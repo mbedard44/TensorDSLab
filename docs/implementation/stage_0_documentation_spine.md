@@ -1,5 +1,32 @@
 # Stage 0 Documentation Spine
 
+Status: completed historical documentation stage. Stage 1 supersedes its open
+architecture questions; keep this page as the record of the initial spine and
+its then-current scope.
+
+The later accepted ecosystem boundary also supersedes Stage 0's direct
+`g4ds11 -> TensorDSLab` description. The current target is
+`G4DS -> TensorG4DS -> TensorDSLab -> TensorML`: native G4DS parsing and
+low-level analysis stay upstream, while a future typed same-GPU bridge maps an
+accepted TensorG4DS product into TensorDSLab semantics. The old bullet below is
+retained only as historical Stage 0 scope.
+
+The superseding Stage 1 decision uses one primary
+`ReadoutCollection(TensorCollection)` rather than one semantic subclass per
+charge or waveform field. It is a structurally immutable partial snapshot over
+six recognized `readout.*` field IDs, with canonical required axis IDs, a
+typed `SampleGrid`, a conditional `DigitizedWaveformSpec`, and field
+transforms.
+A later accepted package decision places concrete domain packages directly
+under `tensor_dslab`, such as `tensor_dslab.common` and
+`tensor_dslab.readout`, without an intermediate `tensor_dslab.domain`
+namespace. `ChannelId` is a common coordinate because readout and future
+reconstruction reuse the same identity.
+A future `ReadoutExample` is at most a thin provenance/context wrapper around
+that collection. Accordingly, Stage 0's statements that exact product and
+tensor-rendering APIs were undecided are historical facts, not current open
+questions.
+
 ## Task
 
 Create the initial process, design, validation, and implementation-stage
@@ -29,9 +56,12 @@ docs/implementation/stage_0_documentation_spine.md
 The docs should establish these accepted directions:
 
 - TensorDSLab is a clean-slate, tensor-native detector data-lab package.
-- TensorDSLab sits between g4ds11 detector simulation and future consumers.
-- TensorDSLab owns detector, readout, and future reconstruction examples,
-  products, product labels, validators, and domain-specific tensor renderings.
+- At the time, TensorDSLab was described as sitting directly between g4ds11
+  detector simulation and future consumers; the supersession note above is the
+  current contract.
+- At the time, TensorDSLab was also described as owning detector, readout, and
+  future reconstruction examples. Current docs narrow this to post-TensorG4DS
+  semantics and do not accept the old wrapper names by default.
 - TensorDSLab owns future cache contracts only after in-memory product
   contracts are accepted.
 - TensorDSLab should define the MVP early while prioritizing in-memory product
