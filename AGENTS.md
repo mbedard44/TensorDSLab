@@ -30,9 +30,10 @@ ownership.
 
 When a stage spans multiple repositories, such as TensorDSLab, TensorG4DS,
 TensorCore, TensorML, G4DS/g4ds11, or Projects/dag, keep each workspace's role
-threads explicit in the handoff. Do not reuse a TensorDSLab role thread as the
-owner of another repository's implementation or validation unless the user
-explicitly accepts that exception.
+threads explicit in the handoff. A role from one repository must not silently
+own implementation, validation, review, or merge work in another repository.
+Any exception must be explicit in the handoff and accepted by the user and
+every affected package Design authority.
 
 Agents should also follow `CONTRIBUTING.md`, which defines repository-wide
 engineering standards. Start with `docs/overview.md` for the documentation map.
@@ -45,6 +46,80 @@ a comparison boundary, or accepting a statistical approximation or intentional
 divergence.
 Validation and Review should treat violations of accepted `CONTRIBUTING.md`
 standards as real findings, not style-only comments.
+
+## Governance Candidate Authority And State
+
+TensorDSLab Design owns this package's architecture, public contracts,
+ownership boundaries, accepted dependencies, documentation, work orders,
+governance adoption, conformance findings, routing, and deviations. A
+cross-package proposal binds TensorDSLab only after every affected package
+Design authority ratifies the same immutable proposal. Coordination agreement,
+Moderator synthesis, tests, work orders, and similarity among package documents
+are evidence; none creates package architecture.
+
+Package sources take precedence for TensorDSLab architecture and contracts. If
+package and cross-package sources disagree, stop the affected work or routing,
+identify the conflicting records, return the contradiction to every affected
+Design authority, and resume only from an explicit resolution and synchronized
+baseline. `AGENTS.md` governs roles, handoffs, routing, work-order gates, and
+verification responsibilities. `CONTRIBUTING.md` governs engineering quality,
+API design, typing, validation, testing, documentation, and code style.
+
+The Governance Core `0.1.0` material under `docs/governance/` is a package-local
+Phase 2 candidate only. It does not change the current states:
+
+```text
+package_adoption_state: Not adopted
+conformance_finding: Not evaluated
+coordination_status: Deferred
+registry_storage_profile: Disabled
+```
+
+These states are independent. Common ratification, a candidate semantic map,
+documentation evidence, and an undispatched work order do not constitute
+package adoption, conformance, routing activation, Coordination activation, or
+production authority.
+
+Design may operate alone during documentation-only maturity. Design,
+Implementation, Validation, and Review are persistent logical roles per
+workspace after activation. Production dispatch requires every execution role
+named by the work order to be Active and verified. A dormant, stale, missing,
+or discrepant route does not authorize dispatch; procedural routing returns to
+Design.
+
+Coordination is an optional representation role and remains Deferred.
+TensorDSLab Design is its procedural fallback. Coordination may represent only
+an accepted package position and may not ratify architecture, command Design,
+dispatch implementation, replace D/I/V/R, edit production or tests by virtue
+of the role, or own merge authority. Later activation requires a concrete
+recurring cross-package need, an accepted charter and Design-return path, an
+adopted routing/privacy procedure, verified route and fallback, no routing
+discrepancy, and explicit Design and user authorization.
+
+The Ecosystem Moderator is neutral and procedural. It may distribute
+authorized packets, collect package positions, synthesize agreements and
+objections, and maintain authorized procedural records. It may not represent
+TensorDSLab, vote or break ties, ratify architecture, command Design, dispatch
+package execution roles, modify this repository, broaden package ownership,
+conceal objections, or infer consent from silence.
+
+TensorDSLab Design owns package routing and discrepancy resolution. Stable
+logical package, workspace, role, and work-order keys are primary. Raw platform
+route identifiers are optional private attributes and must not appear in
+committed package records. Profile B is disabled and not instantiated: do not
+create `.agents`, an ignore rule, a committed route table, a private live-route
+store, or a Moderator cache because the common core was ratified or a candidate
+was prepared. A discrepancy pauses only the affected routing and returns to
+Design. Profile B requires a later focused Design decision covering the private
+path, ignore policy, permissions/operators, sharing,
+replacement/history/deletion, verification, and discrepancy procedure.
+
+TensorDSLab is in active development and pre-deployment. It makes no
+deployability, release-readiness, backward-compatibility, or broad
+cross-package compatibility claim. Later compatibility evidence is limited to
+exact named commits, environment, device/backend, and execution mode. The
+same-device and no-silent-host-materialization Design constraints are not proof
+of an implemented or compatible package handoff.
 
 ## Project Mode
 
@@ -593,6 +668,10 @@ Design should:
 - update design, decision, and architecture documentation when contracts
   change;
 - produce implementation work orders;
+- ratify, condition, revise, reject, or defer cross-package proposals;
+- decide package governance adoption, conformance findings, deviations, and
+  routing state;
+- resolve package routing, conformance, architecture, and scope disputes;
 - say what would require coming back to Design.
 
 Design should not implement production code for the feature branch unless the
@@ -610,7 +689,9 @@ Implementation should:
 - keep the diff scoped to the work order;
 - apply fixes requested by Validation and Review;
 - keep the branch coherent and committed when asked;
-- report commands run, known risks, and unresolved questions.
+- report commands run, known risks, and unresolved questions;
+- stop and return to Design when a requested change would alter accepted
+  architecture, ownership, scope, or non-goals.
 
 Other threads should not modify production code or tests unless the user
 explicitly delegates that exception. By default, they send findings or
@@ -650,7 +731,9 @@ Review should:
 - cite exact file and line references where possible;
 - distinguish blockers from follow-up polish;
 - send findings back to Implementation for fixes unless resolving them would
-  require changing the accepted architecture or stage scope.
+  require changing the accepted architecture or stage scope;
+- issue explicit clearance on the fixed commit or identify the remaining
+  blockers.
 
 Review is read-only by default. It should not rewrite the branch unless the
 user explicitly asks it to. If a Review finding requires an architecture or
@@ -665,26 +748,28 @@ thread while it is being discussed.
 
 Design should dispatch production work only after the source-of-truth work
 order is committed and the base branch is clean, unless the user explicitly
-accepts an exploratory exception. A dispatch should name an exact base commit,
-target branch, source-of-truth stage doc, already-changed docs, required scope,
-non-goals, expected commands, Validation thread, loop budget, and escalation
-conditions.
+accepts an exploratory exception. A dispatch must satisfy the complete
+work-order checklist below and use Active, verified execution routes.
 
 A Design work order should include:
 
-- task;
-- base branch or commit;
-- target branch;
-- target files or packages;
+- a stable package-owned work-order key and task; by default, the committed
+  `docs/implementation/stage_<number>_<slug>.md` path is the key;
+- exact Design and document baseline;
+- base branch or commit and target branch;
+- target files, packages, and public surfaces;
 - source-of-truth docs to keep synchronized;
-- public surfaces to add or change;
 - invariants and validation rules;
 - donor reference, comparison boundary, parity classification, and intentional
   divergences when donor behavior is in scope;
-- non-goals;
-- minimum tests or doc checks;
-- commands expected before Review;
+- scope and non-goals;
+- minimum tests and verification commands;
+- verified persistent Implementation, Validation, and Review routes;
+- a finite Implementation/Validation loop budget;
+- package-owned work-order state vocabulary and its source;
 - known risks or open questions;
+- stale-routing, architecture, scope, and other escalation or stop conditions;
+- Review and clean-closeout expectations;
 - what requires coming back to Design.
 
 The strongest work orders include concrete code or test sketches when code or
@@ -708,9 +793,11 @@ may iterate until the branch is stable:
 Implementation builds -> Validation tests/critiques -> Implementation fixes
 ```
 
-Implementation and Validation may message each other automatically when the
-work order provides the needed thread identifiers and explicitly authorizes the
-loop. This automatic loop is bounded:
+Implementation and Validation may message each other automatically only when
+the work order explicitly authorizes the loop, provides Active and verified
+logical routes, and defines the finite budget. Raw platform route identifiers
+remain private routing attributes and are not work-order identity. This loop is
+bounded:
 
 - maximum three Implementation-to-Validation dispatches;
 - maximum three Validation-to-Implementation dispatches;
@@ -718,6 +805,7 @@ loop. This automatic loop is bounded:
 - no architecture changes or scope expansion;
 - no branch ownership changes;
 - stop early when Validation reports no blocking findings;
+- stop if a required route becomes stale, Deferred, missing, or discrepant;
 - stop and ask the user or Design if the same issue repeats twice, the loop
   budget is exhausted, or a Design decision is needed.
 
@@ -817,6 +905,15 @@ Before Review, check whether the change requires updates to:
   failure modes, or numeric tolerances changed;
 - `README.md`, `AGENTS.md`, or `CONTRIBUTING.md` when workflow, onboarding, or
   repository-wide expectations changed.
+
+Before Review, the Implementation handoff must identify documentation updated,
+documentation checked but unchanged with a reason, verification commands run,
+residual risks, and intentionally deferred items.
+
+Update `docs/governance/` when package adoption state, conformance evidence,
+semantic rule mappings, deviations, routing posture, Coordination status, or
+the active Governance Core candidate changes. A candidate record must not be
+described as an issued package decision.
 
 Implementation handoffs should explicitly say which docs were updated, or why
 no docs update was needed. Validation and Review should run targeted stale-name

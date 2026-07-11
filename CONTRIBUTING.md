@@ -5,6 +5,40 @@ ownership boundaries, typed public APIs, deterministic behavior, focused tests,
 small coherent changes, and documentation that explains contracts rather than
 narrating code.
 
+## Governance Candidate And Delivery Maturity
+
+The Governance Core `0.1.0` Phase 2 candidate is mapped in the
+[package governance records](docs/governance/index.md). Candidate preparation
+does not change package adoption from `Not adopted`, conformance from
+`Not evaluated`, Coordination from `Deferred`, or Profile B from `Disabled`.
+
+The current identity and maturity are:
+
+```text
+Project/display name: TensorDSLab
+Python import: tensor_dslab (accepted future import root; not implemented)
+Distribution name: not yet accepted or implemented
+Delivery maturity: active development / pre-deployment
+Package maturity: documentation-only
+```
+
+Stage 1 and Stage 2 are Design-complete, but Stage 2 is undispatched. There is
+no accepted package metadata, production package, test suite, installed runtime
+dependency, or deployable artifact. TensorDSLab therefore makes no
+installability, deployability, release-readiness, backward-compatibility, or
+broad cross-package compatibility claim. Later compatibility evidence must name
+the exact repository and dependency commits, Python and dependency versions,
+device/backend, and execution mode tested.
+
+The proposed `tensor-dslab` distribution spelling in the Stage 2 work order is
+a future metadata candidate, not a current distribution identity. GPU residency
+and no-silent-host-materialization requirements are TensorDSLab Design
+constraints for future boundaries, not evidence that any TensorG4DS,
+TensorCore, or TensorML baseline is compatible. A breaking change affecting
+multiple repositories requires every affected package Design authority and a
+synchronized migration plan. Compatibility shims, aliases, or deprecation
+windows require demonstrated value and explicit Design acceptance.
+
 ## Repository Identity
 
 TensorDSLab is a clean-slate, tensor-native detector data-lab package in this
@@ -151,6 +185,15 @@ Do not create placeholder modules to reserve architecture. Add a module only
 when there is a real concept, behavior, or contract to house.
 
 ## TensorCore Backbone
+
+The current TensorCore Design snapshot is `0.6.0`, as recorded in
+[TensorCore Integration Architecture](docs/architecture/tensors.md#design-baseline).
+The undispatched Stage 2 work order names exact TensorCore commit
+`dc554994061183776f23f65860a0594516074f2e` as a future dependency candidate.
+Neither is installed or tested at the current documentation-only baseline, and
+neither is cross-package compatibility evidence. Accepting and implementing
+package metadata activates direct dependency declaration plus exact-version,
+environment, device/backend, and execution-mode validation.
 
 TensorDSLab should use TensorCore for generic tensor mechanics, not fork or
 mirror them. Code that needs generic tensor identity, layout, field,
@@ -925,6 +968,13 @@ git diff --check
 Also run targeted link, heading, and stale-term searches for the changed
 contracts. Do not create placeholder code or tests merely to exercise a docs
 stage.
+
+When package-governance candidate records change, also run the state,
+manifest, rule-coverage, source-anchor, dormant-trigger, deviation, raw-ID,
+changed-file-allowlist, and forbidden-claim checks defined in
+[Validation](docs/validation.md#governance-candidate-checks). Runtime, import,
+dependency, export, integration, environment, and post-merge commands remain
+dormant until their corresponding implemented surfaces exist.
 
 ## Before Production Review
 

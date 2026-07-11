@@ -25,6 +25,57 @@ Also run targeted checks for:
 - consistency among architecture, design, decisions, parity, validation, and
   stage documents.
 
+## Governance Candidate Checks
+
+The package-local Governance Core `0.1.0` Phase 2 candidate is documentary
+evidence for later review, not an adoption or conformance decision. Validate
+the [candidate index](governance/index.md),
+[declaration](governance/adoption_0_1_0.md),
+[overlay](governance/overlay.md), and
+[semantic rule map](governance/rule_map_0_1_0.md) against all of these checks:
+
+- verify the Governance Core manifest-file SHA-256
+  `45292e1d72ab79bb4df68a13b82a4ece1bd1207901cd278cc111fe376da28be8`
+  and all eight entries;
+- verify the Council Charter manifest-file SHA-256
+  `343ab10b0ccf54e95fadd70e8cb49ada4480b27149380d39216b2ef1fe9c6916`
+  and all three entries;
+- preserve package adoption as `Not adopted`, conformance as `Not evaluated`,
+  Coordination as `Deferred`, and Profile B as `Disabled` in every candidate
+  record and synchronized package reference;
+- limit candidate creation to the four governance records and narrow
+  synchronization in `AGENTS.md`, `CONTRIBUTING.md`, `README.md`, this file,
+  and `docs/overview.md`;
+- confirm that `docs/decisions.md`, architecture, parity, implementation-stage
+  records, production code, package metadata, tests, routes, registries, and
+  caches are unchanged;
+- map `OP-01` through `OP-13` and `ENG-01` through `ENG-12` exactly once, with
+  every required field, a resolvable package source and section, baseline,
+  rationale, and evidence;
+- use only the accepted disposition vocabulary, use no whole-rule
+  Not-applicable disposition, and record no deviation unless a separately
+  authorized Design finding requires one;
+- require exact absence evidence and a focused activation trigger for every
+  dormant package surface;
+- confirm that durable files contain no raw task identifier and that no
+  `.agents`, route, registry, or cache state was created;
+- reject premature package claims of adoption, conformance, Active routing,
+  enabled Profile B, deployability, release readiness, backward compatibility,
+  broad compatibility, or implemented integration;
+- treat compatibility evidence as exact-baseline evidence only, and do not
+  treat same-GPU residency or no-silent-host-materialization Design constraints
+  as cross-package compatibility evidence;
+- record the fixed clean candidate commit outside the self-referential
+  candidate tree in the Phase 2 report and pass that exact commit to a later,
+  separately authorized Phase 3; and
+- confirm that Stage 2 remains Design-complete and undispatched.
+
+Runtime, import, environment, integration, and post-merge test commands remain
+dormant because the corresponding package surfaces do not exist. Their
+activation requires the focused Design-owned work order identified in the
+overlay and rule map. Passing these documentary checks implies no
+installability, deployability, compatibility, or production conformance.
+
 ## Validation Layers
 
 Future validation should follow the boundary-first model:

@@ -131,10 +131,18 @@ documentation is committed, but Stage 2 still has no selected
 production-dispatch base, implementation branch, or role handoff. There is not
 yet a production package, test suite, or cache schema.
 
+A package-local Governance Core `0.1.0` Phase 2 adoption candidate is prepared
+for later review. Package adoption remains `Not adopted`, conformance remains
+`Not evaluated`, Coordination remains `Deferred`, and Profile B remains
+`Disabled`. This active-development, pre-deployment record makes no
+deployability, backward-compatibility, or broad compatibility claim. See the
+[Package Governance index](docs/governance/index.md).
+
 Start with:
 
 - [Agent Workflow](AGENTS.md)
 - [Contributing](CONTRIBUTING.md)
+- [Package Governance](docs/governance/index.md)
 - [Overview](docs/overview.md)
 - [Design](docs/design.md)
 - [IV-DSLab Parity](docs/parity.md)

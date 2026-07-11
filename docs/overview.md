@@ -50,6 +50,14 @@ Design-complete but has not been dispatched. The synchronized Design
 documentation is committed, while Stage 2's exact production-dispatch base and
 role handoff remain unset.
 
+The package-local Governance Core `0.1.0` Phase 2 adoption candidate is
+prepared for later review, but package adoption remains `Not adopted`,
+conformance remains `Not evaluated`, Coordination remains `Deferred`, and
+Profile B remains `Disabled`. TensorDSLab is in active development and
+pre-deployment; the candidate makes no deployability, backward-compatibility,
+or broad compatibility claim. The [Package Governance index](governance/index.md)
+records the exact candidate scope and state boundaries.
+
 The first accepted MVP direction is the post-binned tensor-native readout path:
 start from already-binned photon-origin primary photoelectrons, then simulate
 the aggregate SiPM charge response, waveform products, analog waveform
@@ -229,6 +237,9 @@ root.
 - [IV-DSLab Parity](parity.md): comparison classes, donor evidence,
   assumptions, fixture provenance, and intentional divergences.
 - [Validation](validation.md): validation philosophy and early expectations.
+- [Package Governance](governance/index.md): Phase 2 adoption-candidate index,
+  declaration, TensorDSLab overlay, complete semantic rule map, state
+  boundaries, and future Phase 3 gate.
 - [TensorCore Integration](architecture/tensors.md): TensorCore consumer,
   semantic collection, field ordering, layout, output/workspace, placement,
   lifetime, reconstruction, and coordination contracts.
