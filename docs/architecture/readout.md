@@ -1,11 +1,9 @@
 # Post-Binned Readout Architecture
 
 Status: active Design contract for the first TensorDSLab MVP. Stage 2's
-structural package-and-collection foundation entered fixed-commit
-Validation/Review closeout on its feature branch. A feature-branch checkout is
-candidate evidence until Review's clean fast-forward; if this record is read on
-`main`, that gate has completed. Scientific transform execution remains
-undispatched.
+structural package-and-collection foundation is Merged / Closed on `main` at
+`e8c62caf001ee7f58f766d7234747ed1d9a21e35`. Scientific transform execution
+remains undispatched.
 
 ## Purpose
 

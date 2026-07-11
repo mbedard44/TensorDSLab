@@ -20,15 +20,14 @@ critique, and Review can reason about the diff.
 
 ### [Stage 2: Package And Readout Collection Foundation](stage_2_package_and_readout_collection_foundation.md)
 
-Status: Stage 2 closeout record prepared from the 2026-07-11 dispatch and exact
-clean package baseline
-`d097cb3cdde185c6814116e886e7844ea3f55178`. The package-owned persistent
-Implementation, Validation, and Review routes remain active for the bounded
-production loop. Fixed-commit Validation has cleared a candidate on this line;
-each later Review-fix commit returns through Validation before Review recheck.
-A feature-branch checkout is not accepted package state. If this record is read
-on `main`, Review's clean fast-forward gate has completed and Stage 2 is
-accepted there.
+Status: Merged / Closed on `main` at
+`e8c62caf001ee7f58f766d7234747ed1d9a21e35`, from the 2026-07-11 dispatch and
+exact clean package baseline `d097cb3cdde185c6814116e886e7844ea3f55178`.
+Fixed-commit Validation evaluated all three candidates in the bounded loop,
+returned the first, and cleared the second and final candidates. Independent
+Review returned narrow findings on the second, cleared the final bytes, and
+performed the clean fast-forward plus post-merge verification. The persistent
+logical roles remain available, but no later production stage is dispatched.
 
 The work order locks the flat package foundation under `tensor_dslab`, with
 shared IDs in `tensor_dslab.common` and readout code in

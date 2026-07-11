@@ -1,10 +1,9 @@
 # Stage 1 Post-Binned Readout MVP Architecture
 
-Status: Design-complete documentation stage. No production implementation has
-been dispatched. The linked Stage 2 production work order is Design-complete
-and the synchronized Design documentation is committed, but Stage 2 still
-requires an exact clean production-dispatch base and role handoff before
-dispatch.
+Status: Design-complete documentation stage. At Stage 1 completion, no
+production implementation had been dispatched. Stage 2 subsequently completed
+the required exact-base, role-separated production loop and is Merged / Closed
+on `main` at `e8c62caf001ee7f58f766d7234747ed1d9a21e35`.
 
 ## Task
 
@@ -444,8 +443,8 @@ remaining open scientific and implementation questions are recorded explicitly.
 
 The next work is the
 [Stage 2 package and `ReadoutCollection` foundation work order](stage_2_package_and_readout_collection_foundation.md),
-which includes atomic field and full-result destination preparation. It has not
-been dispatched. Before dispatch, Design must name a clean exact base commit,
-target branch, target files, public constructor and destination-preparation
-sketches, supported dtypes/devices, minimum tests, Validation thread, loop
-budget, and Review handoff.
+which includes atomic field and full-result destination preparation. At Stage 1
+completion it had not been dispatched; Design later supplied the required clean
+base, target branch and files, public sketches, supported dtypes/devices,
+minimum tests, Validation loop, and Review handoff. Stage 2 is now Merged /
+Closed at `e8c62caf001ee7f58f766d7234747ed1d9a21e35`.

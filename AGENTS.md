@@ -2,10 +2,10 @@
 
 This repository uses role-separated Codex ownership. Design owns architecture,
 decisions, validation expectations, and future work orders directly. Stage 2
-activated the first production Implementation/Validation/Review loop on
-2026-07-11. Documentation-only Design work outside that dispatched branch may
-still remain in Design unless the user requests independent Validation or
-Review.
+completed the first production Implementation/Validation/Review loop on
+2026-07-11. Documentation-only Design work outside a dispatched production
+work order may remain in Design unless the user requests independent Validation
+or Review.
 
 The production workflow is:
 
@@ -80,9 +80,9 @@ These states are independent. Package adoption does not constitute conformance,
 routing activation, Coordination activation, production authority, or Stage 2
 dispatch.
 
-Design may operate alone during documentation-only maturity. Design,
-Implementation, Validation, and Review are persistent logical roles per
-workspace after activation. Production dispatch requires every execution role
+Design may operate alone for documentation-only work. Design, Implementation,
+Validation, and Review are persistent logical roles per workspace after
+activation. Production dispatch requires every execution role
 named by the work order to be Active and verified. A dormant, stale, missing,
 or discrepant route does not authorize dispatch; procedural routing returns to
 Design.
@@ -173,14 +173,14 @@ template. Replace TensorML process semantics with TensorDSLab product and cache
 semantics when adapting docs or patterns. TensorCore is the source of truth for
 generic tensor vocabulary and contracts.
 
-The accepted `main` baseline remains documentation-only while Stage 2 executes
-through its dispatched package-owned production loop. Stage 1 post-binned
-readout architecture and the Stage 2 package-and-collection work order are
-Design-complete. Only Stage 2's focused work order accepts package modules and
-tests; it does not accept cache schemas, DAG surfaces, downstream integration
-surfaces, or copied donor code. A feature-branch candidate is not an accepted
-package surface until fixed-commit Validation, independent Review, and clean
-merge complete.
+Stage 2 is Merged / Closed on `main` at
+`e8c62caf001ee7f58f766d7234747ed1d9a21e35`. It accepts the source-package
+package metadata, `tensor_dslab.common` and `tensor_dslab.readout` structural
+foundation, focused tests, and exact TensorCore dependency recorded by its work
+order. It accepts no scientific transform, workspace, cache schema, DAG
+surface, TensorG4DS or TensorML integration surface, or copied donor code. No
+later production stage is dispatched; each requires its own focused work order,
+verified routes, fixed-commit Validation, independent Review, and clean merge.
 
 If implementation reveals a concrete contradiction in the accepted design, stop
 and send the issue back to Design. Do not silently widen architecture, create
@@ -197,8 +197,8 @@ Project/display folder: TensorDSLab
 Python import package:  tensor_dslab
 ```
 
-The checkout root is the project folder. When production code is accepted, the
-`tensor_dslab/` directory should be the Python import package. Do not create a
+The checkout root is the project folder. The `tensor_dslab/` directory is the
+Python import package. Do not create a
 flat TitleCase Python package that imports as `TensorDSLab`.
 
 Keep semantic subpackages flat beneath that import root:

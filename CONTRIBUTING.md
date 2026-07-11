@@ -17,24 +17,23 @@ The current identity and maturity are:
 
 ```text
 Project/display name: TensorDSLab
-Python import: tensor_dslab (accepted Stage 2 import root; not yet on main)
-Distribution name: tensor-dslab (accepted Stage 2 spelling; not yet on main)
+Python import: tensor_dslab (accepted on main through Stage 2)
+Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
-Package maturity: Stage 2 production loop active; accepted main is documentation-only
+Package maturity: Stage 2 structural foundation Merged / Closed
 ```
 
-Stage 1 and the Stage 2 work order are Design-complete. Stage 2 was dispatched
-on 2026-07-11, but no production candidate is accepted until fixed-commit
-Validation, independent Review, and clean merge complete. There is no accepted
-package metadata, production package, test suite, installed runtime dependency,
-or deployable artifact on `main`. TensorDSLab therefore makes no
-installability, deployability, release-readiness, backward-compatibility, or
-broad cross-package compatibility claim. Later compatibility evidence must name
-the exact repository and dependency commits, Python and dependency versions,
-device/backend, and execution mode tested.
+Stage 1 is Design-complete, and Stage 2 is Merged / Closed on `main` at
+`e8c62caf001ee7f58f766d7234747ed1d9a21e35`. Main now contains accepted package
+metadata, the structural production package, and its focused test suite. The
+post-merge evidence is limited to the exact repository/dependency commits,
+Python and PyTorch versions, CPU execution mode, and conditional CUDA skips
+recorded in the Stage 2 work order. No wheel or published artifact was built,
+and TensorDSLab makes no deployability, release-readiness,
+backward-compatibility, or broad cross-package compatibility claim.
 
-The `tensor-dslab` distribution spelling is accepted for the Stage 2 candidate,
-not yet an installed or released distribution identity. GPU residency
+The `tensor-dslab` distribution spelling is accepted package metadata, not an
+installed, published, or released distribution claim. GPU residency
 and no-silent-host-materialization requirements are TensorDSLab Design
 constraints for future boundaries, not evidence that any TensorG4DS,
 TensorCore, or TensorML baseline is compatible. A breaking change affecting
@@ -180,8 +179,8 @@ TensorDSLab/
   tests/
 ```
 
-The project/display folder is `TensorDSLab`; the Python import package should
-be `tensor_dslab`. Do not create a flat TitleCase Python package that imports
+The project/display folder is `TensorDSLab`; the Python import package is
+`tensor_dslab`. Do not create a flat TitleCase Python package that imports
 as `TensorDSLab`; keep semantic subpackages directly below the import root.
 
 Do not create placeholder modules to reserve architecture. Add a module only
@@ -191,11 +190,11 @@ when there is a real concept, behavior, or contract to house.
 
 The current TensorCore Design snapshot is `0.6.0`, as recorded in
 [TensorCore Integration Architecture](docs/architecture/tensors.md#design-baseline).
-The dispatched Stage 2 work order retains exact TensorCore commit
-`dc554994061183776f23f65860a0594516074f2e` as its dependency point. The
-candidate must verify that exact dependency with its named Python, PyTorch,
-and device/backend environment. Neither the Design pin nor a passing exact
-tuple is broad cross-package compatibility evidence.
+Stage 2 declared and verified exact TensorCore commit
+`dc554994061183776f23f65860a0594516074f2e` with Python `3.13.11`, PyTorch
+`2.12.1`, and CPU execution. The three conditional CUDA tests were skipped
+because CUDA was unavailable. Neither the accepted dependency pin nor this
+passing exact tuple is broad cross-package compatibility evidence.
 
 TensorDSLab should use TensorCore for generic tensor mechanics, not fork or
 mirror them. Code that needs generic tensor identity, layout, field,
@@ -975,8 +974,9 @@ When package-governance records change, also run the state,
 manifest, rule-coverage, source-anchor, dormant-trigger, deviation, raw-ID,
 changed-file-allowlist, and forbidden-claim checks defined in
 [Validation](docs/validation.md#governance-adoption-checks). Runtime, import,
-dependency, export, integration, environment, and post-merge commands remain
-dormant until their corresponding implemented surfaces exist.
+dependency, export, environment, and post-merge commands are active for the
+accepted Stage 2 foundation. Integration and later scientific-runtime commands
+remain dormant until their corresponding implemented surfaces exist.
 
 ## Before Production Review
 

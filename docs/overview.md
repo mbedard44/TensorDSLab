@@ -34,22 +34,24 @@ collection model is stable.
 ## Current Local Focus
 
 The Stage 1 post-binned readout architecture is Design-complete. Stage 2 was
-dispatched on 2026-07-11 through the package-owned production loop, while the
-current accepted `main` baseline remains documentation-only until closeout:
+dispatched on 2026-07-11 through the package-owned production loop and is
+Merged / Closed on `main` at
+`e8c62caf001ee7f58f766d7234747ed1d9a21e35`:
 
 ```text
 AGENTS.md / CONTRIBUTING.md
   -> overview, design, decisions, parity, validation
   -> architecture/tensors.md and architecture/readout.md
   -> implementation-stage work orders
-  -> future package code
+  -> accepted tensor_dslab structural foundation
+  -> future scientific-transform and integration work orders
 ```
 
-No production package, tests, cache schema, DAG surface, or copied donor code
-has been accepted on `main` yet. The Stage 2 package-and-collection work order
-is active from exact clean base
-`d097cb3cdde185c6814116e886e7844ea3f55178`; Implementation owns the feature
-branch, and fixed-commit Validation and Review remain required before merge.
+Main now contains the accepted Stage 2 package metadata, structural
+`tensor_dslab.common` and `tensor_dslab.readout` package, and focused tests.
+Scientific transforms, RNG, workspace execution, caches, DAG surfaces,
+TensorG4DS/TensorML adapters, and copied donor code remain unaccepted. No later
+production stage is dispatched.
 
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`, bound to
 exact candidate `d634401a853915edeb4f83df4a4943b3553deced`. Conformance remains
@@ -225,8 +227,8 @@ TensorDSLab/
     recipes/           # future integration surface
 ```
 
-The outer project/display folder is `TensorDSLab`; the Python import package
-should be `tensor_dslab` when package code is accepted. Do not create a flat
+The outer project/display folder is `TensorDSLab`; the accepted Python import
+package is `tensor_dslab`. Do not create a flat
 TitleCase import package; keep semantic subpackages directly below the import
 root.
 
@@ -250,7 +252,8 @@ root.
 - [Implementation Stages](implementation/index.md): staged work orders and
   scope limits.
 - [Stage 2 Work Order](implementation/stage_2_package_and_readout_collection_foundation.md):
-  package and `ReadoutCollection` foundation contract; not dispatched.
+  package and `ReadoutCollection` foundation contract; Merged / Closed at
+  `e8c62caf001ee7f58f766d7234747ed1d9a21e35`.
 
 Additional architecture docs should be added only when they carry real
 contracts, such as detector products, reconstruction products, or caches.

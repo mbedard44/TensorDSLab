@@ -3,14 +3,13 @@
 Validation should prove scientific behavior, public contracts, and ownership
 boundaries. Tests should not mirror private implementation structure.
 
-## Current Documentation Baseline
+## Current Package Baseline
 
-Before the Review-owned clean fast-forward, the accepted `main` baseline is
-documentation-only while the Stage 2 candidate proceeds through the
-fixed-commit Validation/Review loop. If this record is read on `main`, that
-closeout gate has completed and the Stage 2 production package, metadata, test
-suite, and exact TensorCore runtime dependency are accepted there. Stage 2
-accepts no cache schema or later runtime surface.
+Stage 2 is Merged / Closed on `main` at
+`e8c62caf001ee7f58f766d7234747ed1d9a21e35`. The production package metadata,
+structural package, focused test suite, and exact TensorCore runtime dependency
+are accepted there. Stage 2 accepts no scientific transform, workspace, cache
+schema, or later integration surface.
 
 Documentation-only Design changes remain in the Design thread unless the user
 requests independent Validation or Review. Run:
@@ -105,7 +104,8 @@ operation-specific checks.
 
 ## Package And Dependency Checks
 
-The first production stage should validate:
+Stage 2 established these package and dependency checks; retain them as
+regression requirements:
 
 - project folder `TensorDSLab` and import package `tensor_dslab`;
 - concrete packages such as `tensor_dslab.common` and
@@ -521,9 +521,11 @@ backend/library concerns.
 
 ## Device Checks
 
-Collection construction is placement-neutral. Stage 2 must prove CPU behavior
-and run CUDA collection checks conditionally when CUDA is available; those
-checks do not promise that every later scientific kernel supports CUDA. Each
+Collection construction is placement-neutral. Stage 2 required CPU behavior
+and conditional CUDA collection checks when CUDA was available; those checks
+do not promise that every later scientific kernel supports CUDA. Its post-merge
+verification passed the CPU suite, while three conditional CUDA tests were
+skipped because CUDA was unavailable, so no GPU behavior is claimed. Each
 transform work order must name and test its own execution-device matrix.
 Applicable tests should prove:
 

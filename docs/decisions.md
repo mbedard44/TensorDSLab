@@ -54,8 +54,9 @@ Stage 2 acquires no TensorG4DS dependency.
 
 ### Project Naming Follows The Tensor Ecosystem
 
-The project/display folder is `TensorDSLab`; the Python import package should
-be `tensor_dslab` when production package code is accepted.
+The project/display folder is `TensorDSLab`; the accepted Python import package
+is `tensor_dslab`, and the accepted distribution metadata name is
+`tensor-dslab`.
 
 ### Domain Packages Are Flat Under `tensor_dslab`
 
@@ -72,11 +73,25 @@ class would create an artificial identity conversion at that boundary.
 
 ### Documentation Comes Before Production Code
 
-The initial stages are documentation-only. Design owns architecture,
-decisions, validation expectations, and future work orders directly during
-this phase. The full Implementation/Validation/Review loop begins with the
-first production-code work order unless the user requests earlier independent
-review.
+The initial stages began documentation-only. Design owns architecture,
+decisions, validation expectations, and future work orders directly for such
+work. Stage 2 activated and completed the first full
+Implementation/Validation/Review loop; later production work requires its own
+focused dispatch unless the user requests an earlier independent review.
+
+### Stage 2 Structural Foundation Is Accepted
+
+Stage 2 is Merged / Closed on `main` at
+`e8c62caf001ee7f58f766d7234747ed1d9a21e35`. It accepts the `tensor-dslab`
+metadata, `tensor_dslab.common` and `tensor_dslab.readout` structural package,
+typed IDs and sidecars, `ReadoutCollection`, semantic reconstruction,
+descendant invalidation, output preparation, and focused tests against exact
+TensorCore pin `dc554994061183776f23f65860a0594516074f2e`.
+
+This decision records implementation closeout only. It accepts no scientific
+transform, RNG, workspace, cache, integration surface, GPU behavior,
+deployability, broad compatibility, or conformance finding. No later
+production stage is dispatched.
 
 ### Build In-Memory Products Before IO
 
@@ -514,10 +529,12 @@ field-scoped buffer contract.
 Stage 2 was dispatched on 2026-07-11 from exact clean package baseline
 `d097cb3cdde185c6814116e886e7844ea3f55178` through the verified logical
 Implementation, Validation, and Review routes and the repository's three-round
-maximum I/V loop. Its work-order path is the stable package-owned key. Later
-production stages still require their own focused committed work order, exact
-clean base, verified routes, bounded loop, fixed-commit Review gate, and clean
-closeout expectation; Stage 2 dispatch does not pre-authorize them.
+maximum I/V loop. Review fast-forward merged the cleared foundation at
+`e8c62caf001ee7f58f766d7234747ed1d9a21e35`. Its work-order path remains the
+stable package-owned key. Later production stages still require their own
+focused committed work order, exact clean base, verified routes, bounded loop,
+fixed-commit Review gate, and clean closeout expectation; Stage 2 completion
+does not pre-authorize them.
 
 ### Workspace Inventory And Stronger Allocation Guarantees
 

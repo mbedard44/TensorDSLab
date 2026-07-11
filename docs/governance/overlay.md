@@ -28,18 +28,20 @@ accepted contracts; they do not create architecture accidentally.
 
 ```text
 project/display name: TensorDSLab
-Python import package: tensor_dslab (accepted Stage 2 import root; not yet on main)
-distribution name: tensor-dslab (accepted Stage 2 spelling; not yet on main)
+Python import package: tensor_dslab (accepted on main through Stage 2)
+distribution name: tensor-dslab (accepted metadata; not published or released)
 delivery maturity: active development / pre-deployment
-package maturity: Stage 2 production loop active; accepted main is documentation-only
+package maturity: Stage 2 structural foundation Merged / Closed
 Stage 1: Design-complete
-Stage 2: Dispatched / production candidate not yet accepted
+Stage 2: Merged / Closed at e8c62caf001ee7f58f766d7234747ed1d9a21e35
 ```
 
-There is no accepted `pyproject.toml`, `tensor_dslab/` package, test suite, or
-installed runtime dependency on `main`. Stage 2's feature branch and proposed
-metadata are not evidence that the package is installable, published, or
-deployed before fixed-commit Validation, independent Review, and clean merge.
+Main contains accepted `pyproject.toml` metadata, the structural
+`tensor_dslab/` package, public exports, focused tests, and exact TensorCore
+dependency declaration. Post-merge verification is exact-baseline CPU evidence
+only. No wheel or published artifact was built, CUDA was unavailable, and this
+record makes no installability-across-environments, release, deployment, or
+broad compatibility claim.
 
 ## Pre-Deployment Compatibility Posture
 
@@ -71,6 +73,11 @@ and TensorML interoperate on any device or package tuple.
 - Production dispatch requires every execution role to be Active, privately
   verified for the exact workspace and baseline, and named in the handoff.
 - Coordination is optional, non-authoritative, and Deferred.
+
+Stage 2 activated and verified the persistent Implementation, Validation, and
+Review roles, then closed its bounded assignment at
+`e8c62caf001ee7f58f766d7234747ed1d9a21e35`. No later production work is
+dispatched by that lifecycle event.
 
 ## Execution-Role Boundaries
 
@@ -119,9 +126,12 @@ baseline. `Id` and `TensorCollection` are the accepted downstream extension
 points; sealed primitives remain sealed. TensorDSLab does not fork, mirror,
 re-export, or conceal missing generic behavior behind local shims.
 
-The current Design snapshot is TensorCore `0.6.0`. Stage 2 proposes an exact
-dependency candidate but has not implemented or tested it. A future work order
-must record the exact constraint and tested commit actually used.
+The current Design snapshot is TensorCore `0.6.0`. Stage 2 declared and tested
+exact dependency commit `dc554994061183776f23f65860a0594516074f2e` with Python
+`3.13.11`, PyTorch `2.12.1`, and CPU execution. TensorCore Stage 10 closeout
+`cf75d5c453723c59a07043cd7176ca3b3805b295` is corroborating documentation/test
+evidence only; it made no `tensor_core/` production change and did not move the
+TensorDSLab pin.
 
 TensorDSLab's exact coordinate/index/layout, readout field, dtype, snapshot,
 output, workspace, device, and lifetime rules remain package architecture in
@@ -141,7 +151,8 @@ Donor behavior is parts-bin evidence. Every promoted behavior or parity claim
 names its source, comparison boundary, classification, assumptions,
 observables, acceptance criteria, exclusions, intentional divergences, and
 revisit triggers in `docs/parity.md`. No production parity is claimed while
-the package has no implementation.
+the package has no scientific-transform implementation or parity fixture
+corpus.
 
 ## Boundary Validation And Public API Discipline
 
@@ -156,24 +167,26 @@ deliberate. Historical aliases and compatibility shims are absent unless a
 future Design decision accepts a bounded, evidenced window. Placeholder
 modules and APIs are prohibited.
 
-## Dormant-Surface Evidence And Activation Triggers
+## Surface Evidence And Activation Triggers
 
-No common rule is wholly Not applicable. The following implementation
-surfaces are dormant qualifications inside applicable rules:
+No common rule is wholly Not applicable. The following rows distinguish the
+Stage 2 surfaces that are now active from later dormant qualifications inside
+applicable rules:
 
-| Dormant surface | Exact current evidence | Activation trigger |
+| Surface | Exact current evidence | Later activation trigger |
 | --- | --- | --- |
-| Distribution/installability | Baseline and adopted candidate contain no `pyproject.toml` or package directory; Stage 2 metadata remains provisional | Design dispatches and implements Stage 2 package metadata |
-| Runtime dependencies and TensorCore consumption | No production imports or dependency declaration exist; `docs/architecture/tensors.md` is Design-only | Stage 2 records and tests the exact dependency constraint and commit |
-| Production tests and public exports | No `tests/` or importable package exists | First production package stage creates the corresponding surfaces |
+| Package metadata and source package | Stage 2 accepts `pyproject.toml`, `tensor_dslab/`, and `tensor-dslab` metadata on main; no wheel, publication, or release was produced | A focused build/release work order supplies artifact and environment evidence before any broader installability or release claim |
+| Runtime dependency and TensorCore consumption | Stage 2 declares exact TensorCore pin `dc554994061183776f23f65860a0594516074f2e` and tests public-root consumption on CPU | Each later consumer/backend claim names and verifies its own exact dependency and environment tuple |
+| Production tests and public exports | Stage 2 accepts focused public exports and 52-test structural suite; 49 passed and 3 conditional CUDA tests skipped | Each later production surface adds its own focused public and behavioral tests |
 | Deterministic waveform kernels and execution-workspace substrate | Stage 3 is a planning label only; no transform, output, preflight, or workspace code exists | Design accepts and dispatches a focused Stage 3 work order |
 | RNG, charge, and stochastic-noise kernels | Exact algorithm/backend and some scientific choices remain open; no code exists | Focused Stage 4 and Stage 5 decisions and work orders are accepted |
 | TensorG4DS bridge | Upstream public GPU product/device/layout contract is not frozen | Affected Designs accept the Stage 7 handoff contract |
 | Durable caches and round trips | No durable format, loader, writer, or compatibility target exists | Design accepts a focused Stage 8 cache contract |
 | TensorML/DAG/integration surfaces | Adapters, operation specs, executables, and recipes are deferred | Affected Designs accept a focused Stage 9 integration contract |
-| Runtime/import/dependency/environment/post-merge commands | Only documentary checks are executable today | Each implemented surface supplies exact commands in its work order |
+| Runtime/import/dependency/environment/post-merge commands | Stage 2 activates its exact unit-test, import-isolation, dependency, environment, diff, and post-merge checks | Integration, scientific kernels, CUDA, build artifacts, and later surfaces supply exact commands in their own work orders |
 
-Dormancy supplies no Production conformance evidence and does not imply a
+Activated evidence is limited to the exact Stage 2 baseline and is not a
+conformance or compatibility finding. Remaining dormancy does not imply a
 whole-rule exclusion.
 
 ## Documentation And Verification
@@ -186,9 +199,10 @@ and onboarding sources.
 
 The current executable minimum is `git diff --check` plus local-link, heading,
 code-fence, stale-term, raw-ID, state, changed-file, and generated-output
-checks. Python tests, import checks, dependency isolation, environment checks,
-integration checks, and runtime post-merge commands activate only with their
-implemented surfaces.
+checks. Stage 2 additionally activates its Python tests, import checks,
+dependency isolation, environment checks, and post-merge commands. Integration,
+scientific-transform, build-artifact, and GPU checks activate only with their
+implemented surfaces and exact work orders.
 
 ## Routing And Coordination
 
@@ -215,6 +229,8 @@ Profile B: Disabled
 decision: TDSLAB-GOV-D001 (Issued)
 ```
 
-`TDSLAB-GOV-D001` changes only package adoption state. A later conformance
-evaluation, routing bootstrap, Coordination activation, and Stage 2 dispatch
-remain separate actions.
+`TDSLAB-GOV-D001` changed only package adoption state. Conformance evaluation,
+routing bootstrap, Coordination activation, and production dispatch remained
+separate actions. Stage 2 was later dispatched and closed independently at
+`e8c62caf001ee7f58f766d7234747ed1d9a21e35`; all other states above remain
+unchanged.

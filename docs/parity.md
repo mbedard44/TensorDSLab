@@ -121,10 +121,11 @@ A sampled golden output cannot prove distributional parity. Conversely, two
 implementations may pass selected statistical checks without sharing the same
 law; such a result must remain classified as statistical parity.
 
-Because TensorDSLab has no production implementation yet, classifications in
-this page are Design targets or accepted divergence labels, not claims that a
-test suite has already demonstrated parity. A future work order must supply the
-required evidence before reporting a target as achieved.
+Because TensorDSLab has no scientific-transform implementation or parity
+fixture corpus yet, classifications in this page are Design targets or
+accepted divergence labels, not claims that a test suite has already
+demonstrated parity. A future work order must supply the required evidence
+before reporting a target as achieved.
 
 ## Required Shape Of A Parity Claim
 

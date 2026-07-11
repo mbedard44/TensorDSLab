@@ -127,19 +127,18 @@ global-offset rule.
 The Stage 1 post-binned readout architecture is Design-complete. Stage 2 was
 dispatched on 2026-07-11 from exact clean package baseline
 `d097cb3cdde185c6814116e886e7844ea3f55178` through persistent package-owned
-Implementation, Validation, and Review roles. Before the Review-owned clean
-fast-forward, the accepted `main` baseline remains documentation-only. If this
-record is read on `main`, that merge gate has completed and the Stage 2 package,
-metadata, exact TensorCore dependency, and test suite are accepted there. Stage
-2 accepts no cache schema.
+Implementation, Validation, and Review roles. It is Merged / Closed on `main`
+at `e8c62caf001ee7f58f766d7234747ed1d9a21e35`. That accepted foundation contains
+the `tensor-dslab` metadata, `tensor_dslab` package, typed readout collection
+and sidecars, TensorCore-delegating reconstruction helpers, field-scoped and
+full-output buffer preparation, and focused tests. Stage 2 accepts no
+scientific transform, workspace, cache schema, or integration surface.
 
-The Stage 2 feature-branch line contains the scoped production candidate:
-the installable package foundation, typed readout collection and sidecars,
-TensorCore-delegating reconstruction helpers, field-scoped and full-output
-buffer preparation, and focused construction tests. Fixed-commit Validation
-has cleared a candidate on that line; every later Review-fix commit returns
-through Validation before Review recheck. A feature-branch checkout remains
-candidate evidence and does not itself imply Review clearance or merge.
+Post-merge verification ran 52 tests against both the shared TensorCore source
+and an independently archived exact dependency pin: 49 passed and 3
+conditional CUDA tests were skipped because CUDA was unavailable. This is
+exact-baseline CPU evidence, not a GPU, release, deployment, conformance, or
+broad compatibility claim.
 
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`, bound to
 exact candidate `d634401a853915edeb4f83df4a4943b3553deced`. Conformance remains
@@ -176,6 +175,5 @@ TensorDSLab/                  # project/display folder
     recipes/                 # future integration surface
 ```
 
-When production code is accepted, local smoke and test commands should run from
-the project root with `PYTHONPATH=.`. Semantic packages remain directly below
-`tensor_dslab`.
+Local smoke and test commands run from the project root with `PYTHONPATH=.`.
+Semantic packages remain directly below `tensor_dslab`.
