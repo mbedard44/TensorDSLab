@@ -1,7 +1,9 @@
 # TensorCore Integration Architecture
 
-Status: active Design contract for the post-binned readout architecture. No
-production package or TensorCore dependency has been added yet.
+Status: active Design contract for the post-binned readout architecture. The
+dispatched Stage 2 feature branch now has an Implementation candidate for the
+package and exact TensorCore dependency; it remains unaccepted pending
+fixed-commit Validation, independent Review, and clean merge.
 
 ## Purpose
 
@@ -62,8 +64,9 @@ upstream index.
 
 ## Design Baseline
 
-The current design baseline is TensorCore `0.6.0`. This is a contract snapshot,
-not yet a package dependency pin.
+The current design baseline is TensorCore `0.6.0`. The Stage 2 Implementation
+candidate pins exact commit `dc554994061183776f23f65860a0594516074f2e`; that
+candidate dependency is not accepted on `main` until Stage 2 closeout.
 
 TensorDSLab may rely on these public TensorCore concepts:
 

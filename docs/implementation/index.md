@@ -20,11 +20,12 @@ critique, and Review can reason about the diff.
 
 ### [Stage 2: Package And Readout Collection Foundation](stage_2_package_and_readout_collection_foundation.md)
 
-Status: Dispatched on 2026-07-11 from exact clean package baseline
+Status: Implementation candidate prepared from the 2026-07-11 dispatch and
+exact clean package baseline
 `d097cb3cdde185c6814116e886e7844ea3f55178`. The package-owned persistent
-Implementation, Validation, and Review routes are active for the bounded
-production loop. No Stage 2 production result is accepted until a fixed
-candidate passes Validation and independent Review and is cleanly merged.
+Implementation, Validation, and Review routes remain active for the bounded
+production loop. The candidate is not accepted until fixed-commit Validation,
+independent Review, and a clean merge complete.
 
 The work order locks the flat package foundation under `tensor_dslab`, with
 shared IDs in `tensor_dslab.common` and readout code in

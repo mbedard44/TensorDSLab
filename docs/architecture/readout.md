@@ -1,8 +1,9 @@
 # Post-Binned Readout Architecture
 
 Status: active Design contract for the first TensorDSLab MVP. Stage 2's
-structural package-and-collection foundation is dispatched; scientific
-transform execution remains undispatched.
+structural package-and-collection foundation has an Implementation candidate
+pending fixed-commit Validation and independent Review; scientific transform
+execution remains undispatched.
 
 ## Purpose
 

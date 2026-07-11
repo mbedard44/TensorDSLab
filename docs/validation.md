@@ -5,8 +5,8 @@ boundaries. Tests should not mirror private implementation structure.
 
 ## Current Documentation Baseline
 
-The accepted `main` baseline is documentation-only while the dispatched Stage
-2 candidate proceeds through Implementation, fixed-commit Validation, and
+The accepted `main` baseline is documentation-only while the Stage 2
+Implementation candidate proceeds through fixed-commit Validation and
 independent Review. There is no accepted production package, package metadata,
 test suite, cache schema, or runtime dependency on `main` until closeout.
 

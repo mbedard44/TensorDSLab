@@ -1,0 +1,24 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "tensor-dslab"
+version = "0.1.0"
+description = "Tensor-native detector data-lab products and transforms."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [
+    { name = "Michael Bedard, Princeton University" },
+]
+dependencies = [
+    "torch",
+    "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@dc554994061183776f23f65860a0594516074f2e",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["tensor_dslab"]

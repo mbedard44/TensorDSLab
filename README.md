@@ -132,6 +132,13 @@ remains documentation-only until that fixed production candidate is validated,
 independently reviewed, and merged. There is not yet an accepted production
 package, test suite, or cache schema on `main`.
 
+The feature branch now contains the scoped Stage 2 Implementation candidate:
+the installable package foundation, typed readout collection and sidecars,
+TensorCore-delegating reconstruction helpers, field-scoped and full-output
+buffer preparation, and focused construction tests. This candidate status is
+implementation evidence only; it does not imply Validation or Review
+clearance.
+
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`, bound to
 exact candidate `d634401a853915edeb4f83df4a4943b3553deced`. Conformance remains
 `Not evaluated`, Coordination remains `Deferred`, and Profile B remains

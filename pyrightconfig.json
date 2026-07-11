@@ -1,0 +1,11 @@
+{
+  "typeCheckingMode": "standard",
+  "pythonVersion": "3.11",
+  "include": [
+    "tensor_dslab",
+    "tests"
+  ],
+  "extraPaths": [
+    "."
+  ]
+}
