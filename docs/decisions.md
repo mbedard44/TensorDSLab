@@ -446,6 +446,44 @@ The ordinary exponential afterpulse delay is an accepted scientific correction
 and intentional divergence from the literal reciprocal-exponential expression
 in the audited IV source. Recovery-amplitude behavior remains open.
 
+### Governance Core 0.1.0 Is Adopted (`TDSLAB-GOV-D001`)
+
+Decision ID: `TDSLAB-GOV-D001`
+Decision status: Issued / Adopted
+Decision date: 2026-07-10
+Governed Design base: `151b61fdc36475498219ee5fe7b045a3a72c2d09`
+Accepted candidate: `d634401a853915edeb4f83df4a4943b3553deced`
+Governance manifest-file SHA-256:
+`45292e1d72ab79bb4df68a13b82a4ece1bd1207901cd278cc111fe376da28be8`
+Council context manifest-file SHA-256:
+`343ab10b0ccf54e95fadd70e8cb49ada4480b27149380d39216b2ef1fe9c6916`
+
+TensorDSLab Design accepts the exact Governance Core `0.1.0` package-adoption
+candidate above without conditions. The accepted package records are
+`docs/governance/index.md`, `docs/governance/adoption_0_1_0.md`,
+`docs/governance/overlay.md`, and `docs/governance/rule_map_0_1_0.md`. The
+candidate maps every `OP-*` and `ENG-*` rule exactly once, accepts six rules
+directly, records 19 stronger local rules, uses no whole-rule Not-applicable
+disposition, and accepts no deviation.
+
+This decision changes only the TensorDSLab package-adoption state to
+`Adopted`. Conformance remains `Not evaluated`, Coordination remains
+`Deferred`, Profile B remains `Disabled`, and Stage 2 remains Design-complete
+and undispatched. It does not accept or implement a scientific contract,
+dependency, device or data-flow boundary, compatibility or migration claim,
+API, production surface, deployment state, backward-compatibility guarantee,
+route, registry, cache, or council decision.
+
+The central Design-qualified working dossier remains accurate on mission,
+ownership, documentation-only maturity, designed-versus-implemented
+boundaries, and Deferred Coordination. Its `Not adopted` status and remaining
+adoption-prerequisite wording are a pre-decision snapshot superseded for
+package state by this decision; conformance and Coordination qualifications
+remain current. No sibling-repository edit is part of this decision.
+
+The record-only closeout commit that publishes this decision is named in the
+Phase 3 completion report rather than embedded self-referentially here.
+
 ## Superseded
 
 ### One Collection Subclass Per Readout Product

@@ -1,13 +1,15 @@
 # TensorDSLab Governance Overlay
 
-Document status: Phase 2 candidate support; not adopted
-Package adoption target: Governance Core `0.1.0`
+Document status: Adopted through `TDSLAB-GOV-D001`
+Governance Core version: `0.1.0`
+Adopted candidate: `d634401a853915edeb4f83df4a4943b3553deced`
 Package Design baseline: `151b61fdc36475498219ee5fe7b045a3a72c2d09`
 
 This overlay records TensorDSLab-specific strengthening and maturity context
 for the common governance rules. It does not replace `AGENTS.md`,
 `CONTRIBUTING.md`, or the accepted architecture documents. It has no adoption
-effect until a later TensorDSLab Design decision accepts the fixed candidate.
+effect beyond the exact process rules accepted by `TDSLAB-GOV-D001` and does
+not create scientific or package architecture.
 
 ## Authority And Precedence
 
@@ -50,7 +52,7 @@ dependency versions, device/backend, and relevant execution mode. A passing
 tuple says nothing about historical, future, or untested tuples. Cross-package
 breaking changes require affected Design ratification and a synchronized
 migration plan before implementation. Compatibility aliases, shims, and
-deprecation windows require a focused accepted need; this candidate creates
+deprecation windows require a focused accepted need; this adoption creates
 none.
 
 The current same-device residency and no-silent-host-materialization rules are
@@ -161,7 +163,7 @@ surfaces are dormant qualifications inside applicable rules:
 
 | Dormant surface | Exact current evidence | Activation trigger |
 | --- | --- | --- |
-| Distribution/installability | Baseline and candidate contain no `pyproject.toml` or package directory; Stage 2 metadata remains provisional | Design dispatches and implements Stage 2 package metadata |
+| Distribution/installability | Baseline and adopted candidate contain no `pyproject.toml` or package directory; Stage 2 metadata remains provisional | Design dispatches and implements Stage 2 package metadata |
 | Runtime dependencies and TensorCore consumption | No production imports or dependency declaration exist; `docs/architecture/tensors.md` is Design-only | Stage 2 records and tests the exact dependency constraint and commit |
 | Production tests and public exports | No `tests/` or importable package exists | First production package stage creates the corresponding surfaces |
 | Deterministic waveform kernels and execution-workspace substrate | Stage 3 is a planning label only; no transform, output, preflight, or workspace code exists | Design accepts and dispatches a focused Stage 3 work order |
@@ -190,7 +192,7 @@ implemented surfaces.
 
 ## Routing And Coordination
 
-Profile B is Disabled. Phase 2 creates no `.agents`, ignore rule, registry,
+Profile B is Disabled. Adoption creates no `.agents`, ignore rule, registry,
 route table, private live-route store, Moderator cache, or Active route. Raw
 task identifiers remain private.
 
@@ -205,14 +207,14 @@ and user authorization.
 Accepted deviations: none.
 
 ```text
-package adoption: Not adopted
+package adoption: Adopted
 conformance: Not evaluated
 prospective conformance profile: Documentation
 Coordination: Deferred
 Profile B: Disabled
-proposed decision: TDSLAB-GOV-D001 (Unissued)
+decision: TDSLAB-GOV-D001 (Issued)
 ```
 
-Only a later TensorDSLab Design decision may change adoption state. A later
-conformance evaluation, routing bootstrap, Coordination activation, and Stage
-2 dispatch remain separate actions.
+`TDSLAB-GOV-D001` changes only package adoption state. A later conformance
+evaluation, routing bootstrap, Coordination activation, and Stage 2 dispatch
+remain separate actions.

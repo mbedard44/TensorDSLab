@@ -5,12 +5,13 @@ ownership boundaries, typed public APIs, deterministic behavior, focused tests,
 small coherent changes, and documentation that explains contracts rather than
 narrating code.
 
-## Governance Candidate And Delivery Maturity
+## Governance And Delivery Maturity
 
-The Governance Core `0.1.0` Phase 2 candidate is mapped in the
-[package governance records](docs/governance/index.md). Candidate preparation
-does not change package adoption from `Not adopted`, conformance from
-`Not evaluated`, Coordination from `Deferred`, or Profile B from `Disabled`.
+TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`, bound to
+exact candidate `d634401a853915edeb4f83df4a4943b3553deced` and recorded in the
+[package governance records](docs/governance/index.md). Conformance remains
+`Not evaluated`, Coordination remains `Deferred`, and Profile B remains
+`Disabled`.
 
 The current identity and maturity are:
 
@@ -969,10 +970,10 @@ Also run targeted link, heading, and stale-term searches for the changed
 contracts. Do not create placeholder code or tests merely to exercise a docs
 stage.
 
-When package-governance candidate records change, also run the state,
+When package-governance records change, also run the state,
 manifest, rule-coverage, source-anchor, dormant-trigger, deviation, raw-ID,
 changed-file-allowlist, and forbidden-claim checks defined in
-[Validation](docs/validation.md#governance-candidate-checks). Runtime, import,
+[Validation](docs/validation.md#governance-adoption-checks). Runtime, import,
 dependency, export, integration, environment, and post-merge commands remain
 dormant until their corresponding implemented surfaces exist.
 

@@ -1,15 +1,15 @@
 # Package Governance
 
-Candidate status: Phase 2 candidate prepared for later review; not adopted
-Package adoption: `Not adopted`
+Package adoption: `Adopted`
+Design decision: `TDSLAB-GOV-D001` — Issued
 Conformance finding: `Not evaluated`
 Coordination: `Deferred`
 Profile B: `Disabled`
 
-This directory contains TensorDSLab's package-local candidate for adopting
-Tensor Ecosystem Governance Core `0.1.0`. It is evidence for a future Phase 3
-review and Design decision. It does not itself adopt the core, establish
-conformance, activate a route, or authorize production work.
+TensorDSLab adopts Tensor Ecosystem Governance Core `0.1.0` through
+`TDSLAB-GOV-D001`. The package records here bind the exact accepted candidate
+while leaving conformance, routing, Coordination, and production authority as
+separate states.
 
 ## Exact Inputs And Package Baseline
 
@@ -23,16 +23,18 @@ conformance, activate a route, or authorize production work.
   `343ab10b0ccf54e95fadd70e8cb49ada4480b27149380d39216b2ef1fe9c6916`.
 - TensorDSLab Design and repository source baseline:
   `151b61fdc36475498219ee5fe7b045a3a72c2d09`.
+- Adopted TensorDSLab candidate:
+  `d634401a853915edeb4f83df4a4943b3553deced`.
+- TensorDSLab Design decision: `TDSLAB-GOV-D001` — Issued.
 
-The fixed commit containing this candidate is recorded by the Phase 2
-completion report and supplied unchanged to the future Phase 3 handoff. That
-external commit record avoids placing a self-referential commit hash inside
-the commit it identifies.
+The Phase 3 completion report records the later state-record closeout commit.
+That external record avoids placing a self-referential commit hash inside the
+commit it identifies.
 
-## Candidate Records
+## Adopted Package Records
 
-- [Adoption Candidate](adoption_0_1_0.md): declaration, immutable inputs,
-  current states, non-effects, and the proposed but unissued Design gate.
+- [Adoption Record](adoption_0_1_0.md): declaration, immutable inputs, exact
+  accepted candidate, Design finding, decision, states, and non-effects.
 - [Package Overlay](overlay.md): TensorDSLab-specific workflow, maturity,
   engineering, routing, and verification rules.
 - [Semantic Rule Map](rule_map_0_1_0.md): exactly one mapping for every common
@@ -45,8 +47,8 @@ empty.
 
 TensorDSLab Design owns package architecture, contracts, scope, work orders,
 governance adoption, deviations, and any later conformance finding. The
-ratified common records govern ecosystem process only after package-local
-adoption. They do not create TensorDSLab architecture.
+ratified common records now govern adopted ecosystem process. They do not
+create TensorDSLab scientific or package architecture.
 
 When records conflict, stop the affected work, identify the exact package and
 cross-package sources, and return the contradiction to every affected Design
@@ -84,18 +86,16 @@ Coordination remains Deferred. Procedural requests use the directly verified
 TensorDSLab Design fallback without converting that fallback into registry
 state or letting silence stand for package assent.
 
-## Phase 3 Boundary
+## Adoption Decision And Closeout
 
-Phase 2 ends with a fixed clean candidate commit. A later separately
-authorized Phase 3 must receive that exact commit for direct TensorDSLab Design
-review. If a finding requires any byte change, the current candidate is
-rejected or superseded and the replacement fixed clean commit must receive the
-complete Phase 3 review. The proposed decision `TDSLAB-GOV-D001` remains
-unissued until Design explicitly accepts the exact reviewed commit. Only that
-later decision may change package adoption state.
+TensorDSLab Design reviewed the unchanged fixed candidate
+`d634401a853915edeb4f83df4a4943b3553deced`, accepted it without conditions,
+and issued `TDSLAB-GOV-D001`. No Implementation, Validation, Review,
+independent documentation Review, or Coordination role was activated for the
+documentation-only gate.
 
-Phase 3 is not authorized by these files. Conformance evaluation, Profile B,
-Coordination activation, production dispatch, and cross-package architecture
-remain separate decisions. Phase 3 does not imply Implementation, Validation,
-Review, independent documentation Review, or Coordination activation; any such
-role use requires separate authorization.
+Conformance evaluation, Profile B, Coordination activation, production
+dispatch, cross-package architecture, and dossier maintenance remain separate
+decisions or procedural records. The external working dossier remains
+scientifically accurate, but its `Not adopted` line is a pre-decision snapshot
+superseded for package state by `TDSLAB-GOV-D001`.

@@ -1,21 +1,21 @@
-# Governance Core 0.1.0 Adoption Candidate
+# Governance Core 0.1.0 Adoption
 
-Document status: Phase 2 candidate
-Package adoption state: `Not adopted`
-Proposed Design decision: `TDSLAB-GOV-D001` — Proposed / Unissued
+Document status: Adopted by TensorDSLab Design
+Package adoption state: `Adopted`
+Design decision: `TDSLAB-GOV-D001` — Issued
 Prospective conformance profile: `Documentation`
 Conformance finding: `Not evaluated`
 
-## Candidate Declaration
+## Adoption Declaration
 
 ```text
 governance_core_version: 0.1.0
-package_adoption_state: Not adopted
+package_adoption_state: Adopted
 conformance_profile: Documentation
 conformance_finding: Not evaluated
 package_design_baseline: 151b61fdc36475498219ee5fe7b045a3a72c2d09
-repository_or_document_baseline: fixed Phase 2 candidate commit named by the completion report and Phase 3 handoff
-design_ratification_record: TDSLAB-GOV-D001 (Proposed / Unissued)
+repository_or_document_baseline: d634401a853915edeb4f83df4a4943b3553deced
+design_ratification_record: TDSLAB-GOV-D001 (Issued)
 package_overlay: docs/governance/overlay.md
 semantic_rule_map: docs/governance/rule_map_0_1_0.md
 accepted_deviations: none
@@ -25,10 +25,11 @@ last_verified: 2026-07-10
 verified_by: TensorDSLab/default/Design
 ```
 
-This declaration is deliberately still a candidate. The fixed candidate
-commit is recorded outside itself in the Phase 2 completion report, then
-passed unchanged to Phase 3. The exact source baseline above remains the
-package Design baseline from which this governance-only candidate was derived.
+TensorDSLab Design accepted the exact fixed candidate commit above without
+conditions and issued `TDSLAB-GOV-D001`. The exact source baseline remains the
+governed package Design baseline from which the governance-only candidate was
+derived. The record-only closeout commit is named by the Phase 3 report rather
+than embedded self-referentially in its own contents.
 
 ## Immutable Common Inputs
 
@@ -59,9 +60,10 @@ manifest verification: all three entries verified
 The Council Charter record supplies procedural context. It does not make the
 council or Moderator a TensorDSLab authority.
 
-## Candidate Scope
+## Adopted Candidate Scope
 
-This candidate consists only of:
+The adopted candidate at
+`d634401a853915edeb4f83df4a4943b3553deced` consists only of:
 
 - this declaration;
 - the package [overlay](overlay.md);
@@ -71,14 +73,16 @@ This candidate consists only of:
   `AGENTS.md`, `CONTRIBUTING.md`, `README.md`, `docs/overview.md`, and
   `docs/validation.md`.
 
-`docs/decisions.md` is unchanged. Stage 2 remains Design-complete and
-undispatched. No package code, metadata, test, dependency, cache, adapter,
-registry, route, or production behavior is part of the candidate.
+The Phase 3 closeout adds `TDSLAB-GOV-D001` to `docs/decisions.md` and
+synchronizes only package adoption-state references. Stage 2 remains
+Design-complete and undispatched. No package code, metadata, test, dependency,
+cache, adapter, registry, route, or production behavior is part of the
+adoption.
 
 ## Package Overlay And Rule Map
 
-The package overlay specializes the common process for TensorDSLab without
-copying common text into every package source. It preserves the existing
+The adopted package overlay specializes the common process for TensorDSLab
+without copying common text into every package source. It preserves the existing
 documentation-only Design lifecycle, exact role boundaries, Review-owned
 clean fast-forward closeout, three-dispatches-each-way I/V limit, TensorCore
 consumer boundary, readout semantics, parity rules, and documentary checks.
@@ -94,12 +98,12 @@ Accepted deviations: none.
 
 A future weakening of a common safeguard requires a focused TensorDSLab Design
 decision. If it affects another package, every affected Design authority must
-ratify the same immutable deviation proposal. Phase 2 authorizes no such
+ratify the same immutable deviation proposal. This adoption accepts no such
 change.
 
 ## Pre-Deployment And Compatibility Non-Claims
 
-TensorDSLab is documentation-only and not deployed. The candidate makes no
+TensorDSLab is documentation-only and not deployed. This adoption makes no
 claim of:
 
 - installability or deployability;
@@ -133,12 +137,12 @@ These namespaces remain distinct:
 
 ```text
 Governance Core decision: Ratified
-TensorDSLab package adoption: Not adopted
+TensorDSLab package adoption: Adopted
 prospective conformance profile: Documentation
 TensorDSLab conformance finding: Not evaluated
 Coordination: Deferred
 Profile B: Disabled
-Phase 2 evidence result: candidate preparation only
+Phase 3 Design finding: Accepted without conditions
 Stage 2 production work order: Design-complete / undispatched
 ```
 
@@ -148,15 +152,16 @@ No state implies another.
 
 Profile B remains disabled and no registry or cache exists. The package stores
 no raw task identifier in committed records. TensorDSLab Design is the direct
-procedural fallback while Coordination remains Deferred. This candidate does
-not contact, verify, activate, close, or route work through Coordination.
+procedural fallback while Coordination remains Deferred. The Phase 2 candidate
+did not contact, verify, activate, close, or route work through Coordination,
+and neither does its adoption.
 
 ## Dormant Surfaces
 
 Package metadata, runtime imports, production tests, external bridges,
 stochastic kernels, caches, and integration commands do not exist at the
-source baseline or in this candidate. The overlay and rule map identify the
-authoritative absence evidence and the focused stage that activates each
+source baseline or in the adopted candidate. The overlay and rule map identify
+the authoritative absence evidence and the focused stage that activates each
 obligation. Dormancy is not a whole-rule exclusion and cannot support a
 Production conformance claim.
 
@@ -194,33 +199,43 @@ integration test applies because the corresponding package surfaces do not
 exist; this documentary evidence provides no production or compatibility
 finding.
 
-## Proposed Phase 3 Gate
+## Phase 3 Design Verification And Finding
 
-A later authorized Phase 3 must:
+TensorDSLab Design reverified the unchanged fixed candidate
+`d634401a853915edeb4f83df4a4943b3553deced`, its exact parent and nine-path
+scope, both manifest-file hashes and every manifested entry, all 25 semantic
+map rows and required fields, 42 named source references, every dormant-surface
+absence statement and activation trigger, the empty deviation set, state
+separation, pre-deployment non-claims, privacy, and author-side evidence.
 
-1. receive the exact clean candidate commit named in the Phase 2 report;
-2. have TensorDSLab Design validate and review that fixed commit without
-   modifying architecture or current states;
-3. reject or supersede that candidate if a finding requires any byte change,
-   then subject the replacement fixed clean commit to the complete Phase 3
-   review before a decision;
-4. confirm that the candidate presented for decision is exactly the fixed
-   commit that completed Phase 3 review;
-5. ask TensorDSLab Design to issue, revise, defer, or reject the proposed
-   decision; and
-6. if and only if Design issues `TDSLAB-GOV-D001`, perform the separately
-   authorized controlled state-record closeout.
+Design finding: accepted without conditions. No finding required candidate
+revision, so Design issued `TDSLAB-GOV-D001` against that exact commit. No
+Implementation, Validation, Review, independent documentation Review, or
+Coordination role was activated.
 
-The final Design decision and closeout are not part of Phase 2. Phase 3 does
-not imply use of Implementation, Validation, Review, independent documentation
-Review, or Coordination; any such role activation requires separate
-authorization.
+The Design-qualified ecosystem dossier remains accurate on mission,
+ownership, documentation-only maturity, designed-versus-implemented
+boundaries, scientific qualifications, and Deferred Coordination. Its
+`Not adopted` line and remaining-adoption-prerequisite language are a
+pre-decision snapshot superseded for package state by `TDSLAB-GOV-D001`.
+Conformance remains `Not evaluated`, and no sibling dossier edit is part of
+this package closeout.
+
+## Design Decision And Closeout
+
+`TDSLAB-GOV-D001` adopts Governance Core `0.1.0` together with the exact
+TensorDSLab overlay and semantic map accepted above. The decision is recorded
+in `docs/decisions.md`. The Phase 3 report names the closeout commit, which is
+kept out of its own bytes to avoid a self-reference.
+
+This closeout changes only package adoption and the records that state it. It
+does not evaluate conformance, activate Coordination or Profile B, create
+routing state, or dispatch Stage 2.
 
 ## Non-Effects
 
-This candidate does not:
+This adoption does not:
 
-- adopt Governance Core `0.1.0`;
 - establish Documentation or Production conformance;
 - activate Profile B, a registry, a cache, a route, or Coordination;
 - accept a dependency, data-flow, device, compatibility, migration, adapter,

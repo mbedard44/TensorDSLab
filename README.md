@@ -131,8 +131,8 @@ documentation is committed, but Stage 2 still has no selected
 production-dispatch base, implementation branch, or role handoff. There is not
 yet a production package, test suite, or cache schema.
 
-A package-local Governance Core `0.1.0` Phase 2 adoption candidate is prepared
-for later review. Package adoption remains `Not adopted`, conformance remains
+TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`, bound to
+exact candidate `d634401a853915edeb4f83df4a4943b3553deced`. Conformance remains
 `Not evaluated`, Coordination remains `Deferred`, and Profile B remains
 `Disabled`. This active-development, pre-deployment record makes no
 deployability, backward-compatibility, or broad compatibility claim. See the

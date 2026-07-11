@@ -47,7 +47,7 @@ divergence.
 Validation and Review should treat violations of accepted `CONTRIBUTING.md`
 standards as real findings, not style-only comments.
 
-## Governance Candidate Authority And State
+## Governance Authority And State
 
 TensorDSLab Design owns this package's architecture, public contracts,
 ownership boundaries, accepted dependencies, documentation, work orders,
@@ -65,20 +65,20 @@ baseline. `AGENTS.md` governs roles, handoffs, routing, work-order gates, and
 verification responsibilities. `CONTRIBUTING.md` governs engineering quality,
 API design, typing, validation, testing, documentation, and code style.
 
-The Governance Core `0.1.0` material under `docs/governance/` is a package-local
-Phase 2 candidate only. It does not change the current states:
+TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`, bound to
+exact accepted candidate `d634401a853915edeb4f83df4a4943b3553deced`. The
+current package states are:
 
 ```text
-package_adoption_state: Not adopted
+package_adoption_state: Adopted
 conformance_finding: Not evaluated
 coordination_status: Deferred
 registry_storage_profile: Disabled
 ```
 
-These states are independent. Common ratification, a candidate semantic map,
-documentation evidence, and an undispatched work order do not constitute
-package adoption, conformance, routing activation, Coordination activation, or
-production authority.
+These states are independent. Package adoption does not constitute conformance,
+routing activation, Coordination activation, production authority, or Stage 2
+dispatch.
 
 Design may operate alone during documentation-only maturity. Design,
 Implementation, Validation, and Review are persistent logical roles per
@@ -108,10 +108,11 @@ logical package, workspace, role, and work-order keys are primary. Raw platform
 route identifiers are optional private attributes and must not appear in
 committed package records. Profile B is disabled and not instantiated: do not
 create `.agents`, an ignore rule, a committed route table, a private live-route
-store, or a Moderator cache because the common core was ratified or a candidate
-was prepared. A discrepancy pauses only the affected routing and returns to
-Design. Profile B requires a later focused Design decision covering the private
-path, ignore policy, permissions/operators, sharing,
+store, or a Moderator cache because the common core was ratified, a candidate
+was prepared, or package adoption was issued. A discrepancy pauses only the
+affected routing and returns to Design. Profile B requires a later focused
+Design decision covering the private path, ignore policy,
+permissions/operators, sharing,
 replacement/history/deletion, verification, and discrepancy procedure.
 
 TensorDSLab is in active development and pre-deployment. It makes no
@@ -912,8 +913,8 @@ residual risks, and intentionally deferred items.
 
 Update `docs/governance/` when package adoption state, conformance evidence,
 semantic rule mappings, deviations, routing posture, Coordination status, or
-the active Governance Core candidate changes. A candidate record must not be
-described as an issued package decision.
+the adopted Governance Core version changes. Governance records must
+distinguish a proposed decision from an issued package decision.
 
 Implementation handoffs should explicitly say which docs were updated, or why
 no docs update was needed. Validation and Review should run targeted stale-name
