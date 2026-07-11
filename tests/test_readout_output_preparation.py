@@ -13,6 +13,7 @@ from tensor_dslab.readout import (
     READOUT_NOISE_WAVEFORM_FIELD_ID,
     READOUT_PHOTOELECTRONS_FIELD_ID,
     READOUT_PURE_WAVEFORM_FIELD_ID,
+    ReadoutCollection,
     build_readout_output_buffer,
     build_readout_result_buffer,
 )
@@ -33,6 +34,50 @@ TARGET_DTYPES = {
     READOUT_ANALOG_WAVEFORM_FIELD_ID: torch.float32,
     READOUT_DIGITIZED_WAVEFORM_FIELD_ID: torch.int32,
 }
+
+
+def make_distinctive_collection(
+    field_ids: tuple[TensorFieldId, ...] = READOUT_FIELD_IDS.ids,
+    *,
+    floating_dtype: torch.dtype = torch.float32,
+    storage_kind: str = "contiguous",
+) -> ReadoutCollection:
+    if storage_kind not in ("contiguous", "noncontiguous", "expanded"):
+        raise ValueError("unknown storage_kind")
+    layout = make_layout()
+    shape = tuple(layout.axes.size(axis.id) for axis in layout.axes.axes)
+    tensor_overrides: dict[TensorFieldId, torch.Tensor] = {}
+    for field_index, field_id in enumerate(field_ids):
+        dtype = (
+            TARGET_DTYPES[field_id]
+            if field_id
+            in (
+                READOUT_PHOTOELECTRONS_FIELD_ID,
+                READOUT_DIGITIZED_WAVEFORM_FIELD_ID,
+            )
+            else floating_dtype
+        )
+        value_offset = (field_index + 1) * 100
+        if storage_kind == "expanded":
+            base = torch.full((1, *shape[1:]), value_offset, dtype=dtype)
+            tensor = base.expand(shape)
+        else:
+            storage_shape = (
+                (*shape, 2) if storage_kind == "noncontiguous" else shape
+            )
+            base = torch.arange(
+                1,
+                torch.tensor(storage_shape).prod().item() + 1,
+                dtype=dtype,
+            ).reshape(storage_shape) + value_offset
+            tensor = base[..., 0] if storage_kind == "noncontiguous" else base
+        tensor_overrides[field_id] = tensor
+    return make_collection(
+        field_ids,
+        layout=layout,
+        floating_dtype=floating_dtype,
+        tensor_overrides=tensor_overrides,
+    )
 
 
 def make_atomic_buffer(source, target_field_id):
@@ -157,7 +202,16 @@ class ReadoutOutputPreparationTest(unittest.TestCase):
                 for index, field_id in enumerate(canonical)
                 if mask & (1 << index)
             )
-            source_subset = make_collection(subset)
+            source_subset = make_distinctive_collection(subset)
+            source_records = dict(source_subset.fields)
+            source_values = {
+                field_id: field.tensor.clone()
+                for field_id, field in source_subset.fields.items()
+            }
+            source_storage = {
+                storage_pointer(field.tensor)
+                for field in source_subset.fields.values()
+            }
             for target in canonical:
                 if not requirements[target].issubset(source_subset.fields):
                     continue
@@ -167,24 +221,46 @@ class ReadoutOutputPreparationTest(unittest.TestCase):
                     field_id for field_id in canonical if field_id in expected_set
                 )
                 self.assertEqual(tuple(result.fields), expected_order)
+                for field_id in expected_order:
+                    if field_id == target:
+                        self.assertIsNot(
+                            result.field(field_id),
+                            source_records.get(field_id),
+                        )
+                    else:
+                        self.assertIs(result.field(field_id), source_records[field_id])
+                self.assertNotIn(
+                    storage_pointer(result.tensor(target)),
+                    source_storage,
+                )
+                self.assertEqual(result.field(target).metadata, {})
+                for field_id, source_field in source_subset.fields.items():
+                    self.assertIs(source_field, source_records[field_id])
+                    self.assertTrue(
+                        torch.equal(source_field.tensor, source_values[field_id])
+                    )
                 checked += 1
         self.assertEqual(checked, 207)
 
-    def test_atomic_output_shares_only_unaffected_field_records(self) -> None:
-        source = make_collection()
-        result = make_atomic_buffer(source, READOUT_CHARGE_FIELD_ID)
-        self.assertIs(
-            result.field(READOUT_PHOTOELECTRONS_FIELD_ID),
-            source.field(READOUT_PHOTOELECTRONS_FIELD_ID),
-        )
-        self.assertIs(
-            result.field(READOUT_NOISE_WAVEFORM_FIELD_ID),
-            source.field(READOUT_NOISE_WAVEFORM_FIELD_ID),
-        )
-        self.assertIsNot(
-            result.field(READOUT_CHARGE_FIELD_ID),
-            source.field(READOUT_CHARGE_FIELD_ID),
-        )
+    def test_atomic_output_shares_every_unaffected_record_for_all_targets(self) -> None:
+        source = make_distinctive_collection()
+        original_records = dict(source.fields)
+        original_values = {
+            field_id: field.tensor.clone() for field_id, field in source.fields.items()
+        }
+        for target in READOUT_FIELD_IDS.ids:
+            with self.subTest(target=target):
+                result = make_atomic_buffer(source, target)
+                for field_id, field in result.fields.items():
+                    if field_id == target:
+                        self.assertIsNot(field, original_records[field_id])
+                    else:
+                        self.assertIs(field, original_records[field_id])
+                for field_id, field in source.fields.items():
+                    self.assertIs(field, original_records[field_id])
+                    self.assertTrue(
+                        torch.equal(field.tensor, original_values[field_id])
+                    )
 
     def test_atomic_target_is_distinct_zero_initialized_and_role_typed(self) -> None:
         source = make_collection()
@@ -238,14 +314,42 @@ class ReadoutOutputPreparationTest(unittest.TestCase):
             self.assertIs(result.field(retained), source.field(retained))
             self.assertFalse(result.tensor(retained).is_contiguous())
 
-    def test_atomic_target_never_aliases_source_or_retained_storage(self) -> None:
-        source = make_collection()
-        result = make_atomic_buffer(source, READOUT_CHARGE_FIELD_ID)
-        target_pointer = storage_pointer(result.tensor(READOUT_CHARGE_FIELD_ID))
-        self.assertNotIn(
-            target_pointer,
-            {storage_pointer(field.tensor) for field in source.fields.values()},
-        )
+    def test_every_atomic_target_is_fresh_for_noncontiguous_and_expanded_sources(
+        self,
+    ) -> None:
+        for storage_kind in ("noncontiguous", "expanded"):
+            source = make_distinctive_collection(storage_kind=storage_kind)
+            if storage_kind == "noncontiguous":
+                self.assertTrue(
+                    all(
+                        not field.tensor.is_contiguous()
+                        for field in source.fields.values()
+                    )
+                )
+            else:
+                self.assertTrue(
+                    all(
+                        field.tensor.stride()[0] == 0
+                        for field in source.fields.values()
+                    )
+                )
+            source_storage = {
+                storage_pointer(field.tensor) for field in source.fields.values()
+            }
+            source_values = {
+                field_id: field.tensor.clone()
+                for field_id, field in source.fields.items()
+            }
+            for target in READOUT_FIELD_IDS.ids:
+                with self.subTest(storage_kind=storage_kind, target=target):
+                    result = make_atomic_buffer(source, target)
+                    target_tensor = result.tensor(target)
+                    self.assertTrue(target_tensor.is_contiguous())
+                    self.assertNotIn(storage_pointer(target_tensor), source_storage)
+                    for field_id, field in source.fields.items():
+                        self.assertTrue(
+                            torch.equal(field.tensor, source_values[field_id])
+                        )
 
     def test_atomic_digitized_target_installs_exact_spec(self) -> None:
         source = make_collection(
@@ -304,9 +408,27 @@ class ReadoutOutputPreparationTest(unittest.TestCase):
             digitized_waveform_spec=spec,
         )
         self.assertEqual(
-            tuple(with_digitized.fields)[-1],
-            READOUT_DIGITIZED_WAVEFORM_FIELD_ID,
+            tuple(with_digitized.fields),
+            (
+                READOUT_PHOTOELECTRONS_FIELD_ID,
+                READOUT_CHARGE_FIELD_ID,
+                READOUT_PURE_WAVEFORM_FIELD_ID,
+                READOUT_NOISE_WAVEFORM_FIELD_ID,
+                READOUT_ANALOG_WAVEFORM_FIELD_ID,
+                READOUT_DIGITIZED_WAVEFORM_FIELD_ID,
+            ),
         )
+        expected_dtypes = {
+            READOUT_PHOTOELECTRONS_FIELD_ID: torch.int64,
+            READOUT_CHARGE_FIELD_ID: torch.float64,
+            READOUT_PURE_WAVEFORM_FIELD_ID: torch.float64,
+            READOUT_NOISE_WAVEFORM_FIELD_ID: torch.float64,
+            READOUT_ANALOG_WAVEFORM_FIELD_ID: torch.float64,
+            READOUT_DIGITIZED_WAVEFORM_FIELD_ID: torch.int32,
+        }
+        for field_id, dtype in expected_dtypes.items():
+            self.assertEqual(with_digitized.tensor(field_id).dtype, dtype)
+            self.assertEqual(with_digitized.field(field_id).metadata, {})
         self.assertIs(with_digitized.digitized_waveform_spec, spec)
         with self.assertRaises(ValueError):
             build_readout_output_buffer(
@@ -330,47 +452,78 @@ class ReadoutOutputPreparationTest(unittest.TestCase):
         )
         self.assertEqual(alternate_output.sample_dimension, 0)
 
-    def test_full_output_shares_photoelectrons_only_when_not_replaced(self) -> None:
-        source = make_collection()
-        shared = build_readout_output_buffer(
-            source,
-            floating_dtype=torch.float32,
-            replace_photoelectrons=False,
-        )
-        replaced = build_readout_output_buffer(
-            source,
-            floating_dtype=torch.float32,
-            replace_photoelectrons=True,
-        )
-        self.assertIs(
-            shared.field(READOUT_PHOTOELECTRONS_FIELD_ID),
-            source.field(READOUT_PHOTOELECTRONS_FIELD_ID),
-        )
-        self.assertIsNot(
-            replaced.field(READOUT_PHOTOELECTRONS_FIELD_ID),
-            source.field(READOUT_PHOTOELECTRONS_FIELD_ID),
-        )
-        for field_id in (
-            READOUT_CHARGE_FIELD_ID,
-            READOUT_PURE_WAVEFORM_FIELD_ID,
-            READOUT_NOISE_WAVEFORM_FIELD_ID,
-            READOUT_ANALOG_WAVEFORM_FIELD_ID,
-        ):
-            self.assertIsNot(shared.field(field_id), source.field(field_id))
+    def test_full_output_ownership_for_both_replacement_modes_and_source_strides(
+        self,
+    ) -> None:
+        for storage_kind in ("contiguous", "noncontiguous", "expanded"):
+            source = make_distinctive_collection(storage_kind=storage_kind)
+            source_records = dict(source.fields)
+            source_values = {
+                field_id: field.tensor.clone()
+                for field_id, field in source.fields.items()
+            }
+            source_storage = {
+                storage_pointer(field.tensor) for field in source.fields.values()
+            }
+            for replace_photoelectrons in (False, True):
+                with self.subTest(
+                    storage_kind=storage_kind,
+                    replace_photoelectrons=replace_photoelectrons,
+                ):
+                    result = build_readout_output_buffer(
+                        source,
+                        floating_dtype=torch.float64,
+                        replace_photoelectrons=replace_photoelectrons,
+                        digitized_waveform_spec=make_digitized_spec(),
+                    )
+                    generated_ids = set(result.fields)
+                    if replace_photoelectrons:
+                        self.assertIsNot(
+                            result.field(READOUT_PHOTOELECTRONS_FIELD_ID),
+                            source_records[READOUT_PHOTOELECTRONS_FIELD_ID],
+                        )
+                    else:
+                        self.assertIs(
+                            result.field(READOUT_PHOTOELECTRONS_FIELD_ID),
+                            source_records[READOUT_PHOTOELECTRONS_FIELD_ID],
+                        )
+                        generated_ids.remove(READOUT_PHOTOELECTRONS_FIELD_ID)
+
+                    generated_storage = []
+                    for field_id in generated_ids:
+                        field = result.field(field_id)
+                        self.assertIsNot(field, source_records[field_id])
+                        self.assertTrue(field.tensor.is_contiguous())
+                        pointer = storage_pointer(field.tensor)
+                        self.assertNotIn(pointer, source_storage)
+                        generated_storage.append(pointer)
+                    self.assertEqual(
+                        len(generated_storage), len(set(generated_storage))
+                    )
+                    for field_id, field in source.fields.items():
+                        self.assertIs(field, source_records[field_id])
+                        self.assertTrue(
+                            torch.equal(field.tensor, source_values[field_id])
+                        )
 
     def test_full_generated_fields_are_distinct_zero_initialized_storage(self) -> None:
-        source = make_collection()
+        source = make_distinctive_collection()
         result = build_readout_output_buffer(
             source,
             floating_dtype=torch.float64,
             replace_photoelectrons=True,
             digitized_waveform_spec=make_digitized_spec(),
         )
+        source_storage = {
+            storage_pointer(field.tensor) for field in source.fields.values()
+        }
         pointers = []
         for field in result.fields.values():
             self.assertEqual(torch.count_nonzero(field.tensor).item(), 0)
             self.assertTrue(field.tensor.is_contiguous())
-            pointers.append(storage_pointer(field.tensor))
+            pointer = storage_pointer(field.tensor)
+            self.assertNotIn(pointer, source_storage)
+            pointers.append(pointer)
         self.assertEqual(len(pointers), len(set(pointers)))
 
     def test_generated_writable_storage_is_internally_nonoverlapping(self) -> None:
@@ -405,7 +558,7 @@ class ReadoutOutputPreparationTest(unittest.TestCase):
         )
 
     def test_preparation_never_mutates_source(self) -> None:
-        source = make_collection()
+        source = make_distinctive_collection()
         original_fields = dict(source.fields)
         original_values = {
             field_id: field.tensor.clone()

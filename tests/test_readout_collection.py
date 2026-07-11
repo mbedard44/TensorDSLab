@@ -18,7 +18,9 @@ from tensor_core import (
 from tensor_dslab.readout import (
     AdcQuantization,
     DigitizedWaveformSpec,
+    READOUT_ANALOG_WAVEFORM_FIELD_ID,
     READOUT_CHANNEL_AXIS_ID,
+    READOUT_CHARGE_FIELD_ID,
     READOUT_DIGITIZED_WAVEFORM_FIELD_ID,
     READOUT_EXAMPLE_AXIS_ID,
     READOUT_FIELD_IDS,
@@ -44,6 +46,31 @@ from tests.readout_fixtures import (
 
 
 class ReadoutCollectionTest(unittest.TestCase):
+    def test_field_constants_have_exact_values_and_canonical_order(self) -> None:
+        expected = tuple(
+            TensorFieldId(value)
+            for value in (
+                "readout.photoelectrons",
+                "readout.charge",
+                "readout.waveform.pure",
+                "readout.waveform.noise",
+                "readout.waveform.analog",
+                "readout.waveform.digitized",
+            )
+        )
+        self.assertEqual(
+            (
+                READOUT_PHOTOELECTRONS_FIELD_ID,
+                READOUT_CHARGE_FIELD_ID,
+                READOUT_PURE_WAVEFORM_FIELD_ID,
+                READOUT_NOISE_WAVEFORM_FIELD_ID,
+                READOUT_ANALOG_WAVEFORM_FIELD_ID,
+                READOUT_DIGITIZED_WAVEFORM_FIELD_ID,
+            ),
+            expected,
+        )
+        self.assertEqual(READOUT_FIELD_IDS.ids, expected)
+
     def test_accepts_all_sixty_three_nonempty_canonical_field_subsets(self) -> None:
         field_ids = READOUT_FIELD_IDS.ids
         accepted = 0
@@ -408,6 +435,53 @@ class ReadoutCollectionTest(unittest.TestCase):
                 (READOUT_PHOTOELECTRONS_FIELD_ID,),
                 device=torch.device("meta"),
             )
+
+    def test_accepts_signed_finite_waveforms_for_both_float_dtypes(self) -> None:
+        field_ids = (
+            READOUT_PURE_WAVEFORM_FIELD_ID,
+            READOUT_NOISE_WAVEFORM_FIELD_ID,
+            READOUT_ANALOG_WAVEFORM_FIELD_ID,
+        )
+        for dtype in (torch.float32, torch.float64):
+            tensors = {
+                field_id: torch.linspace(
+                    -float(index + 1),
+                    float(index + 2),
+                    steps=16,
+                    dtype=dtype,
+                ).reshape(2, 2, 4)
+                for index, field_id in enumerate(field_ids)
+            }
+            with self.subTest(dtype=dtype):
+                collection = make_collection(
+                    field_ids,
+                    floating_dtype=dtype,
+                    tensor_overrides=tensors,
+                )
+                for field_id in field_ids:
+                    self.assertEqual(collection.tensor(field_id).dtype, dtype)
+                    self.assertTrue(
+                        torch.equal(collection.tensor(field_id), tensors[field_id])
+                    )
+                    self.assertLess(collection.tensor(field_id).min().item(), 0.0)
+                    self.assertGreater(collection.tensor(field_id).max().item(), 0.0)
+
+    def test_accepts_inclusive_digitized_adc_boundaries(self) -> None:
+        for bit_depth, adc_max in ((12, 4095), (16, 65535)):
+            tensor = torch.tensor(
+                [0, adc_max] * 8,
+                dtype=torch.int32,
+            ).reshape(2, 2, 4)
+            with self.subTest(bit_depth=bit_depth):
+                collection = make_collection(
+                    (READOUT_DIGITIZED_WAVEFORM_FIELD_ID,),
+                    tensor_overrides={READOUT_DIGITIZED_WAVEFORM_FIELD_ID: tensor},
+                    digitized_waveform_spec=make_digitized_spec(bit_depth=bit_depth),
+                )
+                result = collection.tensor(READOUT_DIGITIZED_WAVEFORM_FIELD_ID)
+                self.assertEqual(result.dtype, torch.int32)
+                self.assertEqual(result.min().item(), 0)
+                self.assertEqual(result.max().item(), adc_max)
 
     def test_requires_digitized_spec_exactly_with_digitized_field(self) -> None:
         with self.assertRaises(ValueError):
