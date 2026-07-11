@@ -124,12 +124,13 @@ global-offset rule.
 
 ## Current Status
 
-The Stage 1 post-binned readout architecture is Design-complete, and the
-repository remains documentation-only. The Stage 2 production work order is
-also Design-complete but has not been dispatched. The synchronized Design
-documentation is committed, but Stage 2 still has no selected
-production-dispatch base, implementation branch, or role handoff. There is not
-yet a production package, test suite, or cache schema.
+The Stage 1 post-binned readout architecture is Design-complete. Stage 2 was
+dispatched on 2026-07-11 from exact clean package baseline
+`d097cb3cdde185c6814116e886e7844ea3f55178` through persistent package-owned
+Implementation, Validation, and Review roles. The accepted `main` baseline
+remains documentation-only until that fixed production candidate is validated,
+independently reviewed, and merged. There is not yet an accepted production
+package, test suite, or cache schema on `main`.
 
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`, bound to
 exact candidate `d634401a853915edeb4f83df4a4943b3553deced`. Conformance remains

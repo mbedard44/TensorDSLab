@@ -1,7 +1,8 @@
 # Post-Binned Readout Architecture
 
-Status: active Design contract for the first TensorDSLab MVP. Production code
-has not been dispatched.
+Status: active Design contract for the first TensorDSLab MVP. Stage 2's
+structural package-and-collection foundation is dispatched; scientific
+transform execution remains undispatched.
 
 ## Purpose
 

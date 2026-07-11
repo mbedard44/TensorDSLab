@@ -17,22 +17,24 @@ The current identity and maturity are:
 
 ```text
 Project/display name: TensorDSLab
-Python import: tensor_dslab (accepted future import root; not implemented)
-Distribution name: not yet accepted or implemented
+Python import: tensor_dslab (accepted Stage 2 import root; not yet on main)
+Distribution name: tensor-dslab (accepted Stage 2 spelling; not yet on main)
 Delivery maturity: active development / pre-deployment
-Package maturity: documentation-only
+Package maturity: Stage 2 production loop active; accepted main is documentation-only
 ```
 
-Stage 1 and Stage 2 are Design-complete, but Stage 2 is undispatched. There is
-no accepted package metadata, production package, test suite, installed runtime
-dependency, or deployable artifact. TensorDSLab therefore makes no
+Stage 1 and the Stage 2 work order are Design-complete. Stage 2 was dispatched
+on 2026-07-11, but no production candidate is accepted until fixed-commit
+Validation, independent Review, and clean merge complete. There is no accepted
+package metadata, production package, test suite, installed runtime dependency,
+or deployable artifact on `main`. TensorDSLab therefore makes no
 installability, deployability, release-readiness, backward-compatibility, or
 broad cross-package compatibility claim. Later compatibility evidence must name
 the exact repository and dependency commits, Python and dependency versions,
 device/backend, and execution mode tested.
 
-The proposed `tensor-dslab` distribution spelling in the Stage 2 work order is
-a future metadata candidate, not a current distribution identity. GPU residency
+The `tensor-dslab` distribution spelling is accepted for the Stage 2 candidate,
+not yet an installed or released distribution identity. GPU residency
 and no-silent-host-materialization requirements are TensorDSLab Design
 constraints for future boundaries, not evidence that any TensorG4DS,
 TensorCore, or TensorML baseline is compatible. A breaking change affecting
@@ -189,12 +191,11 @@ when there is a real concept, behavior, or contract to house.
 
 The current TensorCore Design snapshot is `0.6.0`, as recorded in
 [TensorCore Integration Architecture](docs/architecture/tensors.md#design-baseline).
-The undispatched Stage 2 work order names exact TensorCore commit
-`dc554994061183776f23f65860a0594516074f2e` as a future dependency candidate.
-Neither is installed or tested at the current documentation-only baseline, and
-neither is cross-package compatibility evidence. Accepting and implementing
-package metadata activates direct dependency declaration plus exact-version,
-environment, device/backend, and execution-mode validation.
+The dispatched Stage 2 work order retains exact TensorCore commit
+`dc554994061183776f23f65860a0594516074f2e` as its dependency point. The
+candidate must verify that exact dependency with its named Python, PyTorch,
+and device/backend environment. Neither the Design pin nor a passing exact
+tuple is broad cross-package compatibility evidence.
 
 TensorDSLab should use TensorCore for generic tensor mechanics, not fork or
 mirror them. Code that needs generic tensor identity, layout, field,

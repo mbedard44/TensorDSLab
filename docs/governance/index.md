@@ -82,6 +82,11 @@ Profile B is disabled and not instantiated. There is no package registry,
 cache, or Active Coordination route. Raw task identifiers are private and must
 not appear in durable package records.
 
+The package-owned persistent Implementation, Validation, and Review roles were
+activated and privately verified for the dispatched Stage 2 work order on
+2026-07-11. Their stable logical names appear in that work order; activation
+does not create Profile B, registry, cache, or Coordination state.
+
 Coordination remains Deferred. Procedural requests use the directly verified
 TensorDSLab Design fallback without converting that fallback into registry
 state or letting silence stand for package assent.

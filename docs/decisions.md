@@ -466,10 +466,10 @@ candidate maps every `OP-*` and `ENG-*` rule exactly once, accepts six rules
 directly, records 19 stronger local rules, uses no whole-rule Not-applicable
 disposition, and accepts no deviation.
 
-This decision changes only the TensorDSLab package-adoption state to
-`Adopted`. Conformance remains `Not evaluated`, Coordination remains
-`Deferred`, Profile B remains `Disabled`, and Stage 2 remains Design-complete
-and undispatched. It does not accept or implement a scientific contract,
+This decision changed only the TensorDSLab package-adoption state to
+`Adopted`. At issuance, conformance remained `Not evaluated`, Coordination
+remained `Deferred`, Profile B remained `Disabled`, and Stage 2 remained
+Design-complete and undispatched. It did not accept or implement a scientific contract,
 dependency, device or data-flow boundary, compatibility or migration claim,
 API, production surface, deployment state, backward-compatibility guarantee,
 route, registry, cache, or council decision.
@@ -509,15 +509,15 @@ field-scoped buffer contract.
 
 ## Open
 
-### First Production Dispatch Handoff
+### Later Production Dispatch Handoffs
 
-The Design-complete Stage 2 work order records the first production slice's
-exact target files, public constructor spelling, dependency declaration, tests,
-and validation commands. Those work-order and collection-level decisions are
-no longer open. Before dispatch, Design must still record the exact clean
-production base, confirm the synchronized sources have not drifted, and name
-the persistent role handoff and bounded loop. Those dispatch facts remain open
-because no production work has been dispatched.
+Stage 2 was dispatched on 2026-07-11 from exact clean package baseline
+`d097cb3cdde185c6814116e886e7844ea3f55178` through the verified logical
+Implementation, Validation, and Review routes and the repository's three-round
+maximum I/V loop. Its work-order path is the stable package-owned key. Later
+production stages still require their own focused committed work order, exact
+clean base, verified routes, bounded loop, fixed-commit Review gate, and clean
+closeout expectation; Stage 2 dispatch does not pre-authorize them.
 
 ### Workspace Inventory And Stronger Allocation Guarantees
 

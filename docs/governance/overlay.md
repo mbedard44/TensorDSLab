@@ -28,18 +28,18 @@ accepted contracts; they do not create architecture accidentally.
 
 ```text
 project/display name: TensorDSLab
-Python import package: tensor_dslab (accepted future import root; not implemented)
-distribution name: not yet accepted or implemented
+Python import package: tensor_dslab (accepted Stage 2 import root; not yet on main)
+distribution name: tensor-dslab (accepted Stage 2 spelling; not yet on main)
 delivery maturity: active development / pre-deployment
-package maturity: documentation-only
+package maturity: Stage 2 production loop active; accepted main is documentation-only
 Stage 1: Design-complete
-Stage 2: Design-complete / undispatched
+Stage 2: Dispatched / production candidate not yet accepted
 ```
 
-There is no `pyproject.toml`, `tensor_dslab/` package, test suite, installed
-runtime dependency, or implementation branch. Stage 2's provisional metadata
-is a work-order target, not evidence that the package is installable,
-published, or deployed.
+There is no accepted `pyproject.toml`, `tensor_dslab/` package, test suite, or
+installed runtime dependency on `main`. Stage 2's feature branch and proposed
+metadata are not evidence that the package is installable, published, or
+deployed before fixed-commit Validation, independent Review, and clean merge.
 
 ## Pre-Deployment Compatibility Posture
 

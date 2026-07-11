@@ -5,9 +5,10 @@ boundaries. Tests should not mirror private implementation structure.
 
 ## Current Documentation Baseline
 
-TensorDSLab is in a documentation-only Design stage. There is no production
-package, package metadata, test suite, cache schema, or accepted runtime
-dependency yet.
+The accepted `main` baseline is documentation-only while the dispatched Stage
+2 candidate proceeds through Implementation, fixed-commit Validation, and
+independent Review. There is no accepted production package, package metadata,
+test suite, cache schema, or runtime dependency on `main` until closeout.
 
 Documentation-only Design changes remain in the Design thread unless the user
 requests independent Validation or Review. Run:
@@ -45,10 +46,10 @@ against all of these checks:
   `151b61fdc36475498219ee5fe7b045a3a72c2d09`, exact accepted candidate
   `d634401a853915edeb4f83df4a4943b3553deced`, its exact parent, and its
   authorized nine-path scope;
-- confirm that `TDSLAB-GOV-D001` is issued once and that package adoption is
-  `Adopted` while conformance remains `Not evaluated`, Coordination remains
-  `Deferred`, Profile B remains `Disabled`, and Stage 2 remains
-  Design-complete and undispatched;
+- confirm that `TDSLAB-GOV-D001` is issued once and records its issuance-time
+  state accurately: package adoption `Adopted`, conformance `Not evaluated`,
+  Coordination `Deferred`, Profile B `Disabled`, and Stage 2 Design-complete
+  and undispatched at that historical gate;
 - map `OP-01` through `OP-13` and `ENG-01` through `ENG-12` exactly once, with
   every required field, a resolvable package source and section, baseline,
   rationale, and evidence;

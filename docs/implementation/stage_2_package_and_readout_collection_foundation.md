@@ -1,8 +1,8 @@
 # Stage 2 Package And Readout Collection Foundation Work Order
 
-Status: Design-complete work order. Production implementation has not been
-dispatched. The synchronized Design documentation is committed, but dispatch
-still requires an exact clean production base and named role tasks.
+Status: Dispatched. The user authorized production execution on 2026-07-11
+from the exact clean Design baseline recorded below. Implementation owns the
+feature branch; Validation and Review remain independent fixed-commit gates.
 
 ## Task
 
@@ -42,22 +42,55 @@ repository commit:
 29c5589358b4ad38afe68596a4f77efc52464ee6
 ```
 
-That commit is historical provenance, not an implementation base. Phase 1
-commits the synchronized Design documentation containing this work order; it
-does not dispatch implementation or select the Stage 2 production base. Before
-dispatch, Design must record the exact then-current clean base in this section,
-verify that the accepted documentation has not drifted, and name the required
-role tasks.
+That commit is historical provenance, not an implementation base. The exact
+clean package baseline accepted for Stage 2 production dispatch is:
 
-Intended implementation branch:
+```text
+d097cb3cdde185c6814116e886e7844ea3f55178
+```
+
+The governed Design base remains:
+
+```text
+151b61fdc36475498219ee5fe7b045a3a72c2d09
+```
+
+Implementation branch:
 
 ```text
 codex/stage-2-readout-collection-foundation
 ```
 
-The production Implementation/Validation/Review loop begins only after that
-dispatch. The documentation work that defines this order remains in the Design
-thread as the user requested.
+The package-owned logical execution routes are:
+
+```text
+TensorDSLab/default/Implementation
+TensorDSLab/default/Validation
+TensorDSLab/default/Review
+```
+
+Their raw platform route identifiers are private and do not belong in this
+record. Each route was created for the TensorDSLab workspace and independently
+bootstrapped against the exact clean dispatch baseline before production work.
+Coordination remains Deferred and is not part of this route.
+
+The accepted Implementation/Validation loop budget is at most three
+Implementation-to-Validation and three Validation-to-Implementation
+dispatches, stopping earlier on clearance or any `AGENTS.md` stop condition.
+Review receives only a Validation-cleared fixed commit. Review owns the clean
+fast-forward merge and post-merge verification after explicit clearance.
+
+The work-order key is this committed path. Its execution states are:
+
+```text
+Design-complete -> Dispatched -> Implementation candidate
+  -> Validation-cleared -> Review-cleared -> Merged / Closed
+```
+
+`Returned to Design` and `Blocked` are terminal states for the current
+execution attempt; neither authorizes scope expansion. The documentation work
+that defined this order remained in Design, while production code, tests, and
+required implementation-status synchronization now belong to Implementation.
 
 ## Source Of Truth
 
@@ -83,6 +116,22 @@ Use TensorCore `0.6.0` at exact commit:
 ```text
 dc554994061183776f23f65860a0594516074f2e
 ```
+
+Design reconfirmed this dependency point at dispatch. It remains the published
+`origin/main` point available to the direct reference, and the later local
+TensorCore main has no change under `tensor_core/` or `tests/` relative to this
+commit. The dispatch environment uses Python `3.13.11` and PyTorch `2.12.1`;
+that exact tuple is evidence for this stage, not a broad compatibility claim.
+
+The dispatch checkpoint exercised public `TensorCollection.empty_like()`,
+`TensorCollection.zeros_like()`, and `require_compatible_collection(...)`.
+They work for generic whole-collection structure as documented. They return
+base collections, like-allocation preserves source memory format, and generic
+compatibility intentionally excludes TensorDSLab sidecars, retained-record
+identity, target-only replacement, and alias analysis. Stage 2 therefore uses
+TensorCore operations where their generic contract fits and retains the
+already-specified TensorDSLab semantic reconstruction and field-scoped public
+destination builders. No TensorCore change or compatibility shim is required.
 
 `pyproject.toml` should follow the ecosystem package pattern:
 
@@ -925,14 +974,15 @@ fixed implementation commit before dispatching to Review.
 
 ## Readiness Checklist
 
-Phase 1 completes the canonical-axis synchronization, documentary checks, and
-committed Design baseline. Before implementation dispatch, Design must still:
+Design completed the dispatch-readiness gate on 2026-07-11:
 
-1. confirm that every source-of-truth document remains synchronized and that
-   no later Design change altered this work order;
-2. rerun Markdown links, headings, code-fence, stale-name, and
-   `git diff --check` validation against the dispatch candidate;
-3. record the exact then-current clean production base in this page;
-4. confirm the worktree is clean; and
-5. name the persistent Implementation, Validation, and Review tasks and the
-   bounded loop budget in the handoff.
+1. every source-of-truth document remained synchronized and no later Design
+   change altered the Stage 2 contract;
+2. Markdown links, headings, code fences, stale-name searches, and
+   `git diff --check` passed against the clean dispatch candidate;
+3. the exact clean production base is recorded above;
+4. the Design worktree and all three role bootstrap worktrees were clean; and
+5. the persistent logical routes and bounded loop budget are recorded above.
+
+Any later baseline drift, route discrepancy, architecture ambiguity, dirty
+state, or scope expansion returns this work order to Design.

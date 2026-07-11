@@ -33,8 +33,9 @@ collection model is stable.
 
 ## Current Local Focus
 
-The Stage 1 post-binned readout architecture is Design-complete, and the
-repository remains in a documentation-only phase owned by the Design thread:
+The Stage 1 post-binned readout architecture is Design-complete. Stage 2 was
+dispatched on 2026-07-11 through the package-owned production loop, while the
+current accepted `main` baseline remains documentation-only until closeout:
 
 ```text
 AGENTS.md / CONTRIBUTING.md
@@ -45,10 +46,10 @@ AGENTS.md / CONTRIBUTING.md
 ```
 
 No production package, tests, cache schema, DAG surface, or copied donor code
-has been accepted yet. The Stage 2 package-and-collection work order is
-Design-complete but has not been dispatched. The synchronized Design
-documentation is committed, while Stage 2's exact production-dispatch base and
-role handoff remain unset.
+has been accepted on `main` yet. The Stage 2 package-and-collection work order
+is active from exact clean base
+`d097cb3cdde185c6814116e886e7844ea3f55178`; Implementation owns the feature
+branch, and fixed-commit Validation and Review remain required before merge.
 
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`, bound to
 exact candidate `d634401a853915edeb4f83df4a4943b3553deced`. Conformance remains

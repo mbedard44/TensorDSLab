@@ -634,13 +634,16 @@ by itself establish exact, numerical, distributional, or statistical parity.
 
 ## Current Non-Goals
 
-- No production package code.
-- No package metadata or dependency lock-in.
+- No production package code outside the dispatched Stage 2 structural
+  foundation.
+- No package metadata or dependency surface beyond the exact Stage 2 work
+  order.
 - No copied donor code.
 - No native G4DS reader, TensorG4DS dependency, or upstream integration adapter
   in the current post-binned stages.
-- No tests during the current documentation-only stage; tests begin with an
-  accepted production work order or explicit validation-only stage.
+- No tests beyond the dispatched Stage 2 structural contract until a later
+  focused production work order or explicit validation-only stage accepts
+  them.
 - No cache schema commitment.
 - No durable IO, manifest, compaction, or cache compatibility requirements
   before the in-memory product model is accepted.

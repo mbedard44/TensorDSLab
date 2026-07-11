@@ -13,16 +13,18 @@ critique, and Review can reason about the diff.
 
 - [Stage 0: Documentation Spine](stage_0_documentation_spine.md)
 - [Stage 1: Post-Binned Readout MVP Architecture](stage_1_post_binned_readout_mvp_architecture.md)
-  is a Design-complete documentation stage. No production work has been
-  dispatched.
+  is a Design-complete documentation stage and itself dispatched no production
+  work.
 
-## Design-Complete Production Work Order
+## Active Production Work Order
 
 ### [Stage 2: Package And Readout Collection Foundation](stage_2_package_and_readout_collection_foundation.md)
 
-Status: Design-complete work order. Production implementation has not been
-dispatched. The synchronized Design documentation is committed, but the exact
-production-dispatch base and role handoff remain unset.
+Status: Dispatched on 2026-07-11 from exact clean package baseline
+`d097cb3cdde185c6814116e886e7844ea3f55178`. The package-owned persistent
+Implementation, Validation, and Review routes are active for the bounded
+production loop. No Stage 2 production result is accepted until a fixed
+candidate passes Validation and independent Review and is cleanly merged.
 
 The work order locks the flat package foundation under `tensor_dslab`, with
 shared IDs in `tensor_dslab.common` and readout code in

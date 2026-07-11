@@ -1,11 +1,11 @@
 # Agent Workflow
 
-This repository uses role-separated Codex ownership. During the current
-documentation-only Design phase, the Design thread owns architecture,
-decisions, validation expectations, and future work orders directly. The full
-implementation loop begins when Design dispatches the first production-code
-work order, or earlier only when the user explicitly requests independent
-Validation or Review of a documentation change.
+This repository uses role-separated Codex ownership. Design owns architecture,
+decisions, validation expectations, and future work orders directly. Stage 2
+activated the first production Implementation/Validation/Review loop on
+2026-07-11. Documentation-only Design work outside that dispatched branch may
+still remain in Design unless the user requests independent Validation or
+Review.
 
 The production workflow is:
 
@@ -173,13 +173,14 @@ template. Replace TensorML process semantics with TensorDSLab product and cache
 semantics when adapting docs or patterns. TensorCore is the source of truth for
 generic tensor vocabulary and contracts.
 
-Current maturity remains documentation-only. Stage 1 post-binned readout
-architecture and the Stage 2 package-and-collection work order are
-Design-complete, but Stage 2 has not been dispatched. Design may synchronize
-durable architecture, decision, validation, workflow, and implementation-stage
-documents. Until a focused production work order accepts code, do not create
-package modules, cache schemas, tests, DAG surfaces, downstream integration
-surfaces, or copied donor code.
+The accepted `main` baseline remains documentation-only while Stage 2 executes
+through its dispatched package-owned production loop. Stage 1 post-binned
+readout architecture and the Stage 2 package-and-collection work order are
+Design-complete. Only Stage 2's focused work order accepts package modules and
+tests; it does not accept cache schemas, DAG surfaces, downstream integration
+surfaces, or copied donor code. A feature-branch candidate is not an accepted
+package surface until fixed-commit Validation, independent Review, and clean
+merge complete.
 
 If implementation reveals a concrete contradiction in the accepted design, stop
 and send the issue back to Design. Do not silently widen architecture, create
