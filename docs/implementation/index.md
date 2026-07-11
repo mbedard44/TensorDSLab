@@ -16,16 +16,19 @@ critique, and Review can reason about the diff.
   is a Design-complete documentation stage and itself dispatched no production
   work.
 
-## Active Production Work Order
+## Stage 2 Production Work Order
 
 ### [Stage 2: Package And Readout Collection Foundation](stage_2_package_and_readout_collection_foundation.md)
 
-Status: Implementation candidate prepared from the 2026-07-11 dispatch and
-exact clean package baseline
+Status: Stage 2 closeout record prepared from the 2026-07-11 dispatch and exact
+clean package baseline
 `d097cb3cdde185c6814116e886e7844ea3f55178`. The package-owned persistent
 Implementation, Validation, and Review routes remain active for the bounded
-production loop. The candidate is not accepted until fixed-commit Validation,
-independent Review, and a clean merge complete.
+production loop. Fixed-commit Validation has cleared a candidate on this line;
+each later Review-fix commit returns through Validation before Review recheck.
+A feature-branch checkout is not accepted package state. If this record is read
+on `main`, Review's clean fast-forward gate has completed and Stage 2 is
+accepted there.
 
 The work order locks the flat package foundation under `tensor_dslab`, with
 shared IDs in `tensor_dslab.common` and readout code in

@@ -100,6 +100,10 @@ class ReadoutOutputPreparationTest(unittest.TestCase):
             (READOUT_PURE_WAVEFORM_FIELD_ID, (READOUT_PHOTOELECTRONS_FIELD_ID,)),
             (READOUT_ANALOG_WAVEFORM_FIELD_ID, (READOUT_PURE_WAVEFORM_FIELD_ID,)),
             (
+                READOUT_ANALOG_WAVEFORM_FIELD_ID,
+                (READOUT_NOISE_WAVEFORM_FIELD_ID,),
+            ),
+            (
                 READOUT_DIGITIZED_WAVEFORM_FIELD_ID,
                 (READOUT_PURE_WAVEFORM_FIELD_ID, READOUT_NOISE_WAVEFORM_FIELD_ID),
             ),

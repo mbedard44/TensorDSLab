@@ -1,9 +1,10 @@
 # TensorCore Integration Architecture
 
 Status: active Design contract for the post-binned readout architecture. The
-dispatched Stage 2 feature branch now has an Implementation candidate for the
-package and exact TensorCore dependency; it remains unaccepted pending
-fixed-commit Validation, independent Review, and clean merge.
+dispatched Stage 2 package and exact TensorCore dependency entered fixed-commit
+Validation/Review closeout on the feature branch. A feature-branch checkout is
+candidate evidence until Review's clean fast-forward; if this record is read on
+`main`, that gate has completed.
 
 ## Purpose
 
@@ -65,8 +66,9 @@ upstream index.
 ## Design Baseline
 
 The current design baseline is TensorCore `0.6.0`. The Stage 2 Implementation
-candidate pins exact commit `dc554994061183776f23f65860a0594516074f2e`; that
-candidate dependency is not accepted on `main` until Stage 2 closeout.
+line pins exact commit `dc554994061183776f23f65860a0594516074f2e`. It remains
+candidate evidence on the feature branch and is the accepted Stage 2 dependency
+if this record is read on `main` after Review's clean fast-forward.
 
 TensorDSLab may rely on these public TensorCore concepts:
 

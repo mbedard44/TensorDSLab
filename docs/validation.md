@@ -5,10 +5,12 @@ boundaries. Tests should not mirror private implementation structure.
 
 ## Current Documentation Baseline
 
-The accepted `main` baseline is documentation-only while the Stage 2
-Implementation candidate proceeds through fixed-commit Validation and
-independent Review. There is no accepted production package, package metadata,
-test suite, cache schema, or runtime dependency on `main` until closeout.
+Before the Review-owned clean fast-forward, the accepted `main` baseline is
+documentation-only while the Stage 2 candidate proceeds through the
+fixed-commit Validation/Review loop. If this record is read on `main`, that
+closeout gate has completed and the Stage 2 production package, metadata, test
+suite, and exact TensorCore runtime dependency are accepted there. Stage 2
+accepts no cache schema or later runtime surface.
 
 Documentation-only Design changes remain in the Design thread unless the user
 requests independent Validation or Review. Run:
@@ -75,11 +77,14 @@ against all of these checks:
 - record the self-referential Phase 3 closeout commit in the external
   completion report.
 
-Runtime, import, environment, integration, and post-merge test commands remain
-dormant because the corresponding package surfaces do not exist. Their
-activation requires the focused Design-owned work order identified in the
-overlay and rule map. Passing these documentary checks implies no
-installability, deployability, compatibility, or production conformance.
+At the documentation-only governance-adoption gate, runtime, import,
+environment, integration, and post-merge test commands were dormant because
+the corresponding package surfaces did not exist. The Stage 2 work order
+activates package, import, environment, and required post-merge verification
+for its exact foundation. Integration and later runtime or deployment checks
+remain dormant until their focused Design-owned work orders. Passing the
+governance documentary checks alone implies no installability, deployability,
+compatibility, or production conformance.
 
 ## Validation Layers
 

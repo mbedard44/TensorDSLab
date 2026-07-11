@@ -127,17 +127,19 @@ global-offset rule.
 The Stage 1 post-binned readout architecture is Design-complete. Stage 2 was
 dispatched on 2026-07-11 from exact clean package baseline
 `d097cb3cdde185c6814116e886e7844ea3f55178` through persistent package-owned
-Implementation, Validation, and Review roles. The accepted `main` baseline
-remains documentation-only until that fixed production candidate is validated,
-independently reviewed, and merged. There is not yet an accepted production
-package, test suite, or cache schema on `main`.
+Implementation, Validation, and Review roles. Before the Review-owned clean
+fast-forward, the accepted `main` baseline remains documentation-only. If this
+record is read on `main`, that merge gate has completed and the Stage 2 package,
+metadata, exact TensorCore dependency, and test suite are accepted there. Stage
+2 accepts no cache schema.
 
-The feature branch now contains the scoped Stage 2 Implementation candidate:
+The Stage 2 feature-branch line contains the scoped production candidate:
 the installable package foundation, typed readout collection and sidecars,
 TensorCore-delegating reconstruction helpers, field-scoped and full-output
-buffer preparation, and focused construction tests. This candidate status is
-implementation evidence only; it does not imply Validation or Review
-clearance.
+buffer preparation, and focused construction tests. Fixed-commit Validation
+has cleared a candidate on that line; every later Review-fix commit returns
+through Validation before Review recheck. A feature-branch checkout remains
+candidate evidence and does not itself imply Review clearance or merge.
 
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`, bound to
 exact candidate `d634401a853915edeb4f83df4a4943b3553deced`. Conformance remains

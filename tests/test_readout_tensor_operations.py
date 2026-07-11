@@ -8,6 +8,7 @@ from tensor_core import (
     IdSequence,
     TensorAxisSelection,
     TensorCollection,
+    TensorField,
     TensorFieldId,
     TensorFieldSelection,
     TensorLayout,
@@ -87,12 +88,54 @@ class ReadoutTensorOperationTest(unittest.TestCase):
                 )
             )
         )
-        selected = project_readout_fields(source, selection)
+        original_select_fields = TensorCollection.select_fields
+        delegated_results: list[TensorCollection] = []
+
+        def capture_projection(
+            base_collection: TensorCollection,
+            base_selection: TensorFieldSelection,
+        ) -> TensorCollection:
+            selected_base = original_select_fields(base_collection, base_selection)
+            result = TensorCollection(
+                fields={
+                    field_id: TensorField(
+                        id=field.id,
+                        tensor=field.tensor,
+                        layout=field.layout,
+                        metadata={"delegated": field_id.value},
+                    )
+                    for field_id, field in selected_base.fields.items()
+                },
+                shared_axes=selected_base.shared_axes,
+                metadata=selected_base.metadata,
+            )
+            delegated_results.append(result)
+            return result
+
+        with mock.patch.object(
+            TensorCollection,
+            "select_fields",
+            autospec=True,
+            side_effect=capture_projection,
+        ) as operation:
+            selected = project_readout_fields(source, selection)
+        operation.assert_called_once_with(source, selection)
+        self.assertEqual(len(delegated_results), 1)
+        delegated = delegated_results[0]
+        self.assertIs(type(delegated), TensorCollection)
+
         self.assertIs(type(selected), ReadoutCollection)
         self.assertEqual(tuple(selected.fields), selection.ids.ids)
         self.assertIs(selected.sample_grid, source.sample_grid)
         for field_id in selection.ids.ids:
-            self.assertIs(selected.field(field_id), source.field(field_id))
+            delegated_field = delegated.field(field_id)
+            self.assertIs(selected.field(field_id), delegated_field)
+            self.assertIsNot(delegated_field, source.field(field_id))
+            self.assertIs(
+                delegated_field.tensor,
+                source.field(field_id).tensor,
+            )
+            self.assertEqual(delegated_field.metadata, {"delegated": field_id.value})
 
     def test_noncanonical_model_projection_remains_tensorcore_owned(self) -> None:
         source = make_collection()
