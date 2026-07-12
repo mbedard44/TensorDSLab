@@ -46,6 +46,22 @@ construction remains noncontiguous-capable, while every newly allocated public
 target is contiguous in the existing semantic order without normalizing
 retained fields.
 
+## Maintenance 1 Production Work Order
+
+### [Maintenance 1: Readout Surface Ownership](maintenance_1_readout_surface_ownership.md)
+
+Status: Design-complete post-Stage-2 maintenance work order from clean `main`
+`cf0ccf0ad8fdee53767a374837276991decb1703`. It moves the semantic
+`ReadoutCollection` record into `readout/types.py` and shortens the public
+readout-axis Python symbols to `EXAMPLE_AXIS_ID`, `CHANNEL_AXIS_ID`,
+`SAMPLE_AXIS_ID`, and `REQUIRED_AXIS_IDS`. It changes no ID string, collection
+behavior, field API, TensorCore dependency, or scientific contract.
+
+The work deliberately retains `readout/tensors.py` as the current home of four
+readout-semantic reconstruction helpers. Whether those helpers should become
+collection behavior or motivate an opt-in TensorCore reconstruction hook is a
+separate Design question, not an Implementation decision in this work order.
+
 ## Candidate Future Stages
 
 These are planning labels, not accepted work orders. Design must write a

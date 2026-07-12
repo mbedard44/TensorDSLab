@@ -205,9 +205,10 @@ different types even where their string payloads coincide, and
 
 Every present field has the exact same ordered layout. The required public
 axis identities are
-`READOUT_EXAMPLE_AXIS_ID = TensorAxisId("example")`,
-`READOUT_CHANNEL_AXIS_ID = TensorAxisId("channel")`, and
-`READOUT_SAMPLE_AXIS_ID = TensorAxisId("sample")`; their tensor dimension order
+`EXAMPLE_AXIS_ID = TensorAxisId("example")`,
+`CHANNEL_AXIS_ID = TensorAxisId("channel")`, and
+`SAMPLE_AXIS_ID = TensorAxisId("sample")` in the `tensor_dslab.readout`
+namespace; their tensor dimension order
 is arbitrary, and the IDs compare by value rather than object identity.
 Example and channel are ID-backed by exact `ExampleId` and shared `ChannelId`
 coordinates, while sample is count-only. `SampleGrid` is the typed collection
@@ -232,6 +233,20 @@ digitization adds or replaces both atomically. Accepted bit depth is 1 through
 16, accepted `analog_gain_db` is 0 through 40 dB inclusive, and the first
 policy is `AdcQuantization.TRUNCATE`. The gain check intentionally corrects the
 donor's impossible `gain > 40 and gain < 0` condition.
+
+### Readout Semantic Types Live In `types.py`
+
+`ReadoutCollection` is a stable public domain value object and therefore lives
+with `SampleGrid`, `DigitizedWaveformSpec`, and `AdcQuantization` in
+`tensor_dslab.readout.types`. `tensor_dslab.readout.tensors` retains only the
+readout-semantic reconstruction, projection, selection, and movement helpers
+until Design resolves their longer-term home.
+
+The readout package namespace already supplies the domain qualification, so
+the public axis Python symbols omit the redundant `READOUT_` prefix:
+`EXAMPLE_AXIS_ID`, `CHANNEL_AXIS_ID`, `SAMPLE_AXIS_ID`, and
+`REQUIRED_AXIS_IDS`. Their exact TensorCore values and string payloads do not
+change. No compatibility aliases are retained in this pre-deployment package.
 
 The collection is a structurally immutable snapshot: records and mappings are
 immutable, while TensorDSLab transforms treat ordinary PyTorch-mutable tensor
@@ -562,6 +577,20 @@ leave the source immutable, and return a newly validated semantic value. A
 pure coherent axis permutation may remain a `ReadoutCollection`; a bridge that
 changes representation or domain meaning may not. Stage 2 adds no placeholder
 helper, and warmed execution must never invoke this preparation implicitly.
+
+### TensorCore Semantic Reconstruction Boundary
+
+The current `tensor_dslab.readout.tensors` functions delegate generic field
+selection, axis selection, and device movement to TensorCore, then restore
+readout-only sidecars and invariants. `SampleGrid` changes and conditional
+digitized-sidecar pruning cannot be inferred generically by TensorCore, but the
+repeated base-collection reconstruction may justify a future opt-in TensorCore
+extension hook.
+
+Design must compare that option with explicit `ReadoutCollection` methods or a
+more precise TensorDSLab function home. Do not change TensorCore's accepted
+exact-base return contracts, override inherited operations with stronger
+preconditions, or move the helpers merely to hide this boundary.
 
 ### Afterpulse Recovery-Amplitude Policy
 
