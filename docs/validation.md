@@ -11,6 +11,12 @@ structural package, focused test suite, and exact TensorCore runtime dependency
 are accepted there. Stage 2 accepts no scientific transform, workspace, cache
 schema, or later integration surface.
 
+Maintenance 1 changes only readout public-name and module ownership. Its
+feature-branch form is candidate evidence before fixed-commit Validation,
+independent Review, and Review's clean fast-forward; if the updated surface is
+read on `main`, those gates have completed. This status makes no scientific,
+compatibility, deployment, conformance, or GPU claim.
+
 Documentation-only Design changes remain in the Design thread unless the user
 requests independent Validation or Review. Run:
 
@@ -178,11 +184,19 @@ Construction tests should prove:
 - every field has the same exact `TensorLayout` and device and uses dense
   `torch.strided` layout;
 - noncontiguous `torch.strided` tensors are accepted;
-- exact `READOUT_EXAMPLE_AXIS_ID`, `READOUT_CHANNEL_AXIS_ID`, and
-  `READOUT_SAMPLE_AXIS_ID` axes are required and shared in arbitrary layout
+- exact `EXAMPLE_AXIS_ID`, `CHANNEL_AXIS_ID`, and
+  `SAMPLE_AXIS_ID` axes are required and shared in arbitrary layout
   order;
 - canonical axis constants have exact `example`, `channel`, and `sample`
   values, use value equality, and resolve freshly constructed equal IDs;
+- `REQUIRED_AXIS_IDS` is an exact `IdSequence` containing those three exported
+  constants in example/channel/sample order;
+- `ReadoutCollection.__module__` is exactly
+  `tensor_dslab.readout.types`, while `tensor_dslab.readout.tensors` retains
+  only the semantic reconstruction helpers;
+- the four retired prefixed axis names are absent from package exports and
+  `__all__`, and `types`, `validation`, `tensors`, `builders`, and the readout
+  package root import independently in fresh processes;
 - every accepted extra axis is common and shared by every present field;
 - `shared_axes` contains every common-layout axis ID in exact layout order;
 - example and channel axes are ID-backed by exact `ExampleId` and shared

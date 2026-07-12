@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 import ast
+import os
 from pathlib import Path
+import subprocess
 import sys
 import tomllib
 import unittest
 
-from tensor_core import Id, TensorAxisId, TensorFieldId
+from tensor_core import Id, IdSequence, TensorAxisId, TensorFieldId
 
 import tensor_dslab
 import tensor_dslab.common as common
 import tensor_dslab.readout as readout
+import tensor_dslab.readout.ids as readout_ids
+import tensor_dslab.readout.types as readout_types
 from tensor_dslab.common import ChannelId, ExampleId
 
 
@@ -41,16 +45,16 @@ class PackageContractTest(unittest.TestCase):
             "AdcQuantization",
             "DigitizedWaveformSpec",
             "READOUT_ANALOG_WAVEFORM_FIELD_ID",
-            "READOUT_CHANNEL_AXIS_ID",
+            "CHANNEL_AXIS_ID",
             "READOUT_CHARGE_FIELD_ID",
             "READOUT_DIGITIZED_WAVEFORM_FIELD_ID",
-            "READOUT_EXAMPLE_AXIS_ID",
+            "EXAMPLE_AXIS_ID",
             "READOUT_FIELD_IDS",
             "READOUT_NOISE_WAVEFORM_FIELD_ID",
             "READOUT_PHOTOELECTRONS_FIELD_ID",
             "READOUT_PURE_WAVEFORM_FIELD_ID",
-            "READOUT_REQUIRED_AXIS_IDS",
-            "READOUT_SAMPLE_AXIS_ID",
+            "REQUIRED_AXIS_IDS",
+            "SAMPLE_AXIS_ID",
             "ReadoutCollection",
             "SampleGrid",
             "build_readout_output_buffer",
@@ -71,6 +75,67 @@ class PackageContractTest(unittest.TestCase):
             for name in ("Id", "TensorCollection", "TensorField", "TensorAxis"):
                 self.assertFalse(hasattr(module, name), f"{module.__name__}.{name}")
 
+    def test_readout_collection_module_ownership(self) -> None:
+        self.assertIs(readout.ReadoutCollection, readout_types.ReadoutCollection)
+        self.assertEqual(
+            readout.ReadoutCollection.__module__,
+            "tensor_dslab.readout.types",
+        )
+
+    def test_axis_exports_and_retired_names(self) -> None:
+        expected_axes = (
+            ("EXAMPLE_AXIS_ID", "example"),
+            ("CHANNEL_AXIS_ID", "channel"),
+            ("SAMPLE_AXIS_ID", "sample"),
+        )
+        for name, value in expected_axes:
+            axis_id = getattr(readout, name)
+            self.assertIs(type(axis_id), TensorAxisId)
+            self.assertEqual(axis_id, TensorAxisId(value))
+            self.assertIs(axis_id, getattr(readout_ids, name))
+
+        self.assertIs(type(readout.REQUIRED_AXIS_IDS), IdSequence)
+        self.assertIs(readout.REQUIRED_AXIS_IDS, readout_ids.REQUIRED_AXIS_IDS)
+        self.assertEqual(
+            readout.REQUIRED_AXIS_IDS.ids,
+            (
+                readout.EXAMPLE_AXIS_ID,
+                readout.CHANNEL_AXIS_ID,
+                readout.SAMPLE_AXIS_ID,
+            ),
+        )
+
+        retired_names = (
+            "READOUT_EXAMPLE_AXIS_ID",
+            "READOUT_CHANNEL_AXIS_ID",
+            "READOUT_SAMPLE_AXIS_ID",
+            "READOUT_REQUIRED_AXIS_IDS",
+        )
+        for name in retired_names:
+            self.assertNotIn(name, readout.__all__)
+            self.assertFalse(hasattr(readout, name), name)
+            self.assertFalse(hasattr(readout_ids, name), name)
+
+    def test_readout_modules_import_in_fresh_processes(self) -> None:
+        environment = os.environ.copy()
+        environment["PYTHONDONTWRITEBYTECODE"] = "1"
+        for module_name in (
+            "tensor_dslab.readout.types",
+            "tensor_dslab.readout.validation",
+            "tensor_dslab.readout.tensors",
+            "tensor_dslab.readout.builders",
+            "tensor_dslab.readout",
+        ):
+            with self.subTest(module_name=module_name):
+                completed = subprocess.run(
+                    [sys.executable, "-c", f"import {module_name}"],
+                    check=False,
+                    capture_output=True,
+                    env=environment,
+                    text=True,
+                )
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+
     def test_only_public_tensorcore_root_is_imported(self) -> None:
         for path in Path("tensor_dslab").rglob("*.py"):
             tree = ast.parse(path.read_text(), filename=str(path))
@@ -89,7 +154,7 @@ class PackageContractTest(unittest.TestCase):
     def test_coordinate_ids_extend_id_but_axis_and_field_ids_do_not(self) -> None:
         self.assertTrue(issubclass(ExampleId, Id))
         self.assertTrue(issubclass(ChannelId, Id))
-        self.assertIs(type(readout.READOUT_SAMPLE_AXIS_ID), TensorAxisId)
+        self.assertIs(type(readout.SAMPLE_AXIS_ID), TensorAxisId)
         self.assertIs(type(readout.READOUT_CHARGE_FIELD_ID), TensorFieldId)
         self.assertFalse(issubclass(ExampleId, TensorAxisId))
 

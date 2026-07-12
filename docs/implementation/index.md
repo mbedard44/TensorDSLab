@@ -27,7 +27,9 @@ Fixed-commit Validation evaluated all three candidates in the bounded loop,
 returned the first, and cleared the second and final candidates. Independent
 Review returned narrow findings on the second, cleared the final bytes, and
 performed the clean fast-forward plus post-merge verification. The persistent
-logical roles remain available, but no later production stage is dispatched.
+logical roles remain available. Maintenance 1 is the separately dispatched
+organization-only work order below; no scientific or later production stage is
+dispatched.
 
 The work order locks the flat package foundation under `tensor_dslab`, with
 shared IDs in `tensor_dslab.common` and readout code in
@@ -50,8 +52,12 @@ retained fields.
 
 ### [Maintenance 1: Readout Surface Ownership](maintenance_1_readout_surface_ownership.md)
 
-Status: Design-complete post-Stage-2 maintenance work order from clean `main`
-`cf0ccf0ad8fdee53767a374837276991decb1703`. It moves the semantic
+Status: production dispatched from clean `main`
+`cf0ccf0ad8fdee53767a374837276991decb1703` through committed Design authority
+`d09cbad4a1538349e289523a9898f4e6dfd20a57`. A feature-branch copy is candidate
+evidence and does not itself imply Validation or Review clearance; if this
+updated record is read on `main`, Review's clean fast-forward gate has
+completed. The work moves the semantic
 `ReadoutCollection` record into `readout/types.py` and shortens the public
 readout-axis Python symbols to `EXAMPLE_AXIS_ID`, `CHANNEL_AXIS_ID`,
 `SAMPLE_AXIS_ID`, and `REQUIRED_AXIS_IDS`. It changes no ID string, collection

@@ -2,15 +2,15 @@ from __future__ import annotations
 
 from tensor_core import IdSequence, TensorAxisId, TensorFieldId
 
-READOUT_EXAMPLE_AXIS_ID = TensorAxisId("example")
-READOUT_CHANNEL_AXIS_ID = TensorAxisId("channel")
-READOUT_SAMPLE_AXIS_ID = TensorAxisId("sample")
+EXAMPLE_AXIS_ID = TensorAxisId("example")
+CHANNEL_AXIS_ID = TensorAxisId("channel")
+SAMPLE_AXIS_ID = TensorAxisId("sample")
 
-READOUT_REQUIRED_AXIS_IDS = IdSequence(
+REQUIRED_AXIS_IDS = IdSequence(
     (
-        READOUT_EXAMPLE_AXIS_ID,
-        READOUT_CHANNEL_AXIS_ID,
-        READOUT_SAMPLE_AXIS_ID,
+        EXAMPLE_AXIS_ID,
+        CHANNEL_AXIS_ID,
+        SAMPLE_AXIS_ID,
     )
 )
 

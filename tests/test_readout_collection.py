@@ -19,16 +19,16 @@ from tensor_dslab.readout import (
     AdcQuantization,
     DigitizedWaveformSpec,
     READOUT_ANALOG_WAVEFORM_FIELD_ID,
-    READOUT_CHANNEL_AXIS_ID,
+    CHANNEL_AXIS_ID,
     READOUT_CHARGE_FIELD_ID,
     READOUT_DIGITIZED_WAVEFORM_FIELD_ID,
-    READOUT_EXAMPLE_AXIS_ID,
+    EXAMPLE_AXIS_ID,
     READOUT_FIELD_IDS,
     READOUT_NOISE_WAVEFORM_FIELD_ID,
     READOUT_PHOTOELECTRONS_FIELD_ID,
     READOUT_PURE_WAVEFORM_FIELD_ID,
-    READOUT_REQUIRED_AXIS_IDS,
-    READOUT_SAMPLE_AXIS_ID,
+    REQUIRED_AXIS_IDS,
+    SAMPLE_AXIS_ID,
     ReadoutCollection,
     SampleGrid,
     require_valid_readout_collection,
@@ -139,16 +139,16 @@ class ReadoutCollectionTest(unittest.TestCase):
             )
 
     def test_axis_constants_have_exact_values_and_use_value_equality(self) -> None:
-        self.assertEqual(READOUT_EXAMPLE_AXIS_ID, TensorAxisId("example"))
-        self.assertEqual(READOUT_CHANNEL_AXIS_ID, TensorAxisId("channel"))
-        self.assertEqual(READOUT_SAMPLE_AXIS_ID, TensorAxisId("sample"))
-        self.assertIsNot(READOUT_SAMPLE_AXIS_ID, TensorAxisId("sample"))
+        self.assertEqual(EXAMPLE_AXIS_ID, TensorAxisId("example"))
+        self.assertEqual(CHANNEL_AXIS_ID, TensorAxisId("channel"))
+        self.assertEqual(SAMPLE_AXIS_ID, TensorAxisId("sample"))
+        self.assertIsNot(SAMPLE_AXIS_ID, TensorAxisId("sample"))
         self.assertEqual(
-            READOUT_REQUIRED_AXIS_IDS.ids,
+            REQUIRED_AXIS_IDS.ids,
             (
-                READOUT_EXAMPLE_AXIS_ID,
-                READOUT_CHANNEL_AXIS_ID,
-                READOUT_SAMPLE_AXIS_ID,
+                EXAMPLE_AXIS_ID,
+                CHANNEL_AXIS_ID,
+                SAMPLE_AXIS_ID,
             ),
         )
         collection = make_collection((READOUT_PHOTOELECTRONS_FIELD_ID,))
@@ -162,10 +162,10 @@ class ReadoutCollectionTest(unittest.TestCase):
             )
             self.assertEqual(
                 collection.sample_dimension,
-                order.index(READOUT_SAMPLE_AXIS_ID),
+                order.index(SAMPLE_AXIS_ID),
             )
         missing_sample_layout = make_layout(
-            (READOUT_EXAMPLE_AXIS_ID, READOUT_CHANNEL_AXIS_ID)
+            (EXAMPLE_AXIS_ID, CHANNEL_AXIS_ID)
         )
         with self.assertRaises(ValueError):
             make_collection(
@@ -209,7 +209,7 @@ class ReadoutCollectionTest(unittest.TestCase):
                 (READOUT_PHOTOELECTRONS_FIELD_ID,),
                 layout=layout,
                 shared_axes=IdSequence(
-                    (READOUT_EXAMPLE_AXIS_ID, READOUT_CHANNEL_AXIS_ID)
+                    (EXAMPLE_AXIS_ID, CHANNEL_AXIS_ID)
                 ),
             )
         with self.assertRaises(ValueError):
@@ -218,9 +218,9 @@ class ReadoutCollectionTest(unittest.TestCase):
                 layout=layout,
                 shared_axes=IdSequence(
                     (
-                        READOUT_CHANNEL_AXIS_ID,
-                        READOUT_EXAMPLE_AXIS_ID,
-                        READOUT_SAMPLE_AXIS_ID,
+                        CHANNEL_AXIS_ID,
+                        EXAMPLE_AXIS_ID,
+                        SAMPLE_AXIS_ID,
                     )
                 ),
             )
@@ -229,20 +229,20 @@ class ReadoutCollectionTest(unittest.TestCase):
             (READOUT_PHOTOELECTRONS_FIELD_ID,),
             layout=make_layout(
                 (
-                    READOUT_EXAMPLE_AXIS_ID,
+                    EXAMPLE_AXIS_ID,
                     count_extra_axis_id,
-                    READOUT_CHANNEL_AXIS_ID,
-                    READOUT_SAMPLE_AXIS_ID,
+                    CHANNEL_AXIS_ID,
+                    SAMPLE_AXIS_ID,
                 )
             ),
         )
         self.assertEqual(
             collection.shared_axes.ids,
             (
-                READOUT_EXAMPLE_AXIS_ID,
+                EXAMPLE_AXIS_ID,
                 count_extra_axis_id,
-                READOUT_CHANNEL_AXIS_ID,
-                READOUT_SAMPLE_AXIS_ID,
+                CHANNEL_AXIS_ID,
+                SAMPLE_AXIS_ID,
             ),
         )
 
@@ -274,9 +274,9 @@ class ReadoutCollectionTest(unittest.TestCase):
 
         reordered_layout = make_layout(
             (
-                READOUT_CHANNEL_AXIS_ID,
-                READOUT_EXAMPLE_AXIS_ID,
-                READOUT_SAMPLE_AXIS_ID,
+                CHANNEL_AXIS_ID,
+                EXAMPLE_AXIS_ID,
+                SAMPLE_AXIS_ID,
             )
         )
         photo = TensorField(
@@ -556,9 +556,9 @@ class ReadoutCollectionTest(unittest.TestCase):
                 (READOUT_PHOTOELECTRONS_FIELD_ID,),
                 layout=make_layout(order),
             )
-            self.assertEqual(collection.example_dimension, order.index(READOUT_EXAMPLE_AXIS_ID))
-            self.assertEqual(collection.channel_dimension, order.index(READOUT_CHANNEL_AXIS_ID))
-            self.assertEqual(collection.sample_dimension, order.index(READOUT_SAMPLE_AXIS_ID))
+            self.assertEqual(collection.example_dimension, order.index(EXAMPLE_AXIS_ID))
+            self.assertEqual(collection.channel_dimension, order.index(CHANNEL_AXIS_ID))
+            self.assertEqual(collection.sample_dimension, order.index(SAMPLE_AXIS_ID))
 
     @unittest.skipUnless(torch.cuda.is_available(), "CUDA is unavailable")
     def test_cuda_collection_construction(self) -> None:

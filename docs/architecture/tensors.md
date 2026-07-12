@@ -3,6 +3,9 @@
 Status: active Design contract for the post-binned readout architecture. The
 Stage 2 package and exact TensorCore dependency are accepted on `main` through
 Merged / Closed commit `e8c62caf001ee7f58f766d7234747ed1d9a21e35`.
+Maintenance 1 changes only public-name and module ownership. Its feature-branch
+form is candidate evidence before Review's clean fast-forward; if the updated
+surface is read on `main`, that merge gate has completed.
 
 ## Purpose
 
@@ -111,6 +114,10 @@ class ReadoutCollection(TensorCollection):
     ...
 ```
 
+This stable value type is defined in `tensor_dslab.readout.types` alongside
+the other readout records. `tensor_dslab.readout.tensors` retains only the
+semantic reconstruction, projection, selection, and movement helpers.
+
 `ReadoutCollection` is a structurally immutable, partially materialized
 snapshot of recognized readout fields. Any nonempty recognized field subset is
 valid when the present fields satisfy the collection contract. Charge and
@@ -186,23 +193,26 @@ The required public axis IDs are fixed TensorCore values owned by
 subclasses:
 
 ```python
-READOUT_EXAMPLE_AXIS_ID = TensorAxisId("example")
-READOUT_CHANNEL_AXIS_ID = TensorAxisId("channel")
-READOUT_SAMPLE_AXIS_ID = TensorAxisId("sample")
+EXAMPLE_AXIS_ID = TensorAxisId("example")
+CHANNEL_AXIS_ID = TensorAxisId("channel")
+SAMPLE_AXIS_ID = TensorAxisId("sample")
+REQUIRED_AXIS_IDS = IdSequence(
+    (EXAMPLE_AXIS_ID, CHANNEL_AXIS_ID, SAMPLE_AXIS_ID)
+)
 ```
 
 These constants define semantic identity by `TensorAxisId` value equality.
 Object identity is irrelevant: a freshly constructed equal `TensorAxisId`
 denotes the same axis. Their positions remain runtime layout choices. An
-operation resolves each position through
-`layout.axes.index(READOUT_*_AXIS_ID)` and never assumes a conventional tuple
+operation resolves each position through `layout.axes.index(...)` with the
+corresponding exact exported axis ID and never assumes a conventional tuple
 position.
 
 The post-binned readout contract requires shared:
 
-- `READOUT_EXAMPLE_AXIS_ID`;
-- `READOUT_CHANNEL_AXIS_ID`;
-- `READOUT_SAMPLE_AXIS_ID`;
+- `EXAMPLE_AXIS_ID`;
+- `CHANNEL_AXIS_ID`;
+- `SAMPLE_AXIS_ID`;
 - zero or more additional axes accepted by a focused contract.
 
 The example axis is ID-backed by exact `ExampleId` coordinates, and the channel
@@ -218,12 +228,12 @@ occurs in every field and is declared collection-shared. Every ID-backed shared
 axis participates in stochastic identity; this is derived from the layout and
 is not configurable through a role record. The coordinate-key sequence is:
 
-1. `READOUT_EXAMPLE_AXIS_ID` paired with its `ExampleId` coordinate;
-2. `READOUT_CHANNEL_AXIS_ID` paired with its `ChannelId` coordinate;
+1. `EXAMPLE_AXIS_ID` paired with its `ExampleId` coordinate;
+2. `CHANNEL_AXIS_ID` paired with its `ChannelId` coordinate;
 3. each additional ID-backed shared `axis_id` paired with its coordinate, with
    those pairs ordered lexicographically by `axis_id.value` rather than tensor
    position;
-4. `READOUT_SAMPLE_AXIS_ID` paired with the global sample ordinal,
+4. `SAMPLE_AXIS_ID` paired with the global sample ordinal,
    `SampleGrid.sample_offset + local_sample_index`, on
    that count-only axis.
 
@@ -258,7 +268,7 @@ identity.
 
 The warmed `out + workspace` readout profile is stricter:
 
-- `READOUT_SAMPLE_AXIS_ID` is the last tensor dimension;
+- `SAMPLE_AXIS_ID` is the last tensor dimension;
 - each participating source, generated public target, and private scratch
   tensor is contiguous;
 - every writable tensor is internally nonoverlapping and storage-disjoint from
@@ -484,11 +494,11 @@ selection before `forward_pass`. Likewise, a model output that claims
 class check alone does not prove its field IDs or schema.
 
 Axis selection requires the same explicit reconstruction discipline.
-Selections on `READOUT_EXAMPLE_AXIS_ID`, `READOUT_CHANNEL_AXIS_ID`, and accepted
+Selections on `EXAMPLE_AXIS_ID`, `CHANNEL_AXIS_ID`, and accepted
 extra axes may reconstruct a collection when the transformed common layout and
 coordinate classes remain valid. The current
 `SampleGrid(period, origin, offset)` can represent only a contiguous,
-increasing, unit-stride range selected on `READOUT_SAMPLE_AXIS_ID`.
+increasing, unit-stride range selected on `SAMPLE_AXIS_ID`.
 Reconstructing after such a selection updates:
 
 ```text
@@ -793,8 +803,8 @@ The `ReadoutCollection` constructor should validate once:
 - a nonempty subset of recognized field IDs in filtered canonical order;
 - the exact same ordered layout for every present field;
 - `shared_axes` equal to all common-layout axis IDs in layout order, including
-  `READOUT_EXAMPLE_AXIS_ID`, `READOUT_CHANNEL_AXIS_ID`, and
-  `READOUT_SAMPLE_AXIS_ID`;
+  `EXAMPLE_AXIS_ID`, `CHANNEL_AXIS_ID`, and
+  `SAMPLE_AXIS_ID`;
 - exact `ExampleId` coordinates on the example axis, exact `ChannelId`
   coordinates on the channel axis, and count-only sample
   semantics;

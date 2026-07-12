@@ -57,9 +57,12 @@ readout-specific axis and field constants, including the three required
 semantic axis identities:
 
 ```python
-READOUT_EXAMPLE_AXIS_ID = TensorAxisId("example")
-READOUT_CHANNEL_AXIS_ID = TensorAxisId("channel")
-READOUT_SAMPLE_AXIS_ID = TensorAxisId("sample")
+EXAMPLE_AXIS_ID = TensorAxisId("example")
+CHANNEL_AXIS_ID = TensorAxisId("channel")
+SAMPLE_AXIS_ID = TensorAxisId("sample")
+REQUIRED_AXIS_IDS = IdSequence(
+    (EXAMPLE_AXIS_ID, CHANNEL_AXIS_ID, SAMPLE_AXIS_ID)
+)
 ```
 
 They may occur in any layout order and are located by axis-ID equality/index,
@@ -134,6 +137,14 @@ and sidecars, TensorCore-delegating reconstruction helpers, field-scoped and
 full-output buffer preparation, and focused tests. Stage 2 accepts no
 scientific transform, workspace, cache schema, or integration surface.
 
+Maintenance 1 was separately dispatched to correct only readout public-name
+and module ownership. Before Review's clean fast-forward, its feature-branch
+form is candidate evidence; if these updated imports and names are read on
+`main`, that merge gate has completed. `ReadoutCollection` then lives in
+`tensor_dslab.readout.types`, while `tensor_dslab.readout.tensors` retains the
+four semantic reconstruction helpers. No scientific or integration surface is
+part of this maintenance work.
+
 Post-merge verification ran 52 tests against both the shared TensorCore source
 and an independently archived exact dependency pin: 49 passed and 3
 conditional CUDA tests were skipped because CUDA was unavailable. This is
@@ -159,6 +170,7 @@ Start with:
 - [Post-Binned Readout Architecture](docs/architecture/readout.md)
 - [Implementation Stages](docs/implementation/index.md)
 - [Stage 2 Work Order](docs/implementation/stage_2_package_and_readout_collection_foundation.md)
+- [Maintenance 1 Work Order](docs/implementation/maintenance_1_readout_surface_ownership.md)
 
 ## Intended Package Shape
 

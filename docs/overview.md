@@ -50,8 +50,12 @@ AGENTS.md / CONTRIBUTING.md
 Main now contains the accepted Stage 2 package metadata, structural
 `tensor_dslab.common` and `tensor_dslab.readout` package, and focused tests.
 Scientific transforms, RNG, workspace execution, caches, DAG surfaces,
-TensorG4DS/TensorML adapters, and copied donor code remain unaccepted. No later
-production stage is dispatched.
+TensorG4DS/TensorML adapters, and copied donor code remain unaccepted.
+Maintenance 1 was separately dispatched to correct only readout public-name
+and module ownership. Its feature-branch form is candidate evidence before
+Review's clean fast-forward; if this updated contract is read on `main`, that
+merge gate has completed. No scientific or later production stage is
+dispatched.
 
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`, bound to
 exact candidate `d634401a853915edeb4f83df4a4943b3553deced`. Conformance remains
@@ -78,6 +82,9 @@ runtime layouts while keeping field roles, exact required axis identities,
 sample-grid facts, and stochastic coordinates explicit. Caller-defined
 semantic axis-role sidecars, per-product collection subclasses, and a generic
 `Product` base are not accepted.
+The stable value type is defined in `tensor_dslab.readout.types`;
+`tensor_dslab.readout.tensors` retains only semantic reconstruction,
+projection, selection, and movement helpers.
 
 `tensor_dslab.common` owns and exports the shared stable `ExampleId` and
 `ChannelId` coordinate types. `tensor_dslab.readout` owns and exports
@@ -85,9 +92,12 @@ readout-specific axis and field constants, including exactly these required
 axis identities:
 
 ```python
-READOUT_EXAMPLE_AXIS_ID = TensorAxisId("example")
-READOUT_CHANNEL_AXIS_ID = TensorAxisId("channel")
-READOUT_SAMPLE_AXIS_ID = TensorAxisId("sample")
+EXAMPLE_AXIS_ID = TensorAxisId("example")
+CHANNEL_AXIS_ID = TensorAxisId("channel")
+SAMPLE_AXIS_ID = TensorAxisId("sample")
+REQUIRED_AXIS_IDS = IdSequence(
+    (EXAMPLE_AXIS_ID, CHANNEL_AXIS_ID, SAMPLE_AXIS_ID)
+)
 ```
 
 The axes may appear in any layout order and are located by axis-ID
@@ -254,6 +264,8 @@ root.
 - [Stage 2 Work Order](implementation/stage_2_package_and_readout_collection_foundation.md):
   package and `ReadoutCollection` foundation contract; Merged / Closed at
   `e8c62caf001ee7f58f766d7234747ed1d9a21e35`.
+- [Maintenance 1 Work Order](implementation/maintenance_1_readout_surface_ownership.md):
+  readout public-name and module-ownership correction.
 
 Additional architecture docs should be added only when they carry real
 contracts, such as detector products, reconstruction products, or caches.

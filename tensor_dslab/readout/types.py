@@ -2,12 +2,22 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import final
 
+import torch
 from tensor_core import (
     FiniteFloat,
     NonnegativeInteger,
     PositiveFloat,
     PositiveInteger,
+    TensorCollection,
+    TensorLayout,
+)
+
+from tensor_dslab.readout.ids import (
+    CHANNEL_AXIS_ID,
+    EXAMPLE_AXIS_ID,
+    SAMPLE_AXIS_ID,
 )
 
 
@@ -63,3 +73,36 @@ class DigitizedWaveformSpec:
     @property
     def adc_max(self) -> int:
         return (1 << self.bit_depth.value) - 1
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ReadoutCollection(TensorCollection):
+    sample_grid: SampleGrid
+    digitized_waveform_spec: DigitizedWaveformSpec | None = None
+
+    def __post_init__(self) -> None:
+        from tensor_dslab.readout.validation import require_valid_readout_collection
+
+        TensorCollection.__post_init__(self)
+        require_valid_readout_collection(self)
+
+    @property
+    def layout(self) -> TensorLayout:
+        return next(iter(self.fields.values())).layout
+
+    @property
+    def device(self) -> torch.device:
+        return next(iter(self.fields.values())).tensor.device
+
+    @property
+    def example_dimension(self) -> int:
+        return self.layout.axes.index(EXAMPLE_AXIS_ID)
+
+    @property
+    def channel_dimension(self) -> int:
+        return self.layout.axes.index(CHANNEL_AXIS_ID)
+
+    @property
+    def sample_dimension(self) -> int:
+        return self.layout.axes.index(SAMPLE_AXIS_ID)

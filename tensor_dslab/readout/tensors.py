@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import final
-
 import torch
 from tensor_core import (
     FiniteFloat,
@@ -10,50 +7,18 @@ from tensor_core import (
     TensorAxisSelection,
     TensorCollection,
     TensorFieldSelection,
-    TensorLayout,
 )
 
 from tensor_dslab.readout.ids import (
-    READOUT_CHANNEL_AXIS_ID,
     READOUT_DIGITIZED_WAVEFORM_FIELD_ID,
-    READOUT_EXAMPLE_AXIS_ID,
     READOUT_FIELD_IDS,
-    READOUT_SAMPLE_AXIS_ID,
+    SAMPLE_AXIS_ID,
 )
-from tensor_dslab.readout.types import DigitizedWaveformSpec, SampleGrid
-
-
-@final
-@dataclass(frozen=True, slots=True, kw_only=True)
-class ReadoutCollection(TensorCollection):
-    sample_grid: SampleGrid
-    digitized_waveform_spec: DigitizedWaveformSpec | None = None
-
-    def __post_init__(self) -> None:
-        from tensor_dslab.readout.validation import require_valid_readout_collection
-
-        TensorCollection.__post_init__(self)
-        require_valid_readout_collection(self)
-
-    @property
-    def layout(self) -> TensorLayout:
-        return next(iter(self.fields.values())).layout
-
-    @property
-    def device(self) -> torch.device:
-        return next(iter(self.fields.values())).tensor.device
-
-    @property
-    def example_dimension(self) -> int:
-        return self.layout.axes.index(READOUT_EXAMPLE_AXIS_ID)
-
-    @property
-    def channel_dimension(self) -> int:
-        return self.layout.axes.index(READOUT_CHANNEL_AXIS_ID)
-
-    @property
-    def sample_dimension(self) -> int:
-        return self.layout.axes.index(READOUT_SAMPLE_AXIS_ID)
+from tensor_dslab.readout.types import (
+    DigitizedWaveformSpec,
+    ReadoutCollection,
+    SampleGrid,
+)
 
 
 def _reconstruct_readout_collection(
@@ -113,7 +78,7 @@ def select_readout_indices(
         raise TypeError("selection must be TensorAxisSelection")
 
     sample_grid = collection.sample_grid
-    if selection.axis_id == READOUT_SAMPLE_AXIS_ID:
+    if selection.axis_id == SAMPLE_AXIS_ID:
         indices = selection.indices
         expected = tuple(range(indices[0], indices[0] + len(indices)))
         if indices != expected:
@@ -122,7 +87,7 @@ def select_readout_indices(
             )
 
     selected = collection.select_indices(selection)
-    if selection.axis_id == READOUT_SAMPLE_AXIS_ID:
+    if selection.axis_id == SAMPLE_AXIS_ID:
         first_index = selection.indices[0]
         sample_grid = SampleGrid(
             sample_period_ns=collection.sample_grid.sample_period_ns,

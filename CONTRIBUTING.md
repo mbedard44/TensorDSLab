@@ -32,6 +32,12 @@ recorded in the Stage 2 work order. No wheel or published artifact was built,
 and TensorDSLab makes no deployability, release-readiness,
 backward-compatibility, or broad cross-package compatibility claim.
 
+Maintenance 1 was separately dispatched to correct only readout public-name
+and module ownership. Before Review's clean fast-forward, its feature-branch
+form is candidate evidence; if the updated surface is read on `main`, that
+merge gate has completed. It changes no collection behavior, TensorCore pin,
+scientific contract, deployment state, or compatibility finding.
+
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency
 and no-silent-host-materialization requirements are TensorDSLab Design
@@ -250,6 +256,9 @@ not the primary tensor handoff. Do not add caller-defined semantic axis-role
 mappings, one single-field collection subclass per product, a generic
 `Product` base, semantic `TensorField` subclasses, or a ToyProduct-like wrapper
 hierarchy.
+`ReadoutCollection` and the other stable readout value types live in
+`tensor_dslab.readout.types`; `tensor_dslab.readout.tensors` retains only the
+readout-semantic reconstruction, projection, selection, and movement helpers.
 
 `tensor_dslab.common` owns and exports the shared stable coordinate types
 `ExampleId` and `ChannelId`. `tensor_dslab.readout` owns and exports the
@@ -257,9 +266,12 @@ readout-specific axis and field constants, including these exact required axis
 identities:
 
 ```python
-READOUT_EXAMPLE_AXIS_ID = TensorAxisId("example")
-READOUT_CHANNEL_AXIS_ID = TensorAxisId("channel")
-READOUT_SAMPLE_AXIS_ID = TensorAxisId("sample")
+EXAMPLE_AXIS_ID = TensorAxisId("example")
+CHANNEL_AXIS_ID = TensorAxisId("channel")
+SAMPLE_AXIS_ID = TensorAxisId("sample")
+REQUIRED_AXIS_IDS = IdSequence(
+    (EXAMPLE_AXIS_ID, CHANNEL_AXIS_ID, SAMPLE_AXIS_ID)
+)
 ```
 
 A `ReadoutCollection` is a nonempty, structurally immutable, partially

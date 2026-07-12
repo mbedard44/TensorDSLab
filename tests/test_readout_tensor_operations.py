@@ -15,14 +15,14 @@ from tensor_core import (
 )
 
 from tensor_dslab.readout import (
-    READOUT_CHANNEL_AXIS_ID,
+    CHANNEL_AXIS_ID,
     READOUT_DIGITIZED_WAVEFORM_FIELD_ID,
-    READOUT_EXAMPLE_AXIS_ID,
+    EXAMPLE_AXIS_ID,
     READOUT_FIELD_IDS,
     READOUT_NOISE_WAVEFORM_FIELD_ID,
     READOUT_PHOTOELECTRONS_FIELD_ID,
     READOUT_PURE_WAVEFORM_FIELD_ID,
-    READOUT_SAMPLE_AXIS_ID,
+    SAMPLE_AXIS_ID,
     ReadoutCollection,
     move_readout_collection,
     project_readout_fields,
@@ -171,27 +171,27 @@ class ReadoutTensorOperationTest(unittest.TestCase):
             (
                 "sample-last",
                 (
-                    READOUT_EXAMPLE_AXIS_ID,
+                    EXAMPLE_AXIS_ID,
                     EXTRA_AXIS_ID,
-                    READOUT_CHANNEL_AXIS_ID,
-                    READOUT_SAMPLE_AXIS_ID,
+                    CHANNEL_AXIS_ID,
+                    SAMPLE_AXIS_ID,
                 ),
             ),
             (
                 "sample-first",
                 (
-                    READOUT_SAMPLE_AXIS_ID,
-                    READOUT_CHANNEL_AXIS_ID,
+                    SAMPLE_AXIS_ID,
+                    CHANNEL_AXIS_ID,
                     EXTRA_AXIS_ID,
-                    READOUT_EXAMPLE_AXIS_ID,
+                    EXAMPLE_AXIS_ID,
                 ),
             ),
         )
         selections = (
-            (READOUT_EXAMPLE_AXIS_ID, (1,)),
-            (READOUT_CHANNEL_AXIS_ID, (1,)),
+            (EXAMPLE_AXIS_ID, (1,)),
+            (CHANNEL_AXIS_ID, (1,)),
             (EXTRA_AXIS_ID, (1,)),
-            (READOUT_SAMPLE_AXIS_ID, (1, 2, 3)),
+            (SAMPLE_AXIS_ID, (1, 2, 3)),
         )
 
         original_select_indices = TensorCollection.select_indices
@@ -287,9 +287,9 @@ class ReadoutTensorOperationTest(unittest.TestCase):
                         )
                     }
                     self.assertEqual(actual_index_by_axis, expected_index_by_axis)
-                    if axis_id == READOUT_SAMPLE_AXIS_ID:
+                    if axis_id == SAMPLE_AXIS_ID:
                         self.assertNotIn(
-                            READOUT_SAMPLE_AXIS_ID,
+                            SAMPLE_AXIS_ID,
                             selected.layout.index_by_axis,
                         )
 
@@ -325,7 +325,7 @@ class ReadoutTensorOperationTest(unittest.TestCase):
                         if source_field.tensor.requires_grad:
                             self.assertIsNotNone(selected_field.tensor.grad_fn)
 
-                    if axis_id == READOUT_SAMPLE_AXIS_ID:
+                    if axis_id == SAMPLE_AXIS_ID:
                         self.assertIs(
                             selected.sample_grid.sample_period_ns,
                             source.sample_grid.sample_period_ns,
@@ -358,7 +358,7 @@ class ReadoutTensorOperationTest(unittest.TestCase):
                     select_readout_indices(
                         source,
                         TensorAxisSelection(
-                            axis_id=READOUT_SAMPLE_AXIS_ID,
+                            axis_id=SAMPLE_AXIS_ID,
                             indices=indices,
                         ),
                     )
@@ -367,16 +367,16 @@ class ReadoutTensorOperationTest(unittest.TestCase):
     def test_move_reconstructs_on_exact_device_without_dtype_cast(self) -> None:
         axis_orders = (
             (
-                READOUT_EXAMPLE_AXIS_ID,
+                EXAMPLE_AXIS_ID,
                 EXTRA_AXIS_ID,
-                READOUT_CHANNEL_AXIS_ID,
-                READOUT_SAMPLE_AXIS_ID,
+                CHANNEL_AXIS_ID,
+                SAMPLE_AXIS_ID,
             ),
             (
-                READOUT_SAMPLE_AXIS_ID,
-                READOUT_CHANNEL_AXIS_ID,
+                SAMPLE_AXIS_ID,
+                CHANNEL_AXIS_ID,
                 EXTRA_AXIS_ID,
-                READOUT_EXAMPLE_AXIS_ID,
+                EXAMPLE_AXIS_ID,
             ),
         )
         original_to = TensorCollection.to
@@ -474,7 +474,7 @@ class ReadoutTensorOperationTest(unittest.TestCase):
         )
         selected = select_readout_indices(
             projected,
-            TensorAxisSelection(READOUT_SAMPLE_AXIS_ID, (0, 1)),
+            TensorAxisSelection(SAMPLE_AXIS_ID, (0, 1)),
         )
         moved = move_readout_collection(selected, device=torch.device("cpu"))
         self.assertEqual(moved.device.type, "cpu")

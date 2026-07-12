@@ -3,7 +3,10 @@
 Status: active Design contract for the first TensorDSLab MVP. Stage 2's
 structural package-and-collection foundation is Merged / Closed on `main` at
 `e8c62caf001ee7f58f766d7234747ed1d9a21e35`. Scientific transform execution
-remains undispatched.
+remains undispatched. Maintenance 1 changes only public-name and module
+ownership. Its feature-branch form is candidate evidence before Review's clean
+fast-forward; if the updated surface is read on `main`, that merge gate has
+completed.
 
 ## Purpose
 
@@ -158,6 +161,9 @@ recognized fields even though they share a collection layout.
 
 There is no generic TensorDSLab `Product` base. Readout physics remains in free
 functions over `ReadoutCollection`.
+The stable `ReadoutCollection` value type lives in
+`tensor_dslab.readout.types`; `tensor_dslab.readout.tensors` retains only the
+semantic reconstruction, projection, selection, and movement helpers.
 
 ## Canonical Axes And Semantic Sidecars
 
@@ -165,16 +171,19 @@ The three core readout axes have exact public identities. Their positions are
 resolved from each field's `TensorLayout`; tensor dimension order remains
 arbitrary.
 
-Accepted Stage 2 value sketch:
+Current public value sketch:
 
 ```python
 class AdcQuantization(StrEnum):
     TRUNCATE = "truncate"
 
 
-READOUT_EXAMPLE_AXIS_ID = TensorAxisId("example")
-READOUT_CHANNEL_AXIS_ID = TensorAxisId("channel")
-READOUT_SAMPLE_AXIS_ID = TensorAxisId("sample")
+EXAMPLE_AXIS_ID = TensorAxisId("example")
+CHANNEL_AXIS_ID = TensorAxisId("channel")
+SAMPLE_AXIS_ID = TensorAxisId("sample")
+REQUIRED_AXIS_IDS = IdSequence(
+    (EXAMPLE_AXIS_ID, CHANNEL_AXIS_ID, SAMPLE_AXIS_ID)
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -249,7 +258,7 @@ for their storage arrangement.
 
 The warmed `out + workspace` MVP profile is intentionally stricter:
 
-- `READOUT_SAMPLE_AXIS_ID` is last;
+- `SAMPLE_AXIS_ID` is last;
 - every source, generated public target, and private scratch tensor
   participating in the configured call is contiguous;
 - writable targets and scratch are internally nonoverlapping and
@@ -287,8 +296,8 @@ Every `ReadoutCollection` constructor validates:
 - one common device shared by every present tensor;
 - `torch.strided` layout for every present tensor, without requiring
   contiguous strides;
-- exact `READOUT_EXAMPLE_AXIS_ID`, `READOUT_CHANNEL_AXIS_ID`, and
-  `READOUT_SAMPLE_AXIS_ID` axes in that shared layout, in arbitrary order;
+- exact `EXAMPLE_AXIS_ID`, `CHANNEL_AXIS_ID`, and
+  `SAMPLE_AXIS_ID` axes in that shared layout, in arbitrary order;
 - exact `ExampleId` and `ChannelId` coordinate classes and uniqueness;
 - sample-axis size and count-only semantics;
 - field-role-specific dtype, unit, representation, and value domain;
@@ -1000,8 +1009,8 @@ RNG keys include:
 
 - seed and caller namespace;
 - operation role;
-- the `READOUT_EXAMPLE_AXIS_ID` and its `ExampleId` coordinate;
-- the `READOUT_CHANNEL_AXIS_ID` and its `ChannelId` coordinate, never a
+- the `EXAMPLE_AXIS_ID` and its `ExampleId` coordinate;
+- the `CHANNEL_AXIS_ID` and its `ChannelId` coordinate, never a
   channel index;
 - every other ID-backed shared axis paired with its coordinate, ordered
   lexically by `axis_id.value` rather than tensor layout order;

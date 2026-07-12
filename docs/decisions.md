@@ -546,10 +546,15 @@ Stage 2 was dispatched on 2026-07-11 from exact clean package baseline
 Implementation, Validation, and Review routes and the repository's three-round
 maximum I/V loop. Review fast-forward merged the cleared foundation at
 `e8c62caf001ee7f58f766d7234747ed1d9a21e35`. Its work-order path remains the
-stable package-owned key. Later production stages still require their own
-focused committed work order, exact clean base, verified routes, bounded loop,
-fixed-commit Review gate, and clean closeout expectation; Stage 2 completion
-does not pre-authorize them.
+stable package-owned key. Maintenance 1 was separately dispatched from
+committed Design authority `d09cbad4a1538349e289523a9898f4e6dfd20a57` to
+correct only readout public-name and module ownership. A feature-branch copy is
+candidate evidence before fixed-commit Validation and independent Review; if
+the updated surface is read on `main`, Review's clean fast-forward gate has
+completed. Later production stages still require their own focused committed
+work order, exact clean base, verified routes, bounded loop, fixed-commit
+Review gate, and clean closeout expectation; Stage 2 completion does not
+pre-authorize them.
 
 ### Workspace Inventory And Stronger Allocation Guarantees
 

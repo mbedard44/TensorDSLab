@@ -156,10 +156,11 @@ canonical order filtered to the fields present; callers do not define a second
 ordering policy. Every present field has the same exact `TensorLayout`, device,
 and PyTorch `torch.strided` layout; noncontiguous strided tensors are
 valid. The required axes are exactly
-`READOUT_EXAMPLE_AXIS_ID = TensorAxisId("example")`,
-`READOUT_CHANNEL_AXIS_ID = TensorAxisId("channel")`, and
-`READOUT_SAMPLE_AXIS_ID = TensorAxisId("sample")`. They are shared and may
-occur in any layout order. Example and channel use exact `ExampleId` and
+`EXAMPLE_AXIS_ID = TensorAxisId("example")`,
+`CHANNEL_AXIS_ID = TensorAxisId("channel")`, and
+`SAMPLE_AXIS_ID = TensorAxisId("sample")`, with `REQUIRED_AXIS_IDS` preserving
+that order. They are shared and may occur in any layout order. Example and
+channel use exact `ExampleId` and
 `ChannelId` coordinates; sample is count-only. `ChannelId` belongs in
 `tensor_dslab.common` because readout and future reconstruction reuse the same
 channel coordinate identity. All accepted extra axes are common to every
@@ -175,6 +176,11 @@ analog gain, and quantization policy. The first contract accepts bit depths
 from 1 through 16, inclusive gain from 0 through 40 dB, and
 `AdcQuantization.TRUNCATE`. The gain range intentionally corrects the donor's
 impossible out-of-range conjunction.
+
+`ReadoutCollection` is defined with the other stable readout value types in
+`tensor_dslab.readout.types`. The separate `tensor_dslab.readout.tensors`
+module retains only semantic reconstruction, projection, selection, and
+movement helpers.
 
 Collection construction is placement-neutral: tensors may already reside on
 any PyTorch device when all fields share that exact device, but construction
@@ -241,7 +247,7 @@ runtime storage flag to semantic identity.
 The warmed readout execution profile is narrower because its kernels operate
 primarily along time. For `out + workspace`:
 
-- `READOUT_SAMPLE_AXIS_ID` is the last dimension;
+- `SAMPLE_AXIS_ID` is the last dimension;
 - every participating source, generated public target, and private scratch
   tensor is contiguous;
 - every writable tensor is internally nonoverlapping and storage-disjoint from

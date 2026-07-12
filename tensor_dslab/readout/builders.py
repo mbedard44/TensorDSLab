@@ -15,8 +15,7 @@ from tensor_dslab.readout.ids import (
     READOUT_PHOTOELECTRONS_FIELD_ID,
     READOUT_PURE_WAVEFORM_FIELD_ID,
 )
-from tensor_dslab.readout.tensors import ReadoutCollection
-from tensor_dslab.readout.types import DigitizedWaveformSpec
+from tensor_dslab.readout.types import DigitizedWaveformSpec, ReadoutCollection
 from tensor_dslab.readout.validation import require_valid_readout_collection
 
 

@@ -178,9 +178,13 @@ Stage 2 is Merged / Closed on `main` at
 package metadata, `tensor_dslab.common` and `tensor_dslab.readout` structural
 foundation, focused tests, and exact TensorCore dependency recorded by its work
 order. It accepts no scientific transform, workspace, cache schema, DAG
-surface, TensorG4DS or TensorML integration surface, or copied donor code. No
-later production stage is dispatched; each requires its own focused work order,
-verified routes, fixed-commit Validation, independent Review, and clean merge.
+surface, TensorG4DS or TensorML integration surface, or copied donor code.
+Maintenance 1 was separately dispatched to correct only readout public-name and
+module ownership. A feature-branch checkout is candidate evidence; if the
+updated surface is present on `main`, Review's clean fast-forward gate has
+completed. No scientific or later production stage is dispatched; each requires
+its own focused work order, verified routes, fixed-commit Validation,
+independent Review, and clean merge.
 
 If implementation reveals a concrete contradiction in the accepted design, stop
 and send the issue back to Design. Do not silently widen architecture, create
@@ -227,7 +231,7 @@ Production imports should stay absolute, such as:
 ```python
 from tensor_core import TensorAxisId, TensorLayout
 from tensor_dslab.common import ChannelId, ExampleId
-from tensor_dslab.readout import READOUT_CHANNEL_AXIS_ID
+from tensor_dslab.readout import CHANNEL_AXIS_ID
 ```
 
 Do not rewrite imports to relative forms to satisfy editor-only diagnostics.
@@ -280,6 +284,9 @@ readout products are recognized fields inside one direct
 a typed `SampleGrid`, and a conditional typed `DigitizedWaveformSpec`. Do not
 create caller-defined semantic axis-role mappings, one single-field collection
 subclass per product, a generic `Product` base, or a ToyProduct-like hierarchy.
+The stable semantic records, including `ReadoutCollection`, live in
+`tensor_dslab.readout.types`; `tensor_dslab.readout.tensors` retains only the
+readout-semantic reconstruction, projection, selection, and movement helpers.
 
 Every valid `ReadoutCollection` is a nonempty, structurally immutable,
 partially materialized snapshot. Transforms treat retained tensor payloads as
@@ -305,9 +312,12 @@ readout-specific axis and field constants, including exactly these required
 semantic axis identities:
 
 ```python
-READOUT_EXAMPLE_AXIS_ID = TensorAxisId("example")
-READOUT_CHANNEL_AXIS_ID = TensorAxisId("channel")
-READOUT_SAMPLE_AXIS_ID = TensorAxisId("sample")
+EXAMPLE_AXIS_ID = TensorAxisId("example")
+CHANNEL_AXIS_ID = TensorAxisId("channel")
+SAMPLE_AXIS_ID = TensorAxisId("sample")
+REQUIRED_AXIS_IDS = IdSequence(
+    (EXAMPLE_AXIS_ID, CHANNEL_AXIS_ID, SAMPLE_AXIS_ID)
+)
 ```
 
 All present fields in one snapshot use the same exact ordered layout and
@@ -337,7 +347,7 @@ metadata, or runtime policy to collection identity.
 
 The MVP warmed `out + workspace` readout profile is stricter:
 
-- `READOUT_SAMPLE_AXIS_ID` is the last tensor dimension;
+- `SAMPLE_AXIS_ID` is the last tensor dimension;
 - every participating source, generated public target, and scratch tensor is
   contiguous;
 - every writable target and scratch tensor is internally nonoverlapping and

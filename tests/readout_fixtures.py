@@ -26,15 +26,15 @@ from tensor_dslab.readout import (
     AdcQuantization,
     DigitizedWaveformSpec,
     READOUT_ANALOG_WAVEFORM_FIELD_ID,
-    READOUT_CHANNEL_AXIS_ID,
+    CHANNEL_AXIS_ID,
     READOUT_CHARGE_FIELD_ID,
     READOUT_DIGITIZED_WAVEFORM_FIELD_ID,
-    READOUT_EXAMPLE_AXIS_ID,
+    EXAMPLE_AXIS_ID,
     READOUT_FIELD_IDS,
     READOUT_NOISE_WAVEFORM_FIELD_ID,
     READOUT_PHOTOELECTRONS_FIELD_ID,
     READOUT_PURE_WAVEFORM_FIELD_ID,
-    READOUT_SAMPLE_AXIS_ID,
+    SAMPLE_AXIS_ID,
     ReadoutCollection,
     SampleGrid,
 )
@@ -55,15 +55,15 @@ class OtherId(Id):
 
 
 DEFAULT_AXIS_ORDER: AxisOrder = (
-    READOUT_EXAMPLE_AXIS_ID,
-    READOUT_CHANNEL_AXIS_ID,
-    READOUT_SAMPLE_AXIS_ID,
+    EXAMPLE_AXIS_ID,
+    CHANNEL_AXIS_ID,
+    SAMPLE_AXIS_ID,
 )
 
 ALTERNATE_AXIS_ORDER: AxisOrder = (
-    READOUT_SAMPLE_AXIS_ID,
-    READOUT_EXAMPLE_AXIS_ID,
-    READOUT_CHANNEL_AXIS_ID,
+    SAMPLE_AXIS_ID,
+    EXAMPLE_AXIS_ID,
+    CHANNEL_AXIS_ID,
 )
 
 
@@ -100,7 +100,7 @@ def make_layout(
 ) -> TensorLayout:
     axes: list[TensorAxis] = []
     for axis_id in axis_order:
-        if axis_id == READOUT_EXAMPLE_AXIS_ID:
+        if axis_id == EXAMPLE_AXIS_ID:
             if example_count_only:
                 axis = TensorAxis(id=axis_id, size=2)
             else:
@@ -113,7 +113,7 @@ def make_layout(
                         )
                     ),
                 )
-        elif axis_id == READOUT_CHANNEL_AXIS_ID:
+        elif axis_id == CHANNEL_AXIS_ID:
             if channel_count_only:
                 axis = TensorAxis(id=axis_id, size=2)
             else:
@@ -126,7 +126,7 @@ def make_layout(
                         )
                     ),
                 )
-        elif axis_id == READOUT_SAMPLE_AXIS_ID:
+        elif axis_id == SAMPLE_AXIS_ID:
             if sample_id_backed:
                 axis = build_id_axis(
                     axis_id,

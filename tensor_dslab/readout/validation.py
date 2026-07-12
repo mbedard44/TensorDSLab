@@ -5,19 +5,22 @@ from tensor_core import IdSequence
 
 from tensor_dslab.common import ChannelId, ExampleId
 from tensor_dslab.readout.ids import (
+    CHANNEL_AXIS_ID,
+    EXAMPLE_AXIS_ID,
     READOUT_ANALOG_WAVEFORM_FIELD_ID,
-    READOUT_CHANNEL_AXIS_ID,
     READOUT_CHARGE_FIELD_ID,
     READOUT_DIGITIZED_WAVEFORM_FIELD_ID,
-    READOUT_EXAMPLE_AXIS_ID,
     READOUT_FIELD_IDS,
     READOUT_NOISE_WAVEFORM_FIELD_ID,
     READOUT_PHOTOELECTRONS_FIELD_ID,
     READOUT_PURE_WAVEFORM_FIELD_ID,
-    READOUT_SAMPLE_AXIS_ID,
+    SAMPLE_AXIS_ID,
 )
-from tensor_dslab.readout.types import DigitizedWaveformSpec, SampleGrid
-from tensor_dslab.readout.tensors import ReadoutCollection
+from tensor_dslab.readout.types import (
+    DigitizedWaveformSpec,
+    ReadoutCollection,
+    SampleGrid,
+)
 
 
 _FLOATING_FIELD_IDS = (
@@ -82,9 +85,9 @@ def require_valid_readout_collection(collection: ReadoutCollection) -> None:
 
     axes = reference_layout.axes
     try:
-        example_axis = axes.axes[axes.index(READOUT_EXAMPLE_AXIS_ID)]
-        channel_axis = axes.axes[axes.index(READOUT_CHANNEL_AXIS_ID)]
-        sample_axis = axes.axes[axes.index(READOUT_SAMPLE_AXIS_ID)]
+        example_axis = axes.axes[axes.index(EXAMPLE_AXIS_ID)]
+        channel_axis = axes.axes[axes.index(CHANNEL_AXIS_ID)]
+        sample_axis = axes.axes[axes.index(SAMPLE_AXIS_ID)]
     except ValueError as error:
         raise ValueError(
             "ReadoutCollection layout must include example, channel, and sample axes"

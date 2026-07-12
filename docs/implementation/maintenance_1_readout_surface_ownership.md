@@ -1,8 +1,11 @@
 # Maintenance 1 Readout Surface Ownership Work Order
 
-Status: Design-complete post-Stage-2 maintenance work order. The user accepted
-this direction on 2026-07-11. Production dispatch begins only from the clean
-committed Design authority containing this record.
+Status: production dispatched from committed Design authority
+`d09cbad4a1538349e289523a9898f4e6dfd20a57` on 2026-07-11. A feature-branch
+copy is candidate evidence and does not itself imply fixed-commit Validation
+or independent Review clearance; if this updated record is read on `main`,
+Review's clean fast-forward gate has completed. The user accepted this exact
+ownership correction and no broader surface.
 
 ## Objective
 
