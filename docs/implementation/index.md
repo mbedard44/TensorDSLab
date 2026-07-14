@@ -27,9 +27,8 @@ Fixed-commit Validation evaluated all three candidates in the bounded loop,
 returned the first, and cleared the second and final candidates. Independent
 Review returned narrow findings on the second, cleared the final bytes, and
 performed the clean fast-forward plus post-merge verification. The persistent
-logical roles remain available. Maintenance 1 is the separately dispatched
-organization-only work order below; no scientific or later production stage is
-dispatched.
+logical roles remain available. Maintenance 1 and Stage 3 are separate records
+below; Stage 2 itself dispatched no scientific transform.
 
 The work order locks the flat package foundation under `tensor_dslab`, with
 shared IDs in `tensor_dslab.common` and readout code in
@@ -72,16 +71,17 @@ separate Design question, not an Implementation decision in this work order.
 
 ### [Stage 3: TensorCore 0.7 Product Foundation](stage_3_tensorcore_0_7_product_foundation.md)
 
-Status: Review-cleared / clean fast-forward authorized at exact implementation
-candidate `9250192587d1e05e71f09c9cda4ba9d0bce09bde`, from committed
-Design/dispatch base `fb4fd3753d336fd46203e122789caed32fb49d91`. Fixed-commit
-Validation and independent Review have no unresolved finding. If this updated
-record is read on `main`, Review's clean fast-forward and post-merge
-verification gates have completed; final Design acceptance remains the last
-closeout gate. No push occurred.
+Status: Merged / Closed. Exact implementation candidate
+`9250192587d1e05e71f09c9cda4ba9d0bce09bde`, from committed Design/dispatch
+base `fb4fd3753d336fd46203e122789caed32fb49d91`, passed fixed-commit Validation
+and independent Review with no unresolved finding. Review's documentation-only
+closeout and clean fast-forward produced `main`
+`97e17c3177ac217aeb42a077db78f4bd223d51fa`; Design accepted that closeout on
+2026-07-14 after independently repeating the post-merge package, dependency,
+static-typing, import-isolation, and artifact checks. No push occurred.
 
 Stage 3 is the clean structural migration from the historical TensorCore
-`0.6` foundation to exact TensorCore `0.7.0` candidate
+`0.6` foundation to exact TensorCore `0.7.0` dependency
 `b454d738f6385ce6489d85492a618a3dab139bb6`. It establishes common typed axes
 and sampling, six direct final product-field leaves, product-owned config
 records and deep validators, the unordered completed-result

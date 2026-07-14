@@ -17,20 +17,20 @@ The current identity and maturity are:
 
 ```text
 Project/display name: TensorDSLab
-Python import: tensor_dslab (accepted on main through Stage 2)
+Python import: tensor_dslab (accepted on main through Stage 3)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
-Package maturity: Stage 2 structural foundation Merged / Closed
+Package maturity: Stage 3 TensorCore 0.7 product foundation Merged / Closed
 ```
 
 Stage 1 is Design-complete, and Stage 2 is Merged / Closed on `main` at
-`e8c62caf001ee7f58f766d7234747ed1d9a21e35`. Main now contains accepted package
-metadata, the structural production package, and its focused test suite. The
-post-merge evidence is limited to the exact repository/dependency commits,
-Python and PyTorch versions, CPU execution mode, and conditional CUDA skips
-recorded in the Stage 2 work order. No wheel or published artifact was built,
-and TensorDSLab makes no deployability, release-readiness,
-backward-compatibility, or broad cross-package compatibility claim.
+`e8c62caf001ee7f58f766d7234747ed1d9a21e35`. That historical stage established
+the first package metadata, structural package, and focused test suite. Its
+evidence remains limited to the exact repository/dependency commits, Python
+and PyTorch versions, CPU execution mode, and conditional CUDA skips recorded
+in the Stage 2 work order. No wheel or published artifact was built, and
+TensorDSLab makes no deployability, release-readiness, backward-compatibility,
+or broad cross-package compatibility claim.
 
 Maintenance 1 was separately dispatched to correct only readout public-name
 and module ownership. Before Review's clean fast-forward, its feature-branch
@@ -38,13 +38,14 @@ form is candidate evidence; if the updated surface is read on `main`, that
 merge gate has completed. It changes no collection behavior, TensorCore pin,
 scientific contract, deployment state, or compatibility finding.
 
-The TensorCore `0.7` rebuild in `docs/architecture/rebuild.md` is the
-Design-accepted replacement target, not implemented production. Stage 2 and
-Maintenance 1 remain historical evidence. Stage 3 remains Design-complete /
-Undispatched until the synchronized authority is committed, its clean base and
-persistent routes are verified, and Design explicitly dispatches it.
-Implementation, Validation, Review, merge, and closeout are later state
-transitions.
+The TensorCore `0.7` rebuild in `docs/architecture/rebuild.md` is implemented
+through Stage 3. Exact implementation candidate
+`9250192587d1e05e71f09c9cda4ba9d0bce09bde` cleared fixed-commit Validation
+and independent Review; Review's clean fast-forward and post-merge closeout
+produced `main` `97e17c3177ac217aeb42a077db78f4bd223d51fa`, and Design accepted the
+result after an independent post-merge audit. Stage 2 and Maintenance 1 remain
+historical TensorCore `0.6` evidence. Scientific producers, public readout
+orchestration, and integration remain undispatched future work.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency
@@ -215,10 +216,10 @@ has neither a config nor a readout producer.
 ## TensorCore Backbone
 
 Stage 2 used TensorCore `0.6` at its exact recorded pin; that remains historical
-evidence only. The rebuild targets TensorCore `0.7.0` at candidate
-`b454d738f6385ce6489d85492a618a3dab139bb6`. Selecting that exact dependency and
-passing fixed TensorDSLab consumer probes are Stage 3 gates, not broad
-compatibility claims.
+evidence only. Stage 3 selected exact TensorCore `0.7.0` dependency
+`b454d738f6385ce6489d85492a618a3dab139bb6`. The exact selection and fixed
+TensorDSLab consumer probes are package evidence, not a broad compatibility
+claim.
 
 Import TensorCore public names from the root `tensor_core` package. Do not
 import implementation modules, fork generic behavior, or re-export generic

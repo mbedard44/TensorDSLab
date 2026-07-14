@@ -21,20 +21,20 @@ DAG orchestration, and the exact cross-package adapters remain deferred.
 
 ## Current State
 
-Stage 2 and Maintenance 1 are Merged / Closed historical baselines. The clean
-`main` baseline used to begin the rebuild Design pass is
-`3af8ab4acf834b07e3d027fb530e5f12934999a5`. It contains the first structural
-package foundation but no scientific readout transform. The selected rebuild
-deliberately replaces that pre-deployment representation instead of carrying a
-compatibility layer for it.
+Stage 2 and Maintenance 1 are Merged / Closed historical TensorCore `0.6`
+baselines. Stage 3 is Merged / Closed through exact implementation candidate
+`9250192587d1e05e71f09c9cda4ba9d0bce09bde` and Review's clean fast-forward
+closeout on `main` at `97e17c3177ac217aeb42a077db78f4bd223d51fa`.
+It deliberately replaced the pre-deployment `0.6` representation without a
+compatibility layer and still implements no scientific readout transform.
 
-The active Design target is [Rebuild Architecture](architecture/rebuild.md).
-The exact TensorCore `0.7.0` candidate reviewed for it is
-`b454d738f6385ce6489d85492a618a3dab139bb6`. The rebuild uses TensorCore's
-ordinary `TensorAxis`, `TensorField`, and `TensorCollection` ABC roots with
-direct final TensorDSLab semantic leaves. A production work order must pin and
-probe that exact dependency before changing code. Documentation and an
-undispatched work order do not themselves authorize implementation.
+[Rebuild Architecture](architecture/rebuild.md) remains the accepted complete
+architecture. Stage 3 selected exact TensorCore `0.7.0` commit
+`b454d738f6385ce6489d85492a618a3dab139bb6` and implements its ordinary
+`TensorAxis`, `TensorField`, and `TensorCollection` ABC roots with direct final
+TensorDSLab semantic leaves. Later scientific producers and public readout
+orchestration remain Design targets only until their own focused work orders
+are written, dispatched, validated, reviewed, and merged.
 
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`, bound to
 accepted candidate `d634401a853915edeb4f83df4a4943b3553deced`. Conformance is
@@ -185,8 +185,8 @@ are in `architecture/rebuild.md`.
 - [Implementation Stages](implementation/index.md): staged work orders and
   dispatch state.
 - [Stage 3 Work Order](implementation/stage_3_tensorcore_0_7_product_foundation.md):
-  Design-complete / Undispatched TensorCore `0.7` semantic product/config
-  foundation and clean replacement scope.
+  Merged / Closed TensorCore `0.7` semantic product/config foundation and
+  clean replacement scope.
 - [Package Governance](governance/index.md): adoption decision and declaration,
   TensorDSLab overlay, semantic rule map, state boundaries, and closeout.
 - [Stage 2 Work Order](implementation/stage_2_package_and_readout_collection_foundation.md):

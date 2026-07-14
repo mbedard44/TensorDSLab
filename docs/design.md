@@ -306,6 +306,7 @@ the accepted boundary.
 Architecture documentation does not dispatch implementation. Each production
 slice requires a focused work order, exact dependency and package baselines,
 verified Implementation/Validation/Review routes, fixed-commit validation,
-independent review, a clean Review merge gate, and Design closeout. The next
-structural slice is defined through the implementation index and its Stage 3 work order;
-scientific kernels remain excluded until their own gates are closed.
+independent review, a clean Review merge gate, and Design closeout. The
+TensorCore `0.7` structural foundation is Merged / Closed through Stage 3.
+Scientific kernels remain excluded until their own focused work orders and
+gates are accepted.

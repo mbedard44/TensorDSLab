@@ -779,7 +779,7 @@ the sidecar-free collection record. In particular, a digitized-only result is a
 valid completed in-process result only while its caller separately retains the
 exact `DigitizedWaveformConfig` needed to interpret it. Durable or
 independently transported digitized values remain blocked on the explicit
-association in Design gate 5.
+association in Design gate 4.
 
 Membership is semantically unordered. A collection requires:
 
@@ -4394,44 +4394,45 @@ The rebuild validation matrix includes:
 
 ## Rebuild Migration
 
-This Design pass has accepted the architecture, synchronized the live Design
-documents, and written the focused Stage 3 structural-foundation work order.
-The TensorCore commit named here remains a candidate until Stage 3's fixed-pin
-consumer probes clear it. Historical work orders and governance records remain
-unchanged.
+This Design pass accepted the architecture, synchronized the live Design
+documents, and wrote the focused Stage 3 structural-foundation work order.
+Stage 3 subsequently selected exact TensorCore `0.7.0` commit
+`b454d738f6385ce6489d85492a618a3dab139bb6`, passed fixed-pin consumer probes,
+and merged the product/config/collection foundation. Historical work orders
+and governance records remain unchanged.
+
+The completed structural step was:
+
+- commit synchronized Design authority, verify the persistent role routes,
+  replace the `0.6` package with the typed axes, sampling, product/config, and
+  collection foundation, then clear fixed-commit Validation, independent
+  Review, fast-forward merge, and Design closeout.
 
 The remaining production sequence is:
 
-1. Commit a clean synchronized Design authority, verify the persistent role
-   routes, and explicitly dispatch Stage 3. The work order is currently
-   Design-complete / Undispatched.
-2. Replace the `0.6` structural package with `SamplingConfig`, timestamp
-   grammar, common axes/sampling modules, product-owned packages,
-   request-aware `ReadoutCollection`, configs, and validation.
-3. Implement deterministic product producers under focused work orders.
-4. Freeze and implement the private RNG and stochastic-noise contracts under a
+1. Implement deterministic product producers under focused work orders.
+2. Freeze and implement the private RNG and stochastic-noise contracts under a
    focused work order.
-5. Freeze the remaining Poisson/multinomial stream, numerical-tail, and
+3. Freeze the remaining Poisson/multinomial stream, numerical-tail, and
    count-bound contracts, then implement the fixed-`K` charge simulation in
    parity-scoped slices.
-6. Publish request-aware `simulate_readout(...)` only after every required
+4. Publish request-aware `simulate_readout(...)` only after every required
    producer exists and its complete closure can be preflighted.
-7. Profile real GPU memory and execution before designing workspace/output
+5. Profile real GPU memory and execution before designing workspace/output
    reuse.
-8. Design the exact TensorG4DS-to-truth-Photoelectrons bridge.
-9. Design explicit TensorML/reconstruction adapters.
-10. Design durable artifacts only after in-memory contracts stabilize.
+6. Design the exact TensorG4DS-to-truth-Photoelectrons bridge.
+7. Design explicit TensorML/reconstruction adapters.
+8. Design durable artifacts only after in-memory contracts stabilize.
 
 Each production slice uses the repository Implementation/Validation/Review
 loop and fixed-commit evidence. No compatibility alias preserves `0.6`.
 
 ## Supersession Ledger
 
-The accepted rebuild architecture replaces the following live Design
-contracts. Production bytes remain at the historical representation until
-Stage 3 clears and merges.
+The accepted rebuild architecture and completed Stage 3 foundation replace the
+following historical `0.6` contracts.
 
-| Current `0.6` contract | Rebuild target |
+| Historical `0.6` contract | Implemented Stage 3 or accepted rebuild target |
 | --- | --- |
 | TensorCore `0.6` ID/layout records | TensorCore `0.7` semantic roots |
 | `TensorAxisId`, `TensorFieldId`, `IdSequence` | exact final leaf classes |
@@ -4467,8 +4468,9 @@ This synchronization pass updated:
 - `docs/validation.md`; and
 - `docs/implementation/index.md`.
 
-It also created the Design-complete / Undispatched Stage 3 work order.
-Governance records and completed work orders remain historical records.
+It also created the Stage 3 work order, which was later implemented, validated,
+independently reviewed, fast-forwarded, and accepted as Merged / Closed.
+Governance records and earlier completed work orders remain historical records.
 
 ## Closed Decisions And Remaining Design Gates
 
@@ -4529,36 +4531,36 @@ and address-local ordered Box-Muller pairs. The documented finite exponential
 and normal tails are accepted bounded-MVP approximations and parity
 qualifications, not hidden claims of unbounded continuous support.
 
+Stage 3 completed the TensorCore selection, inherited-constructor typing,
+public-import, and fixed consumer-probe gate at exact commit
+`b454d738f6385ce6489d85492a618a3dab139bb6`.
+
 The remaining gates are:
 
-1. Select and pin exact TensorCore `0.7` candidate
-   `b454d738f6385ce6489d85492a618a3dab139bb6`; prove ordinary-ABC inherited
-   constructor typing, exact public imports, and the TensorDSLab result-
-   taxonomy contract with fixed consumer probes.
-2. Exact private numeric stream table, Poisson algorithm and crossover,
+1. Exact private numeric stream table, Poisson algorithm and crossover,
    operation-specific per-quantum versus exact aggregate sampling choices,
    Charge-specific execution-dtype and raw-word-budget choices,
    rejection/exhaustion behavior, and supported execution-mode repeatability
    evidence. The Threefry engine, address packing, generic uniform conversion,
    Bernoulli threshold, exponential inversion, and Box-Muller mapping are no
    longer open in this gate.
-3. Exact fixed/exponential/zero-clipped-normal offset-PMF preparation
+2. Exact fixed/exponential/zero-clipped-normal offset-PMF preparation
    precision, stable normal-CDF and right-tail evaluation, normalization and
    tail-rounding tolerance; supported `maximum_generations`, rate,
    source-count, and accumulated-count bounds; and hard checked-overflow
    behavior. These are execution-support limits, not alternate scientific
    laws.
-4. Waveform-tail execution acceptance: scalar constant dtype/precision,
+3. Waveform-tail execution acceptance: scalar constant dtype/precision,
    compiler/execution mode, equivalence to the frozen unfused reference,
    one-kernel/no-target-sized-temporary instrumentation, and the fallback gate
    for a purpose-built kernel. Cross-product analog/digitized fusion remains
    excluded.
-5. Digitization-config association for independent/durable consumers.
-6. Exact TensorG4DS source and dense truth-binning bridge, including provenance
+4. Digitization-config association for independent/durable consumers.
+5. Exact TensorG4DS source and dense truth-binning bridge, including provenance
    origin, left-edge construction, exact boundary assignment at `0`, `i * T`,
    and exclusive `N * T`, plus `underflow_hit_count` and
    `overflow_hit_count` accounting.
-7. Whether typed collection convenience properties materially improve the API.
+6. Whether typed collection convenience properties materially improve the API.
 
 The fixed-`K` correlated-avalanche model itself is closed at the scientific
 algorithm level: exact config ownership, independent per-edge phase closure,
@@ -4567,7 +4569,7 @@ fixed/exponential/zero-clipped-normal CT delay families, optional composed
 exponential recovery response, unmarked cross-feeding, S1/S2 ledgers, terminal
 smearing rule, causal right-overflow policy, and private diagnostic vocabulary
 are selected above. The remaining Charge gates are the sampler/RNG and
-supported-numerical-domain items 2 and 3, plus concrete parity tolerances. No
+supported-numerical-domain items 1 and 2, plus concrete parity tolerances. No
 work order may substitute a same-bin closure, generation-wave plan, marked
 recovery process, Gamma-Poisson law, or separate public mechanism pipeline for
 this baseline.

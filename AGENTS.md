@@ -174,27 +174,22 @@ template. Replace TensorML process semantics with TensorDSLab product and cache
 semantics when adapting docs or patterns. TensorCore is the source of truth for
 generic tensor vocabulary and contracts.
 
-Stage 2 is Merged / Closed on `main` at
-`e8c62caf001ee7f58f766d7234747ed1d9a21e35`. It accepts the source-package
-package metadata, `tensor_dslab.common` and `tensor_dslab.readout` structural
-foundation, focused tests, and exact TensorCore dependency recorded by its work
-order. It accepts no scientific transform, workspace, cache schema, DAG
-surface, TensorG4DS or TensorML integration surface, or copied donor code.
-Maintenance 1 was separately dispatched to correct only readout public-name and
-module ownership. A feature-branch checkout is candidate evidence; if the
-updated surface is present on `main`, Review's clean fast-forward gate has
-completed. No scientific or later production stage is dispatched; each requires
-its own focused work order, verified routes, fixed-commit Validation,
-independent Review, and clean merge.
+Stage 2 is Merged / Closed at
+`e8c62caf001ee7f58f766d7234747ed1d9a21e35`, and Maintenance 1 is Merged /
+Closed at `3af8ab4acf834b07e3d027fb530e5f12934999a5`. They remain historical
+TensorCore `0.6` evidence.
 
-The TensorCore `0.7` rebuild described in `docs/architecture/rebuild.md` is the
-Design-accepted replacement target. It is intentionally incompatible with the
-Stage 2 representation, but it does not change production merely by being
-accepted in Design. Stage 2 and Maintenance 1 remain historical evidence.
-Stage 3 remains Design-complete / Undispatched until the synchronized authority
-is committed, its clean base and persistent routes are verified, and Design
-explicitly dispatches it. Implementation, Validation, Review, merge, and
-closeout are later state transitions.
+Stage 3 is Merged / Closed through exact implementation candidate
+`9250192587d1e05e71f09c9cda4ba9d0bce09bde` and Review's clean fast-forward
+closeout on `main` at `97e17c3177ac217aeb42a077db78f4bd223d51fa`.
+It implements the TensorCore `0.7` product/config/collection foundation
+described by `docs/architecture/rebuild.md`. Fixed-commit Validation,
+independent Review, and Design's post-merge audit found no unresolved issue.
+The evidence is CPU-only because CUDA was unavailable, and no wheel or
+editable-install claim was made because the required build tooling was absent.
+No scientific product-builder or later integration stage is dispatched; each
+requires its own focused work order, verified routes, fixed-commit Validation,
+independent Review, and clean merge.
 
 If implementation reveals a concrete contradiction in the accepted design, stop
 and send the issue back to Design. Do not silently widen architecture, create

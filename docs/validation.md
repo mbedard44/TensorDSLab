@@ -5,7 +5,7 @@ at the boundary that owns each claim. Tests should exercise supported use and
 must not mirror private implementation structure or harden the package against
 callers who deliberately leave the public API.
 
-## Current State And Next Gate
+## Current State
 
 Stage 2 is Merged / Closed at
 `e8c62caf001ee7f58f766d7234747ed1d9a21e35`. Maintenance 1 is Merged / Closed
@@ -13,11 +13,14 @@ at `3af8ab4acf834b07e3d027fb530e5f12934999a5`. Those commits remain the
 historical TensorCore `0.6` production baseline.
 
 [Stage 3: TensorCore 0.7 Product Foundation](implementation/stage_3_tensorcore_0_7_product_foundation.md)
-is Design-complete / Undispatched. It is the next production gate and replaces
-the live `0.6` structural package with the product-centered TensorCore `0.7`
-foundation described in [Rebuild Architecture](architecture/rebuild.md). Until
-Stage 3 passes fixed-commit Validation, independent Review, and merge, the
-rebuild is a Design target rather than implemented behavior.
+is Merged / Closed. Exact implementation candidate
+`9250192587d1e05e71f09c9cda4ba9d0bce09bde` passed fixed-commit Validation
+and independent Review, and Review's post-merge closeout produced `main`
+`97e17c3177ac217aeb42a077db78f4bd223d51fa`. The accepted production package
+now implements the product-centered TensorCore `0.7` foundation described in
+[Rebuild Architecture](architecture/rebuild.md). The recorded two CUDA skips
+remain qualifications rather than GPU evidence. No scientific producer or
+later integration stage is dispatched.
 
 Documentation-only Design work remains in Design unless the user requests an
 independent documentation Validation or Review. At minimum, run:
