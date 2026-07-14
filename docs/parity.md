@@ -346,7 +346,7 @@ stochastic laws are identical.
 | white Gaussian noise | statistical, with an ideal-normal analytic oracle | Mean, RMS, and independence target the same ideal law; finite digital samplers and RNG streams intentionally differ. |
 | PSD-shaped noise | statistical | Preserve calibrated spectral intent, not IV bank/crop traces or their exact distribution. |
 | analog `pure + noise` composition | exact, conditional | Exact algebraically when inputs, units, sign, shape, and clipping policy match. |
-| in-range ADC mapping | exact after representation mapping, conditional | When the mapped floating value and transfer parameters match, both truncate to the same integer code; TensorDSLab stores it in signed `torch.int32` rather than donor `uint16`. Floating-dtype/backend differences are numerical, not covered by this exact claim. |
+| open-interior ADC mapping | exact after representation mapping, conditional | When the mapped floating value and transfer parameters match away from a transition, both truncate to the same integer code; TensorDSLab stores it in signed `torch.int32` rather than donor `uint16`. Inclusive endpoint guards are an intentional numerical correction. |
 | out-of-range ADC behavior | intentional divergence | TensorDSLab clips before integer conversion instead of preserving IV unsigned wraparound. |
 | fixed-seed or bitwise IV RNG streams | not applicable | TensorDSLab uses position-addressed tensor-native random fields. |
 | per-channel condition DB variation | deferred | Requires a typed TensorDSLab channel-parameter boundary. |
@@ -858,14 +858,23 @@ TensorDSLab digitizes `AnalogWaveform` into the distinct `DigitizedWaveform`
 ADC-count product. “Digitized” is retained because the product is specifically
 the ADC result, not an arbitrary later digital or firmware-processed waveform.
 
-For in-range values, the target is **exact parity after representation
-mapping**. TensorDSLab clamps the mapped nonnegative value and converts it to
-signed `torch.int32`, whose float-to-integer truncation is the accepted rule;
-bit depth is 1 through 16. IV stores its code in `uint16`; dtype identity is not
-the parity claim, but equal integer code values are required when the mapped
+For open-interior in-range values, the target is **exact parity after
+representation mapping**. TensorDSLab derives the pre-gain lower and upper
+input thresholds, rounds them once to the waveform execution dtype, and
+assigns code zero or `maximum_code` inclusively when the analog value reaches
+those exact representable thresholds. The open interval uses the accepted
+affine mapping, floating clamp, and truncating conversion to signed
+`torch.int32`; bit depth is 1 through 16. The endpoint guard prevents ordinary
+affine rounding from placing a configured upper endpoint just below the
+maximum code. IV stores its code in `uint16`; dtype identity is not the parity
+claim, but equal interior integer code values are required when the mapped
 floating value, gain, voltage range, offset, and bit depth match. Differences
-introduced earlier by accepted floating dtype or backend arithmetic use
-numerical parity with focused-work-order tolerances and boundary fixtures.
+introduced by accepted floating dtype or backend arithmetic use numerical
+parity with focused-work-order tolerances and transition fixtures. Inclusive
+endpoint saturation is an **intentional numerical correction** wherever
+literal donor/affine operation order would lose one code to rounding; it
+preserves the configured ADC range rather than the accidental finite-
+arithmetic result.
 
 For out-of-range values, classification is **intentional divergence**.
 TensorDSLab gains and clamps analog voltage before quantization, validates gain,
@@ -875,7 +884,9 @@ IV's impossible conjunction that failed to reject out-of-range gain.
 
 Validation should cover exact lower/upper endpoints, half-step and near-step
 values, negative and over-range inputs, gain boundaries, all accepted bit
-depths, and ADC bounds.
+depths, dtype-rounded threshold collapse/rejection, and ADC bounds. The exact
+endpoint claim is scoped to the documented field-dtype thresholds, not to an
+unrepresentable real-number voltage between adjacent floating values.
 
 ## RNG Donor Parity And Backend Agreement
 

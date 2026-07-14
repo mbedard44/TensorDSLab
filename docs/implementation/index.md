@@ -105,6 +105,25 @@ unavailable, so the closeout makes no GPU, editable-install, or wheel-build
 claim. The exact archive SHA-256, environment, import isolation, and remaining
 qualifications are recorded in the work order.
 
+## Stage 4 Production Work Order
+
+### [Stage 4: Deterministic Waveform Products](stage_4_deterministic_waveform_products.md)
+
+Status: **Design-complete / Undispatched**. The work order freezes a
+functionality-first slice containing exactly three private producers:
+`_product_pure_waveform(...)` for both accepted TPC/Veto pulse models,
+`_product_analog_waveform(...)`, and `_product_digitized_waveform(...)`.
+It requires scientific/reference correctness, dtype/device/axes behavior,
+source immutability, guaranteed-fresh results, and accepted autograd behavior.
+It makes no kernel-count, fusion, target-temporary, allocation-free,
+throughput, or GPU-performance claim.
+
+The whole noise producer, including exact zero noise, remains Stage 5 scope.
+Stage 4 adds no public export, `simulate_readout(...)`, RNG, charge producer,
+workspace, IO, or integration surface. The Design-complete record does not
+authorize production edits; Implementation starts only from a separate
+explicit dispatch of the exact committed Design authority.
+
 ## Candidate Future Stages
 
 These are planning labels, not accepted work orders. Design must write a
@@ -113,21 +132,14 @@ behavior is in scope, the work order must name the comparison boundary, parity
 classification, acceptance criteria, and intentional divergences defined in
 [Parity](../parity.md).
 
-### Stage 4: Deterministic Waveform Products
-
-Possible goal: implement focused private product producers for the accepted
-TPC/Veto pure pulse models, zero-noise mode, analog composition/saturation, and
-digitization. Every field-returning path must state TensorCore's operation-
-owned result classification and prove its accepted numerical and storage
-contract. Do not publish partial `simulate_readout(...)` orchestration merely
-to reserve the API.
-
 ### Stage 5: Readout RNG And Stochastic Noise
 
 Possible goal: implement the accepted private positional Threefry engine and
-closed distribution primitives, followed by white and PSD-shaped noise. The
-work order must freeze exact numeric streams and execution-mode evidence in its
-own scope and must not infer coordinate-label or tensor-permutation invariance.
+closed distribution primitives, followed by the complete zero, white, and
+PSD-shaped `_product_noise_waveform(...)` family. The work order must freeze
+exact numeric streams and execution-mode evidence in its own scope, make the
+zero branch seed-inert, and must not infer coordinate-label or tensor-
+permutation invariance.
 
 ### Stage 6: Charge Simulation
 

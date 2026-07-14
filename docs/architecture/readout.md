@@ -439,7 +439,9 @@ analog[i] = clamp(pure[i] + noise[i], minimum, maximum)
 
 Either saturation bound may be absent; with both absent this is addition.
 There is no deterministic analog pedestal. This clamp represents physical
-front-end saturation.
+front-end saturation. Present bounds must be finite in the waveform execution
+dtype, and two bounds must remain strictly ordered after dtype conversion;
+the producer uses those exact rounded device scalars.
 
 ### DigitizedWaveform
 
@@ -451,27 +453,43 @@ gain = 10**(analog_gain_db / 20)
 span = input_max_mv - input_min_mv
 slope = gain * maximum_code / span
 intercept = -input_min_mv * maximum_code / span
+lower_input_mv = input_min_mv / gain
+upper_input_mv = input_max_mv / gain
 ```
 
 The producer evaluates:
 
 ```text
-digitized[i] = int32(clamp(
+interior[i] = clamp(
     analog[i] * slope + intercept,
     0,
     maximum_code,
-))
+)
+
+code_float[i] =
+    0,                         if analog[i] <= lower_input_mv
+    maximum_code,              if analog[i] >= upper_input_mv
+    interior[i],               otherwise
+
+digitized[i] = int32(code_float[i])
 ```
 
-The floating clamp precedes integer conversion, intentionally correcting the
-donor cast-before-clip wraparound defect. Nonnegative float-to-int conversion
-provides truncation. The affine digitizer transfer, not `NoiseWaveform`, owns
-the ADC code corresponding to zero analog voltage.
+The thresholds, `maximum_code`, slope, and intercept are converted once to the
+waveform dtype and materialized as exact zero-dimensional device scalars; the
+thresholds must remain finite and strictly ordered. Direct pre-gain endpoint
+comparisons make the accepted inclusive endpoints exact even when affine
+rounding would otherwise lose the upper code. Floating clamp and endpoint
+selection precede integer conversion, intentionally correcting the donor
+cast-before-clip wraparound defect. Nonnegative open-interior float-to-int
+conversion provides truncation. The endpoint-guarded affine digitizer
+transfer, not `NoiseWaveform`, owns the ADC code corresponding to zero analog
+voltage.
 
-Analog and digitized product producers each target one fused backend kernel
-without a target-sized temporary. That is a profiling and compiler-evidence
-requirement, not an inference from compact Python. Cross-product fusion is
-excluded from the MVP.
+The initial analog and digitized product producers use their direct eager Torch
+equations and make no kernel-count or temporary-allocation claim. A later
+measured optimization stage may target one fused backend kernel without a
+target-sized temporary. Cross-product fusion remains excluded unless a focused
+Design change proves product and retention invariance.
 
 ## Random Fields
 
@@ -588,17 +606,20 @@ Deferred work includes:
 - broad compatibility, deployment, and release policy; and
 - convenience properties beyond exact-type lookup.
 
-## First Production Slices
+## Production Slices
 
-The first rebuild production stage should implement only the TensorCore `0.7`
-semantic foundation: exact dependency pin, axes, sampling, product field/config
-types, `ReadoutCollection`, exports, and focused structural/static tests. It
-must not create empty simulation, RNG, or product-builder modules.
+Stage 3 is Merged / Closed and implements only the TensorCore `0.7` semantic
+foundation: exact dependency pin, axes, sampling, product field/config types,
+`ReadoutCollection`, exports, and focused structural/static tests. It created
+no empty simulation, RNG, or product-builder module.
 
-Later focused stages add deterministic waveform products, close and implement
-stochastic Charge/RNG, and finally expose complete request-aware
-`simulate_readout`. A partial public simulation API must not imply unsupported
-product closures.
+Stage 4 is Design-complete / Undispatched. It freezes a functionality-first
+work order for exactly the private pure, analog, and digitized waveform
+producers. Stage 5 will own the complete zero/white/PSD noise producer and its
+RNG prerequisites. Later focused stages close stochastic Charge/RNG and finally
+expose complete request-aware `simulate_readout`. A partial public simulation
+API must not imply unsupported product closures. Measured GPU fusion remains a
+separate optimization stage after functional producers exist.
 
 ## Return To Design Before
 

@@ -181,13 +181,22 @@ TensorCore `0.6` evidence.
 
 Stage 3 is Merged / Closed through exact implementation candidate
 `9250192587d1e05e71f09c9cda4ba9d0bce09bde` and Review's clean fast-forward
-closeout on `main` at `97e17c3177ac217aeb42a077db78f4bd223d51fa`.
-It implements the TensorCore `0.7` product/config/collection foundation
-described by `docs/architecture/rebuild.md`. Fixed-commit Validation,
-independent Review, and Design's post-merge audit found no unresolved issue.
-The evidence is CPU-only because CUDA was unavailable, and no wheel or
-editable-install claim was made because the required build tooling was absent.
-No scientific product-builder or later integration stage is dispatched; each
+closeout `97e17c3177ac217aeb42a077db78f4bd223d51fa`; Design's accepted final
+closeout is clean `main` at
+`5ff13eb3c0735abfda454a334be59faac35259c2`. It implements the TensorCore
+`0.7` product/config/collection foundation described by
+`docs/architecture/rebuild.md`. Fixed-commit Validation, independent Review,
+and Design's post-merge audit found no unresolved issue. The evidence is
+CPU-only because CUDA was unavailable, and no wheel or editable-install claim
+was made because the required build tooling was absent.
+
+Stage 4 is Design-complete / Undispatched through
+`docs/implementation/stage_4_deterministic_waveform_products.md`. It freezes a
+functionality-first work order for exactly the private pure, analog, and
+digitized waveform producers. The complete noise producer remains Stage 5,
+and kernel fusion or target-temporary elimination remains a later measured
+optimization. This documentation state authorizes no production edit. No
+scientific product-builder or later integration stage is dispatched; each
 requires its own focused work order, verified routes, fixed-commit Validation,
 independent Review, and clean merge.
 

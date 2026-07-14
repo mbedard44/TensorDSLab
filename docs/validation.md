@@ -16,11 +16,20 @@ historical TensorCore `0.6` production baseline.
 is Merged / Closed. Exact implementation candidate
 `9250192587d1e05e71f09c9cda4ba9d0bce09bde` passed fixed-commit Validation
 and independent Review, and Review's post-merge closeout produced `main`
-`97e17c3177ac217aeb42a077db78f4bd223d51fa`. The accepted production package
+`97e17c3177ac217aeb42a077db78f4bd223d51fa`. Design accepted the final Stage 3
+closeout on clean `main` at
+`5ff13eb3c0735abfda454a334be59faac35259c2`. The accepted production package
 now implements the product-centered TensorCore `0.7` foundation described in
 [Rebuild Architecture](architecture/rebuild.md). The recorded two CUDA skips
-remain qualifications rather than GPU evidence. No scientific producer or
-later integration stage is dispatched.
+remain qualifications rather than GPU evidence.
+
+[Stage 4 work order](implementation/stage_4_deterministic_waveform_products.md)
+is Design-complete / Undispatched. Its focused acceptance matrix covers the
+private pure, analog, and digitized producers with eager functionality first;
+the complete noise producer and measured fusion evidence remain later stages.
+Until an exact Design authority is explicitly dispatched, no Stage 4 runtime,
+static-typing, or parity check is active production clearance and no scientific
+producer is implemented.
 
 Documentation-only Design work remains in Design unless the user requests an
 independent documentation Validation or Review. At minimum, run:
@@ -372,21 +381,27 @@ prove device mismatches within one collection fail rather than move silently.
 No code path may silently call `.cpu()`, `.numpy()`, `.tolist()`, detach, cast,
 or import NumPy as a reference implementation.
 
-## Later Scientific Validation
+## Staged Scientific Validation
 
 Stage 3 does not implement scientific producers, RNG, request planning, or
-`simulate_readout(...)`. The detailed future acceptance matrix remains
-normative in [Rebuild Validation Strategy](architecture/rebuild.md#validation-strategy),
+`simulate_readout(...)`. The Design-complete / Undispatched Stage 4 work order
+activates only after explicit dispatch and then validates the TPC/Veto pure,
+analog, and digitized producers, including their reference equations,
+freshness, axes/device/dtype behavior, and accepted autograd contracts. It does
+not validate zero noise, stochastic noise, RNG, Charge, public orchestration,
+or GPU fusion.
+
+The remaining acceptance matrix stays normative in
+[Rebuild Validation Strategy](architecture/rebuild.md#validation-strategy),
 including:
 
 - product-request closure and retention invariance;
 - TensorDSLab positional Threefry RNG and distribution primitives;
 - dark counts, timing jitter, fixed-generation correlated avalanches, S1/S2
   charge ledgers, recovery weighting, overflow, and smearing;
-- TPC FEB-SNR and Veto PDU pulse models;
-- white, zero, and PSD-shaped noise;
-- analog composition/saturation and digitization;
-- operation-owned freshness, stream ordering, and future GPU fusion evidence;
+- the complete white, zero, and PSD-shaped noise family under Stage 5;
+- operation-owned freshness and stream ordering, with GPU fusion evidence
+  deferred to a later measured optimization stage;
   and
 - future TensorG4DS, TensorML, Reconstruction, and durable boundaries.
 

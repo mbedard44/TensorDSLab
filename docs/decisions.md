@@ -54,11 +54,11 @@ representation validation; TensorDSLab owns domain relationships and
 scientific meaning.
 
 The reviewed TensorCore Design reference is exact clean commit
-`b454d738f6385ce6489d85492a618a3dab139bb6`. Selecting the exact dependency pin
-and proving public imports, runtime construction, inherited-constructor static
-typing, and result-storage contracts remain requirements of the first rebuild
-production work order. TensorDSLab will not fork TensorCore or reproduce its
-private mechanics.
+`b454d738f6385ce6489d85492a618a3dab139bb6`. Stage 3 selected that exact
+dependency and proved public imports, runtime construction,
+inherited-constructor static typing, and the operation-owned result-storage
+boundary against both the clean source checkout and an independently archived
+pin. TensorDSLab will not fork TensorCore or reproduce its private mechanics.
 
 ### Exact Types Replace Loose Semantic Namespaces
 
@@ -200,6 +200,25 @@ remain raw, exclusive, and unexposed until writes are enqueued. The retired
 model of overwriting an already valid public field or collection will not
 return.
 
+### Deterministic Waveforms Are Functionality-First
+
+The Design-complete / Undispatched Stage 4 work order covers exactly the
+private pure, analog, and digitized waveform producers. It freezes scalar
+precision and requires scientific/reference equations, dtype/device/axes,
+accepted autograd behavior, source immutability, and guaranteed-fresh outputs.
+It makes no kernel-count, target-sized-temporary, throughput, or compiler
+claim. The complete noise producer remains Stage 5.
+
+The first pure-waveform producer prepares its config-derived pulse template and
+sampled normalization in Python binary64, then materializes that template once
+in the `Charge` dtype/device. Analog saturation bounds and ADC transfer
+constants use the same binary64 scalar-preparation rule before field-dtype
+representability checks. Digitization retains an affine open interior and
+explicitly saturates at inclusive dtype-rounded pre-gain thresholds so the
+upper endpoint cannot lose one code to rounding. Payload-sized convolution,
+analog, and digitizer arithmetic remains in the input field dtype and device;
+existing input payloads are never host-materialized.
+
 ### Public Validation Does Not Mean Adversarial Hardening
 
 TensorDSLab validates supported public input relationships: exact product
@@ -332,13 +351,6 @@ model in `architecture/rebuild.md` is the only active baseline.
 
 ## Open
 
-### Exact TensorCore Consumer Pin And Probes
-
-The first rebuild work order must select exact TensorCore candidate
-`b454d738f6385ce6489d85492a618a3dab139bb6` and prove package-root imports,
-inherited constructors, exact-leaf behavior, static result inference, and
-operation-owned aliasing/freshness claims.
-
 ### Charge RNG And Supported Numerical Domain
 
 Before stochastic Charge implementation, Design must close the numeric stream
@@ -348,13 +360,13 @@ repeatability modes, PMF preparation precision and tolerances, stable
 normal-tail evaluation, supported generation/rate/count bounds, checked
 overflow, and parity tolerances.
 
-### Waveform-Tail Execution Evidence
+### Waveform-Tail Optimization Evidence
 
-The deterministic waveform stage must select scalar precision and execution
-mode, prove equivalence with the frozen reference equations, instrument the
-one-kernel/no-target-sized-temporary target for analog and digitized products,
-and define the gate for a purpose-built fallback kernel. Cross-product fusion
-remains excluded.
+A later measured optimization stage may instrument product-local fusion and
+evaluate a purpose-built fallback kernel after the functional producers exist.
+It must freeze the compiler/execution mode, representative shapes, profiler and
+memory evidence, and equivalence to the accepted eager reference.
+Cross-product fusion remains excluded without a focused Design change.
 
 ### Durable Digitization Association
 

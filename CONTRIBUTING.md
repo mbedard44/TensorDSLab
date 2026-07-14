@@ -21,6 +21,7 @@ Python import: tensor_dslab (accepted on main through Stage 3)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
 Package maturity: Stage 3 TensorCore 0.7 product foundation Merged / Closed
+Next work order: Stage 4 waveforms (Design-complete / Undispatched)
 ```
 
 Stage 1 is Design-complete, and Stage 2 is Merged / Closed on `main` at
@@ -42,10 +43,17 @@ The TensorCore `0.7` rebuild in `docs/architecture/rebuild.md` is implemented
 through Stage 3. Exact implementation candidate
 `9250192587d1e05e71f09c9cda4ba9d0bce09bde` cleared fixed-commit Validation
 and independent Review; Review's clean fast-forward and post-merge closeout
-produced `main` `97e17c3177ac217aeb42a077db78f4bd223d51fa`, and Design accepted the
-result after an independent post-merge audit. Stage 2 and Maintenance 1 remain
-historical TensorCore `0.6` evidence. Scientific producers, public readout
-orchestration, and integration remain undispatched future work.
+produced `97e17c3177ac217aeb42a077db78f4bd223d51fa`, and Design accepted the
+result after an independent post-merge audit on clean `main`
+`5ff13eb3c0735abfda454a334be59faac35259c2`. Stage 2 and Maintenance 1 remain
+historical TensorCore `0.6` evidence.
+
+The Stage 4 deterministic waveform work order is Design-complete /
+Undispatched. It covers exactly the private pure, analog, and digitized
+producers under a functionality-first acceptance gate. The complete noise
+producer remains Stage 5, and GPU fusion or target-temporary elimination is a
+later measured optimization. Scientific producers remain unimplemented;
+public readout orchestration and integration remain undispatched future work.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency

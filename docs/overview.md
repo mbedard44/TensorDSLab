@@ -24,9 +24,11 @@ DAG orchestration, and the exact cross-package adapters remain deferred.
 Stage 2 and Maintenance 1 are Merged / Closed historical TensorCore `0.6`
 baselines. Stage 3 is Merged / Closed through exact implementation candidate
 `9250192587d1e05e71f09c9cda4ba9d0bce09bde` and Review's clean fast-forward
-closeout on `main` at `97e17c3177ac217aeb42a077db78f4bd223d51fa`.
-It deliberately replaced the pre-deployment `0.6` representation without a
-compatibility layer and still implements no scientific readout transform.
+closeout `97e17c3177ac217aeb42a077db78f4bd223d51fa`; Design's accepted final
+Stage 3 closeout is clean `main` at
+`5ff13eb3c0735abfda454a334be59faac35259c2`. It deliberately replaced the
+pre-deployment `0.6` representation without a compatibility layer and still
+implements no scientific readout transform.
 
 [Rebuild Architecture](architecture/rebuild.md) remains the accepted complete
 architecture. Stage 3 selected exact TensorCore `0.7.0` commit
@@ -35,6 +37,13 @@ architecture. Stage 3 selected exact TensorCore `0.7.0` commit
 TensorDSLab semantic leaves. Later scientific producers and public readout
 orchestration remain Design targets only until their own focused work orders
 are written, dispatched, validated, reviewed, and merged.
+
+[Stage 4 work order](implementation/stage_4_deterministic_waveform_products.md)
+is Design-complete / Undispatched. It freezes a functionality-first work order
+for the private pure, analog, and digitized waveform producers, while deferring
+the complete noise producer to Stage 5 and measured GPU fusion to a later
+optimization stage. This status changes no production code and authorizes no
+Implementation work by itself.
 
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`, bound to
 accepted candidate `d634401a853915edeb4f83df4a4943b3553deced`. Conformance is
@@ -187,6 +196,9 @@ are in `architecture/rebuild.md`.
 - [Stage 3 Work Order](implementation/stage_3_tensorcore_0_7_product_foundation.md):
   Merged / Closed TensorCore `0.7` semantic product/config foundation and
   clean replacement scope.
+- [Stage 4 Work Order](implementation/stage_4_deterministic_waveform_products.md):
+  Design-complete / Undispatched functionality-first pure, analog, and
+  digitized waveform producer slice.
 - [Package Governance](governance/index.md): adoption decision and declaration,
   TensorDSLab overlay, semantic rule map, state boundaries, and closeout.
 - [Stage 2 Work Order](implementation/stage_2_package_and_readout_collection_foundation.md):

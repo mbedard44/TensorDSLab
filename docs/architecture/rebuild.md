@@ -114,8 +114,8 @@ Durable persistence and IO are deferred entirely from this rebuild.
 - Preserve accepted detector/readout behavior and parity classifications where
   their comparison boundaries still apply.
 - Leave explicit later boundaries for TensorG4DS, TensorML, reconstruction,
-  artifacts, and measured execution optimization beyond the accepted
-  product-local waveform-tail fusion target.
+  artifacts, and measured execution optimization, including product-local
+  waveform-tail fusion after the functional producers are established.
 
 ## Non-Goals
 
@@ -1799,9 +1799,10 @@ ordinary collaborator-facing simulation API.
 
 The two pointwise waveform-tail producers own their product arithmetic directly.
 Do not add `_apply_analog_saturation(...)`, `_digitize(...)`, or another
-one-line Python wrapper merely to rename either expression. Here *kernel*
-means the fused backend execution of a product producer, not another layer in
-the Python API.
+one-line Python wrapper merely to rename either expression. The initial
+implementation uses ordinary eager Torch expressions. A later measured
+optimization may fuse either expression without adding another Python API
+layer.
 
 After structural and config preflight, `_product_analog_waveform(...)` evaluates
 one elementwise product expression:
@@ -1816,8 +1817,8 @@ analog[i] = clamp(
 
 Either bound may be absent. When both are absent, the expression is simply
 addition. The producer returns one new `AnalogWaveform` with guaranteed fresh
-storage independent of `pure.tensor` and `noise.tensor`; it must not materialize
-a target-sized sum merely to clamp it in a second eager operation.
+storage independent of `pure.tensor` and `noise.tensor`. The functional stage
+makes no claim about eager or backend-created target-sized intermediates.
 
 `_product_digitized_waveform(...)` computes its scalar transfer constants once
 during preflight:
@@ -1828,24 +1829,36 @@ gain = 10**(analog_gain_db / 20)
 span = input_max_mv - input_min_mv
 slope = gain * maximum_code / span
 intercept = -input_min_mv * maximum_code / span
+lower_input_mv = input_min_mv / gain
+upper_input_mv = input_max_mv / gain
 ```
 
-It then evaluates one elementwise product expression:
+It then evaluates one endpoint-guarded affine product expression:
 
 ```text
-digitized[i] = int32(clamp(
+interior[i] = clamp(
     analog[i] * slope + intercept,
     0,
     maximum_code,
-))
+)
+
+code_float[i] =
+    0,                         if analog[i] <= lower_input_mv
+    maximum_code,              if analog[i] >= upper_input_mv
+    interior[i],               otherwise
+
+digitized[i] = int32(code_float[i])
 ```
 
-The clamp occurs in floating point before conversion. Because every clamped
-value is nonnegative, float-to-`torch.int32` conversion implements the accepted
-truncation rule without a separate target-sized `trunc` tensor. The producer
-returns one new `DigitizedWaveform` with guaranteed fresh storage independent
-of `analog.tensor`; no target-sized gained, clipped, or scaled waveform is a
-semantic or private intermediate.
+The guards compare directly against dtype-rounded thresholds in the pre-gain
+analog domain and make the inclusive ADC endpoints exact even when affine
+rounding would place the upper endpoint just below `maximum_code`. The clamp
+and endpoint selection occur in floating point before conversion. Because
+every selected value is nonnegative, float-to-`torch.int32` conversion
+implements the accepted open-interior truncation rule without an explicit
+`torch.trunc(...)` step. The producer returns one new `DigitizedWaveform` with
+guaranteed fresh storage independent of `analog.tensor`. The functional stage
+does not classify temporary storage created by eager Torch or its backend.
 
 The normal materialized waveform tail therefore has exactly two semantic
 product steps:
@@ -2060,10 +2073,11 @@ Preflight completes before the first RNG draw or tensor write. It validates:
 - timestamp grammar and timing suitability for enabled operations;
 - source device and supported tensor layout;
 - `floating_dtype` is exactly `torch.float32` or `torch.float64` when the
-  closure generates a floating product; and
+  closure generates a floating product;
 - analog saturation bounds and digitizer `maximum_code`, `gain`, `span`,
-  `slope`, and `intercept` are valid and representable for the selected
-  execution dtype before either waveform-tail producer launches; and
+  `slope`, `intercept`, and pre-gain endpoint thresholds are valid,
+  representable, and noncollapsed in the selected execution dtype before
+  either waveform-tail producer launches; and
 - exact seed type/range, a present seed when an effective enabled submodel is
   stochastic, and positional RNG/backend compatibility.
 
@@ -3198,6 +3212,14 @@ use a negative configured peak voltage; there is no second gain or inversion
 switch. Output axes and shape match charge. Baseline is not part of the
 signal-only `PureWaveform`.
 
+The first functional producer prepares the config-derived sample times, pulse
+values, sampled-extremum normalization, and signed scaling in Python binary64,
+validates that finite template before payload work, and materializes it once in
+the exact `Charge` dtype and device. This is host-side preparation of small
+configuration-derived coefficients, not host materialization of the input
+payload. Causal convolution and every payload-sized operation execute in the
+field dtype on the field device with no hidden widening.
+
 TensorDSLab intentionally standardizes the discretization around those donor
 equations:
 
@@ -3437,6 +3459,16 @@ inside `_product_analog_waveform(...)` and is distinct from the finite ADC code
 range. An absent lower or upper bound leaves that side unbounded; with no
 bounds the equation reduces to `pure + noise`.
 
+The producer evaluates the eager equation in the common input dtype and device.
+Config-derived bounds are converted through that dtype and checked for finite
+representability before payload calculation; two present bounds must remain
+strictly ordered after conversion. The exact rounded values are materialized
+as zero-dimensional tensors on the input device and used by the clamp. It
+adopts the exact `pure.axes` tuple after requiring
+`noise.axes == pure.axes`, equal device, and equal dtype. Autograd is preserved
+through addition and saturation according to ordinary Torch clamp semantics;
+no derivative is promised exactly at a saturation boundary.
+
 The MVP introduces no deterministic analog baseline or pedestal.
 `PureWaveform` is a signal excursion from 0 mV, `NoiseWaveform` is a stochastic
 voltage fluctuation about 0 mV, and `AnalogWaveform` is their zero-referenced
@@ -3464,24 +3496,45 @@ gain = 10**(analog_gain_db / 20)
 span = input_max_mv - input_min_mv
 slope = gain * maximum_code / span
 intercept = -input_min_mv * maximum_code / span
+lower_input_mv = input_min_mv / gain
+upper_input_mv = input_max_mv / gain
 ```
+
+These scalar constants are derived once in Python binary64, required to be
+finite and representable in the analog input dtype, and then used by payload
+arithmetic in that dtype and device. The rounded thresholds must remain
+strictly ordered. Preflight preserves the exact rounded thresholds,
+`maximum_code`, slope, and intercept and materializes them as zero-dimensional
+tensors on the input device, so payload arithmetic uses the values that
+validation accepted. This scalar preparation does not move or materialize the
+analog payload on the host.
 
 The product producer then evaluates:
 
 ```text
-digitized[i] = int32(clamp(
+interior[i] = clamp(
     analog[i] * slope + intercept,
     0,
     maximum_code,
-))
+)
+
+code_float[i] =
+    0,                         if analog[i] <= lower_input_mv
+    maximum_code,              if analog[i] >= upper_input_mv
+    interior[i],               otherwise
+
+digitized[i] = int32(code_float[i])
 ```
 
 Bit depth is in `[1, 16]`, analog gain is in `[0, 40]` dB, and output is
-nonnegative `torch.int32`. Clipping precedes conversion; unsigned wraparound is
+nonnegative `torch.int32`. The endpoint comparisons occur directly in the
+pre-gain analog domain. They are inclusive at the exact field-dtype thresholds
+and avoid a one-code endpoint loss caused by floating affine rounding.
+Clipping and endpoint selection precede conversion; unsigned wraparound is
 forbidden. One scalar gain and voltage-transfer range applies to every channel
-and example. Conversion of the nonnegative clamped value truncates toward zero,
-which is the accepted ADC quantization rule. No separate pedestal is needed:
-an asymmetric input range determines the code corresponding to 0 mV.
+and example. Conversion of a nonnegative open-interior value truncates toward
+zero, which is the accepted ADC quantization rule. No separate pedestal is
+needed: an asymmetric input range determines the code corresponding to 0 mV.
 That nonzero zero-voltage code is an ADC transfer property, not a baseline
 voltage added to `AnalogWaveform`. Digitization is not declared
 differentiable.
@@ -3497,15 +3550,23 @@ scaled_code = (
     / span
     * maximum_code
 )
-reference_code = int32(clamp(scaled_code, 0, maximum_code))
+interior_reference_code = int32(clamp(scaled_code, 0, maximum_code))
+
+reference_code =
+    0,                         if analog_mv <= lower_input_mv
+    maximum_code,              if analog_mv >= upper_input_mv
+    interior_reference_code,   otherwise
 ```
 
-The production expression using precomputed `slope` and `intercept` is the
-normative execution form. Validation covers exact endpoints, code-transition
-neighborhoods, and the accepted dtype/backend arithmetic rather than assuming
-cross-backend bitwise identity under floating multiply-add reassociation. Its
-pre-conversion clamp intentionally fixes IV-DSLab's cast-before-clip
-wraparound defect.
+The gained/clipped and affine interiors are algebraically equivalent in real
+arithmetic but need not be floating-point identical near code transitions.
+The production expression using precomputed `slope` and `intercept` plus the
+same endpoint guards is the normative execution form. Validation covers exact
+dtype-rounded endpoints, code-transition neighborhoods, and the accepted
+dtype/backend arithmetic rather than assuming cross-backend bitwise identity
+under floating multiply-add reassociation. Its pre-conversion clamp and guards
+intentionally fix IV-DSLab's cast-before-clip wraparound and endpoint-rounding
+defects.
 
 Because TensorCore leaves are fieldless, a bare `DigitizedWaveform` does not
 carry variable bit depth, gain, or voltage transfer. The builder guarantees its
@@ -3949,23 +4010,24 @@ itself promise a lower peak during construction. The simple functional planner
 may keep local prerequisite references until final assembly, and autograd may
 retain them longer through the result graph.
 
-The pointwise waveform tail has one narrower MVP execution target. Each of
-`_product_analog_waveform(...)` and `_product_digitized_waveform(...)` should emit
-one fused accelerator kernel that reads each product input once and writes its
-guaranteed-fresh product output without a target-sized temporary. The first implementation
-uses the direct Torch expressions owned by those producers and lets
-`torch.compile`/the selected backend perform product-local fusion. The
-uncompiled equations remain the correctness reference.
+The first waveform implementation is functionality-first. The direct eager
+Torch equations owned by `_product_analog_waveform(...)` and
+`_product_digitized_waveform(...)` are the correctness references and may
+materialize ordinary backend intermediates. Their functional work order proves
+scientific values, dtype/device/axes, autograd where applicable, source
+immutability, and guaranteed-fresh outputs; it makes no kernel-count,
+target-sized-temporary, throughput, or compiler claim.
 
-One-kernel/no-target-sized-temporary behavior is an evidence-backed execution
-claim, not something inferred from compact Python syntax. The implementation
-work order must inspect the compiled graph and use accelerator profiling and
-memory instrumentation on representative shapes. If the selected compiler
-cannot prove this contract, the affected implementation slice returns to
-Design and may use one purpose-built Triton or CUDA kernel without changing the
-public API or adding a decorative Python wrapper. Product outputs themselves
-remain guaranteed-fresh fields relative to their named inputs, so this does
-not create an allocation-free chain claim.
+One-kernel/no-target-sized-temporary behavior is a later evidence-backed
+optimization claim, not something inferred from compact Python syntax. A
+focused optimization stage may inspect compiled graphs and use accelerator
+profiling and memory instrumentation on representative shapes, then retain the
+direct eager equations as its correctness reference. If compiler fusion is
+insufficient, that later stage may evaluate a purpose-built Triton or CUDA
+kernel without changing the public API or adding a decorative Python wrapper.
+Product outputs remain guaranteed-fresh fields relative to their named inputs;
+neither the functional nor a later fused implementation creates an
+allocation-free chain claim.
 
 Fusion across product boundaries, earlier release of arbitrary prerequisites,
 and scratch reuse remain later measured execution optimizations with their own
@@ -4140,9 +4202,9 @@ The scientific targets retained by this architecture are:
   power and making no absolute-power parity claim for that cell;
 - exact analog composition and optional physical saturation at the
   `AnalogWaveform` product boundary; and
-- exact in-range ADC codes under the frozen affine execution form, with
-  intentional pre-conversion clipping divergence from IV's out-of-range
-  integer wraparound.
+- exact in-range ADC codes under the frozen endpoint-guarded affine execution
+  form, with inclusive field-dtype endpoints and intentional pre-conversion
+  clipping divergence from IV's out-of-range integer wraparound.
 
 Post-binned statistical parity remains acceptable without eventwise or bitwise
 identity when tensor rebasing or RNG streams differ. Every production claim
@@ -4192,25 +4254,29 @@ The rebuild validation matrix includes:
 - `_product_analog_waveform(...)` reference checks for no saturation, each
   one-sided bound, and two-sided bounds, including exact bound values and proof
   that the input fields remain unchanged;
+- analog scalar preflight rejects nonfinite field-dtype conversions and bounds
+  that collapse or reverse after conversion before evaluating `pure + noise`;
 - zero-input waveform fixtures proving that neither `PureWaveform`,
   `NoiseWaveform`, nor `AnalogWaveform` receives a deterministic pedestal, and
-  that the digitizer's zero-voltage code follows only from its accepted affine
-  transfer;
+  that the digitizer's zero-voltage code follows only from its accepted
+  endpoint-guarded affine transfer;
 - digitizer preflight checks for finite representable `maximum_code`, `gain`,
-  `span`, `slope`, and `intercept`, followed by endpoint, asymmetric-zero-code,
-  code-transition-neighborhood, truncation, `torch.int32`, and pre-cast
-  clamping fixtures with no unsigned wraparound;
+  `span`, `slope`, `intercept`, and strictly ordered dtype-rounded pre-gain
+  thresholds, followed by endpoint, asymmetric-zero-code, code-transition-
+  neighborhood, truncation, `torch.int32`, and pre-cast clamping fixtures with
+  no unsigned wraparound;
 - equivalence of each direct waveform-tail production expression to its
   unfused reference equation under the accepted dtype/backend numerical
   contract;
-- static and runtime proof that the waveform tail contains only the two owning
-  product producers, materializes `AnalogWaveform` even when it is an
-  unretained prerequisite, and does not introduce decorative pointwise Python
-  wrappers or cross-product fusion;
-- conditional accelerator compiler-graph, profiler, and memory evidence that
-  each waveform-tail product producer emits one fused backend kernel and no
-  target-sized temporary; absent such evidence, no fusion claim is made and
-  the affected implementation returns to Design;
+- Stage 4 static and runtime proof that the waveform tail contains only the
+  two owning product producers and does not introduce decorative pointwise
+  Python wrappers or cross-product fusion;
+- later public-orchestration proof that requesting only `DigitizedWaveform`
+  still computes `AnalogWaveform` exactly once as an unretained prerequisite;
+- a later conditional accelerator optimization stage may add compiler-graph,
+  profiler, and memory evidence for one fused backend kernel and no
+  target-sized temporary; Stage 4 requires no such evidence and makes no
+  fusion claim;
 - exact `PureWaveformConfig.model` rejection of foreign/base values,
   exact dispatch to both accepted pulse models, and proof that one selected
   model and scalar parameter set are applied uniformly without inferring
@@ -4386,7 +4452,9 @@ The rebuild validation matrix includes:
   same-stream and explicit cross-stream ordering behavior;
 - ordinary-`torch.Tensor` execution evidence, with custom tensor subclasses and
   dispatch modes explicitly unsupported rather than exhaustively detected;
-- no silent CPU, NumPy, list, move, input-cast, or detach path;
+- no CPU, NumPy, Python-list, move, cast, or detach path for an existing input
+  payload; small config-derived scalar/template preparation remains allowed as
+  explicitly documented by the owning producer;
 - transform-specific scientific/parity tests;
 - CPU tests and conditional CUDA tests with accurate qualifications;
 - stale `0.6` names and compatibility aliases absent; and
@@ -4472,6 +4540,14 @@ It also created the Stage 3 work order, which was later implemented, validated,
 independently reviewed, fast-forwarded, and accepted as Merged / Closed.
 Governance records and earlier completed work orders remain historical records.
 
+The subsequent Stage 4 Design pass creates the focused
+`stage_4_deterministic_waveform_products.md` work order and synchronizes the
+functionality-first execution decision. Stage 4 remains Design-complete /
+Undispatched: exactly the private pure, analog, and digitized producers are in
+scope; the complete noise producer remains Stage 5 and measured GPU fusion is
+a later optimization gate. This documentation state changes no production
+module or public API.
+
 ## Closed Decisions And Remaining Design Gates
 
 The rebuild package tree and import ownership are closed. Shared semantic axes
@@ -4514,8 +4590,8 @@ standard-normal components are generated. Neither choice reopens this PSD law.
 
 Waveform baseline ownership is closed as well. The MVP has no deterministic
 analog pedestal: pure and noise are zero-referenced voltage components, analog
-is their optionally saturated sum, and the digitizer's affine transfer owns
-the nonzero ADC code corresponding to 0 mV.
+is their optionally saturated sum, and the digitizer's endpoint-guarded affine
+transfer owns the nonzero ADC code corresponding to 0 mV.
 
 The private raw RNG core and positional address encoding are closed. RNG schema
 `tensordslab.threefry4x32-20/v1` uses the exact standard Random123
@@ -4550,11 +4626,11 @@ The remaining gates are:
    source-count, and accumulated-count bounds; and hard checked-overflow
    behavior. These are execution-support limits, not alternate scientific
    laws.
-3. Waveform-tail execution acceptance: scalar constant dtype/precision,
-   compiler/execution mode, equivalence to the frozen unfused reference,
-   one-kernel/no-target-sized-temporary instrumentation, and the fallback gate
-   for a purpose-built kernel. Cross-product analog/digitized fusion remains
-   excluded.
+3. Waveform-tail optimization evidence after the functional producers are
+   accepted: compiler/execution mode, equivalence to the frozen eager
+   reference, one-kernel/no-target-sized-temporary instrumentation, and the
+   fallback gate for a purpose-built kernel. Cross-product analog/digitized
+   fusion remains excluded.
 4. Digitization-config association for independent/durable consumers.
 5. Exact TensorG4DS source and dense truth-binning bridge, including provenance
    origin, left-edge construction, exact boundary assignment at `0`, `i * T`,
