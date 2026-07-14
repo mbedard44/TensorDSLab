@@ -16,10 +16,14 @@ not mean that TensorDSLab should reproduce IV-DSLab package structure, global
 state, RNG streams, sparse PE-row growth, condition-database loading, fixed
 array rank, or incidental implementation defects.
 
-The target behavior remains authoritative in
-[Post-Binned Readout Architecture](architecture/readout.md). This page explains
-how that target relates to donor behavior; it does not independently create or
-override a TensorDSLab scientific contract.
+The selected TensorCore `0.7` target is governed by
+[Rebuild Architecture](architecture/rebuild.md),
+[Post-Binned Readout Architecture](architecture/readout.md), and
+[TensorCore Integration](architecture/tensors.md). The fixed-`K` section of
+the rebuild architecture is the sole active correlated-avalanche baseline.
+TensorDSLab retains no competing avalanche-algorithm architecture page. This
+page classifies donor relationships; it does not independently dispatch
+implementation or override an architecture contract.
 
 ## Authority And Interpretation
 
@@ -103,7 +107,7 @@ fixtures must anchor production claims.
 ## Parity Vocabulary
 
 These classifications apply only when discussing a donor comparison. Ordinary
-contract phrases such as “exact field ID,” “exact target-field identity,” or
+contract phrases such as “exact product type,” “exact target-product identity,” or
 “exact output destination” are not parity claims.
 
 | Classification | Meaning | Minimum evidence |
@@ -134,10 +138,10 @@ Every production work order or fixture that claims parity must name:
 ```text
 reference:
 comparison boundary:
-dependency field IDs:
-result field ID:
-ReadoutCollection field subset (context only):
-private ephemeral observable (if no public field boundary):
+input product types:
+result product type:
+requested ReadoutCollection product subset (context only):
+private ephemeral observable (if no public product boundary):
 input/config domain:
 classification:
 assumptions:
@@ -155,66 +159,48 @@ operation order or upstream population differs.
 
 ## ReadoutCollection Presence And Parity Claims
 
-The primary in-memory container is one partially materialized
+The rebuild's primary in-memory result is one request-selected
 `ReadoutCollection`, but parity never attaches to the container merely because
-a field is present. A public transform claim attaches to its exact recognized
-dependency field ID or IDs and exact result field ID; the dependency-ID set is
-empty for noise rendering, whose dependencies are the common layout and sample
-grid. A private `simulate_charge` submodel claim instead names its ephemeral
-working-grid boundary and observable and must not invent a field ID. Every claim
-also names the relevant canonical-axis layout, `SampleGrid`, conditional
-field-specific spec, configuration, comparison boundary, and observable.
+a product is present. A public claim names the exact input and requested result
+product types. A private charge-submodel claim names its ephemeral
+frontier/ledger boundary and observable and must not invent another product
+type. Every claim also names the exact axes, `SamplingConfig`, product config,
+dtype, comparison boundary, and observable.
 
-A collection may contain any nonempty canonical subset of recognized fields.
-Transform-generated snapshots retain unaffected source fields, replace or add
-the target, and remove stale descendants according to the readout architecture.
-Those retained fields are context, not additional parity results. Unless a
-claim explicitly covers a composition, its acceptance criteria apply only to
-the named result field.
+A returned collection contains exactly the nonempty product set requested by
+the caller. Privately computed prerequisites and avalanche diagnostics are not
+additional parity results. Unless a claim explicitly covers a composition, its
+acceptance criteria apply only to the named product.
+An analog-only or digitized-only requested result is therefore valid without
+retaining its prerequisites, but its presence alone records neither lineage
+nor parity evidence. A new analog-composition claim still requires both
+`PureWaveform` and `NoiseWaveform`; a digitization claim requires
+`AnalogWaveform`.
 
-Explicit projection or field removal does not invalidate a retained descendant.
-A projected analog or digitized field therefore remains a valid collection
-member without its dependencies, but its presence alone records neither
-lineage nor parity evidence. A new analog-composition claim still requires both
-`readout.waveform.pure` and `readout.waveform.noise`; a digitization claim
-requires `readout.waveform.analog`.
+## Execution And Scheduling Neutrality
 
-## Workspace, Builder, And Scheduling Neutrality
+The selected rebuild begins with one functional `simulate_readout(...)`
+surface. It does not carry the historical Stage 2 architecture's public `out`,
+`ReadoutWorkspace`, fixed-chain builder, lease, or allocation-free contracts
+forward by default. Those existing contracts remain historical evidence, not
+implicit rebuild API.
 
-Functional execution, caller-supplied `out`, and exact
-`ReadoutWorkspace`-backed execution are runtime realizations of the same public
-transform contract. Result-buffer builders, workspace storage, private
-ping-pong scheduling, lease state, CUDA stream placement, allocation reuse, and
-target publication mechanics are nonsemantic execution details. They do not
-create a donor comparison boundary, strengthen or weaken a parity
-classification, or justify different field values for the same accepted
-input/config/RNG coordinates and backend contract.
+The broader parity rule is independent of either execution design. Product
+planning, scratch storage, buffer reuse, fusion, stream placement, and target
+publication do not create a donor comparison boundary, strengthen or weaken a
+parity classification, or justify different scientific values for the same
+accepted input/config/seed/backend contract. A later rebuild optimization must
+preserve the documented scientific order, position-addressed random field,
+causal edge policies, frozen per-generation frontier, and S1/S2 ledgers. If it
+changes a named observable, that is an architecture change requiring Design
+review, not an allocator- or scheduler-dependent tolerance.
 
-For a public result, all accepted execution modes must agree at the exact,
-numerical, distributional, or statistical level already required for that
-TensorDSLab operation. Comparing functional and workspace-backed outputs is
-TensorDSLab backend/execution agreement, not a new IV-DSLab parity claim. A
-workspace schedule must preserve the documented scientific operation order,
-coordinate-addressed random field, edge policies, frozen post-dark
-crosstalk/afterpulse source, and complete target overwrite. If scheduling or
-buffer reuse changes a named scientific observable, that is an implementation
-defect or an architecture change requiring Design review, not an acceptable
-allocator-dependent tolerance.
-
-Private dark-count, crosstalk, afterpulse, or smearing observables may be backed
-by reusable workspace tensors for focused validation. They remain ephemeral
-comparison aids: workspace storage never promotes them to recognized field IDs,
-public products, durable labels, sidecars, or lineage records. Reusing scratch
-must not alter a previously returned public output; explicit caller reuse of an
-`out` destination is an output-lifetime decision, not a parity operation.
-
-Preflight atomicity, alias rejection, leases, stream safety, allocation
-instrumentation, and failure recovery belong to contract validation rather than
-donor parity. In particular, the warmed steady-state absence of
-TensorDSLab-owned target/scratch storage allocation is a performance/resource
-claim. Backend allocator requests, library-private scratch and plans, and
-rollback after asynchronous failure are diagnostic or deferred behavior and do
-not enter a scientific parity acceptance criterion.
+Private dark-count, crosstalk, afterpulse, overflow, or smearing values remain
+ephemeral validation observables regardless of their eventual storage plan.
+Scratch storage never promotes them to recognized product types, public
+products, durable labels, sidecars, or lineage records. Allocation, aliasing,
+stream safety, failure behavior, and fusion are separate implementation and
+resource claims; they do not enter a scientific parity acceptance criterion.
 
 ## MVP Deviation Policy
 
@@ -245,27 +231,27 @@ available.
 
 ## Post-Binned Parity Envelope
 
-IV-DSLab operates primarily on sparse PE rows. The first TensorDSLab MVP starts
-from the `readout.photoelectrons` field in a `ReadoutCollection`. This field is
-a dense grid of binned photon-origin primary PE seeds; it is not electrical
-charge and does not already include dark counts, crosstalk avalanches, or
-afterpulses. The representation has discarded:
+IV-DSLab operates primarily on sparse PE rows. The rebuild starts from a dense
+`Photoelectrons` product containing binned photon-origin primary PE seeds. It
+is not electrical charge and does not already include dark counts, crosstalk
+avalanches, or afterpulses. The representation has discarded:
 
 - each PE's exact sub-bin time;
 - individual seed identity and any source-row ordering;
 - any source-side weight beyond the accepted unit primary-seed count.
 
-The MVP also deliberately does not carry donor global RNG state/draw order or
+The rebuild also deliberately does not carry donor global RNG state/draw order or
 implicit condition-database and channel-map state.
 
 Consequently, TensorDSLab does not claim end-to-end eventwise parity with
-IV-DSLab for the first MVP. Legitimate comparisons use one of three explicitly
+IV-DSLab for the rebuild. Legitimate comparisons use one of three explicitly
 different boundaries:
 
-1. the public `readout.photoelectrons -> readout.photoelectrons` boundary for
-   timing redistribution from a common binned primary-seed grid;
-2. the public `readout.photoelectrons -> readout.charge` boundary for
-   end-to-end `simulate_charge` statistics; or
+1. a private timing-redistribution diagnostic from a common binned
+   `Photoelectrons` input, without treating jitter as a replacement truth
+   product;
+2. `simulate_readout(..., products=[Charge])` from common `Photoelectrons` for
+   end-to-end charge statistics; or
 3. a private ephemeral count-grid boundary used only to validate an internal
    dark-count, crosstalk, afterpulse, or smearing submodel.
 
@@ -280,11 +266,13 @@ The common default for unknown source-bin phase is:
 U ~ Uniform(0, sample_period)
 ```
 
-That assumption can establish conditional distributional parity for a binned
-transition kernel. It cannot reproduce eventwise IV behavior when the original
-PE phases were known or were not conditionally uniform. Nor does an isolated
-private-submodel result establish parity for the public `simulate_charge`
-composition.
+That assumption can establish conditional distributional parity for an ideal
+mathematical binned transition kernel. A selected finite digital sampler may
+still reduce the implemented claim to statistical parity, as it does for the
+timing-jitter normal below. The assumption cannot reproduce eventwise IV
+behavior when the original PE phases were known or were not conditionally
+uniform. Nor does an isolated private-submodel result establish parity for the
+public requested-`Charge` composition.
 
 ## Full-Chain Order
 
@@ -300,27 +288,34 @@ sparse source PEs
   -> convolution + baseline noise + saturation + ADC conversion
 ```
 
-The accepted TensorDSLab MVP comparison begins after a future
+The selected TensorDSLab rebuild comparison begins after a future
 TensorG4DS-to-TensorDSLab bridge has produced the binned input. Native G4DS and
-TensorG4DS behavior are outside this readout parity boundary. The MVP flow is:
+TensorG4DS behavior are outside this readout parity boundary. The rebuild flow is:
 
 ```text
-readout.photoelectrons (binned photon-origin primary PE seeds)
-  -> timing redistribution -> readout.photoelectrons
-  -> simulate_charge
-       -> private dark-count addition
-       -> private frozen source snapshot
-            -> private first-generation crosstalk contribution
-            -> private first-generation afterpulse contribution
-       -> private aggregate charge smearing
-  -> readout.charge
-  -> pure/noise/analog waveform fields
-  -> optional safe digitization
+Photoelectrons (binned photon-origin primary PE seeds)
+  -> optional private dark-count addition
+  -> optional private timing redistribution of then-current seeds
+  -> optional fixed-K coupled DiCT/DeCT/AP simulation
+       -> integer avalanche frontier
+       -> floating S1 deposited-charge ledger
+       -> floating S2 charge-square-sum ledger
+       -> separate right-overflow diagnostics
+  -> optional terminal S1/S2 charge smearing
+  -> Charge -> PureWaveform
+
+Photoelectrons axes/device/shape + SamplingConfig
+  -> NoiseWaveform
+
+PureWaveform + NoiseWaveform
+  -> AnalogWaveform -> DigitizedWaveform
+
+retain exactly the caller-requested products
 ```
 
 Effect-order classification: **intentional divergence**.
 
-The public `simulate_charge` result may target **statistical parity** for named
+The public requested `Charge` result may target **statistical parity** for named
 charge observables over an accepted input/config ensemble. TensorDSLab must not
 claim distributional or eventwise parity for that composed stochastic flow.
 Passing isolated internal-submodel checks is necessary evidence, but it does not
@@ -330,29 +325,30 @@ stochastic laws are identical.
 
 ## Summary Matrix
 
-| Surface | MVP target classification | Core qualification |
+| Surface | Target classification | Core qualification |
 | --- | --- | --- |
 | package, collection/field, rank, and TensorCore representation | not applicable | TensorDSLab is a clean-slate tensor-native architecture. |
-| full stochastic effect order | intentional divergence | IV jitters after recursive noise and optional smearing; TensorDSLab jitters primary seeds first and uses bounded private contributions inside `simulate_charge`. |
-| end-to-end `simulate_charge` | statistical | Compare named aggregate `readout.charge` observables from common `readout.photoelectrons` ensembles; internal divergences preclude equality of the complete law. |
-| timing jitter in isolation | distributional, conditional | Requires iid uniform latent sub-bin phases, matching Gaussian width, sample grid, and drop policy. |
+| full stochastic effect order | intentional divergence | IV jitters after recursive noise and optional smearing; the rebuild adds dark roots, jitters truth plus dark roots, then runs causal fixed-`K` branching. |
+| end-to-end requested `Charge` | statistical | Compare named aggregate `Charge` observables from common `Photoelectrons` ensembles; internal divergences preclude equality of the complete law. |
+| timing jitter in isolation | statistical, with an ideal-kernel analytic oracle | The ideal iid-uniform-phase/Gaussian transition law is the oracle; the selected finite digital normal and backend math preclude literal distributional identity. |
 | dark counts in complete equal-width cells | distributional, conditional | Follows from Poisson splitting for homogeneous rates; DB variation and edge/order effects are excluded. |
-| crosstalk | intentional divergence | IV uses recursive branching; TensorDSLab uses one bounded Poisson contribution. |
-| correlated-noise recursion | intentional divergence | TensorDSLab forbids generated contributions from feeding other effects in the MVP. |
+| crosstalk | statistical/intentional divergence | The rebuild uses fixed-`K` unmarked recursion with separate ordinary-Poisson DiCT and DeCT mechanisms; IV has no audited DeCT and uses charge-dependent recursive quirks. |
+| correlated-noise recursion | statistical/intentional divergence | Generated retained children feed every enabled mechanism only in the next frozen generation, with caller-selected finite `K`. |
+| fixed-`K` DiCT/DeCT edge placement | intentional divergence | The sole active rebuild baseline uses independently phase-marginalized causal nonnegative-offset kernels with right-overflow diagnostics only; it does not reproduce signed post-binned displacement from IV's later independent parent/child jitter. |
 | afterpulse delay law | intentional divergence | TensorDSLab accepts an ordinary exponential mean-delay model instead of IV's literal reciprocal-exponential expression. |
-| afterpulse recovery amplitude | deferred | Unit-count versus recovery-weighted amplitude and its ordering remain open. |
-| charge smearing | statistical, with a conditional distributional subcase | Aggregate Gaussian equality holds only for equal independent unit charges before clipping. |
+| afterpulse recovery amplitude | intentional divergence / binned approximation | `recovery=None` gives unit AP charge instead of IV recovery weighting; a composed recovery config uses conditional category means without changing branching and omits within-category recovery variance. |
+| charge smearing | statistical | The ideal aggregate-Gaussian identity is an analytic oracle; one finite-lattice aggregate draw is not the donor's per-avalanche digital draw sequence. |
 | FEB-SNR pulse template and convolution | numerical | Same functional family, but normalization and binned-photoelectron edge/sub-bin behavior differ. |
 | eventwise IV sub-bin amplitude correction | not applicable | True PE phase is absent after binning. |
 | omission of a phase-marginalized amplitude correction | intentional divergence | A latent-phase expectation is possible, but the first MVP does not apply one. |
 | exact zero baseline | exact | Both can produce an all-zero noise waveform. |
-| arbitrary constant baseline | not applicable | This is an explicit TensorDSLab model, not audited IV emulation. |
-| white Gaussian noise | distributional | Same iid law when RMS matches; RNG streams intentionally differ. |
-| FFT noise | statistical | Preserve RMS/spectral intent, not IV bank/crop traces or their exact distribution. |
+| arbitrary constant baseline | not applicable to the MVP | No accepted config selects a deterministic nonzero analog baseline; the digitizer transfer owns the ADC code at 0 mV. |
+| white Gaussian noise | statistical, with an ideal-normal analytic oracle | Mean, RMS, and independence target the same ideal law; finite digital samplers and RNG streams intentionally differ. |
+| PSD-shaped noise | statistical | Preserve calibrated spectral intent, not IV bank/crop traces or their exact distribution. |
 | analog `pure + noise` composition | exact, conditional | Exact algebraically when inputs, units, sign, shape, and clipping policy match. |
 | in-range ADC mapping | exact after representation mapping, conditional | When the mapped floating value and transfer parameters match, both truncate to the same integer code; TensorDSLab stores it in signed `torch.int32` rather than donor `uint16`. Floating-dtype/backend differences are numerical, not covered by this exact claim. |
 | out-of-range ADC behavior | intentional divergence | TensorDSLab clips before integer conversion instead of preserving IV unsigned wraparound. |
-| fixed-seed or bitwise IV RNG streams | not applicable | TensorDSLab uses coordinate-addressed tensor-native random fields. |
+| fixed-seed or bitwise IV RNG streams | not applicable | TensorDSLab uses position-addressed tensor-native random fields. |
 | per-channel condition DB variation | deferred | Requires a typed TensorDSLab channel-parameter boundary. |
 
 ## Timing Jitter
@@ -366,9 +362,12 @@ correlated-noise expansion, and optional DB smearing.
 
 ### TensorDSLab Timing Behavior
 
-The public transform consumes and replaces `readout.photoelectrons`; it does not
-create charge or any avalanche/count product. TensorDSLab receives only source
-sample `s`. For sample period `T`, latent phase `U`, and jitter `J`:
+The rebuild keeps `Photoelectrons` as immutable truth. Inside
+`_product_charge(...)`, an effective `_simulate_dark_counts(...)` block precedes
+an effective `_simulate_timing_jitter(...)` block. Jitter therefore
+redistributes truth plus dark roots when both execute, truth alone when the dark
+block is skipped, and performs no redistribution when jitter itself is skipped.
+For source sample `s`, sample period `T`, latent phase `U`, and jitter `J`:
 
 ```text
 U ~ Uniform(0, T)
@@ -381,15 +380,24 @@ bucket counts rather than materializing one PE row per quantum.
 
 ### Timing Parity Claim
 
-Classification: **conditional distributional parity in isolation**.
+Classification: **conditional statistical parity in isolation**, with the
+ideal latent-uniform-plus-Gaussian transition kernel retained as an analytic
+oracle.
 
-The binned target law is the same as individually jittering PEs only when:
+The ideal binned target law is the same as individually jittering PEs only
+when:
 
 - conditional source-bin phases are independent and uniform;
 - jitter draws are independent with the same Gaussian width;
 - the sample period, window, and boundary convention match;
 - out-of-window targets are dropped in both comparisons;
 - the comparison ignores the different position of jitter in the full chain.
+
+The selected finite-lattice Box-Muller normal and backend transcendental
+arithmetic do not reproduce IV's finite digital normal law exactly. Validation
+therefore measures the analytic transition probabilities, moments, and named
+tails rather than upgrading the implemented comparison to distributional
+parity.
 
 If IV source phases are known and nonuniform, TensorDSLab's result is a
 statistical approximation to the marginalized binned behavior, not
@@ -411,14 +419,14 @@ rate and assigns uniform times within the gate.
 
 ### TensorDSLab Dark-Count Behavior
 
-Inside `simulate_charge`, the first TensorDSLab model adds an independent count
-to each eligible channel/sample cell of a private working grid:
+Inside the private `_product_charge(...)` path, TensorDSLab adds an independent
+count to each eligible channel/sample cell of a private working grid:
 
 ```text
 count ~ Poisson(rate_hz * sample_period_ns * 1e-9)
 ```
 
-The MVP uses one global rate. Typed per-channel rates are deferred. The
+The rebuild uses one global rate. Typed per-channel rates are deferred. The
 resulting grid is an ephemeral submodel observable, not a recognized
 `ReadoutCollection` field.
 
@@ -437,8 +445,8 @@ cells represent complete equal channel-time exposure. The claim excludes:
 
 For a stationary homogeneous Poisson process, independent timing displacement
 preserves the interior rate. Finite-window edge behavior can still differ
-because IV jitters generated dark-count PEs and TensorDSLab generates dark
-counts after source timing redistribution.
+because both systems jitter dark-count PEs but differ in their surrounding
+recursive effect order and finite-window boundary construction.
 
 Validation should compare expected counts per channel-time exposure, Poisson
 variance, zero-count probability, cell covariance, and edge-cell behavior.
@@ -452,6 +460,13 @@ branching. The returned count is total descendants, not a single first
 generation. For a unit source and subcritical coefficient `p`, the recursive
 mean is `p / (1 - p)`, not `p`.
 
+For a fractional-charge source, IV freezes `p * source_charge` as the offspring
+coefficient throughout that helper's entire hidden recursive tree, then emits
+all flattened crosstalk descendants with unit charge. This is not coherent
+per-node marked branching, where each child's own charge would determine only
+its direct offspring. TensorDSLab records the frozen-source behavior as a donor
+artifact rather than a marked-recursion target.
+
 IV then processes a growing PE queue. Photon crosstalk, direct crosstalk, and
 afterpulse outputs can seed other effects; dark counts participate in that
 queue. Same-type guards and internal loop unrolling limit some paths, but the
@@ -459,34 +474,43 @@ overall model still contains cross-effect recursive feeding.
 
 ### TensorDSLab Crosstalk Behavior
 
-For source count `n`, the first TensorDSLab model samples one same-channel,
-same-sample first-generation contribution:
+The rebuild uses one frozen integer frontier per generation. For each unit
+parent, DiCT and DeCT own separate configured mean offspring counts, separate
+causal physical-delay models, separate prepared offset PMFs, and separate
+ordinary-Poisson draws:
 
 ```text
-contribution ~ Poisson(mean_additional_counts_per_source * n)
+A_direct[g + 1, u]  ~ Poisson(R_direct[g + 1, u])
+A_delayed[g + 1, u] ~ Poisson(R_delayed[g + 1, u])
 ```
 
-Crosstalk and afterpulse contributions read one frozen post-dark snapshot and
-are added once inside `simulate_charge`. Generated counts do not become new
-sources. The snapshot and contributions are private scratch representations,
-not collection products.
+Rates are never superimposed and no Gamma latent surrounds either supplied
+mean. Every retained child contributes one avalanche and unit deposited charge
+and enters the ordinary unmarked next frontier. A caller-selected `K` bounds
+genealogical depth; `K=1` is the first-generation case. DeCT is a distinct
+optional TensorDSLab model with no audited IV counterpart.
+
+Each CT mode may independently select a fixed, exponential, or zero-clipped
+normal physical-delay family. For the normal family,
+`X ~ Normal(location_ns, sigma_ns)` and `Delta = max(X, 0)`, so the negative
+latent tail becomes an exact prompt atom of size
+`Phi(-location_ns / sigma_ns)`. This is neither a truncated normal nor an IV
+parity behavior. All three families satisfy the shared nonnegative causal-delay
+contract; common preparation rejects negative-offset support or an underflow
+category instead of silently clipping an arbitrary invalid model.
 
 ### Crosstalk Parity Claim
 
 Classification: **intentional divergence**.
 
-The TensorDSLab coefficient is a Poisson mean coefficient, not IV's recursive
-branching parameter. Reusing the same numeric value does not establish mean,
-variance, or tail parity. A future calibration intended to approximate IV must
-explicitly define the parameter mapping and the moments/tails it preserves.
-
-The MVP accepts bounded shape and nonrecursive execution to keep behavior
-reviewable and tensor-native. Validation should prove the TensorDSLab law and
-shared-snapshot rule at the private submodel boundary. Statistical comparison
-with IV may report multiplicity mean, variance, zero probability, and
-upper-tail quantiles, but it must remain labeled divergence unless Design
-accepts a calibrated approximation target. Those diagnostics do not create a
-public crosstalk field or transform.
+The DiCT coefficient remains an ordinary direct-offspring Poisson mean. Reusing
+IV's numeric value can support generation-level statistical comparison but
+does not reproduce IV's source-charge-frozen hidden subtree or signed
+post-jitter edge displacement. Validation should report results as a function
+of `K`, sampling, and boundary policy. Private mechanism diagnostics do not
+create public crosstalk products or transforms. The normal-delay option is a
+TensorDSLab calibrated extension and must not be described as better IV parity
+or greater scientific accuracy without calibration evidence.
 
 ## Afterpulses
 
@@ -516,34 +540,77 @@ charge = 1 - exp(-delay / recovery_tau)
 ```
 
 Afterpulse rows also participate in the growing correlated-noise queue; the
-self-recursion guard is commented out in the audited source.
+self-recursion guard is commented out in the audited source. Literal IV then
+uses that row's fractional `charge` in both `direct_ct * pe.charge` and
+`ap * pe.charge`, so recovery suppresses later DiCT intensity and AP fire
+probability. Its final per-row charge smearing occurs only after correlated
+branching and does not feed back.
+
+For DiCT, that multiplication scales the seed yield from the source avalanche;
+it does not give the crosstalk child fractional charge. Source-yield scaling can
+be physically motivated because a partially recovered avalanche has lower
+multiplication and may emit fewer secondary photons. The separate IV artifact
+is that `poissonian_loop(direct_ct * source_charge)` freezes this reduced
+coefficient through its hidden recursive subtree even though every emitted
+DiCT descendant is assigned unit charge.
+
+The audited `PEType` set contains no DeCT member. The non-database `PHCT` path
+is disabled by default, marked `TODO`/`FIXME`, produces same-raw-time
+unit-charge rows, and is absent from the database path. IV's delayed,
+recovery-weighted AP rows therefore do not establish a delayed-crosstalk model.
+TensorDSLab must treat DeCT as a new calibrated inter-microcell mechanism, not
+infer it from IV's AP parameters or recovery law. This separation is consistent
+with measured amplitude-versus-delay analyses that identify low-amplitude
+same-pixel afterpulses during recovery and full-amplitude delayed crosstalk in
+other pixels; see [Rosado and Hidalgo
+(2015)](https://arxiv.org/abs/1509.02286).
 
 ### TensorDSLab Direction
 
-The current architecture accepts bounded first-generation firing with an
-ordinary exponential delay parameterized by `mean_delay_ns`, latent uniform
-source-bin phase, an explicit out-of-window drop bucket, and no ragged PE rows.
-The standard exponential law is a deliberate scientific interpretation and
-correction, not literal reproduction of the audited IV expression. Its working
-counts or amplitudes remain private to `simulate_charge`.
+The sole active rebuild baseline uses ordinary exponential AP delay
+parameterized by `mean_delay_ns`, a fresh independent latent uniform phase for
+each parent-child edge, an explicit right-overflow category, and no ragged PE
+rows. The standard exponential law is a deliberate correction rather than
+literal reproduction of IV's reciprocal-exponential expression.
+
+Every successful AP contributes one integer avalanche to the shared unmarked
+next-generation frontier. `afterpulse=None` disables the mechanism;
+`afterpulse.recovery=None` retains AP with unit deposited charge. A present
+`AfterpulseRecoveryConfig.time_constant_ns` selects
+`rho(delay) = 1 - exp(-delay / time_constant)`. Before source-relative
+delay categories collapse into destination bins, the same realized category
+counts update both integer AP count and their conditional-mean recovery-weighted
+charge. The corresponding private square-sum is the sum of category weights
+squared, not the square of aggregate AP charge. Recovery never changes AP,
+DiCT, or DeCT offspring probability and never becomes frontier state.
 
 ### Afterpulse Parity Claim
 
 Delay-law classification: **intentional divergence**.
 
-Recovery-amplitude classification: **deferred**.
+Unit-recovery mode classification: **intentional divergence from IV's
+recovery weighting**.
 
-TensorDSLab must resolve all of the following before implementation:
+Configured fixed-`K` recovery-response classification: **intentional binned
+approximation**, eligible only for statistical comparison of named charge and
+count/charge observables.
 
-- unit-count afterpulses versus a typed recovery-amplitude stage;
-- ordering relative to charge smearing;
-- the accepted statistical comparison after recursive feeding is removed.
+The rebuild preserves AP existence/delay fluctuations and their
+covariance with deposited charge by weighting the same sampled categories. It
+intentionally omits recovery variation within one delay category and diverges
+from IV through recovery-independent future branching: every root, dark-count,
+DiCT, DeCT, and AP parent uses the same DiCT/DeCT rates and AP fire probability,
+with no recovery state carried forward. Its recovery clock is the immediate AP
+birth edge rather than reconstructed microcell firing history. Recovery
+classes, if later used to refine within-category charge integration, are
+transient AP sampling categories and are summed immediately into the shared
+unmarked frontier.
 
-The ordinary exponential delay and removal of recursive feeding are already
-recorded intentional divergences. If the MVP accepts unit counts, that choice
-must be added as another divergence. If it accepts recovery-weighted amplitude,
-recursion and effect-order differences will still prevent full distributional
-parity.
+The ordinary exponential delay, independent per-edge phase closure,
+recovery-independent future branching, fixed `K`, and conditional-mean binned
+recovery weights remain recorded intentional divergences. They prevent a full
+distributional or eventwise parity claim even when named aggregate observables
+agree statistically.
 
 ## Charge Smearing
 
@@ -561,40 +628,53 @@ the same explicit smearing implementation.
 
 ### TensorDSLab Charge-Smearing Behavior
 
-As the terminal private submodel inside `simulate_charge`, aggregate integer
-cell count `n` and one configured width produce the public `readout.charge`
-value:
+As the terminal private submodel inside `_product_charge(...)`, the completed
+fixed-`K` ledgers are:
 
 ```text
-draw = Normal(n, sqrt(n) * sigma)
-amplitude = max(draw, 0)
+S1 = sum_i w_i
+S2 = sum_i w_i**2
 ```
+
+Roots and CT children have `w_i=1`; recovered AP categories have their selected
+conditional-mean weights. With no smearing config, public `Charge` is a new
+field with guaranteed fresh storage independent of the source
+`Photoelectrons`, over `S1`. With smearing enabled, the terminal rule is
+`Normal(S1, relative_sigma * sqrt(S2))` followed by nonnegative clipping.
+Avalanche count and `S1` alone do not determine that variance. `S2` is always
+accumulated as private numerical scratch; it is not branching state or a
+collection product.
 
 ### Charge-Smearing Parity Claim
 
-Classification: **statistical parity**, with a **conditional distributional
-subcase**.
+Classification: **statistical parity**.
 
-Before clipping, the aggregate draw has exactly the same probability
-distribution as summing `n` independent `Normal(1, sigma)` unit charges. That
-identity does not hold for heterogeneous `q_i` or channel widths: the donor
-variance is proportional to `sum(q_i**2)`, not simply `n`. Recovery-weighted
-afterpulses are therefore outside the distributional subcase. TensorDSLab's
-zero clipping also changes the negative tail and mean.
+In the ideal real-valued Gaussian model and before clipping, one aggregate draw
+has the same mathematical distribution as summing `n` independent
+`Normal(1, sigma)` unit charges. That is an analytic oracle, not an implemented
+distributional-parity claim: TensorDSLab draws one bounded finite-lattice
+Box-Muller normal, while the donor draws and rounds per avalanche. The identity
+also does not hold for heterogeneous `q_i` or channel widths: the donor variance
+is proportional to `sum(q_i**2)`, not simply `n`. Recovery-weighted afterpulses
+are outside the unit-count subcase. The fixed-`K` path's explicit `S2` preserves
+the selected ideal-model variance for its conditional-mean binned weights; it
+does not restore IV's continuous within-category recovery variation or literal
+delay law. TensorDSLab's finite normal tail and zero clipping further change the
+tail, bias, and mean.
 
 Validation should compare conditional mean, variance, zero-count behavior,
 negative-tail probability before policy, post-clipping bias, and high/low count
 regimes at the private-count-to-public-charge boundary. Per-channel variation
 requires a later typed parameter contract. The private integer input does not
-become a recognized collection field, and `readout.charge` denotes a floating
+become a recognized collection product, and `Charge` denotes a floating
 aggregate PE-equivalent response rather than SI charge.
 
-## End-To-End `simulate_charge`
+## End-To-End Requested `Charge`
 
 The public comparison boundary is:
 
 ```text
-readout.photoelectrons -> simulate_charge -> readout.charge
+Photoelectrons -> simulate_readout(..., products=[Charge]) -> Charge
 ```
 
 Classification: **statistical parity for named observables**.
@@ -602,9 +682,10 @@ Classification: **statistical parity for named observables**.
 This claim compares a common ensemble of binned photon-origin primary PE seeds
 to the aggregate PE-equivalent charge response. It does not expose or require
 the donor's sparse generated-PE rows, and it does not assert that the complete
-joint law matches. The different effect order, nonrecursive crosstalk,
-first-generation afterpulsing, aggregate smearing, negative clipping, and RNG
-construction preclude an end-to-end distributional claim for the MVP.
+joint law matches. The different effect order, fixed-depth unmarked recursion,
+causal binned edge placement, recovery approximation, aggregate smearing,
+negative clipping, and RNG construction preclude an end-to-end distributional
+claim.
 
 Validation must exercise the public composition as well as the private
 submodels. At minimum it should compare per-channel and per-sample charge mean
@@ -613,13 +694,13 @@ selected tail quantiles, and any accepted time-profile statistic over named
 input/config ensembles. Each internal dark-count, crosstalk, afterpulse, and
 smearing check must retain its own classification; passing them separately does
 not prove this end-to-end statistical target. Conversely, a passing
-`simulate_charge` ensemble does not upgrade an intentionally divergent internal
+requested-`Charge` ensemble does not upgrade an intentionally divergent internal
 submodel to distributional parity.
 
 Fixtures may retain private intermediate grids as test-only diagnostics when
 needed to localize a failure. They must not record those grids as recognized
-field IDs, public products, durable producer labels, or required collection
-sidecars.
+product types, public products, durable producer labels, or required collection
+or config state.
 
 ## Pure Waveform Rendering
 
@@ -640,8 +721,8 @@ and removes the prebuffer.
 
 TensorDSLab uses the same template family but normalizes by its sampled maximum,
 performs causal full convolution truncated to the input sample count, and
-applies explicit gain and sign. `readout.waveform.pure` remains signal-only;
-baseline is owned by `readout.waveform.noise`.
+applies explicit gain and sign. `PureWaveform` remains signal-only; baseline is
+owned by `NoiseWaveform`.
 
 ### Pure-Waveform Parity Claim
 
@@ -673,39 +754,50 @@ impulse response, same-length truncation, sign/gain, and boundary behavior.
 
 ## Noise Waveforms
 
-### Zero And Constant Baseline
+### Zero Baseline
 
 IV returns exact float32 zeros when noise is disabled. TensorDSLab can provide
-**exact parity** for an all-zero `readout.waveform.noise` result field over the
-declared shape after any explicit dtype mapping is accounted for.
+**exact parity** for an all-zero `NoiseWaveform` over the declared shape after
+any explicit dtype mapping is accounted for.
 
-An arbitrary nonzero constant baseline is **not applicable** as an IV-emulation
-claim. It is a useful explicit TensorDSLab model.
+An arbitrary nonzero constant baseline is not an accepted MVP
+`NoiseWaveformConfig` model. The analog products remain zero-referenced, and
+the digitizer transfer owns the nonzero ADC code corresponding to 0 mV. Adding
+a deterministic analog pedestal later requires a focused Design decision and
+new parity boundary rather than an implementation-local constant-noise mode.
 
 ### White Noise
 
 IV non-DB white noise is iid Gaussian with RMS `pe_amplitude / snr`. The DB path
 generates iid standard normal values and later scales by per-channel RMS.
-TensorDSLab generates a coordinate-addressed per-sample Gaussian field.
+TensorDSLab generates a position-addressed per-sample Gaussian field.
 
-Classification: **distributional parity** when mean, RMS, dtype domain, and
-independence assumptions match. Global RNG state, sequential draw order, and
-same-seed sample values are intentionally excluded. TensorDSLab additionally
-requires reorder and chunk invariance.
+Classification: **statistical parity**, with the matching ideal iid-normal law
+retained as an analytic oracle when mean, RMS, and independence assumptions
+match. Global RNG state, sequential draw order, finite digital normal law, and
+same-seed IV/TensorDSLab values are intentionally excluded. TensorDSLab's own
+same-backend repeatability additionally requires identical shape, dimension
+order, coordinate order, config, dtype, and positional RNG version; it does not
+promise reorder or chunk invariance.
 
 Validation should compare mean, RMS, marginal normality, sample/channel
-covariance, and coordinate-invariance properties. A fixed white-noise array is
-a reproducibility fixture, not proof of distributional parity.
+covariance, and same-shape same-backend repeatability. Reordering and chunking
+should verify the documented positional contract rather than assert invariant
+values. A fixed white-noise array is a reproducibility fixture, not proof of
+distributional parity.
 
-### FFT Noise
+### PSD-Shaped Noise
 
 IV zeros DC, adds global random phases, synthesizes long inverse-FFT baselines,
 normalizes each long baseline to unit standard deviation, persists or loads a
 bank, and randomly crops per-channel segments.
 
-TensorDSLab directly synthesizes the exact requested sample length from an
-explicit one-sided spectrum using semantic phases and explicit normalization.
-It does not reproduce the bank/crop process.
+TensorDSLab directly synthesizes the exact requested sample length from a
+caller-supplied absolute one-sided PSD. It integrates source intervals onto the
+target frequency cells, discards the DC-cell power without redistribution,
+draws position-addressed Gaussian Fourier coefficients with fixed endpoint
+scaling, and applies the documented inverse real transform without post-transform
+RMS normalization. It does not reproduce the donor's bank/crop process.
 
 Classification: **statistical parity**.
 
@@ -733,9 +825,9 @@ analog = optional_clip(pure + noise)
 ```
 
 Pure and noise are signal-only and noise-only components at the same analog
-reference plane and in the same voltage units. `readout.waveform.analog` is
-their composed pre-digitization voltage waveform; the component fields do not
-claim to be separate Tile, PDU, or DAQ hardware-boundary outputs.
+reference plane and in the same voltage units. `AnalogWaveform` is their
+composed pre-digitization voltage waveform; the component fields do not claim
+to be separate Tile, PDU, or DAQ hardware-boundary outputs.
 
 Classification: **conditional exact parity** for the algebraic composition
 when pure/noise values, units, polarity, shape, and clipping threshold are
@@ -762,19 +854,18 @@ saturation.
 
 ### TensorDSLab Digitization And Parity Claim
 
-TensorDSLab digitizes `readout.waveform.analog` into the distinct
-`readout.waveform.digitized` ADC-count field. “Digitized” is retained because
-the field is specifically the ADC result, not an arbitrary later digital or
-firmware-processed waveform.
+TensorDSLab digitizes `AnalogWaveform` into the distinct `DigitizedWaveform`
+ADC-count product. “Digitized” is retained because the product is specifically
+the ADC result, not an arbitrary later digital or firmware-processed waveform.
 
 For in-range values, the target is **exact parity after representation
-mapping**. TensorDSLab uses `AdcQuantization.TRUNCATE`, accepts bit depths from
-1 through 16, and stores the resulting nonnegative ADC code in signed
-`torch.int32`. IV stores its code in `uint16`; dtype identity is not the parity
-claim, but equal integer code values are required when the mapped floating
-value, gain, voltage range, offset, and bit depth match. Differences introduced
-earlier by accepted floating dtype or backend arithmetic use numerical parity
-with Stage 3 tolerances and boundary fixtures.
+mapping**. TensorDSLab clamps the mapped nonnegative value and converts it to
+signed `torch.int32`, whose float-to-integer truncation is the accepted rule;
+bit depth is 1 through 16. IV stores its code in `uint16`; dtype identity is not
+the parity claim, but equal integer code values are required when the mapped
+floating value, gain, voltage range, offset, and bit depth match. Differences
+introduced earlier by accepted floating dtype or backend arithmetic use
+numerical parity with focused-work-order tolerances and boundary fixtures.
 
 For out-of-range values, classification is **intentional divergence**.
 TensorDSLab gains and clamps analog voltage before quantization, validates gain,
@@ -790,13 +881,14 @@ depths, and ADC bounds.
 
 TensorDSLab does not target fixed-seed or bitwise RNG-stream parity with
 IV-DSLab. The algorithms consume different representations, group draws
-differently, use different operation order, and require coordinate-addressed
+differently, use different operation order, and require position-addressed
 device-resident streams.
 
-The accepted RNG targets are:
+The rebuild RNG targets are:
 
-- exact repeatability for identical TensorDSLab input/config/coordinates on the
-  same supported backend;
+- exact repeatability for identical TensorDSLab input values, shape, dimension
+  order, coordinate order, config, dtype, algorithm/version, and root seed on
+  the same supported backend;
 - cross-backend distributional agreement with the accepted probability kernel;
 - finite-sample statistical validation as evidence for that cross-backend
   agreement contract;
@@ -808,10 +900,12 @@ cross-backend requirement compares TensorDSLab implementations to one accepted
 TensorDSLab probability contract and is therefore called agreement, not donor
 parity.
 
-Changing channel order, ID-backed batching, chunking, or unrelated batch
-members must not change values associated with the same semantic coordinates.
-This is a stronger reproducibility contract than the audited donor streams and
-is an intentional TensorDSLab improvement.
+Coordinate strings are not RNG identities. Reordering axes or coordinates,
+reindexing payloads, selecting, or invoking arbitrary chunks generally changes
+logical flat positions and therefore sampled values. Positional addresses
+restart for each builder invocation. Product-request changes preserve a common
+product because operation streams are fixed, but chunk stability would require
+explicit global positional offsets and a later Design contract.
 
 ## Condition-Database Variation
 
@@ -819,42 +913,45 @@ IV uses package-load global configuration, detector channel maps, and a
 condition database for per-channel dark-count, crosstalk, afterpulse, charge
 spread, amplitude, and RMS values.
 
-The first TensorDSLab MVP uses explicit global scientific configs where
-accepted. Per-channel variation is **deferred**, not rejected scientifically.
-It requires a typed channel-ID-keyed parameter record with explicit defaults,
-missing-channel behavior, units, provenance, device rendering, and cache
-policy. TensorDSLab must not import the legacy DB or channel-map runtime to
-claim parity.
+The first TensorDSLab MVP uses scalar scientific configs uniformly across one
+invocation. Per-channel variation is **deferred**, not rejected scientifically.
+The rebuild anticipates a typed device-resident parameter tensor aligned to the
+exact `ChannelAxis`, with explicit supported axes, units, provenance,
+validation, movement, and lifetime rules. TensorDSLab must not import the
+legacy DB or channel-map runtime to claim parity.
 
 ## Accepted Intentional Divergences
 
-The current MVP accepts these donor differences:
+The rebuild accepts these donor differences:
 
-- start from the post-binned `readout.photoelectrons` primary-seed field rather
+- start from the post-binned `Photoelectrons` primary-seed field rather
   than sparse PE rows;
-- apply timing redistribution before dark counts and secondary effects;
-- keep dark-count, frozen-snapshot, crosstalk, afterpulse, and pre-smearing count
-  grids private inside `simulate_charge` rather than exposing avalanche products;
-- use one frozen post-dark source for bounded first-generation crosstalk and
-  afterpulse contributions;
-- omit recursive generated-count feeding;
+- add private dark roots before timing redistribution and then branch from the
+  post-jitter truth-plus-dark frontier;
+- keep dark-count, generation-frontier, mechanism, overflow, S1, and S2 values
+  private inside `_product_charge(...)` rather than exposing avalanche products;
+- use fixed-`K` unmarked recursive feeding with independently phase-marginalized
+  causal edges rather than IV's sparse queue and source-charge-dependent quirks;
+- keep DiCT and DeCT as separate ordinary-Poisson mechanisms and make no
+  IV-parity claim for DeCT;
 - use an ordinary exponential mean-delay model rather than IV's literal
   reciprocal-exponential afterpulse expression;
+- use unit AP charge when recovery is absent or conditional-mean binned
+  recovery weights when it is configured, without recovery-dependent future
+  branching;
 - use an aggregate charge-smearing boundary and explicit negative policy;
 - omit eventwise sub-bin pulse-amplitude correction that cannot be reconstructed
   from binned input and defer an available phase-marginalized correction;
-- generate direct exact-length FFT noise rather than bank/crop baselines;
+- generate direct exact-length PSD-shaped noise rather than bank/crop baselines;
 - separate pure, noise, analog, and digitized field roles at one declared
   pre-digitization voltage reference plane;
-- use coordinate-addressed RNG rather than donor global/sequential streams;
+- use position-addressed counter RNG rather than donor global/sequential streams;
 - clamp before integer ADC conversion and validate gain/range constraints.
 
-These choices are acceptable for the MVP because they support a bounded,
+These choices are acceptable for the rebuild because they support a bounded,
 reviewable tensor-native path. They are not evidence of end-to-end eventwise or
 distributional IV parity; the narrower statistical target for
-`simulate_charge` requires its own named ensemble observables and tolerances.
-Afterpulse recovery amplitude is not included in this accepted list because
-that scientific decision remains open.
+requested `Charge` requires its own named ensemble observables and tolerances.
 
 ## Validation And Fixture Rules
 
@@ -869,17 +966,19 @@ Every parity fixture must state:
 
 - donor source path/symbol and snapshot identity;
 - TensorDSLab comparison boundary;
-- exact dependency and result field IDs plus collection field subset for a
+- exact input and result product types plus requested collection subset for a
   public boundary, or an explicit private-ephemeral designation for an internal
   submodel observable;
-- field-specific interpretation sidecars, including
-  `DigitizedWaveformSpec` for ADC comparisons;
-- units, axes, layout, dtype, and configuration;
+- the exact `DigitizedWaveformConfig` for ADC comparisons;
+- units, exact axis types and coordinate order, tensor dimension order, dtype,
+  and configuration;
 - parity classification;
 - assumptions and accepted intentional divergences;
-- RNG algorithm/seed/namespace/coordinates when sampled;
+- RNG algorithm/version, root seed, numeric operation stream, logical position,
+  source-quantum ordinal, and raw-word schedule when sampled;
 - execution mode and backend when needed for reproducibility, while treating
-  `out`, workspace, scheduling, stream, and allocation choices as nonsemantic;
+  scheduling, scratch, device-stream placement, fusion, and allocation choices
+  as nonsemantic;
 - observable, tolerance, sample size, and confidence/error criterion;
 - whether it is exact/numerical evidence or distribution/statistical evidence.
 
@@ -893,13 +992,13 @@ Suggested minimum parity observables are:
 | --- | --- |
 | timing jitter | transition/drop probabilities, displacement mean/variance, conservation including drops |
 | dark counts | exposure-normalized rate, variance, zero probability, cell covariance, edge cells |
-| crosstalk | multiplicity mean/variance, zero probability, tail quantiles, generation policy |
-| afterpulses | fire probability, delay law/CDF, drop fraction, recovery-amplitude relation, recursion policy |
+| crosstalk | multiplicity mean/variance, zero probability, tail quantiles, generation policy, offset PMF/time profile, clipped-normal prompt-zero mass, right-overflow fraction |
+| afterpulses | fire probability, delay law/CDF, overflow fraction, recovery-amplitude relation, integer-count/charge covariance, omitted within-category recovery variance, recursion policy |
 | charge smearing | conditional mean/variance, negative tail, clipping bias, heterogeneous-charge exclusions |
-| end-to-end `simulate_charge` | per-channel/sample charge mean and variance, zero-cell probability, total response, occupancy, edge loss, selected tails and time profile |
+| end-to-end requested `Charge` | per-channel/sample charge mean and variance, zero-cell probability, total response, occupancy, edge loss, selected tails and time profile |
 | pure waveform | template samples, peak, area, time-to-peak, impulse response, truncation/edge behavior |
-| white noise | mean, RMS, marginal law, covariance, coordinate invariance |
-| FFT noise | RMS, integrated power, PSD, autocorrelation, endpoint policy, marginal law |
+| white noise | mean, RMS, marginal law, covariance, and positional repeatability under an unchanged invocation identity |
+| PSD-shaped noise | RMS, integrated power, PSD, autocorrelation, endpoint policy, marginal law |
 | analog waveform | exact sum, clip order, polarity, units, common component reference plane |
 | digitization | gain/map/clip/quantize order, transfer-curve boundaries, ADC bounds |
 
@@ -908,8 +1007,9 @@ with concrete tolerances and sample sizes before implementation is accepted.
 
 ## Deferred Decisions
 
-- afterpulse recovery-amplitude model and ordering;
-- exact RNG algorithm and CPU/GPU bitwise policy;
+- exact private stream assignments, Poisson/multinomial raw-word schedules,
+  supported count/rate bounds, and CPU/GPU repeatability evidence;
+- exact prepared offset-PMF normalization and tail-rounding tolerances;
 - per-channel parameter representation;
 - whether any calibrated crosstalk approximation should match selected IV
   moments or remain a standalone TensorDSLab model;
@@ -939,9 +1039,10 @@ with concrete tolerances and sample sizes before implementation is accepted.
 - accepting an intentional divergence without named scientific observables and
   validation criteria;
 - changing the post-binned comparison boundary or effect order;
-- reintroducing recursive correlated-noise growth;
-- changing the accepted ordinary exponential afterpulse delay or selecting
-  recovery-amplitude behavior;
+- changing the selected fixed-`K` correlated-avalanche law or substituting a
+  different correlated-avalanche algorithm;
+- changing the accepted ordinary exponential afterpulse delay, unit-recovery
+  mode, or composed exponential recovery response;
 - depending on donor runtime state, large donor artifacts, or opaque fixtures;
 - claiming campaign-level parity from isolated transform checks;
 - changing a parity classification after a public field contract or durable

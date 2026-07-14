@@ -38,9 +38,10 @@ every affected package Design authority.
 Agents should also follow `CONTRIBUTING.md`, which defines repository-wide
 engineering standards. Start with `docs/overview.md` for the documentation map.
 Design work orders should cite the relevant `CONTRIBUTING.md` standards when a
-stage touches TensorCore layout, TensorDSLab product semantics, in-memory
-product relationships, durable cache shape, validation boundaries, public
-typing, IDs versus indices, artifacts, or future integration boundaries.
+stage touches TensorCore axes/fields/collections, TensorDSLab product semantics,
+in-memory product relationships, durable cache shape, validation boundaries,
+public typing, coordinates versus indices, artifacts, result storage, or future
+integration boundaries.
 They should also cite `docs/parity.md` when promoting donor behavior, changing
 a comparison boundary, or accepting a statistical approximation or intentional
 divergence.
@@ -126,9 +127,9 @@ of an implemented or compatible package handoff.
 
 TensorDSLab is a clean-slate, tensor-native detector data-lab package. It
 consumes accepted TensorG4DS tensor-native products and turns them into typed
-readout and future reconstruction products, while using TensorCore as the
-generic tensor identity, layout, field, collection, selection, batching,
-movement, validation, and pure operation backbone.
+readout and future reconstruction products, while using TensorCore's semantic
+axis, field, collection, constrained-scalar, validation, and relationship
+roots directly.
 
 The intended chain is:
 
@@ -186,6 +187,15 @@ completed. No scientific or later production stage is dispatched; each requires
 its own focused work order, verified routes, fixed-commit Validation,
 independent Review, and clean merge.
 
+The TensorCore `0.7` rebuild described in `docs/architecture/rebuild.md` is the
+Design-accepted replacement target. It is intentionally incompatible with the
+Stage 2 representation, but it does not change production merely by being
+accepted in Design. Stage 2 and Maintenance 1 remain historical evidence.
+Stage 3 remains Design-complete / Undispatched until the synchronized authority
+is committed, its clean base and persistent routes are verified, and Design
+explicitly dispatches it. Implementation, Validation, Review, merge, and
+closeout are later state transitions.
+
 If implementation reveals a concrete contradiction in the accepted design, stop
 and send the issue back to Design. Do not silently widen architecture, create
 placeholder package trees, add DAG-facing surfaces, rename public concepts,
@@ -205,19 +215,56 @@ The checkout root is the project folder. The `tensor_dslab/` directory is the
 Python import package. Do not create a
 flat TitleCase Python package that imports as `TensorDSLab`.
 
-Keep semantic subpackages flat beneath that import root:
+The rebuild uses a product-centered readout tree:
 
 ```text
 tensor_dslab/
   common/
-  detector/          # optional post-TensorG4DS semantics, only when accepted
+    axes.py
+    sampling.py
   readout/
-  reconstruction/
-  caches/
-  executables/       # future integration surface, only when accepted
-  operations/        # future integration surface, only when accepted
-  recipes/           # future integration surface, only when accepted
+    types.py
+    simulation.py
+    _requirements.py
+    _random.py
+    photoelectrons/
+      types.py
+    charge/
+      types.py
+      _product.py
+    pure_waveform/
+      types.py
+      _product.py
+    noise_waveform/
+      types.py
+      _product.py
+    analog_waveform/
+      types.py
+      _product.py
+    digitized_waveform/
+      types.py
+      _product.py
 ```
+
+This is an ownership target, not permission to create placeholders. Materialize
+only modules with real behavior accepted by the active work order. Each product
+owns its final `TensorField` leaf, public configs, product validation, and
+eventual private `_product_*` builder. Private `_simulate_*` functions implement
+scientific submodels. `readout.types` contains only `ReadoutConfig` and
+`ReadoutCollection`; `readout.simulation` owns the one public
+`simulate_readout(...)` orchestration function. Shared axes and sampling belong
+in `common`. Readout-specific requirements and random mechanics remain private.
+
+Keep import direction acyclic: TensorCore, common, private shared requirements,
+product types, product producers plus explicit prerequisite product types,
+readout composition types, readout simulation, then deliberate package-root
+exports. Product packages must not import `ReadoutConfig`, `ReadoutCollection`,
+or `simulate_readout(...)`. Do not promote `_random.py` to `common` until a
+second TensorDSLab domain needs the exact same accepted mechanics.
+
+`Photoelectrons` is an already-produced dense truth input. It has no
+`PhotoelectronsConfig`, no TensorDSLab readout producer, and no `_product.py`.
+Source construction and PE binning remain part of the future TensorG4DS bridge.
 
 Runtime commands launched from the project root should use the project root on
 `PYTHONPATH` so absolute `tensor_dslab.*` imports resolve:
@@ -226,12 +273,12 @@ Runtime commands launched from the project root should use the project root on
 PYTHONPATH=. python -m unittest discover -s tests
 ```
 
-Production imports should stay absolute, such as:
+Stage 3 production imports should stay absolute, such as:
 
 ```python
-from tensor_core import TensorAxisId, TensorLayout
-from tensor_dslab.common import ChannelId, ExampleId
-from tensor_dslab.readout import CHANNEL_AXIS_ID
+from tensor_core import TensorAxis, TensorField
+from tensor_dslab import Photoelectrons, ReadoutCollection, SamplingConfig
+from tensor_dslab.common import ChannelAxis, ExampleAxis, SampleAxis
 ```
 
 Do not rewrite imports to relative forms to satisfy editor-only diagnostics.
@@ -243,161 +290,75 @@ when there is a real TensorDSLab concept, behavior, or contract to house.
 
 ## TensorCore Boundary
 
-TensorDSLab should use TensorCore directly for generic tensor contracts:
-
-- `Id`, `TensorAxisId`, and `TensorFieldId`;
-- `IdSequence` and generic constrained scalars such as `PositiveInteger`,
-  `NonnegativeInteger`, `FiniteFloat`, `PositiveFloat`, `NonnegativeFloat`, and
-  `Probability`;
-- `TensorAxis`, `TensorAxes`, `TensorLayout`, `TensorField`, and
-  `TensorCollection`;
-- tensor selections such as `TensorFieldSelection` and
-  `TensorAxisSelection`;
-- generic builders, validators, immutable mapping helpers, batching helpers,
-  movement, reduction, selection, detachment, addition, and other pure tensor
-  operations.
-
-Production imports must come from the public `tensor_core` package root, not
-TensorCore implementation modules. Do not re-export generic TensorCore helpers
-through `tensor_dslab.common`.
-
-TensorCore's intentional downstream extension points are `Id` and
-`TensorCollection`. TensorDSLab may subclass `Id` for domain coordinates and
-defines one primary readout collection, `ReadoutCollection`, directly from
-`TensorCollection`. Do not subclass sealed TensorCore primitives such as
-axis/field IDs, scalar wrappers, axes, layouts, `TensorField`, selections, or
-`BatchConfig`.
-
-TensorDSLab owns domain IDs, semantic collection and field contracts, builders,
-validators, and domain transforms. Future cache records and loaders belong in
-TensorDSLab only after in-memory product contracts are accepted. Domain IDs
-may appear as TensorCore coordinates when they subclass TensorCore `Id`, but
-they should not become TensorCore-owned primitives.
-
-TensorCore is the dense tensor spine. TensorDSLab gives TensorCore records
-detector/readout product meaning instead of recreating generic tensor
-mechanics. Runtime scripts and builders may choose concrete TensorCore axis
-order, but TensorDSLab fixes required readout-axis identities and makes field
-roles, sample-grid facts, and stochastic coordinate inputs explicit. The first
-readout products are recognized fields inside one direct
-`ReadoutCollection(TensorCollection)` subclass, with free transform functions,
-a typed `SampleGrid`, and a conditional typed `DigitizedWaveformSpec`. Do not
-create caller-defined semantic axis-role mappings, one single-field collection
-subclass per product, a generic `Product` base, or a ToyProduct-like hierarchy.
-The stable semantic records, including `ReadoutCollection`, live in
-`tensor_dslab.readout.types`; `tensor_dslab.readout.tensors` retains only the
-readout-semantic reconstruction, projection, selection, and movement helpers.
-
-Every valid `ReadoutCollection` is a nonempty, structurally immutable,
-partially materialized snapshot. Transforms treat retained tensor payloads as
-read-only, and callers must not mutate existing field tensors in place. Only
-the fresh target tensor of an atomic `out=` call, or the prepared generated
-field set held exclusively by `build_readout_collection(...)`, may be written.
-Mutable private scratch belongs only to a separate runtime
-`ReadoutWorkspace`; it is never a collection field or sidecar. The collection's
-present fields are an ordered subsequence of this canonical schema:
+The rebuild targets exact TensorCore `0.7` semantic roots:
 
 ```text
-readout.photoelectrons
-readout.charge
-readout.waveform.pure
-readout.waveform.noise
-readout.waveform.analog
-readout.waveform.digitized
+TensorAxis(coordinates: tuple[str, ...])
+TensorField(tensor: torch.Tensor, axes: tuple[TensorAxis, ...])
+TensorCollection(fields: Iterable[TensorField])
 ```
 
-`tensor_dslab.common` owns and exports the shared stable coordinate types
-`ExampleId` and `ChannelId`. `tensor_dslab.readout` owns and exports the
-readout-specific axis and field constants, including exactly these required
-semantic axis identities:
+Production imports come from the public `tensor_core` package root. TensorCore
+owns universal representation validation, constrained scalars, exact-type
+lookup, and generic relationship helpers. It has no ID/layout/metadata model,
+generic selection or movement API, output-buffer/workspace API, persistence
+API, or lifecycle service. TensorDSLab must not recreate retired TensorCore
+`0.6` IDs, layouts, constants, sidecars, compatibility shims, or generic
+operations.
 
-```python
-EXAMPLE_AXIS_ID = TensorAxisId("example")
-CHANNEL_AXIS_ID = TensorAxisId("channel")
-SAMPLE_AXIS_ID = TensorAxisId("sample")
-REQUIRED_AXIS_IDS = IdSequence(
-    (EXAMPLE_AXIS_ID, CHANNEL_AXIS_ID, SAMPLE_AXIS_ID)
-)
-```
+`ExampleAxis`, `ChannelAxis`, and `SampleAxis` are direct final fieldless
+`TensorAxis` leaves. The six product types are direct final fieldless
+`TensorField` leaves. `ReadoutCollection` is a direct final fieldless
+`TensorCollection` leaf. Each leaf has exactly that matching root in
+`__bases__`, with no mixin or other base. Every semantic leaf uses inherited root
+construction, `@final`, `__slots__ = ()`, no added stored fields, and one
+TensorDSLab `_require()` narrowing hook. Do not reapply `@dataclass`, introduce
+an intermediate semantic base, or override generic root behavior.
 
-All present fields in one snapshot use the same exact ordered layout and
-device, and every tensor uses `torch.strided` layout; noncontiguous strided
-tensors remain valid collection structure. The three required
-axes occur exactly once and may appear in any layout order; locate them by
-`TensorAxisId` value equality and `TensorAxes.index(...)`, never a fixed tensor
-dimension or object identity. The example axis is ID-backed by exact
-`ExampleId` coordinates, the channel axis by exact `ChannelId`
-coordinates, and the sample axis is count-only. Photoelectrons use exactly
-`torch.int64`; charge, pure, noise, and analog use one common
-`torch.float32` or `torch.float64` dtype; and digitized ADC counts use exactly
-`torch.int32`. If the accepted
-layout has additional axes, every field carries them and the collection
-declares them shared too. `shared_axes` lists every common-layout axis ID in
-layout order. TensorDSLab constructors, not TensorCore, enforce these stronger
-invariants. `SampleGrid` remains the typed source of regular sample-grid facts;
-there is no `ReadoutAxisRoles` sidecar.
+These are ordinary Python ABC extension points. TensorDSLab verifies its own
+leaf declarations through static analysis, focused tests, and Review. Runtime
+code validates documented public inputs and cheap correctness-critical
+relationships; it does not police callers who subclass final leaves, mutate
+classes, bypass constructors, call private functions, mutate exposed tensors,
+or install custom Torch dispatch behavior. Such behavior is unsupported and
+has no promised error category.
 
-Collection semantics and warmed execution storage are separate contracts.
-Arbitrary axis order and noncontiguous `torch.strided` values remain valid
-read-only collection structure; the semantic constructor does not reject an
-expanded or internally overlapping source merely because of its storage
-arrangement. TensorLayout is the only semantic axis-order source of truth. Do
-not add an `ExecutionReadyReadoutCollection`, axis-order sidecar, stride
-metadata, or runtime policy to collection identity.
+Coordinates are exact unique nonempty strings scoped by exact axis type. Axis
+tuple order is tensor-dimension order. Code locates dimensions by exact axis
+class, not loose names or constants. `SampleAxis` contains canonical increasing
+uniform left-edge timestamps such as `"0ps"` and `"2000ps"`; numeric kernels
+use indices and `SamplingConfig`, never parse semantic labels on the hot path.
+There is no `ExampleId`, `ChannelId`, `TensorAxisId`, `TensorFieldId`,
+`IdSequence`, `TensorLayout`, `SampleGrid`, or `DigitizedWaveformSpec` in the
+rebuild.
 
-The MVP warmed `out + workspace` readout profile is stricter:
+Every field contains exactly one example, channel, and sample axis in any
+order, uses `torch.strided`, and reuses the exact source axis tuple for
+dimension-preserving results. `Photoelectrons` is `torch.int64`; `Charge`,
+`PureWaveform`, `NoiseWaveform`, and `AnalogWaveform` use one common
+`torch.float32` or `torch.float64`; `DigitizedWaveform` is `torch.int32`.
+`ReadoutCollection` accepts any nonempty unordered subset of those exact six
+product types, with equal ordered axes, one device, and one common floating
+dtype. It is a completed requested result, not a partial pipeline snapshot; it
+has no add, replace, descendant-invalidation, or reconstruction lifecycle.
 
-- `SAMPLE_AXIS_ID` is the last tensor dimension;
-- every participating source, generated public target, and scratch tensor is
-  contiguous;
-- every writable target and scratch tensor is internally nonoverlapping and
-  storage-disjoint from sources and other live outputs; and
-- the ordered axes/sizes, shape, device, role dtypes, algorithms, destination
-  schema, bound stream, and exclusive lease match exactly.
+TensorCore establishes neither universal freshness nor universal storage
+sharing. Every TensorDSLab field-returning operation classifies each successful
+path as exact return, guaranteed storage-sharing, sharing permitted but
+unspecified, or guaranteed fresh storage independent of named inputs. The MVP
+classifies requested source `Photoelectrons` as an exact return and every
+generated product as guaranteed fresh and pairwise storage-independent. Every
+operation also owns dtype, device, axes, layout/strides, autograd,
+synchronization, failure effects, and output-to-output relationships.
 
-Preflight rejects a mismatch before RNG consumption or writes. It must not
-permute, call `.contiguous()`, clone, cast, move, use a reshape that copies, or
-fall back to allocating storage inside the warmed call. Leading-axis order
-remains flexible, but each order is a different workspace signature. Because
-contiguous strides derive from ordered shape, the MVP signature needs no
-arbitrary stride tuple. A future allocation-free noncontiguous profile requires
-a focused Design decision and memory-instrumented evidence.
-
-The digitized field conditionally owns a typed `DigitizedWaveformSpec` sidecar
-with bit depth from 1 through 16, voltage transfer, inclusive `[0, 40]` dB
-analog gain, and `AdcQuantization.TRUNCATE`. It is
-required exactly when `readout.waveform.digitized` is present so projected or
-loaded ADC counts remain interpretable and bounds-checkable. Invalidation or
-projection that removes the field removes the spec too.
-
-TensorCore terminology is strict:
-
-- a coordinate is a stable `Id` value associated with an ID-backed axis;
-- an index is a zero-based integer tensor position along an axis;
-- a layout is ordered axes plus coordinate-to-index maps for ID-backed axes.
-
-Coordinates and indices are never interchangeable. Do not persist transient
-tensor, table, or array indices as durable identity. Diagnostics, caches, and
-reports should prefer semantic IDs when an axis is ID-backed.
-
-`IdSequence` preserves caller order and rejects empty, duplicate, base-`Id`, or
-mixed-concrete-class values. TensorDSLab builders must not sort or infer ID
-order and should validate the exact domain coordinate class for ID-backed axes.
-
-Later coordinate-addressed stochastic transforms derive logical identity
-independently of tensor dimension order: required example-axis ID and
-coordinate first, required channel-axis ID and coordinate second, then every
-other ID-backed shared axis ordered lexically by `axis_id.value` and paired
-with its coordinate, followed by
-`SampleGrid.sample_offset + local_sample_index`. An operation-local
-draw/counter coordinate follows when needed. Extra count-only axes are valid
-collection structure, but a stochastic transform must reject one that lacks an
-accepted stable global-offset rule.
-
-TensorCore contract changes require explicit Design acceptance in the
-TensorCore workspace. TensorDSLab should not fork TensorCore, keep local
-compatibility shims for retired TensorCore names, or broaden TensorCore public
-surfaces from a TensorDSLab implementation stage.
+No write may begin through an alias after a semantic field has been constructed
+and exposed. Producers initiate or enqueue all writes before constructing the
+result field, and never later write through an alias to its storage. The public
+MVP has no `out=`, destination collection, workspace, allocator, or stream
+lease. Any later reusable destination remains raw, exclusive, and unexposed
+until writes have been enqueued and the semantic field is constructed exactly
+once. TensorCore contract changes still require TensorCore Design acceptance;
+TensorDSLab does not fork it.
 
 ## Product Relationships And Boundaries
 
@@ -411,9 +372,10 @@ G4DS native products
        -> explicit provenance and coordinate mapping
        -> detector-window/readout-grid construction
        -> photon-origin PE binning
-  -> ReadoutCollection{"readout.photoelectrons"}
-  -> TensorDSLab readout and future reconstruction tensor views
-  -> deferred explicit TensorML field-selection/model boundary
+  -> dense TensorDSLab Photoelectrons truth field
+  -> simulate_readout(...)
+  -> request-selected ReadoutCollection
+  -> deferred reconstruction and TensorML boundaries
 ```
 
 The external chain is data flow, not package dependency flow. Core readout and
@@ -421,18 +383,18 @@ common modules depend only on TensorCore. A future downstream-owned bridge may
 import an exact accepted public TensorG4DS type; TensorG4DS must never import
 TensorDSLab to construct downstream identities. The bridge is a semantic
 transformation, not a subclass cast or an assumption that TensorG4DS and
-TensorDSLab layouts are interchangeable.
+TensorDSLab axes are interchangeable.
 
 The production integration target keeps tensor payloads resident on one
 explicit accelerator device across TensorG4DS, TensorDSLab, and TensorML.
 Boundary code must not silently call `.cpu()`, `.numpy()`, serialize/reload, or
 otherwise use host materialization as the package handoff. New computations
-may allocate new tensors on that same device, and TensorCore IDs, layouts, and
-other small semantic records may remain ordinary host-side metadata. Device
-movement is always explicit. Because TensorG4DS has not yet frozen a public
-GPU output contract, the exact accepted input type, dtype/layout matrix, and
+may allocate new tensors on that same device, and TensorCore axes and other
+small semantic records may remain ordinary host-side objects. Device movement
+is always explicit. Because TensorG4DS has not yet frozen a public GPU output
+contract, the exact accepted input type, dtype/axis matrix, and
 device-preservation tests belong to the future integration work order; they do
-not add a TensorG4DS dependency to the post-binned Stage 2 foundation.
+not add a TensorG4DS dependency to the local readout foundation.
 
 The discrete TensorG4DS bridge carries no end-to-end autograd promise and must
 not detach silently. Its first work order should reject gradient-sensitive
@@ -441,198 +403,96 @@ does not weaken functional autograd for accepted deterministic waveform
 transforms later in TensorDSLab.
 
 The primary readout tensor handoff is `ReadoutCollection`, not a loose product
-tuple or a required dataclass adapter. A future `ReadoutExample` may be a thin
-provenance/context record containing a collection; it is not the tensor spine.
-TensorG4DS `EventId` values and native G4DS event values are upstream
-provenance, not TensorDSLab row identity. `tensor_dslab.common` owns and
-exports opaque stable `ExampleId` and `ChannelId` coordinates. A later bridge
-stage must define explicit provenance-to-example and channel-coordinate
-mapping rather than equating IDs or guessing identity from transient indices.
-
-Producer product labels such as `readout.photoelectrons`, `readout.charge`,
-`readout.waveform.pure`,
-`readout.waveform.noise`, `readout.waveform.analog`,
-`readout.waveform.digitized`, and future
-reconstruction labels are durable TensorDSLab product labels. TensorCore
-`TensorFieldId` values identify runtime collection fields. A durable label may
-use the same string as its corresponding field ID, but the namespaces and
-types remain explicit and are never interchangeable.
+tuple or a required dataclass adapter. Runtime product and axis identity is the
+exact concrete Python class. Example, channel, and sample coordinates are
+ordered strings scoped by `ExampleAxis`, `ChannelAxis`, and `SampleAxis`.
+TensorG4DS event values remain upstream provenance; the future bridge owns
+their explicit mapping to ordered example-coordinate strings. Durable labels
+and serialization remain deferred and must not be inferred from Python class
+names without a focused artifact contract.
 
 Consumer-facing adapters are deferred. TensorDSLab should first make the local
 typed product graph coherent enough that future consumers can depend on it
 without parsing raw `.fil`, table, array, manifest, or private representation
 details.
 
-The first readout operations should work from the already-binned primary-PE
-field in a `ReadoutCollection`:
+The following is the accepted completed-rebuild simulation contract, not the
+Stage 3 implemented surface. The later public readout operation consumes an
+already-produced dense truth field:
 
 ```text
-readout.photoelectrons
-  -> timing jitter
-  -> simulate_charge
-       -> private dark-count avalanche grid
-       -> private frozen-snapshot crosstalk and afterpulse contributions
-       -> private aggregate charge smearing
-  -> readout.charge
-  -> readout.waveform.pure
-
-shared layout/sample grid -> readout.waveform.noise
-pure + noise -> readout.waveform.analog -> readout.waveform.digitized
+Photoelectrons
+  -> simulate_readout(products=..., config=..., seed=...)
+  -> ReadoutCollection containing exactly the requested products
 ```
 
-`readout.photoelectrons` contains binned photon-origin primary PE seeds. Only
-timing jitter replaces that field. One public `simulate_charge` transform
-consumes it, performs dark counts, frozen-snapshot crosstalk and afterpulses,
-and charge smearing internally, and adds or replaces `readout.charge`.
-Intermediate avalanche-count grids are private runtime scratch values, not
-recognized fields or durable products; their storage may come from a caller-
-owned compatible workspace. Do not expose an apparently sequential public API
-that lets one generated contribution feed another by accident.
+`Photoelectrons` contains binned photon-origin primary PE truth. It never
+contains dark counts, timing jitter, correlated avalanches, or charge
+smearing, and the builder never mutates or replaces it. Charge production uses
+private working values in physical order: truth, optional dark counts,
+optional timing jitter, optional correlated-avalanche simulation, and optional
+smearing. Intermediate count, charge-ledger, and diagnostic values are private
+implementation state rather than fields or durable products.
 
-`readout.charge` is the finite floating aggregate PE-equivalent response per
+`Charge` is the finite floating aggregate PE-equivalent response per
 readout channel and sample. It is not an SI-coulomb measurement and does not
 claim an explicit individual-SPAD output. Pure and noise waveforms are
 signal-only and noise-only components at one shared analog reference plane;
 they are not sequential hardware products. Their composition produces the
 analog waveform consumed by digitization.
 
-Readout transforms consume a `ReadoutCollection` and return a new coherent
-snapshot by adding or replacing one recognized field. They retain unaffected
-fields by structural sharing and remove all transitive descendants of the new
-or replaced dependency. Projection is different: it may retain any nonempty
-canonical subset without invalidating a retained descendant because no
-retained value changed. Centralize these rules; do not edit field mappings ad
-hoc or leave stale derived fields beside an updated dependency.
+`simulate_readout(...)` requires an explicit nonempty iterable of exact product
+classes. It consumes the iterable once, rejects duplicates and unknown classes,
+computes the transitive prerequisite closure, validates every required config
+and source relationship before RNG use, executes each producer at most once,
+and retains exactly the requested fields. Request order has no collection
+semantics. Unrequested prerequisites remain private local values.
 
-The accepted invalidation graph is:
+The computational graph is:
 
 ```text
-readout.photoelectrons -> readout.charge -> readout.waveform.pure
-readout.waveform.pure + readout.waveform.noise
-  -> readout.waveform.analog -> readout.waveform.digitized
+Photoelectrons -> Charge -> PureWaveform
+Photoelectrons axes/device/shape + SamplingConfig -> NoiseWaveform
+PureWaveform + NoiseWaveform -> AnalogWaveform -> DigitizedWaveform
 ```
 
-Replacing a field removes every reachable descendant. Replacing photoelectrons
-does not remove noise when layout and sample-grid semantics are unchanged.
+`ReadoutConfig` composes `SamplingConfig` with optional product configs. Config
+absence is structural. A requested product requires the configs in its
+transitive closure; an unrequested branch does not. Product configs describe
+science, not persistence, device movement, allocation, mutation, streams, or
+campaign policy. `products` controls only final in-memory retention. IO is
+deferred.
 
-Readout execution has three layers:
+When implemented, the initial builder is functional. It borrows
+`Photoelectrons` read-only,
+returns that exact field when requested, and creates guaranteed-fresh generated
+products. Generated products retained together are storage-independent. The
+builder does not mutate sources, silently move/cast/detach/host-materialize
+inputs, expose private scratch, or write through any alias after exposing a
+semantic result. Preflight failure occurs before RNG consumption or producer
+writes; failures after backend launch carry no rollback guarantee.
 
-1. Atomic free transforms remain independently callable. With `out=None`, a
-   transform follows the functional allocating path, leaves inputs unchanged,
-   may explicitly normalize arbitrary semantic order/strides with allocation,
-   and preserves autograd for accepted differentiable deterministic behavior.
-   With `out=`, it writes the complete target field of the exact supplied valid
-   result collection and returns that exact collection. A workspace is valid
-   only with `out`; supplying `out` selects a non-autograd simulation path.
-   Without a workspace, ordinary scratch or explicitly accepted normalization
-   may allocate and carries no allocation-free claim. Every writable target
-   must be internally nonoverlapping even when the read-only source is not.
-2. `ReadoutWorkspace` is a public caller-owned, runtime-only, scratch-only
-   object. A compatible workspace lets atomic transforms reuse prepared private
-   scratch. It is never a collection field, sidecar, scientific config, ID,
-   product, cache record, or returned result.
-3. `build_readout_collection(...)` is the higher-level local domain builder. It
-   owns the fixed configured full transform chain and automatic scratch
-   schedule while keeping the low-level atomic transforms available. It does
-   not load sources, perform IO, move or cast tensors, or own Projects/dag
-   scheduling. It preflights the complete configured chain, destination, and
-   workspace before its first atomic RNG draw or write.
+Every generated dimension-preserving field reuses the source's exact immutable
+axis tuple and axis instances. Axis order may vary semantically; upstream
+construction should ordinarily use example/channel/sample order so samples are
+last for temporal kernels. Positional RNG addresses use tensor indices in the
+actual dimension order, not coordinate strings, and therefore do not promise
+permutation or arbitrary chunking invariance.
 
-Every atomic call performs all destination, workspace, placement, dtype,
-algorithm, and lease preflight before consuming RNG state or launching writes.
-`out` must have the exact expected result field set and canonical order,
-sidecars, layout, device, role dtypes, and `torch.strided` tensors. Its
-unaffected fields are the exact retained source `TensorField` records; its
-writable target does not alias a source tensor or workspace scratch. The target
-is zero-initialized at public construction and is overwritten completely.
-Preflight failure leaves RNG and tensors untouched. After a backend operation
-has launched, failures carry no transactional rollback guarantee.
-
-A `ReadoutWorkspace` is exact for one fixed ordered sequence of layout axis IDs
-and sizes, device, role dtypes, algorithm scratch signature, destination
-schema, and CPU/default or specific CUDA stream. The warmed profile additionally
-requires sample-last order and contiguous participating tensors. Required-axis
-positions are derived from the ordered IDs by axis-ID equality/index; the
-signature stores no semantic-role sidecar or arbitrary stride tuple. It never
-caches, resizes, moves, casts, or recycles source tensors. One nonreentrant
-exclusive same-stream lease is allowed at a time. Scratch may use uninitialized
-storage only when every consumer proves write-before-read; logical private
-charge roles include source, total, and contribution storage, so the design
-must not claim that two physical buffers always suffice. Returned collections
-never reference workspace storage.
-
-The full `build_readout_collection(...)` result contains photoelectrons,
-charge, pure, noise, analog, and optional digitized fields. When timing jitter
-is disabled it may structurally share the source photoelectron field. With both
-`out=None` and no workspace, the builder is a functional allocating path. The
-warmed steady-state hot path requires an exact caller-prepared `out` and
-workspace. “Allocation-free” means no TensorDSLab-managed tensor-storage
-allocation in that warmed path; it does not promise zero Python object,
-PyTorch-internal, or vendor-library allocation.
-
-Private count-domain ping-pong swaps references between contiguous buffers of
-one exact shape/order/dtype/device class; it never permutes data. Integer
-photoelectron/avalanche counts, floating charge/waveforms, and integer ADC
-codes use separate storage classes. Public output preparation allocates fresh
-targets contiguously in the source collection's existing semantic axis order;
-it does not reorder retained fields. A separate one-time preparation step
-outside the repeated loop is required when a source is not sample-last and
-contiguous.
-
-Caller-owned `out` storage remains stable until the caller submits that same
-destination again. Reuse authorizes complete overwrite, so overlapping
-consumers require caller-managed output banks. Mutation, allocation, workspace,
-and stream policy are runtime control, not TensorCore identity; do not encode
-them as a TensorCore `Id`, field ID, axis ID, coordinate, product label, or
-scientific config.
-
-TensorCore field selection, batching, movement, and like-allocation return
-base `TensorCollection` records. TensorDSLab owns validated reconstruction and
-canonical projection helpers. For TensorML, an explicit
-`TensorFieldSelection` and its requested order are the positional model schema;
-do not pass a growing full readout snapshot as an implicit model ABI or assume
-that collection subclass identity survives the stock selection loop.
-Keep noncanonical model selections as base `TensorCollection` values; do not
-reorder them to recover subclass identity. A stock-loop model accepts that base
-type unless a focused adapter reconstructs a canonical subset before
-`forward_pass`.
-
-Generic base results do not retain subclass sidecar attributes. Reconstruction
-helpers explicitly carry `SampleGrid` and the conditional
-`DigitizedWaveformSpec` around the TensorCore operation, update or prune them
-for the result, and pass them to the semantic constructor. Required axis
-meaning is recovered from the exact exported axis IDs, not a sidecar or
-free-form metadata.
-
-Projection and placement are explicit memory policy. Project the needed fields
-before accelerator movement, move only that base collection through
-TensorCore, then reconstruct `ReadoutCollection` if the target boundary needs
-semantic collection identity. Structural sharing avoids copies but does not
-free tensors while old snapshots remain referenced. Transforms must not
-silently evict unrelated fields or move a full snapshot. A returned collection
-must not reference `ReadoutWorkspace` scratch. Caller-managed output banks, not
-hidden source recycling, provide stable lifetimes for overlapping consumers.
-
-Reconstruct after sample-axis selection only for a contiguous increasing
-unit-stride range, advancing both sample-grid origin and containing-grid
-offset. Arbitrary, reordered, or strided sample selections remain base
-`TensorCollection` values; do not attach a false regular `SampleGrid`.
-
-Do not impose the readout sample-last execution profile on every TensorDSLab
-domain. A future Readout-to-Reconstruction bridge selects fields, validates
-the exact `ChannelId` set, reorders by stable axis IDs/coordinates, explicitly
-materializes reconstruction-preferred contiguous storage once, and constructs
-a reconstruction-owned semantic value before entering its own execution
-profile. Cross-channel reconstruction may prefer channel-last even though
-temporal readout prefers sample-last.
+The completed MVP public surface has no atomic public transforms, mutation
+lifecycle, generic projection/reconstruction helpers, `out=`, workspace,
+allocation-free claim, or public stream policy. A later optimization stage
+starts from measured GPU evidence and must preserve request, freshness,
+exposure, synchronization, and lifetime contracts rather than reviving Stage
+2's preconstructed writable collection model.
 
 Projects/dag owns campaign fanout and fanin, scheduling, retry, repair,
 compiled DAG objects, scheduler-visible grouping, status, and cross-shard
 orchestration. TensorDSLab may later expose DAG-compatible executables,
 operation specs, and recipe fragments only after local product and cache
-contracts are accepted. Local fixed-chain composition inside
-`build_readout_collection(...)` is a TensorDSLab domain-builder responsibility,
-not campaign orchestration.
+contracts are accepted. Local dependency planning inside
+`simulate_readout(...)` is TensorDSLab scientific orchestration, not campaign
+orchestration.
 
 For future caches, TensorDSLab owns deterministic storage-level compaction over
 caller-supplied complete compatible products. Projects/dag owns scheduling,
@@ -645,28 +505,26 @@ TensorDSLab should move toward boundary-first validation:
 ```text
 external/source/config/artifact boundary
   -> validate/coerce into strong typed objects
-  -> construct TensorDSLab domain records and TensorCore layout records
+  -> construct TensorDSLab semantic leaves and collections
   -> hot path trusts those records
 ```
 
 Validate strongly when data crosses into TensorDSLab or TensorCore native
-records and when constructing new typed product, cache, tensor, layout, or
-selection objects. Do not repeatedly revalidate already constructed object
-graphs inside hot loops unless a work order accepts that specific check.
-
-Workspace preparation validates its exact layout, axis sizes/order, device,
-role dtypes, algorithm scratch signature, and execution stream. Each lease then
-performs narrow exact-match and exclusivity preflight before RNG consumption or
-writes; mismatch fails rather than resizing or adapting the workspace.
+records and when constructing new typed axes, products, collections, configs,
+or artifacts. Leaf construction checks cheap intrinsic structure. Explicit
+deep validation owns device-wide scientific scans at untrusted ingress and
+producer postconditions. Do not repeatedly revalidate already constructed
+graphs or parse semantic coordinate strings inside hot loops.
 
 Use constrained scalar wrappers for meaningful numeric config/source/artifact
 values where constraints matter. Tensor-local positive counts should use
 TensorCore-owned `PositiveInteger`. Numeric wrappers should reject bool. Do not
 add generic bool wrappers by default.
 
-Implementation should not move validation out of hot-path functions casually.
-Boundary-first validation is an accepted direction, but each migration should
-name the new construction or boundary checks that make downstream trust safe.
+Implementation should validate supported public use, not adversarial attempts
+to escape it. Unsupported subclassing, constructor bypass, class mutation,
+private-function calls, exposed-tensor mutation, and custom dispatch require no
+exhaustive detection or stable error behavior.
 
 ## Thread Roles
 
@@ -905,9 +763,9 @@ Before Review, check whether the change requires updates to:
   behavior, or cross-domain contracts;
 - `docs/architecture/<domain>.md` when a domain public contract, product shape,
   builder/loader contract, validation rule, or representation bridge changed;
-- `docs/architecture/tensors.md` when TensorCore integration, semantic product,
-  layout, field, placement, output, workspace, allocation, or lifetime
-  contracts changed;
+- `docs/architecture/tensors.md` when TensorCore integration, semantic axes or
+  fields, result sharing/freshness, placement, synchronization, exposure, or
+  lifetime contracts changed;
 - `docs/parity.md` when donor references, comparison boundaries, fixtures,
   tolerances, RNG comparisons, or intentional-divergence claims changed;
 - `docs/design.md` when end-to-end domain flow or ownership boundaries changed;

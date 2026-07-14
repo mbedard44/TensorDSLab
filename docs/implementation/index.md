@@ -52,12 +52,12 @@ retained fields.
 
 ### [Maintenance 1: Readout Surface Ownership](maintenance_1_readout_surface_ownership.md)
 
-Status: production dispatched from clean `main`
-`cf0ccf0ad8fdee53767a374837276991decb1703` through committed Design authority
-`d09cbad4a1538349e289523a9898f4e6dfd20a57`. A feature-branch copy is candidate
-evidence and does not itself imply Validation or Review clearance; if this
-updated record is read on `main`, Review's clean fast-forward gate has
-completed. The work moves the semantic
+Status: Merged / Closed on `main` at
+`3af8ab4acf834b07e3d027fb530e5f12934999a5`. It was dispatched from clean
+`main` `cf0ccf0ad8fdee53767a374837276991decb1703` through committed Design
+authority `d09cbad4a1538349e289523a9898f4e6dfd20a57`, cleared fixed-commit
+Validation and independent Review, and was fast-forwarded without a push. The
+work moves the semantic
 `ReadoutCollection` record into `readout/types.py` and shortens the public
 readout-axis Python symbols to `EXAMPLE_AXIS_ID`, `CHANNEL_AXIS_ID`,
 `SAMPLE_AXIS_ID`, and `REQUIRED_AXIS_IDS`. It changes no ID string, collection
@@ -68,6 +68,29 @@ readout-semantic reconstruction helpers. Whether those helpers should become
 collection behavior or motivate an opt-in TensorCore reconstruction hook is a
 separate Design question, not an Implementation decision in this work order.
 
+## Stage 3 Production Work Order
+
+### [Stage 3: TensorCore 0.7 Product Foundation](stage_3_tensorcore_0_7_product_foundation.md)
+
+Status: Design-complete / Undispatched.
+
+Stage 3 is the clean structural migration from the historical TensorCore
+`0.6` foundation to exact TensorCore `0.7.0` candidate
+`b454d738f6385ce6489d85492a618a3dab139bb6`. It establishes common typed axes
+and sampling, six direct final product-field leaves, product-owned config
+records and deep validators, the unordered completed-result
+`ReadoutCollection`, `ReadoutConfig`, deliberate exports, and focused runtime
+and static-typing evidence.
+
+The stage deletes old IDs, layouts, constants, sidecars, reconstruction,
+selection, movement, invalidation, and output-buffer surfaces without aliases.
+It creates no `simulation.py`, `_random.py`, product `_product.py`, scientific
+algorithm, RNG, workspace, IO, source bridge, TensorML adapter, or future
+placeholder. The exact production base remains
+`3af8ab4acf834b07e3d027fb530e5f12934999a5`; Design must commit the synchronized
+rebuild authority, verify clean persistent role routes, and explicitly dispatch
+the work order before code begins.
+
 ## Candidate Future Stages
 
 These are planning labels, not accepted work orders. Design must write a
@@ -76,108 +99,52 @@ behavior is in scope, the work order must name the comparison boundary, parity
 classification, acceptance criteria, and intentional divergences defined in
 [Parity](../parity.md).
 
-### Stage 3: Deterministic Transforms And Execution Substrate
+### Stage 4: Deterministic Waveform Products
 
-Possible goal: implement pulse-template pure rendering, constant baseline,
-analog composition, clipping, and digitization with functional and
-output-buffer paths over structurally immutable collection snapshots.
-Preserve autograd for accepted functional analog transforms, treat retained
-tensors as read-only, structurally share retained fields, and invalidate stale
-descendants when a target field is transform-added or replaced. Add the exact
-execution-signature and caller-owned scratch-only `ReadoutWorkspace`
-substrates, including fixed-device/single-stream/non-reentrant leasing and
-deterministic-tail scratch. Do not publish a placeholder full-chain builder
-before the photoelectron-to-charge branch exists; keep its scheduling machinery
-internal until Stage 4 can expose a complete configured chain.
-Lock warmed preflight to contiguous sample-last participating storage, exact
-destination/workspace/stream/lease signatures, and internally nonoverlapping
-writable buffers. Functional paths may allocate explicit normalization;
-ordinary `out` paths may allocate documented scratch or normalization; warmed
-calls reject rather than permute, make contiguous, cast, move, reshape-copy, or
-allocate a fallback. Do not add an execution-ready collection subclass or
-storage sidecar. The focused Stage 3 work order must sketch the explicit
-one-time source-preparation/materialization API (or an equally explicit caller
-composition) that produces a validated sample-last contiguous semantic value
-outside the repeated loop; Stage 2 intentionally provides no placeholder.
+Possible goal: implement focused private product producers for the accepted
+TPC/Veto pure pulse models, zero-noise mode, analog composition/saturation, and
+digitization. Every field-returning path must state TensorCore's operation-
+owned result classification and prove its accepted numerical and storage
+contract. Do not publish partial `simulate_readout(...)` orchestration merely
+to reserve the API.
 
-### Stage 4: Tensor-Native RNG And Workspace-Backed Charge Simulation
+### Stage 5: Readout RNG And Stochastic Noise
 
-Possible goal: accept and implement the coordinate-addressed random-field
-contract, timing jitter, and the public `simulate_charge(...)` transform.
-Timing jitter is the only transform that replaces the binned photon-origin
-primary PE seeds in `readout.photoelectrons`. Charge simulation consumes those
-seeds, applies dark counts plus frozen-source crosstalk and afterpulses in
-private integer scratch grids, applies aggregate charge smearing, and adds or
-replaces the floating PE-equivalent `readout.charge` response. Intermediate
-avalanche counts are not products. Extend the full-chain builder and workspace
-signature with these algorithms, prove same-stream lease safety, and validate
-the warmed TensorDSLab-managed tensor-storage-allocation-free mode for the
-accepted charge kernels. Publish `build_readout_collection(...)` here with the
-deterministic waveform/noise modes already accepted in Stage 3; Stage 5 may
-extend its noise configurations without changing builder ownership or lifetime.
-Add afterpulses only after Design resolves recovery-amplitude semantics.
-Prove that count-domain ping-pong swaps references only within one exact
-contiguous order/shape/dtype/device class, that different axis orders use
-different workspaces, and that integer count, floating response, and ADC
-domains remain separate buffers. Instrument stable target/scratch storage and
-reject sample-not-last/noncontiguous warmed calls before RNG or writes.
+Possible goal: implement the accepted private positional Threefry engine and
+closed distribution primitives, followed by white and PSD-shaped noise. The
+work order must freeze exact numeric streams and execution-mode evidence in its
+own scope and must not infer coordinate-label or tensor-permutation invariance.
 
-### Stage 5: Stochastic Waveform Noise
+### Stage 6: Charge Simulation
 
-Possible goal: implement Gaussian white noise and direct tensor FFT noise over
-the accepted collection/RNG substrate, extend the full-chain workspace
-signature and scratch preparation for those algorithms, and validate the three
-execution modes without claiming backend-wide zero allocation.
+Possible goal: freeze the remaining Poisson/PMF/numerical-domain gates and
+implement `_product_charge(...)` with private dark counts, timing jitter,
+fixed-generation correlated avalanches, S1/S2 ledgers, overflow diagnostics,
+and charge smearing. `Photoelectrons` remains immutable truth and all
+intermediate avalanche state remains private.
 
-### Stage 6: Readout Example Composition
+### Stage 7: Public Readout Orchestration
 
-Possible goal: define an optional thin `ReadoutExample` provenance/context
-wrapper around the primary `ReadoutCollection` handoff without creating a
-second product graph, upstream handoff, durable IO, or downstream adapters.
+Possible goal: implement request/config/seed preflight, exact prerequisite
+planning, each prerequisite at most once, requested-only retention, and the
+complete public `simulate_readout(...)` surface after every required product
+producer exists. Do not add IO or persistence policy. Profile real GPU memory
+and execution before proposing workspace or output-reuse architecture.
 
-### Stage 7: TensorG4DS Handoff And Photoelectron-Binning Contract
+### Later Integration And Artifact Stages
 
-Possible goal: accept one exact public TensorG4DS event/deposit/cluster product
-and add the smallest TensorDSLab-owned semantic bridge needed to produce
-`readout.photoelectrons`. The work order must define the potentially
-one-to-many TensorG4DS `EventId` provenance-to-`ExampleId` mapping,
-TensorDSLab-owned channel mapping, detector response, window/readout-grid
-construction, and photon-origin primary-PE binning. It must require an
-already-placed same-GPU input and output with no implicit host staging,
-serialization, movement, cast, or detach, while recognizing that the bridge
-constructs new example/channel/sample layouts rather than casting upstream
-collections. It must bind and validate the accepted versioned TensorG4DS
-position/time/energy unit contract and keep conversions explicit and
-on-device. Native G4DS parsing and TensorG4DS clustering stay out of
-TensorDSLab. No concrete TensorG4DS import or adapter type is accepted until
-TensorG4DS itself freezes the required public GPU/device contract. The first
-discrete bridge carries no end-to-end autograd promise and must reject
-gradient-sensitive input rather than detaching silently. The work order must
-also resolve empty upstream events and zero/one/many emitted examples without
-inventing sentinel deposits, channels, or IDs.
-
-### Stage 8: Durable Cache Contract
-
-Possible goal: decide whether the first cache target is compatibility-oriented,
-loader-compatible, or a new tensor-native format, then implement only the
-accepted product reconstruction and storage boundary.
-
-### Stage 9: Integration Surfaces
-
-Possible goal: add DAG-compatible operation specs, executable doors, recipe
-fragments, or downstream adapters only after in-memory products, TensorCore
-contracts, and durable cache contracts are stable.
-
-Any future TensorML adapter should use explicit field selection order as the
-positional model ABI and account for generic selection/batching returning base
-`TensorCollection`. It should not assume the `ReadoutCollection` class alone is
-a model schema or pre-authorize TensorML `input_fields` / `output_fields`
-changes.
+The exact TensorG4DS-to-`Photoelectrons` bridge, TensorML/Reconstruction
+adapters, durable artifacts, and DAG/integration surfaces each require later
+focused Design work. The bridge must own provenance, channel mapping, numeric
+PE binning under `SamplingConfig`, and underflow/overflow accounting without
+native G4DS parsing or TensorG4DS clustering. Model-facing field order and
+artifact identity are consumer/durable contracts rather than implicit
+`ReadoutCollection` membership order.
 
 ## Expected Stage Discipline
 
 Each stage should stay scoped to its work order. If implementation reveals a
-real contradiction in TensorDSLab product ownership, TensorCore layout
+real contradiction in TensorDSLab product ownership, TensorCore axis/field
 semantics, in-memory relationships, cache shape, or future integration
 compatibility, stop and send the issue back to Design rather than widening the
 branch.
