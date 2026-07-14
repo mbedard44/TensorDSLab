@@ -1,108 +1,114 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import StrEnum
 from typing import final
 
-import torch
 from tensor_core import (
-    FiniteFloat,
-    NonnegativeInteger,
-    PositiveFloat,
-    PositiveInteger,
     TensorCollection,
-    TensorLayout,
+    TensorField,
+    require_field_types,
+    require_same_axes,
+    require_same_device,
 )
 
-from tensor_dslab.readout.ids import (
-    CHANNEL_AXIS_ID,
-    EXAMPLE_AXIS_ID,
-    SAMPLE_AXIS_ID,
+from tensor_dslab.common import SamplingConfig
+from tensor_dslab.readout.analog_waveform import (
+    AnalogWaveform,
+    AnalogWaveformConfig,
 )
-
-
-class AdcQuantization(StrEnum):
-    TRUNCATE = "truncate"
-
-
-@dataclass(frozen=True, slots=True)
-class SampleGrid:
-    sample_period_ns: PositiveFloat
-    origin_ns: FiniteFloat
-    sample_offset: NonnegativeInteger
-
-    def __post_init__(self) -> None:
-        if type(self.sample_period_ns) is not PositiveFloat:
-            raise TypeError("SampleGrid.sample_period_ns must be PositiveFloat")
-        if type(self.origin_ns) is not FiniteFloat:
-            raise TypeError("SampleGrid.origin_ns must be FiniteFloat")
-        if type(self.sample_offset) is not NonnegativeInteger:
-            raise TypeError("SampleGrid.sample_offset must be NonnegativeInteger")
-
-
-@dataclass(frozen=True, slots=True)
-class DigitizedWaveformSpec:
-    bit_depth: PositiveInteger
-    voltage_pp_mv: PositiveFloat
-    voltage_offset_mv: FiniteFloat
-    analog_gain_db: FiniteFloat
-    quantization: AdcQuantization
-
-    def __post_init__(self) -> None:
-        if type(self.bit_depth) is not PositiveInteger:
-            raise TypeError("DigitizedWaveformSpec.bit_depth must be PositiveInteger")
-        if type(self.voltage_pp_mv) is not PositiveFloat:
-            raise TypeError("DigitizedWaveformSpec.voltage_pp_mv must be PositiveFloat")
-        if type(self.voltage_offset_mv) is not FiniteFloat:
-            raise TypeError("DigitizedWaveformSpec.voltage_offset_mv must be FiniteFloat")
-        if type(self.analog_gain_db) is not FiniteFloat:
-            raise TypeError("DigitizedWaveformSpec.analog_gain_db must be FiniteFloat")
-        if type(self.quantization) is not AdcQuantization:
-            raise TypeError("DigitizedWaveformSpec.quantization must be AdcQuantization")
-        if self.bit_depth.value > 16:
-            raise ValueError("DigitizedWaveformSpec.bit_depth must be at most 16")
-        if not 0.0 <= self.analog_gain_db.value <= 40.0:
-            raise ValueError(
-                "DigitizedWaveformSpec.analog_gain_db must be between 0.0 and 40.0"
-            )
-
-    @property
-    def adc_min(self) -> int:
-        return 0
-
-    @property
-    def adc_max(self) -> int:
-        return (1 << self.bit_depth.value) - 1
+from tensor_dslab.readout.charge import Charge, ChargeConfig
+from tensor_dslab.readout.digitized_waveform import (
+    DigitizedWaveform,
+    DigitizedWaveformConfig,
+)
+from tensor_dslab.readout.noise_waveform import (
+    NoiseWaveform,
+    NoiseWaveformConfig,
+)
+from tensor_dslab.readout.photoelectrons import Photoelectrons
+from tensor_dslab.readout.pure_waveform import (
+    PureWaveform,
+    PureWaveformConfig,
+)
+from tensor_dslab.readout._requirements import (
+    _require_exact,
+    _require_optional_exact,
+)
 
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
-class ReadoutCollection(TensorCollection):
-    sample_grid: SampleGrid
-    digitized_waveform_spec: DigitizedWaveformSpec | None = None
+class ReadoutConfig:
+    sampling: SamplingConfig
+    charge: ChargeConfig | None = None
+    pure_waveform: PureWaveformConfig | None = None
+    noise_waveform: NoiseWaveformConfig | None = None
+    analog_waveform: AnalogWaveformConfig | None = None
+    digitized_waveform: DigitizedWaveformConfig | None = None
 
     def __post_init__(self) -> None:
-        from tensor_dslab.readout.validation import require_valid_readout_collection
+        _require_exact(self.sampling, SamplingConfig, "ReadoutConfig.sampling")
+        _require_optional_exact(
+            self.charge,
+            ChargeConfig,
+            "ReadoutConfig.charge",
+        )
+        _require_optional_exact(
+            self.pure_waveform,
+            PureWaveformConfig,
+            "ReadoutConfig.pure_waveform",
+        )
+        _require_optional_exact(
+            self.noise_waveform,
+            NoiseWaveformConfig,
+            "ReadoutConfig.noise_waveform",
+        )
+        _require_optional_exact(
+            self.analog_waveform,
+            AnalogWaveformConfig,
+            "ReadoutConfig.analog_waveform",
+        )
+        _require_optional_exact(
+            self.digitized_waveform,
+            DigitizedWaveformConfig,
+            "ReadoutConfig.digitized_waveform",
+        )
 
-        TensorCollection.__post_init__(self)
-        require_valid_readout_collection(self)
 
-    @property
-    def layout(self) -> TensorLayout:
-        return next(iter(self.fields.values())).layout
+@final
+class ReadoutCollection(TensorCollection):
+    __slots__ = ()
 
-    @property
-    def device(self) -> torch.device:
-        return next(iter(self.fields.values())).tensor.device
+    @classmethod
+    def accepted_field_types(cls) -> frozenset[type[TensorField]]:
+        return frozenset(
+            {
+                Photoelectrons,
+                Charge,
+                PureWaveform,
+                NoiseWaveform,
+                AnalogWaveform,
+                DigitizedWaveform,
+            }
+        )
 
-    @property
-    def example_dimension(self) -> int:
-        return self.layout.axes.index(EXAMPLE_AXIS_ID)
+    def _require(self) -> None:
+        if not self.field_types:
+            raise ValueError("ReadoutCollection must be nonempty")
+        require_field_types(
+            self,
+            required=frozenset(),
+            optional=self.accepted_field_types(),
+        )
 
-    @property
-    def channel_dimension(self) -> int:
-        return self.layout.axes.index(CHANNEL_AXIS_ID)
+        fields = tuple(self.fields.values())
+        require_same_axes(*fields)
+        require_same_device(*fields)
 
-    @property
-    def sample_dimension(self) -> int:
-        return self.layout.axes.index(SAMPLE_AXIS_ID)
+        floating_dtypes = {
+            field.tensor.dtype
+            for field in fields
+            if field.tensor.is_floating_point()
+        }
+        if len(floating_dtypes) > 1:
+            raise ValueError("readout floating fields must share one dtype")
