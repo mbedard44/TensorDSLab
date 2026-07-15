@@ -207,7 +207,8 @@ analog, and digitized waveform producers. It freezes scalar precision and
 requires scientific/reference equations, dtype/device/axes, accepted autograd
 behavior, source immutability, and guaranteed-fresh outputs. It makes no
 kernel-count, target-sized-temporary, throughput, or compiler claim. The
-complete noise producer remains a candidate Stage 5 slice and is undispatched.
+complete noise producer remains unimplemented; its focused Stage 5 work order
+is Design-complete / Undispatched.
 
 The first pure-waveform producer prepares its config-derived pulse template and
 sampled normalization in Python binary64, then materializes that template once
@@ -218,6 +219,33 @@ explicitly saturates at inclusive dtype-rounded pre-gain thresholds so the
 upper endpoint cannot lose one code to rounding. Payload-sized convolution,
 analog, and digitizer arithmetic remains in the input field dtype and device;
 existing input payloads are never host-materialized.
+
+### Noise Uses One Private Positional RNG And Eager Reference Path
+
+The Design-complete / Undispatched Stage 5 work order selects private
+`tensordslab.threefry4x32-20/v1` and one central strongly typed `_RngStream`
+enum. Its initial exact members are `NOISE_WHITE = 0x0000_0001` and
+`NOISE_PSD_COEFFICIENT = 0x0000_0002`; stream zero is unassigned, zero noise
+owns no stream, and Charge assignments remain open. The root API remains one
+ordinary non-boolean 64-bit seed. No public RNG object, `torch.Generator`,
+semantic coordinate, timestamp, or loose stream constant is introduced.
+
+Stage 5 implements only the raw engine, fixed-point uniforms, and Box-Muller
+behavior consumed by zero/white/PSD noise. Bernoulli, exponential, Poisson,
+categorical, rejection, source-quantum, and generation mechanics remain Charge
+scope. White RMS and PSD cells are prepared in Python binary64, PSD overlaps
+use `math.fsum`, and executed values are rounded once into the requested dtype.
+Those values define ideal-standard-normal targets; the finite Box-Muller
+lattice is not renormalized. White RMS must remain in the selected dtype's
+positive normal range. Conservative host bounds reject that unsupported
+subnormal regime and white/PSD scales that could overflow the selected dtype.
+
+The accepted reference is vectorized eager CPU with conditional eager CUDA.
+Raw words and fixed-point uniforms are exact across accepted implementations;
+completed normal and PSD products are exactly repeatable only on the same
+backend/mode and compare statistically across backends. Results are fresh,
+source-payload-independent `NoiseWaveform` values with `requires_grad=False`.
+Compiled execution and performance optimization remain later measured work.
 
 ### Public Validation Does Not Mean Adversarial Hardening
 

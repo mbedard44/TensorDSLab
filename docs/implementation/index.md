@@ -141,6 +141,31 @@ Stage 4 adds no public export, `simulate_readout(...)`, RNG, charge producer,
 workspace, IO, or integration surface. It makes no kernel-count, fusion,
 target-temporary, allocation-free, throughput, or GPU-performance claim.
 
+## Stage 5 Production Work Order
+
+### [Stage 5: Readout RNG And Stochastic Noise](stage_5_readout_rng_and_stochastic_noise.md)
+
+Status: **Design-complete / Undispatched**. The work order starts from clean
+Stage 4 Design closeout `9ee84bf44a3a84e7e2d57d21362e79cc850f8e26`
+and retains exact TensorCore `0.7.0` pin
+`b454d738f6385ce6489d85492a618a3dab139bb6`. It is documentation authority,
+not production dispatch.
+
+The focused slice adds only the private standard
+`tensordslab.threefry4x32-20/v1` engine, exact fixed-point uniform conversion,
+Box-Muller behavior actually consumed by noise, and the complete exact-zero,
+IID-white, and PSD-shaped `_product_noise_waveform(...)` family. The private
+central enum begins with exact streams `NOISE_WHITE = 0x0000_0001` and
+`NOISE_PSD_COEFFICIENT = 0x0000_0002`; it assigns no Charge stream.
+
+The acceptance mode is functionality-first vectorized eager CPU with
+conditional eager CUDA. Raw words and fixed-point uniforms are exact across
+accepted implementations; completed normal/PSD products are exactly
+repeatable on the same backend/mode and compare statistically across backends.
+The stage adds no public API, Charge-only distribution primitive,
+`simulate_readout(...)`, compile/fusion/performance claim, workspace, IO, or
+integration surface.
+
 ## Candidate Future Stages
 
 These are planning labels, not accepted work orders. Design must write a
@@ -148,15 +173,6 @@ focused stage document before Implementation starts any of them. When donor
 behavior is in scope, the work order must name the comparison boundary, parity
 classification, acceptance criteria, and intentional divergences defined in
 [Parity](../parity.md).
-
-### Stage 5: Readout RNG And Stochastic Noise
-
-Possible goal: implement the accepted private positional Threefry engine and
-closed distribution primitives, followed by the complete zero, white, and
-PSD-shaped `_product_noise_waveform(...)` family. The work order must freeze
-exact numeric streams and execution-mode evidence in its own scope, make the
-zero branch seed-inert, and must not infer coordinate-label or tensor-
-permutation invariance.
 
 ### Stage 6: Charge Simulation
 

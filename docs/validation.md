@@ -32,8 +32,10 @@ post-merge full-suite, exact-archive, static-typing, import-isolation, and
 artifact gates without finding an issue. The accepted production package now
 contains the private pure, analog, and digitized producers with eager
 functionality first. The recorded three CUDA skips are qualifications rather
-than GPU evidence. The complete noise producer and measured fusion evidence
-remain later, undispatched stages.
+than GPU evidence. The focused
+[Stage 5 work order](implementation/stage_5_readout_rng_and_stochastic_noise.md)
+for the private RNG and complete noise producer is Design-complete /
+Undispatched. Measured fusion remains a later stage.
 
 Documentation-only Design work remains in Design unless the user requests an
 independent documentation Validation or Review. At minimum, run:
@@ -404,7 +406,9 @@ The remaining acceptance matrix stays normative in
 including:
 
 - product-request closure and retention invariance;
-- TensorDSLab positional Threefry RNG and distribution primitives;
+- Stage 5 positional Threefry/address packing, fixed-point uniforms, and
+  Box-Muller behavior used by noise, under eager CPU and conditional eager CUDA
+  only;
 - dark counts, timing jitter, fixed-generation correlated avalanches, S1/S2
   charge ledgers, recovery weighting, overflow, and smearing;
 - the complete white, zero, and PSD-shaped noise family under Stage 5;
@@ -412,6 +416,15 @@ including:
   deferred to a later measured optimization stage;
   and
 - future TensorG4DS, TensorML, Reconstruction, and durable boundaries.
+
+Stage 5 does not activate Bernoulli, exponential, Poisson, categorical,
+multinomial, rejection, source-quantum, iterative-generation, Charge-stream,
+compiled, Triton, fusion, or performance validation. Its exact checks cover raw
+words, addresses, fixed-point uniform conversion, zero noise, fixed-seed
+same-backend repeatability, and deterministic PSD construction. Its stochastic
+checks use analytic estimator uncertainty for white/PSD moments and covariance.
+The PSD DC coefficient is exact zero; the sample-domain record mean is bounded
+by inverse-FFT roundoff rather than required to equal zero exactly.
 
 Those checks activate only under focused production work orders. They must
 not be weakened merely because Stage 3 establishes the semantic types. The

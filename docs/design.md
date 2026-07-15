@@ -310,6 +310,7 @@ independent review, a clean Review merge gate, and Design closeout. The
 TensorCore `0.7` structural foundation is Merged / Closed through Stage 3.
 [Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
 Closed and implements the first scientific slice: functionality-first private
-pure, analog, and digitized waveform producers. The complete noise producer
-remains a candidate Stage 5 slice, and measured GPU optimization remains later
-work. Neither has a dispatched production work order.
+pure, analog, and digitized waveform producers. The complete private-RNG and
+noise [Stage 5 work order](implementation/stage_5_readout_rng_and_stochastic_noise.md)
+is Design-complete / Undispatched. Measured GPU optimization remains later
+work.

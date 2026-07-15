@@ -199,8 +199,11 @@ functionality-first contract in
 Validation, independent Review, and Design's post-merge audit found no
 unresolved issue. The evidence is CPU-only because CUDA was unavailable, and
 it makes no GPU-performance, fusion, editable-install, or wheel-build claim.
-The complete noise producer remains a candidate Stage 5 slice; no Stage 5 or
-later integration work order is dispatched.
+The focused private-RNG and complete-noise Stage 5 work order is
+Design-complete / Undispatched at
+`docs/implementation/stage_5_readout_rng_and_stochastic_noise.md`. It accepts
+no code until Design explicitly dispatches the exact committed authority. No
+Stage 5 or later integration production work is dispatched.
 
 If implementation reveals a concrete contradiction in the accepted design, stop
 and send the issue back to Design. Do not silently widen architecture, create

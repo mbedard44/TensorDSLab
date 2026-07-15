@@ -786,11 +786,20 @@ same-backend repeatability additionally requires identical shape, dimension
 order, coordinate order, config, dtype, and positional RNG version; it does not
 promise reorder or chunk invariance.
 
-Validation should compare mean, RMS, marginal normality, sample/channel
-covariance, and same-shape same-backend repeatability. Reordering and chunking
-should verify the documented positional contract rather than assert invariant
-values. A fixed white-noise array is a reproducibility fixture, not proof of
-distributional parity.
+Stage 5 fixes `NOISE_WHITE = 0x0000_0001` under private
+`tensordslab.threefry4x32-20/v1`. White RMS is prepared in binary64 and rounded
+once into the selected output dtype; represented subnormal RMS values are
+rejected, and that normal-range RMS plus the accepted finite Box-Muller lattice
+define the implemented law. The finite normal cutoff
+therefore remains part of the statistical-parity qualification rather than a
+claim of an unbounded ideal Gaussian.
+
+Validation should compare mean, RMS, relevant tail behavior, sample/channel
+covariance, and same-shape same-backend repeatability using analytic estimator
+uncertainty rather than an arbitrary normality-test p-value. Reordering and
+chunking should verify the documented positional contract rather than assert
+invariant values. A fixed white-noise array is a reproducibility fixture, not
+proof of distributional parity.
 
 ### PSD-Shaped Noise
 
@@ -806,6 +815,14 @@ scaling, and applies the documented inverse real transform without post-transfor
 RMS normalization. It does not reproduce the donor's bank/crop process.
 
 Classification: **statistical parity**.
+
+Stage 5 fixes `NOISE_PSD_COEFFICIENT = 0x0000_0002`. Overlap integration uses
+Python binary64 and `math.fsum`; retained powers are rounded once into the
+execution dtype and define the ideal-standard-normal target
+variance/covariance oracle. The finite Box-Muller lattice is not renormalized
+and remains inside the statistical allowance. The private DC coefficient is
+exact zero. The synthesized sample mean is zero only within inverse-FFT
+roundoff and is not post-corrected.
 
 Validation should compare RMS, integrated power, one-sided PSD shape,
 autocorrelation, DC/Nyquist policy, marginal distribution, and any accepted
@@ -905,12 +922,15 @@ The rebuild RNG targets are:
 
 - exact repeatability for identical TensorDSLab input values, shape, dimension
   order, coordinate order, config, dtype, algorithm/version, and root seed on
-  the same supported backend;
-- cross-backend distributional agreement with the accepted probability kernel;
+  the same supported backend and eager execution mode;
+- exact Threefry raw-word and fixed-point-uniform agreement between accepted
+  eager CPU/CUDA implementations;
+- cross-backend statistical agreement for completed Box-Muller and PSD values
+  with the accepted probability kernel;
 - finite-sample statistical validation as evidence for that cross-backend
   agreement contract;
-- no CPU/GPU bitwise guarantee until a focused RNG work order accepts an
-  algorithm capable of providing it.
+- no CPU/GPU bitwise guarantee for completed values involving transcendental
+  functions or FFTs.
 
 The parity classifications above apply to the comparison with IV-DSLab. The
 cross-backend requirement compares TensorDSLab implementations to one accepted
@@ -1024,15 +1044,15 @@ with concrete tolerances and sample sizes before implementation is accepted.
 
 ## Deferred Decisions
 
-- exact private stream assignments, Poisson/multinomial raw-word schedules,
-  supported count/rate bounds, and CPU/GPU repeatability evidence;
+- exact private Charge stream assignments, Poisson/multinomial raw-word
+  schedules, supported count/rate bounds, and CPU/GPU repeatability evidence;
 - exact prepared offset-PMF normalization and tail-rounding tolerances;
 - per-channel parameter representation;
 - whether any calibrated crosstalk approximation should match selected IV
   moments or remain a standalone TensorDSLab model;
 - whether pure rendering needs a latent-phase-marginalized amplitude
   correction to meet peak/area tolerances;
-- numeric and statistical tolerances for each production slice;
+- numeric and statistical tolerances for later Charge and integration slices;
 - whether a future source-aware path should preserve actual sub-bin phase,
   explicitly accepted window history, or per-PE charge weights;
 - whether campaign-level IV comparisons are scientifically necessary after

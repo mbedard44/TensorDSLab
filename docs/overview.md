@@ -44,8 +44,9 @@ closeout `b3ebfcd9473537dd385195afea374bd2f426c6c0`. It implements the private
 pure, analog, and digitized waveform producers under a functionality-first
 contract. Fixed-commit Validation, independent Review, and Design's post-merge
 audit found no unresolved issue. The complete noise producer remains a
-candidate Stage 5 slice, and measured GPU fusion remains a later optimization
-stage; neither is dispatched.
+focused [Stage 5](implementation/stage_5_readout_rng_and_stochastic_noise.md)
+slice whose work order is Design-complete / Undispatched. Measured GPU fusion
+remains a later optimization stage.
 
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`, bound to
 accepted candidate `d634401a853915edeb4f83df4a4943b3553deced`. Conformance is
@@ -162,7 +163,7 @@ tensor_dslab/
     types.py                  # ReadoutConfig and ReadoutCollection only
     simulation.py             # later public orchestration
     _requirements.py
-    _random.py                # later private RNG behavior
+    _random.py                # Stage 5 private RNG behavior when dispatched
     photoelectrons/types.py
     charge/{types.py,_product.py}
     pure_waveform/{types.py,_product.py}
@@ -201,6 +202,9 @@ are in `architecture/rebuild.md`.
 - [Stage 4 Work Order](implementation/stage_4_deterministic_waveform_products.md):
   Merged / Closed functionality-first pure, analog, and digitized waveform
   producer slice.
+- [Stage 5 Work Order](implementation/stage_5_readout_rng_and_stochastic_noise.md):
+  Design-complete / Undispatched private positional RNG and complete
+  zero/white/PSD noise producer slice.
 - [Package Governance](governance/index.md): adoption decision and declaration,
   TensorDSLab overlay, semantic rule map, state boundaries, and closeout.
 - [Stage 2 Work Order](implementation/stage_2_package_and_readout_collection_foundation.md):

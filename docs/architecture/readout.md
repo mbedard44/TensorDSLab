@@ -389,9 +389,11 @@ configured cascade. If correlation was disabled, every root has unit weight,
 so the same converted charge tensor represents both `S1` and `S2`. Smearing
 does not feed back into branching.
 
-Exact RNG streams, Poisson sampling, PMF numerical preparation, supported
-count/rate/generation bounds, checked overflow, and parity tolerances remain
-gates before stochastic Charge implementation.
+Exact Charge RNG streams, Poisson sampling, PMF numerical preparation,
+supported count/rate/generation bounds, checked overflow, and Charge parity
+tolerances remain gates before stochastic Charge implementation. Stage 5
+separately freezes only the two noise streams and noise-required random
+mechanics.
 
 ## Waveform Products
 
@@ -428,6 +430,16 @@ torch.fft.irfft(..., n=sample_count, dim=-1, norm="backward")
 
 The exact odd/even endpoint scales, expected variance, covariance, and
 precision policy are frozen in `rebuild.md`.
+
+Stage 5 prepares white RMS and PSD overlaps in Python binary64, accumulates each
+target cell with `math.fsum`, discards DC, and rounds each executed value once
+into the requested floating dtype. White RMS must remain in that dtype's
+positive normal range; represented subnormal RMS is outside the Stage 5 law.
+Those represented values define the
+ideal-standard-normal target statistics. The accepted finite Box-Muller lattice
+is validated within its frozen allowance and is not post-normalized. The
+private producer uses only the source axes, shape, and device; it does not read
+the `Photoelectrons` payload and returns fresh `requires_grad=False` noise.
 
 ### AnalogWaveform
 
@@ -509,9 +521,20 @@ builder invocation starts its logical positions at zero; callers use distinct
 seeds for independent invocations. A future chunk-stable API requires explicit
 global offsets.
 
-The fixed Threefry word engine and basic distribution transforms are selected
-in `rebuild.md`. Exact numeric stream assignment and Poisson details remain
-Charge implementation gates.
+The fixed Threefry word engine and noise-required distribution transforms are
+selected in `rebuild.md`. The central private enum begins with exactly:
+
+```python
+NOISE_WHITE = 0x0000_0001
+NOISE_PSD_COEFFICIENT = 0x0000_0002
+```
+
+Stream zero is unassigned; zero noise owns no stream. Stage 5 is vectorized
+eager CPU plus conditional eager CUDA only. Raw words and fixed-point uniforms
+must agree exactly between accepted CPU/CUDA paths; completed Box-Muller and
+PSD values require exact same-backend repeatability and cross-backend
+statistical agreement. Exact Charge stream assignment and Poisson details
+remain later Charge gates.
 
 ## Functional, Memory, And Exposure Contract
 
@@ -614,10 +637,10 @@ foundation: exact dependency pin, axes, sampling, product field/config types,
 no empty simulation, RNG, or product-builder module.
 
 Stage 4 is Merged / Closed and implements exactly the private pure, analog, and
-digitized waveform producers under the functionality-first contract. A
-candidate Stage 5 slice will own the complete zero/white/PSD noise producer and
-its RNG prerequisites, but no Stage 5 work order is dispatched. Later focused
-stages close stochastic Charge/RNG and finally expose complete request-aware
+digitized waveform producers under the functionality-first contract. The
+focused Stage 5 complete zero/white/PSD noise and private-RNG work order is
+Design-complete / Undispatched. Later focused stages close stochastic Charge
+RNG and finally expose complete request-aware
 `simulate_readout`. A partial public simulation API must not imply unsupported
 product closures. Measured GPU fusion remains a separate optimization stage
 after functional producers exist.

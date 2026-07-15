@@ -21,7 +21,7 @@ Python import: tensor_dslab (accepted on main through Stage 4)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
 Package maturity: Stage 4 deterministic waveform products Merged / Closed
-Next production direction: Stage 5 noise/RNG candidate (Undispatched)
+Next production direction: Stage 5 noise/RNG work order Design-complete / Undispatched
 ```
 
 Stage 1 is Design-complete, and Stage 2 is Merged / Closed on `main` at
@@ -54,9 +54,10 @@ closeout `b3ebfcd9473537dd385195afea374bd2f426c6c0`. It implements exactly the
 private pure, analog, and digitized producers under a functionality-first
 acceptance gate. Fixed-commit Validation, independent Review, and Design's
 post-merge audit found no unresolved issue. The complete noise producer
-remains a candidate Stage 5 slice, and GPU fusion or target-temporary
-elimination remains a later measured optimization. Public readout
-orchestration and integration remain undispatched future work.
+has a focused Stage 5 work order that is Design-complete / Undispatched, and
+GPU fusion or target-temporary elimination remains a later measured
+optimization. Public readout orchestration and integration remain undispatched
+future work.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency
@@ -439,6 +440,27 @@ The builder does not load sources, perform IO, move or cast inputs, persist
 products, own DAG scheduling, or accept an ambient generator. Its public random
 input is one root integer seed. Private RNG addresses use operation streams and
 logical flat tensor positions, never semantic coordinate strings.
+
+The Design-complete Stage 5 work order fixes private
+`tensordslab.threefry4x32-20/v1` and one central `_RngStream(Enum)` with
+`NOISE_WHITE = 0x0000_0001` and
+`NOISE_PSD_COEFFICIENT = 0x0000_0002`. Do not use loose stream constants,
+`IntEnum`, `auto()`, hashes, declaration order, or mutable/global generators.
+Stage 5 implements only uniform and Box-Muller behavior consumed by noise;
+Charge-only distributions and streams wait for their actual consumer.
+
+White RMS and PSD cells are prepared in Python binary64, PSD overlaps use
+`math.fsum`, and executed values round once into the selected output dtype.
+White RMS must remain in the selected dtype's positive normal range. The
+represented values define ideal-normal target moments; the finite Box-Muller
+lattice is not renormalized, and conservative host bounds reject subnormal
+white scales and overflow-prone scales. Noise results are fresh,
+source-payload-independent, and
+`requires_grad=False`. The accepted reference path is eager CPU with
+conditional eager CUDA. Raw words and fixed-point uniforms are exact across
+accepted implementations; completed normal/PSD products compare exactly only
+within one unchanged backend/mode and statistically across backends. Do not
+turn private helper signatures into public or compatibility contracts.
 
 Every field-returning path must adopt TensorCore's operation-owned result
 taxonomy: exact return, guaranteed storage-sharing, sharing permitted but

@@ -3252,8 +3252,9 @@ Recognized models are:
 1. exact zero noise;
 2. position-addressed IID Gaussian white noise with ensemble mean zero and
    explicit RMS; and
-3. exact-record-zero-mean Gaussian noise shaped by a caller-supplied one-sided
-   PSD.
+3. Gaussian noise shaped by a caller-supplied one-sided PSD, with an exactly
+   zero DC coefficient and a record mean that is zero up to inverse-transform
+   roundoff.
 
 `PsdNoiseConfig` supplies arbitrary strictly increasing frequency left edges,
 one exclusive `frequency_stop_hz`, and piecewise-constant absolute density in
@@ -3307,6 +3308,52 @@ P[0] = 0
 P[k] = Q[k],  k = 1, ..., K
 ```
 
+Stage 5 prepares these cells on the host with Python binary64 arithmetic.
+Every target-cell overlap contribution is accumulated with `math.fsum`; DC is
+discarded in binary64; and each retained `P[k]` is rounded exactly once into
+the requested `torch.float32` or `torch.float64` execution dtype. Those
+represented dtype-rounded powers, rather than an unattainable real-number
+ideal, define the ideal-standard-normal target coefficient moments and
+numerical validation oracle. The finite fixed-point Box-Muller lattice is not
+silently renormalized to exact unit variance; its documented bounded-lattice
+error is included in statistical acceptance. White-noise RMS follows the same
+rule: prepare in binary64 and round once into the output dtype. Preflight
+rejects a white RMS that is nonfinite or smaller than the dtype's least positive
+normal value, and a PSD whose retained power is zero or nonfinite after this
+rounding. The normal-range lower bound excludes a materially quantized
+subnormal white-noise law from Stage 5. Payload generation, Box-Muller
+arithmetic, coefficient construction, and `irfft` execute in the selected
+floating/complex dtype with ambient autocast disabled; no widened payload path
+is hidden behind a `float32` request.
+
+The frequency conversion is explicit binary64 arithmetic:
+
+```text
+fs_hz = 1e12 / sampling.sample_period_ps.value
+df_hz = fs_hz / N
+nyquist_hz = fs_hz / 2
+```
+
+All three values must be finite and positive. PSD source coverage through
+exactly `nyquist_hz` is sufficient; the exclusive endpoint has zero measure.
+
+Preflight also closes the finite-output numerical domain without a device-wide
+postcondition scan. Let `normal_guard` be `8.0` for `float32` and `16.0` for
+`float64`, conservative bounds above the accepted maximum Box-Muller radii.
+The represented white RMS must satisfy both
+`torch.finfo(dtype).tiny <= rms_mv` and
+`normal_guard * rms_mv <= torch.finfo(dtype).max`. Represented PSD powers must
+satisfy:
+
+```text
+N * normal_guard * math.fsum(sqrt(P[k]) for k = 1, ..., K)
+    <= torch.finfo(dtype).max
+```
+
+The PSD bound conservatively covers coefficient construction and a complete
+inverse-transform accumulation. Nonfinite host evaluation or a failed bound is
+rejected before random-word generation or target-sized allocation.
+
 Within the accepted numerical tolerance, `sum_k(Q[k])` equals the supplied PSD
 integral over `[0, fs / 2)`. Synthesis then deliberately sets the DC-cell power
 to zero. It therefore retains `sum_{k=1}^K(P[k])`, discards exactly the
@@ -3323,10 +3370,11 @@ to `PsdNoiseConfig`. An IID `WhiteNoiseConfig` realization may have an ordinary
 finite-sample mean fluctuation and is not silently demeaned, because demeaning
 would change its accepted IID covariance.
 
-PSD-shaped noise uses one exact Gaussian one-sided coefficient law. For each
-leading-index waveform row, let all `u[k]`, `v[k]`, and `z` values below be
-mutually independent real standard-normal variates generated in the selected
-output floating dtype. Define the interior index set as
+PSD-shaped noise uses one fixed finite-lattice Box-Muller one-sided coefficient
+law targeting the ideal Gaussian equations below. For each leading-index
+waveform row, let all `u[k]`, `v[k]`, and `z` values below be mutually
+independent finite-lattice Box-Muller components targeting standard normals in
+the selected output floating dtype. Define the interior index set as
 `I = {1, ..., floor((N - 1) / 2)}`. The private one-sided coefficients are:
 
 ```text
@@ -3379,7 +3427,7 @@ interior coefficient. DC and even-length Nyquist are self-conjugate and do not
 receive that factor. This explains the `N / 2` interior scale and `N` Nyquist
 scale above.
 
-The frozen statistical contract is:
+The frozen ideal-standard-normal statistical oracle is:
 
 ```text
 E[x[n]] = 0
@@ -3401,6 +3449,12 @@ For every paired coefficient,
 `E[abs(X[k])**2] = N**2 * P[k] / 2`. The even-length real Nyquist coefficient
 has variance `N**2 * P[N / 2]`. Parseval's identity consequently gives
 `E[mean_n(x[n]**2)] = sum_{k=1}^K(P[k])`.
+
+The executed finite-lattice Box-Muller law targets these equations but does not
+make them exact digital moments: discretized open uniforms and target-dtype
+transcendentals introduce a small accepted deviation. Validation includes the
+frozen numerical/lattice allowance and must not post-normalize generated values
+to force the ideal equations exactly.
 
 The covariance is circular in the sample index. Different waveform rows use
 independent coefficient variates in the MVP, so their cross-covariance is zero
@@ -3440,6 +3494,48 @@ time-domain output waveform. Consistent with the scalar-calibration rule, the
 MVP uses the same white-noise RMS or PSD for every channel while drawing the
 channels independently. Per-channel spectra and cross-channel spectral
 correlation require a later typed tensor-calibration/input contract.
+
+The exact Stage 5 noise lattices use `q = 0` throughout:
+
+```text
+white:
+    stream = NOISE_WHITE
+    p = 0, ..., output.numel() - 1
+
+PSD, F = floor(N / 2) + 1:
+    stream = NOISE_PSD_COEFFICIENT
+    p = row * F + k,  k = 1, ..., floor(N / 2)
+```
+
+PSD row order is the private coefficient order defined above. `k = 0` has no
+address and requests no draw. Every positive-frequency position keeps its
+fixed address even when its represented power is zero; an eager implementation
+may evaluate that draw and then force the coefficient to exact zero. Interior
+positions use ordered `(z0, z1)` for real and imaginary components. An even
+Nyquist position uses `z0` and discards `z1`.
+
+The initial noise producer supports vectorized eager CPU execution and eager
+CUDA execution only when that CUDA path has passed its required evidence.
+MPS, Meta, compiled, Triton, and custom-kernel execution are outside Stage 5.
+An unsupported device is rejected before output allocation or random-word
+generation; the producer never moves an input or generated payload through the
+host. Identical accepted inputs reproduce exactly on the same backend and
+execution mode. Raw Threefry words and fixed-point uniform conversions must
+agree exactly between accepted CPU and CUDA implementations, while completed
+Box-Muller and PSD values require cross-backend statistical agreement rather
+than bitwise identity because transcendental and FFT implementations may
+differ.
+
+`_product_noise_waveform(...)` performs only contextual preflight needed for
+its algorithm. It requires exact sampling/source agreement, an exact
+`torch.float32` or `torch.float64` output dtype, and an accepted CPU/CUDA
+device. A seed is exactly a non-boolean Python `int` in `[0, 2**64)`.
+`ZeroNoiseConfig` accepts either `None` or a valid seed and returns fresh exact
+zeros without invoking RNG; white and PSD models reject `None`. Intrinsic
+config validity remains owned by the frozen config constructors, and the
+private producer does not defend against fabricated private objects or
+constructor bypass. All contextual and numeric preparation completes before
+random-word generation or output allocation.
 
 ### Analog Waveform
 
@@ -3623,9 +3719,11 @@ random_bits = counter_random(
 random_field = random_bits.reshape(tensor.shape)
 ```
 
-The GPU implementation should derive logical position from thread/index
-arithmetic; the conceptual `flat_position` value does not require allocating
-an `arange` tensor in a warmed kernel.
+The functionality-first eager implementation may materialize a logical-position
+tensor. That allocation is accepted in Stage 5. A later measured fused
+implementation may derive the same positions from thread/index arithmetic
+without materializing `arange`; this representation choice never changes the
+positional identity above.
 
 An iterative stochastic role may extend this same positional rule with a
 virtual leading iteration dimension when it must distinguish repeated draws at
@@ -3652,9 +3750,9 @@ when required, is part of that role's frozen row-major lattice. Terminal
 smearing owns a separate noniterative stream and product-grid lattice. A
 zero frontier requests no words and may skip physical work, but it never
 compacts later positions or changes another role's address. Preflight requires
-`K * N <= 2**63` independently for every enabled generation role. Exact stream
-numbers, Poisson/multinomial raw-word schedules, and exhaustion behavior remain
-the focused RNG gate; generation identity itself is no longer open.
+`K * N <= 2**63` independently for every enabled generation role. Exact Charge
+stream numbers, Poisson/multinomial raw-word schedules, and exhaustion behavior
+remain the later Charge gate; generation identity itself is no longer open.
 
 ### Private Raw Engine And Address Schema
 
@@ -3738,12 +3836,23 @@ Every independently specified random field or stochastic substep owns one
 private exact-valued 32-bit stream. Cell-level operations use `q = 0`;
 per-source-quantum operations use the ordinal within that source cell. One
 stream must not mix those two meanings. Streams live as explicitly assigned
-members of a private type such as `_RngStream`, never as exported loose
-constants, and never derive from `Enum.auto()`, Python `hash()`, declaration
-order, requested-product order, or execution order. The exact stream table is
-frozen with the corresponding stochastic algorithms; this architecture does
-not prematurely assign numbers to the still-deferred charge distribution
-models. Once assigned, a stream is never renumbered or repurposed.
+members of the single private `readout._random._RngStream` enum, never as
+exported loose constants, and never derive from `Enum.auto()`, Python `hash()`,
+declaration order, requested-product order, or execution order. Stage 5 freezes
+exactly these initial members:
+
+```python
+@unique
+class _RngStream(Enum):
+    NOISE_WHITE = 0x0000_0001
+    NOISE_PSD_COEFFICIENT = 0x0000_0002
+```
+
+`Enum`, rather than `IntEnum`, preserves strong typing; numeric packing uses a
+member's `.value`. Stream zero remains unassigned. `ZeroNoiseConfig` owns no
+stream and requests no raw words. Stage 5 assigns no Charge member or reserved
+Charge range. A later accepted stochastic operation appends a globally unique
+explicit member without renumbering, reusing, or repurposing an existing one.
 
 Threefry operates on mathematical unsigned 32-bit words. The reference Torch
 implementation may carry each word in `torch.int64`, provided every live word
@@ -3755,11 +3864,15 @@ signed overflow, host endianness, physical strides, or implementation-defined
 signed right shift. A later native-unsigned CPU, Triton, or CUDA kernel is an
 implementation substitution only if it returns the same standard raw words.
 
-The integer core has a strong boundary: every supported eager, compiled, CPU,
-and CUDA implementation must return identical four-word output for an
-identical key and counter. This claim becomes true for a backend only after it
-passes the authoritative known-answer and cross-implementation tests. The
-initial fixed Random123 oracles include:
+The integer core has a strong boundary: every accepted implementation must
+return identical four-word output for an identical key and counter. Stage 5
+accepts one vectorized eager CPU implementation and conditionally accepts its
+vectorized eager CUDA path when CUDA evidence is available; an independent
+scalar implementation is a validation oracle rather than a production
+execution mode. Compiled, Triton, MPS, and custom-kernel paths are not accepted
+Stage 5 execution modes. Any later accepted implementation must first pass the
+same authoritative known-answer and cross-implementation tests. The initial
+fixed Random123 oracles include:
 
 ```text
 counter: 00000000 00000000 00000000 00000000
@@ -3776,12 +3889,12 @@ output:  59cd1dbb b8879579 86b5d00c ac8b6d84
 ```
 
 Raw-word identity does not automatically make floating distribution transforms
-bitwise identical across backends. Uniform conversion, normal pairing,
-exponential and Bernoulli transforms, Poisson sampling, transcendental
-functions, arithmetic dtype, and rejection behavior are separate frozen
-algorithm contracts. Until their evidence supports something stronger,
-completed stochastic products retain the same-backend repeatability and
-cross-backend statistical-parity boundary documented below.
+bitwise identical across backends. Stage 5 requires exact accepted-CPU/CUDA
+agreement for fixed-point uniform conversion, exact same-backend repeatability
+for Box-Muller and completed noise products, and cross-backend statistical
+agreement for completed Gaussian and PSD values. Bernoulli, exponential,
+Poisson, categorical, and rejection behavior remain future Charge contracts
+and are not Stage 5 implementation claims.
 
 The implementation must not read or mutate PyTorch's global RNG state, create
 a `torch.Generator`, use `torch.poisson` as the normative sampler, or depend on
@@ -3789,9 +3902,13 @@ private PyTorch RNG operations. The engine will belong privately to
 TensorDSLab when its focused stage is dispatched; selecting it here neither
 changes TensorCore nor creates a Random123 runtime dependency.
 
-### MVP Uniform And Distribution Primitives
+### Selected RNG Distribution Contracts
 
-The MVP uses the conventional precision-matched Random123 fixed-point
+Stage 5 implements the precision-matched uniform conversions and Box-Muller
+mapping used by white and PSD noise. The Bernoulli and exponential contracts
+below are selected future Charge Design and remain nonoperative until a focused
+Charge work order activates them. The MVP uses the conventional
+precision-matched Random123 fixed-point
 conversions rather than a widened `float64` inverse-transform path for
 `float32` products. The normative conversion reference is Random123 `1.14.0`
 [`u01fixedpt.h`](https://github.com/DEShawResearch/random123/blob/726a093cd9a73f3ec3c8d7a70ff10ed8efec8d13/include/Random123/u01fixedpt.h).
@@ -3878,10 +3995,16 @@ dtype:
 
 ```text
 radius = sqrt(-2 * log(U(0, 1)))
-angle = 2 * pi * U[0, 1)
+angle = tau * U[0, 1)
 z0 = radius * cos(angle)
 z1 = radius * sin(angle)
 ```
+
+Stage 5 prepares `tau` from Python binary64 `math.tau` and rounds it exactly
+once into the selected execution dtype/device before payload arithmetic. The
+angle is one multiplication of that scalar by the closed-open uniform; it is
+not a reassociable two-multiply `2 * pi * U` expression. The exact `-2` factor
+is applied to `log(U)` before square root, with ambient autocast disabled.
 
 One exact `(stream, logical_position, source_quantum, base_raw_word)` address
 owns the ordered pair `(z0, z1)`. A `float32` pair consumes two consecutive raw
@@ -3900,12 +4023,13 @@ validation and in the synchronized `docs/parity.md` comparison; evidence that
 rare threshold observables are sensitive to it is the trigger for a separately
 versioned widened or tail-complete normal algorithm.
 
-Uniform conversions and Bernoulli integer comparisons must reproduce the same
-target-dtype values bit-for-bit on every supported implementation. Box-Muller
-and exponential outputs retain the same-backend repeatability boundary because
-`log`, square root, sine, and cosine may differ across backends or compiler
-modes. Selecting these primitives does not create a CPU/CUDA bitwise guarantee
-for completed stochastic products.
+Stage 5 proves that uniform conversions reproduce the same target-dtype values
+bit-for-bit on every accepted CPU/CUDA implementation. Box-Muller outputs
+retain the same-backend repeatability boundary because `log`, square root,
+sine, and cosine may differ across backends. Later Charge work must separately
+activate and prove the selected Bernoulli and exponential behavior. None of
+these selections creates a CPU/CUDA bitwise guarantee for completed stochastic
+products.
 
 Variable-count operations assign a source quantum the deterministic address
 `(source_flat_position, quantum_ordinal, raw_word_ordinal)` before
@@ -3914,13 +4038,16 @@ cell and never depends on parallel execution order. A distribution-level draw
 may consume more than one raw word, so `raw_word_ordinal` must not be renamed or
 treated as a one-word draw number.
 
-Preflight rejects an invalid seed, unsupported stream, position/shape overflow,
-source population outside the quantum bound, or statically known raw-word
-overflow before any stochastic product write. A variable-attempt rejection
-sampler cannot preflight its realized attempt count. Exhausting its 32-bit block
-coordinate is a deterministic hard algorithm failure: it returns no valid
-product and must never wrap, reseed, reuse an earlier address, change
-algorithms, clamp the sample, or emit a biased fallback.
+Stage 5 preflight is deliberately contextual: it checks the optional or
+required seed, exact floating dtype and accepted device, sampling/source shape
+agreement, recognized noise stream, checked logical position arithmetic, the
+fixed normal raw-word schedule, and model-specific RMS/PSD representation
+before output allocation or random-word generation. It does not adversarially
+police privately constructed position tensors. Source-population limits,
+variable-attempt rejection, and exhaustion behavior remain part of the future
+Charge gate. A later rejection sampler must still fail deterministically rather
+than wrap, reseed, reuse an address, change algorithms, clamp the sample, or
+emit a biased fallback.
 
 Required behavior is:
 
@@ -3931,8 +4058,8 @@ Required behavior is:
   removed from `products`, because their numeric operation streams are fixed;
 - zero-effect configs consume no relevant draws;
 - no hidden global RNG; and
-- cross-backend distributional/statistical agreement without an assumed
-  bitwise guarantee.
+- cross-backend statistical agreement for completed floating stochastic
+  products without an assumed bitwise guarantee.
 
 Coordinate values are semantic metadata but are not random identities.
 Relabeling or reordering coordinate metadata without moving payload values
@@ -3988,6 +4115,14 @@ generic root:
 - deterministic differentiable waveform operations preserve autograd where
   accepted; and
 - stochastic count simulation and digitization make no blanket autograd claim.
+
+`_product_noise_waveform(...)` uses `Photoelectrons` only for its exact axes,
+shape, and device; it never reads the integer payload. Every zero, white, or
+PSD result is a guaranteed-fresh `NoiseWaveform` with the requested floating
+dtype and `requires_grad=False`. It has no differentiable tensor input or
+lineage to the truth payload. A later `AnalogWaveform` may still preserve the
+independent `PureWaveform` autograd path when adding this nondifferentiable
+noise value.
 
 TensorCore frozen records do not make Torch storage physically immutable.
 Callers must not mutate tensors held by fields or collections through any
@@ -4319,7 +4454,8 @@ The rebuild validation matrix includes:
   normalization, post-transform demeaning, standard-deviation normalization,
   power normalization, or DC-power redistribution changes the frozen law;
 - PSD-shaped-noise ensemble checks for an exactly zero real DC coefficient and
-  per-record sample mean, retained expected variance, the accepted odd/even
+  a per-record sample mean bounded by deterministic inverse-FFT roundoff,
+  retained expected variance, the accepted odd/even
   circular covariance equation, target spectral shape outside the discarded
   DC cell, real Nyquist behavior, fluctuating finite-record power, independent
   channel rows, zero cross-row covariance in expectation, Parseval mean-square
@@ -4329,30 +4465,35 @@ The rebuild validation matrix includes:
 - exact non-boolean root-seed validation in `[0, 2**64)`, deterministic
   closure acceptance of `None`, and stochastic-closure rejection of `None`
   before any draw or write;
-- exact Random123 `Threefry4x32_R<20>` known-answer vectors on every supported
-  scalar, vectorized, eager, compiled, CPU, and conditional CUDA engine path,
-  with expected words held as independent fixed fixtures rather than generated
-  by the implementation under test;
+- exact Random123 `Threefry4x32_R<20>` known-answer vectors against an
+  independent scalar oracle, the vectorized eager CPU implementation, and the
+  conditional vectorized eager CUDA implementation, with expected words held
+  as independent fixed fixtures rather than generated by the implementation
+  under test;
 - exact schema-v1 key/counter/lane packing for zero and maximum seeds, differing
   seed halves, every accepted private stream, positions around the `2**32`
   split and at the accepted maximum, zero and maximum quantum ordinals, and
-  raw-word ordinals `0`, `1`, `2`, `3`, `4`, and the accepted maximum;
+  raw-word ordinals `0`, `1`, `2`, `3`, `4`, and the accepted maximum; the
+  nonzero/max-quantum cases validate generic schema packing only and do not
+  create a Stage 5 source-quantum consumer;
 - explicit lane-three-to-next-block-lane-zero rollover, numerical low/high word
-  order, the `0x54445331` domain tag, and deterministic rejection of every
-  position, population, and raw-word bound violation without narrowing casts;
+  order, the `0x54445331` domain tag, and deterministic rejection of seed,
+  stream, position, quantum, and raw-word schema-bound violations without
+  narrowing casts; source-population validation remains later Charge scope;
 - exact `float32` and `float64` closed-open and open-open conversion oracles for
   zero, maximum, and representative raw words, including endpoint exclusion,
   numerical two-word order, discarded-bit behavior, and no reuse of discarded
   bits;
-- Bernoulli ties-to-even threshold construction, exact threshold-boundary word
-  comparisons, quantized probability error no greater than `2**-33`, and
-  draw-free threshold-zero and threshold-`2**32` results;
+- later Charge-stage Bernoulli ties-to-even threshold construction, exact
+  threshold-boundary word comparisons, quantized probability error no greater
+  than `2**-33`, and draw-free threshold-zero and threshold-`2**32` results;
 - Box-Muller raw-word schedule and ordered cosine/sine components at one exact
   positional address, scalar-consumer spare-result discard, two-component PSD
   use, native-dtype execution, same-backend repeatability, component moments
   and covariance, and explicit `float32`/`float64` radial cutoffs;
-- exponential endpoint, mean, and finite-tail fixtures in each accepted dtype,
-  with no hidden widened `float64` path for a `float32` operation;
+- later Charge-stage exponential endpoint, mean, and finite-tail fixtures in
+  each accepted dtype, with no hidden widened `float64` path for a `float32`
+  operation;
 - globally unique fixed numeric operation-stream assignments that do not
   change with the requested subset, enabled branches, or later appended
   operations;
@@ -4360,16 +4501,17 @@ The rebuild validation matrix includes:
   and empty results where the selected backend accepts them;
 - row-major logical flat positions derived from current dimension order rather
   than physical storage offsets, including noncontiguous-view fixtures;
-- for every accepted iterative stochastic role, exact
+- for every later accepted iterative Charge role, exact
   virtual-leading-iteration addressing `p = j * N + u`, checked
   `G * N <= 2**63`, global rather
   than block-local iteration identity, and no activity-compacted positions;
-- deterministic source-quantum and raw-word ordinals, collision-free address
+- later Charge-stage deterministic source-quantum and raw-word ordinals,
+  collision-free address
   encoding across every accepted root-seed/stream/position/quantum/raw-word
   tuple, and the distinction between address uniqueness and ordinary repeated
   32-bit output values;
-- exact raw-word agreement between the scalar oracle and all accepted
-  vectorized or compiled implementations, plus proof that TensorDSLab neither
+- exact raw-word agreement between the scalar oracle and every Stage 5
+  accepted vectorized eager implementation, plus proof that TensorDSLab neither
   reads nor mutates PyTorch global RNG state and does not construct a
   `torch.Generator`;
 - proof that axis classes, coordinate strings, and timestamps do not enter the
@@ -4481,8 +4623,8 @@ The completed production steps are:
 
 The remaining production sequence is:
 
-1. Freeze and implement the private RNG and complete noise contracts under a
-   focused work order.
+1. Implement the frozen private RNG and complete noise contracts under the
+   Design-complete Stage 5 work order after explicit dispatch.
 2. Freeze the remaining Poisson/multinomial stream, numerical-tail, and
    count-bound contracts, then implement the fixed-`K` charge simulation in
    parity-scoped slices.
@@ -4546,9 +4688,9 @@ The subsequent Stage 4 Design pass created the focused
 `stage_4_deterministic_waveform_products.md` work order and synchronized the
 functionality-first execution decision. Stage 4 is now Merged / Closed and
 implements exactly the private pure, analog, and digitized producers. It added
-no public API. The complete noise producer remains a candidate Stage 5 slice,
-and measured GPU fusion remains a later optimization gate; neither is
-dispatched.
+no public API. The focused Stage 5 private-RNG and complete-noise work order is
+Design-complete / Undispatched. Measured GPU fusion remains a later
+optimization gate.
 
 ## Closed Decisions And Remaining Design Gates
 
@@ -4585,10 +4727,11 @@ redistribution, Gaussian one-sided coefficients, two independent real
 standard-normal components per interior coefficient,
 `torch.fft.irfft(..., n=N, dim=-1, norm="backward")`, the documented endpoint
 scales, retained expected variance, circular covariance, independent rows, and
-no post-transform normalization or hidden longer-record crop. The later RNG
-stream table assigns the private PSD coefficient stream, but the accepted
-precision-matched uniforms and Box-Muller pair now define how its two ordered
-standard-normal components are generated. Neither choice reopens this PSD law.
+no post-transform normalization or hidden longer-record crop. Stage 5 assigns
+`NOISE_WHITE = 0x0000_0001` and
+`NOISE_PSD_COEFFICIENT = 0x0000_0002`; the accepted precision-matched uniforms
+and Box-Muller pair define how the corresponding standard-normal values are
+generated. Neither choice reopens this PSD law.
 
 Waveform baseline ownership is closed as well. The MVP has no deterministic
 analog pedestal: pure and noise are zero-referenced voltage components, analog
@@ -4602,12 +4745,13 @@ logical-position/quantum/raw-word-block counter packing, lane selection, and
 accepted bounds specified above. This closes raw-bit generation only; it does
 not select the stream numbers for deferred algorithms.
 
-The generic MVP distribution layer is also closed: precision-matched
-Random123-style `float32` and `float64` closed-open/open-open conversions,
-ties-to-even 32-bit Bernoulli thresholds, native-dtype exponential inversion,
-and address-local ordered Box-Muller pairs. The documented finite exponential
-and normal tails are accepted bounded-MVP approximations and parity
-qualifications, not hidden claims of unbounded continuous support.
+The noise-required distribution layer is closed for Stage 5:
+precision-matched Random123-style `float32` and `float64`
+closed-open/open-open conversions and address-local ordered Box-Muller pairs.
+Ties-to-even 32-bit Bernoulli thresholds and native-dtype exponential inversion
+remain selected future Charge Design rather than Stage 5 implementation scope.
+The documented finite normal tail is an accepted bounded-MVP approximation and
+parity qualification, not a hidden claim of unbounded continuous support.
 
 Stage 3 completed the TensorCore selection, inherited-constructor typing,
 public-import, and fixed consumer-probe gate at exact commit
@@ -4615,13 +4759,14 @@ public-import, and fixed consumer-probe gate at exact commit
 
 The remaining gates are:
 
-1. Exact private numeric stream table, Poisson algorithm and crossover,
+1. Exact private Charge stream assignments, Poisson algorithm and crossover,
    operation-specific per-quantum versus exact aggregate sampling choices,
    Charge-specific execution-dtype and raw-word-budget choices,
    rejection/exhaustion behavior, and supported execution-mode repeatability
-   evidence. The Threefry engine, address packing, generic uniform conversion,
-   Bernoulli threshold, exponential inversion, and Box-Muller mapping are no
-   longer open in this gate.
+   evidence. The Threefry engine, address packing, uniform conversion, and
+   Box-Muller mapping are no longer open. Bernoulli and exponential equations
+   are selected, but their implementation/evidence activates only with an
+   accepted Charge consumer.
 2. Exact fixed/exponential/zero-clipped-normal offset-PMF preparation
    precision, stable normal-CDF and right-tail evaluation, normalization and
    tail-rounding tolerance; supported `maximum_generations`, rate,
