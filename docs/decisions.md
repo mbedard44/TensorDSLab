@@ -206,9 +206,12 @@ The Merged / Closed Stage 4 work order implements exactly the private pure,
 analog, and digitized waveform producers. It freezes scalar precision and
 requires scientific/reference equations, dtype/device/axes, accepted autograd
 behavior, source immutability, and guaranteed-fresh outputs. It makes no
-kernel-count, target-sized-temporary, throughput, or compiler claim. The
-complete noise producer remains unimplemented; its focused Stage 5 work order
-is Design-complete / Undispatched.
+kernel-count, target-sized-temporary, throughput, or compiler claim.
+
+The Merged / Closed Stage 5 work order implements the complete exact-zero,
+IID-white, and caller-supplied PSD noise producer plus only the private RNG
+behavior those models consume. It likewise makes no compiler, fusion,
+target-sized-temporary, throughput, or accelerator-performance claim.
 
 The first pure-waveform producer prepares its config-derived pulse template and
 sampled normalization in Python binary64, then materializes that template once
@@ -222,7 +225,7 @@ existing input payloads are never host-materialized.
 
 ### Noise Uses One Private Positional RNG And Eager Reference Path
 
-The Design-complete / Undispatched Stage 5 work order selects private
+The Merged / Closed Stage 5 work order selects private
 `tensordslab.threefry4x32-20/v1` and one central strongly typed `_RngStream`
 enum. Its initial exact members are `NOISE_WHITE = 0x0000_0001` and
 `NOISE_PSD_COEFFICIENT = 0x0000_0002`; stream zero is unassigned, zero noise

@@ -188,7 +188,7 @@ tensor_dslab/
     types.py                 # ReadoutConfig and ReadoutCollection only
     simulation.py            # public simulate_readout()
     _requirements.py         # shared private readout relationships
-    _random.py               # private readout RNG when implemented
+    _random.py               # private Stage 5 readout RNG
 
     photoelectrons/
       __init__.py
@@ -309,8 +309,10 @@ verified Implementation/Validation/Review routes, fixed-commit validation,
 independent review, a clean Review merge gate, and Design closeout. The
 TensorCore `0.7` structural foundation is Merged / Closed through Stage 3.
 [Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
-Closed and implements the first scientific slice: functionality-first private
-pure, analog, and digitized waveform producers. The complete private-RNG and
-noise [Stage 5 work order](implementation/stage_5_readout_rng_and_stochastic_noise.md)
-is Design-complete / Undispatched. Measured GPU optimization remains later
-work.
+Closed and implements the deterministic waveform producers. The private-RNG
+and complete-noise
+[Stage 5 work order](implementation/stage_5_readout_rng_and_stochastic_noise.md)
+is also Merged / Closed through exact implementation candidate
+`538089910be0fcaceff363c43e41e92e87af2efd` and Review closeout
+`c6a506d3658b24197806b9e230480211a254a35a`. Measured GPU optimization and
+the remaining Charge/public-orchestration slices remain later work.

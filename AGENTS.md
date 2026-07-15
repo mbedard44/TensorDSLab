@@ -199,11 +199,17 @@ functionality-first contract in
 Validation, independent Review, and Design's post-merge audit found no
 unresolved issue. The evidence is CPU-only because CUDA was unavailable, and
 it makes no GPU-performance, fusion, editable-install, or wheel-build claim.
-The focused private-RNG and complete-noise Stage 5 work order is
-Design-complete / Undispatched at
-`docs/implementation/stage_5_readout_rng_and_stochastic_noise.md`. It accepts
-no code until Design explicitly dispatches the exact committed authority. No
-Stage 5 or later integration production work is dispatched.
+Stage 5 is Merged / Closed through exact implementation candidate
+`538089910be0fcaceff363c43e41e92e87af2efd` and Review's evidence-only
+closeout `c6a506d3658b24197806b9e230480211a254a35a`. It implements the private
+`tensordslab.threefry4x32-20/v1` reference RNG plus exact-zero, IID-white, and
+caller-supplied PSD noise under
+`docs/implementation/stage_5_readout_rng_and_stochastic_noise.md`.
+Fixed-commit Validation, independent Review, and Design's post-merge audit
+found no unresolved issue. The evidence is eager CPU-only because CUDA was
+unavailable; it makes no GPU execution, performance, fusion, editable-install,
+or wheel-build claim. No Charge, public orchestration, or later integration
+production work is dispatched.
 
 If implementation reveals a concrete contradiction in the accepted design, stop
 and send the issue back to Design. Do not silently widen architecture, create

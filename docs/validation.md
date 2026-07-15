@@ -32,10 +32,18 @@ post-merge full-suite, exact-archive, static-typing, import-isolation, and
 artifact gates without finding an issue. The accepted production package now
 contains the private pure, analog, and digitized producers with eager
 functionality first. The recorded three CUDA skips are qualifications rather
-than GPU evidence. The focused
+than GPU evidence.
+
+The focused
 [Stage 5 work order](implementation/stage_5_readout_rng_and_stochastic_noise.md)
-for the private RNG and complete noise producer is Design-complete /
-Undispatched. Measured fusion remains a later stage.
+is Merged / Closed through exact implementation candidate
+`538089910be0fcaceff363c43e41e92e87af2efd` and Review's evidence-only
+closeout `c6a506d3658b24197806b9e230480211a254a35a`. Fixed-commit Validation,
+independent Review, and Design's post-merge audit found no unresolved issue in
+the private positional RNG or complete exact-zero, IID-white, and
+caller-supplied PSD noise producer. The five conditional CUDA skips are
+qualifications rather than GPU evidence. Measured fusion remains a later
+stage.
 
 Documentation-only Design work remains in Design unless the user requests an
 independent documentation Validation or Review. At minimum, run:
@@ -398,20 +406,20 @@ Stage 3 did not implement scientific producers, RNG, request planning, or
 `simulate_readout(...)`. Stage 4 subsequently validated and merged the TPC/Veto
 pure, analog, and digitized producers, including their reference equations,
 freshness, axes/device/dtype behavior, and accepted autograd contracts. It did
-not validate zero noise, stochastic noise, RNG, Charge, public orchestration,
-or GPU fusion.
+not validate Charge, public orchestration, or GPU fusion. Stage 5 subsequently
+validated and merged the private positional Threefry reference, its
+noise-consumed fixed-point uniform and Box-Muller behavior, and complete
+exact-zero, IID-white, and caller-supplied PSD noise. CUDA was unavailable, so
+that closeout is eager CPU-only evidence and makes no GPU execution or
+performance claim.
 
 The remaining acceptance matrix stays normative in
 [Rebuild Validation Strategy](architecture/rebuild.md#validation-strategy),
 including:
 
 - product-request closure and retention invariance;
-- Stage 5 positional Threefry/address packing, fixed-point uniforms, and
-  Box-Muller behavior used by noise, under eager CPU and conditional eager CUDA
-  only;
 - dark counts, timing jitter, fixed-generation correlated avalanches, S1/S2
   charge ledgers, recovery weighting, overflow, and smearing;
-- the complete white, zero, and PSD-shaped noise family under Stage 5;
 - operation-owned freshness and stream ordering, with GPU fusion evidence
   deferred to a later measured optimization stage;
   and
@@ -426,8 +434,9 @@ checks use analytic estimator uncertainty for white/PSD moments and covariance.
 The PSD DC coefficient is exact zero; the sample-domain record mean is bounded
 by inverse-FFT roundoff rather than required to equal zero exactly.
 
-Those checks activate only under focused production work orders. They must
-not be weakened merely because Stage 3 establishes the semantic types. The
+Later checks activate only under focused production work orders. They must not
+be weakened merely because earlier stages establish related semantic types or
+private RNG machinery. The
 sole active correlated-avalanche baseline is the fixed-maximum-generation
 model in `rebuild.md`; deleted exploratory algorithm documents are not
 implementation sources.

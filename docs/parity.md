@@ -794,6 +794,12 @@ define the implemented law. The finite normal cutoff
 therefore remains part of the statistical-parity qualification rather than a
 claim of an unbounded ideal Gaussian.
 
+Stage 5 is Merged / Closed through exact implementation candidate
+`538089910be0fcaceff363c43e41e92e87af2efd`. Its frozen eager-CPU evidence
+clears the accepted same-backend repeatability and analytic statistical gates.
+CUDA was unavailable, so this closeout adds no cross-backend execution or GPU
+performance claim.
+
 Validation should compare mean, RMS, relevant tail behavior, sample/channel
 covariance, and same-shape same-backend repeatability using analytic estimator
 uncertainty rather than an arbitrary normality-test p-value. Reordering and
@@ -823,6 +829,12 @@ variance/covariance oracle. The finite Box-Muller lattice is not renormalized
 and remains inside the statistical allowance. The private DC coefficient is
 exact zero. The synthesized sample mean is zero only within inverse-FFT
 roundoff and is not post-corrected.
+
+The Merged / Closed Stage 5 evidence covers odd/even endpoint scaling,
+isolated cosine and sine bases, real-only Nyquist behavior, Parseval power,
+lagged covariance, coefficient moments, and cross-row independence. Those
+checks establish the documented TensorDSLab law, not trace identity with IV's
+bank-and-crop process.
 
 Validation should compare RMS, integrated power, one-sided PSD shape,
 autocorrelation, DC/Nyquist policy, marginal distribution, and any accepted

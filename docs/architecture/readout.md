@@ -637,10 +637,10 @@ foundation: exact dependency pin, axes, sampling, product field/config types,
 no empty simulation, RNG, or product-builder module.
 
 Stage 4 is Merged / Closed and implements exactly the private pure, analog, and
-digitized waveform producers under the functionality-first contract. The
-focused Stage 5 complete zero/white/PSD noise and private-RNG work order is
-Design-complete / Undispatched. Later focused stages close stochastic Charge
-RNG and finally expose complete request-aware
+digitized waveform producers under the functionality-first contract. Stage 5
+is Merged / Closed and implements the private positional RNG behavior consumed
+by complete exact-zero, IID-white, and caller-supplied PSD noise. Later focused
+stages close stochastic Charge RNG and finally expose complete request-aware
 `simulate_readout`. A partial public simulation API must not imply unsupported
 product closures. Measured GPU fusion remains a separate optimization stage
 after functional producers exist.

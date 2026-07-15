@@ -1,18 +1,24 @@
 # Stage 5 Readout RNG And Stochastic Noise Work Order
 
-Status: **Review-cleared / fast-forward merged; Design acceptance pending** at
-exact implementation candidate
-`538089910be0fcaceff363c43e41e92e87af2efd`. The user authorized production
-execution on 2026-07-14 from committed Design/dispatch authority
-`69b0472d246e107668a7ed253fa7c10bba22de8f`; fixed-commit Validation and
-independent Review have no unresolved finding. Review cleanly fast-forwarded
-`main` from `9ee84bf44a3a84e7e2d57d21362e79cc850f8e26` to the exact candidate and
-repeated the required post-merge gates. Final Design acceptance remains the
-last closeout gate. No push occurred.
+Status: **Merged / Closed**. Exact implementation candidate
+`538089910be0fcaceff363c43e41e92e87af2efd` is a linear descendant of committed
+Design/dispatch authority `69b0472d246e107668a7ed253fa7c10bba22de8f`.
+Candidate 1 has that authority as its exact parent; Candidates 2 and 3 are
+test-only corrections with their respective prior fixed candidate as parent.
+The user authorized production execution on 2026-07-14; fixed-commit
+Validation and independent Review found no unresolved issue. Review cleanly
+fast-forwarded `main` from
+`9ee84bf44a3a84e7e2d57d21362e79cc850f8e26` to the exact candidate, repeated
+the required post-merge gates, and recorded the evidence-only closeout at
+`c6a506d3658b24197806b9e230480211a254a35a`. TensorDSLab Design accepted that
+closeout on 2026-07-15 after independently repeating the package, dependency,
+static-typing, import-isolation, diff, and artifact gates. No push occurred.
 
-The implementation candidate has the exact Design parent and an exact
-seven-path delta comprising five additions and two modifications. Candidate 1
-was `57a2697c04e86f35cefb0aa2b865e679a50ad534`; Candidate 2
+The candidate series is a linear descendant of the exact Design authority and
+has an exact seven-path cumulative delta comprising five additions and two
+modifications. Candidate 1
+`57a2697c04e86f35cefb0aa2b865e679a50ad534` has the exact Design-authority
+parent; Candidate 2
 `97fd2c2a0487ecfe58f9cb9c7f33c76b5bc37d85` added only the finite PSD
 accumulation equality/nextafter proof. Review returned two P2 test-evidence
 findings on Candidate 2. Candidate 3 added only the authorized RNG-conversion
@@ -115,6 +121,14 @@ This Review-owned closeout changes only this work order and the implementation
 index. Cleared production, tests, README, metadata, synchronized Design, and
 governance bytes remain exactly those merged at Candidate 3.
 
+Final Design independently repeated both 109-test runs against the clean
+TensorCore source pin and its exact archive: each ran 104 passing tests with 5
+conditional CUDA skips and no failure or error. Pyright `1.1.408` again
+reported zero findings against both dependency forms; archive identity, import
+isolation, diff, and generated-artifact checks also passed. This final Design
+closeout changes no production, test, README, package metadata, public API,
+dependency, or governance byte.
+
 ## Objective
 
 Implement the smallest complete stochastic waveform slice on top of the closed
@@ -177,7 +191,7 @@ conformance_finding: Not evaluated
 coordination_status: Deferred
 registry_storage_profile: Disabled
 stage_4: Merged / Closed
-stage_5: Merged / Design acceptance pending
+stage_5: Merged / Closed
 ```
 
 The only permitted Stage 5 execution states are:
@@ -1286,8 +1300,10 @@ Return before any change that would:
 Stage 5 becomes **Merged / Closed** only when:
 
 1. Design explicitly dispatches the exact committed synchronized authority;
-2. the implementation candidate has that exact parent and only allowlisted
-   changes;
+2. the candidate series is a linear descendant of that exact authority, its
+   first implementation candidate has that authority as its exact parent,
+   every correction candidate has the prior fixed candidate as its exact
+   parent, and the cumulative delta contains only allowlisted changes;
 3. source-checkout and independently archived exact-pin suites pass on one
    fixed candidate;
 4. mandatory static typing passes against both dependency forms;

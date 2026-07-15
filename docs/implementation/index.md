@@ -145,14 +145,18 @@ target-temporary, allocation-free, throughput, or GPU-performance claim.
 
 ### [Stage 5: Readout RNG And Stochastic Noise](stage_5_readout_rng_and_stochastic_noise.md)
 
-Status: **Review-cleared / fast-forward merged; Design acceptance pending** at
-exact implementation candidate
-`538089910be0fcaceff363c43e41e92e87af2efd`, from committed Design/dispatch
-authority `69b0472d246e107668a7ed253fa7c10bba22de8f`. Fixed-commit Validation and
-independent Review have no unresolved finding. Review fast-forwarded clean
-`main` from `9ee84bf44a3a84e7e2d57d21362e79cc850f8e26` to the candidate and repeated
-the required post-merge gates. Final Design acceptance remains outstanding.
-No push occurred.
+Status: **Merged / Closed**. Exact implementation candidate
+`538089910be0fcaceff363c43e41e92e87af2efd` is a linear descendant of committed
+Design/dispatch authority `69b0472d246e107668a7ed253fa7c10bba22de8f`;
+Candidate 1 has that authority as its exact parent, and the later candidates
+are test-only corrections in the finite review loop. Fixed-commit Validation
+and independent Review found no unresolved issue. Review fast-forwarded clean
+`main` from `9ee84bf44a3a84e7e2d57d21362e79cc850f8e26` to the candidate and recorded
+its evidence-only closeout at
+`c6a506d3658b24197806b9e230480211a254a35a`. Design accepted the closeout on
+2026-07-15 after independently repeating the source/archive package suites,
+dual static-typing, import-isolation, dependency-identity, diff, and artifact
+gates. No push occurred.
 
 The focused slice adds only the private standard
 `tensordslab.threefry4x32-20/v1` engine, exact fixed-point uniform conversion,

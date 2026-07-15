@@ -263,7 +263,7 @@ tensor_dslab/
     types.py                 # ReadoutConfig and ReadoutCollection only
     simulation.py            # public simulate_readout() orchestration
     _requirements.py         # shared private readout requirements
-    _random.py               # shared private readout RNG, when implemented
+    _random.py               # shared private Stage 5 readout RNG
 
     photoelectrons/
       __init__.py
@@ -4635,22 +4635,24 @@ The completed production steps are:
   Review, fast-forward merge, and Design closeout; and
 - implement the deterministic pure, analog, and digitized product producers
   under the focused Stage 4 work order, then clear the same fixed-commit
-  Validation, independent Review, merge, and Design closeout gates.
+  Validation, independent Review, merge, and Design closeout gates; and
+- implement the private positional RNG behavior consumed by exact-zero,
+  IID-white, and caller-supplied PSD noise under the focused Stage 5 work
+  order, then clear its fixed-commit Validation, independent Review, merge,
+  and Design closeout gates.
 
 The remaining production sequence is:
 
-1. Implement the frozen private RNG and complete noise contracts under the
-   Design-complete Stage 5 work order after explicit dispatch.
-2. Freeze the remaining Poisson/multinomial stream, numerical-tail, and
+1. Freeze the remaining Poisson/multinomial stream, numerical-tail, and
    count-bound contracts, then implement the fixed-`K` charge simulation in
    parity-scoped slices.
-3. Publish request-aware `simulate_readout(...)` only after every required
+2. Publish request-aware `simulate_readout(...)` only after every required
    producer exists and its complete closure can be preflighted.
-4. Profile real GPU memory and execution before designing workspace/output
+3. Profile real GPU memory and execution before designing workspace/output
    reuse.
-5. Design the exact TensorG4DS-to-truth-Photoelectrons bridge.
-6. Design explicit TensorML/reconstruction adapters.
-7. Design durable artifacts only after in-memory contracts stabilize.
+4. Design the exact TensorG4DS-to-truth-Photoelectrons bridge.
+5. Design explicit TensorML/reconstruction adapters.
+6. Design durable artifacts only after in-memory contracts stabilize.
 
 Each production slice uses the repository Implementation/Validation/Review
 loop and fixed-commit evidence. No compatibility alias preserves `0.6`.
@@ -4704,9 +4706,11 @@ The subsequent Stage 4 Design pass created the focused
 `stage_4_deterministic_waveform_products.md` work order and synchronized the
 functionality-first execution decision. Stage 4 is now Merged / Closed and
 implements exactly the private pure, analog, and digitized producers. It added
-no public API. The focused Stage 5 private-RNG and complete-noise work order is
-Design-complete / Undispatched. Measured GPU fusion remains a later
-optimization gate.
+no public API. The subsequent Stage 5 private-RNG and complete-noise work order
+is also Merged / Closed through exact implementation candidate
+`538089910be0fcaceff363c43e41e92e87af2efd` and Review closeout
+`c6a506d3658b24197806b9e230480211a254a35a`. It likewise added no public API.
+Measured GPU fusion remains a later optimization gate.
 
 ## Closed Decisions And Remaining Design Gates
 

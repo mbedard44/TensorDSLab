@@ -17,11 +17,11 @@ The current identity and maturity are:
 
 ```text
 Project/display name: TensorDSLab
-Python import: tensor_dslab (accepted on main through Stage 4)
+Python import: tensor_dslab (accepted on main through Stage 5)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
-Package maturity: Stage 4 deterministic waveform products Merged / Closed
-Next production direction: Stage 5 noise/RNG work order Design-complete / Undispatched
+Package maturity: Stage 5 readout RNG and stochastic noise Merged / Closed
+Next Design direction: remaining Charge RNG, sampler, and numerical-bound contracts
 ```
 
 Stage 1 is Design-complete, and Stage 2 is Merged / Closed on `main` at
@@ -53,11 +53,18 @@ Stage 4 is Merged / Closed through exact implementation candidate
 closeout `b3ebfcd9473537dd385195afea374bd2f426c6c0`. It implements exactly the
 private pure, analog, and digitized producers under a functionality-first
 acceptance gate. Fixed-commit Validation, independent Review, and Design's
-post-merge audit found no unresolved issue. The complete noise producer
-has a focused Stage 5 work order that is Design-complete / Undispatched, and
-GPU fusion or target-temporary elimination remains a later measured
-optimization. Public readout orchestration and integration remain undispatched
-future work.
+post-merge audit found no unresolved issue.
+
+Stage 5 is Merged / Closed through exact implementation candidate
+`538089910be0fcaceff363c43e41e92e87af2efd` and Review's evidence-only
+closeout `c6a506d3658b24197806b9e230480211a254a35a`. It implements the private
+positional Threefry reference, noise-consumed fixed-point uniforms and
+Box-Muller pair, and complete exact-zero, IID-white, and caller-supplied PSD
+noise producer. Its fixed-commit Validation, independent Review, and Design
+post-merge audit found no unresolved issue. CUDA was unavailable, so the
+evidence is eager CPU-only and makes no GPU execution or performance claim.
+GPU fusion, Charge, public readout orchestration, and integration remain
+undispatched future work.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency
@@ -200,7 +207,7 @@ TensorDSLab/
       types.py                # ReadoutConfig and ReadoutCollection only
       simulation.py           # public simulate_readout() orchestration
       _requirements.py        # private shared readout relationships
-      _random.py              # private readout RNG, when implemented
+      _random.py              # private Stage 5 readout RNG
       photoelectrons/types.py
       charge/{types,_product}.py
       pure_waveform/{types,_product}.py
@@ -441,7 +448,7 @@ products, own DAG scheduling, or accept an ambient generator. Its public random
 input is one root integer seed. Private RNG addresses use operation streams and
 logical flat tensor positions, never semantic coordinate strings.
 
-The Design-complete Stage 5 work order fixes private
+The Merged / Closed Stage 5 work order fixes private
 `tensordslab.threefry4x32-20/v1` and one central `_RngStream(Enum)` with
 `NOISE_WHITE = 0x0000_0001` and
 `NOISE_PSD_COEFFICIENT = 0x0000_0002`. Do not use loose stream constants,
@@ -832,7 +839,7 @@ manifest, rule-coverage, source-anchor, dormant-trigger, deviation, raw-ID,
 changed-file-allowlist, and forbidden-claim checks defined in
 [Validation](docs/validation.md#governance-adoption-checks). Runtime, import,
 dependency, export, environment, and post-merge commands are active for the
-accepted package surfaces through Stage 4. Integration and unimplemented
+accepted package surfaces through Stage 5. Integration and unimplemented
 scientific-runtime commands remain dormant until their corresponding surfaces
 exist.
 
