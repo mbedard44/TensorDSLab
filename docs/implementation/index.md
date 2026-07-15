@@ -145,11 +145,14 @@ target-temporary, allocation-free, throughput, or GPU-performance claim.
 
 ### [Stage 5: Readout RNG And Stochastic Noise](stage_5_readout_rng_and_stochastic_noise.md)
 
-Status: **Design-complete / Undispatched**. The work order starts from clean
-Stage 4 Design closeout `9ee84bf44a3a84e7e2d57d21362e79cc850f8e26`
-and retains exact TensorCore `0.7.0` pin
-`b454d738f6385ce6489d85492a618a3dab139bb6`. It is documentation authority,
-not production dispatch.
+Status: **Review-cleared / fast-forward merged; Design acceptance pending** at
+exact implementation candidate
+`538089910be0fcaceff363c43e41e92e87af2efd`, from committed Design/dispatch
+authority `69b0472d246e107668a7ed253fa7c10bba22de8f`. Fixed-commit Validation and
+independent Review have no unresolved finding. Review fast-forwarded clean
+`main` from `9ee84bf44a3a84e7e2d57d21362e79cc850f8e26` to the candidate and repeated
+the required post-merge gates. Final Design acceptance remains outstanding.
+No push occurred.
 
 The focused slice adds only the private standard
 `tensordslab.threefry4x32-20/v1` engine, exact fixed-point uniform conversion,
@@ -165,6 +168,17 @@ repeatable on the same backend/mode and compare statistically across backends.
 The stage adds no public API, Charge-only distribution primitive,
 `simulate_readout(...)`, compile/fusion/performance claim, workspace, IO, or
 integration surface.
+
+Review verified the exact seven-path candidate delta. Against both the clean
+TensorCore `0.7.0` source pin and its independent exact archive, 109 tests ran:
+104 passed and 5 conditional CUDA tests skipped. The focused RNG/noise run
+executed 33 tests: 31 passed and 2 CUDA tests skipped. Pyright `1.1.408` found
+no issue against either dependency form, import isolation returned
+`False False False False`, and diff/artifact checks passed. The exact archive
+SHA-256, frozen statistical observations, environment, and residual
+qualifications are recorded in the work order. CUDA was unavailable, so this
+is CPU-only evidence and makes no GPU execution or performance claim; build
+tooling was unavailable, so it makes no editable-install or wheel-build claim.
 
 ## Candidate Future Stages
 

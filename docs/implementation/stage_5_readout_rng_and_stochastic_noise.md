@@ -1,9 +1,119 @@
 # Stage 5 Readout RNG And Stochastic Noise Work Order
 
-Status: **Design-complete / Undispatched**. This documentation-only work order
-defines a future production slice. It does not authorize Implementation,
-Validation, Review, merge, or push. Design must explicitly dispatch the exact
-committed authority after privately verifying every required route.
+Status: **Review-cleared / fast-forward merged; Design acceptance pending** at
+exact implementation candidate
+`538089910be0fcaceff363c43e41e92e87af2efd`. The user authorized production
+execution on 2026-07-14 from committed Design/dispatch authority
+`69b0472d246e107668a7ed253fa7c10bba22de8f`; fixed-commit Validation and
+independent Review have no unresolved finding. Review cleanly fast-forwarded
+`main` from `9ee84bf44a3a84e7e2d57d21362e79cc850f8e26` to the exact candidate and
+repeated the required post-merge gates. Final Design acceptance remains the
+last closeout gate. No push occurred.
+
+The implementation candidate has the exact Design parent and an exact
+seven-path delta comprising five additions and two modifications. Candidate 1
+was `57a2697c04e86f35cefb0aa2b865e679a50ad534`; Candidate 2
+`97fd2c2a0487ecfe58f9cb9c7f33c76b5bc37d85` added only the finite PSD
+accumulation equality/nextafter proof. Review returned two P2 test-evidence
+findings on Candidate 2. Candidate 3 added only the authorized RNG-conversion
+and PSD endpoint/basis tests and closed both findings without changing
+production, API, mathematics, or Design authority. The complete fast-forward
+from prior `main` integrates eleven Design-document paths and the seven-path
+candidate as one linear eighteen-path change. The feature branch remains fixed
+at Candidate 3.
+
+TensorCore was clean at exact `0.7.0` pin
+`b454d738f6385ce6489d85492a618a3dab139bb6`. Review independently archived
+that commit; the ZIP SHA-256 was
+`649c4daac3b953397371cb64647dcaf9a7ca7a857b32fae58c4ec4a856c79796`.
+Before and after the merge, both the source checkout and exact archive ran 109
+tests: 104 passed and 5 conditional CUDA tests skipped, with no failure or
+error. The focused RNG/noise run executed 33 tests: 31 passed and 2 CUDA tests
+skipped.
+
+Pyright `1.1.408` reported 0 errors, warnings, or informational findings
+against both the TensorCore source checkout and independently extracted exact
+archive. Import isolation returned `False False False False`; `git diff
+--check`, exact topology and allowlist, public/private surfaces, dependency
+direction, source/global-RNG immutability, and generated-artifact scans passed.
+The evidence environment was Python `3.13.11`, PyTorch `2.12.1`, macOS
+`15.7.4` on arm64, and eager CPU execution. CUDA and MPS were unavailable, so
+this evidence makes no GPU execution or performance claim. The `build` and
+`hatchling` modules were unavailable, so no editable-install or wheel-build
+claim is made.
+
+The frozen statistical seeds were `0`, `1`, `0x0123456789abcdef`, and
+`0xffffffffffffffff`. White-noise evidence used 262144 values and 131072
+adjacent-pair products per dtype. Each PSD case used 16384 waveform rows and
+8192 cross-row pairs. Values below are `observed / target / absolute-error
+bound`; a two-value entry is `observed / absolute bound` for a zero target:
+
+```text
+white float32:
+  mean                 -0.002746397635735885 / 0.01172637939453125
+  mean square           1.001362997223374 / 1.0 / 0.01658044457859096
+  adjacent covariance  -2.2253214777987623e-05 / 0.016580444578590956
+white float64:
+  mean                  0.002645765103896858 / 0.01171875000001421
+  mean square           0.9992600757469671 / 1.0 / 0.01657281518407392
+  adjacent covariance  -0.003958642449093908 / 0.016572815184073917
+
+PSD N=31 float32:
+  covariance lag 0      0.9662873536118535 / 0.9677419066429138 / 0.0855740245022514
+  covariance lag 1     -0.0351497644340036 / -0.03225806355476376 / 0.060554378410020836
+  covariance lag 2     -0.030771644344430353 / -0.03225806355476386 / 0.060554378410020836
+  Parseval power        0.9685921046647603 / 0.9677419066429138 / 0.01565378429011359
+PSD N=31 float64:
+  covariance lag 0      0.9665481483832368 / 0.967741935483871 / 0.08553711062747371
+  covariance lag 1     -0.04290909765344848 / -0.032258064516129045 / 0.06051746378959955
+  covariance lag 2     -0.038704258644078664 / -0.03225806451612909 / 0.06051746378959955
+  Parseval power        0.9685921887791034 / 0.967741935483871 / 0.015616868331550283
+PSD N=32 float32:
+  covariance lag 0      0.9704460567476081 / 0.96875 / 0.08566316666406923
+  covariance lag 1     -0.03711228048185357 / -0.03124999999999996 / 0.060615323705037395
+  covariance lag 2     -0.040777838638136485 / -0.031250000000000056 / 0.060615323705037395
+  Parseval power        0.9678595796932747 / 0.96875 / 0.01541587650869006
+PSD N=32 float64:
+  covariance lag 0      0.9789082137659939 / 0.96875 / 0.08562621178437732
+  covariance lag 1     -0.04276724728097317 / -0.03124999999999996 / 0.06057836882534549
+  covariance lag 2     -0.030316815466442416 / -0.031250000000000056 / 0.06057836882534549
+  Parseval power        0.9684886222786686 / 0.96875 / 0.015378921628998152
+```
+
+The same PSD rows produced these coefficient and cross-row observations:
+
+```text
+N=31 float32:
+  k=3 real square       15.425012537079477 / 15.499999538064003 / 1.3706106257777269
+  k=3 imaginary square  15.526823566950645 / 15.499999538064003 / 1.3706106257777269
+  component covariance  0.22388699112167748 / 0.9693412491875506
+  magnitude square      30.95183610403012 / 30.999999076128006 / 1.9386824983751012
+  cross-row covariance -0.002752762898090102 / 0.0855740245022514
+N=31 float64:
+  k=3 real square       15.543785341164698 / 15.500000000000007 / 1.3700193885500378
+  k=3 imaginary square  15.408055684185445 / 15.500000000000007 / 1.3700193885500378
+  component covariance  0.002862388225908008 / 0.9687500000011018
+  magnitude square      30.95184102535014 / 31.000000000000014 / 1.9375000000022036
+  cross-row covariance  0.010613883783526689 / 0.0855371106274737
+N=32 float32:
+  k=3 real square       15.772776001081134 / 16.0 / 1.4148239139355951
+  k=3 imaginary square  15.8838610491261 / 16.0 / 1.4148239139355951
+  component covariance  0.11061036435107273 / 1.0006103515625
+  magnitude square      31.656637050207234 / 32.0 / 2.001220703125
+  Nyquist square        31.20328483861561 / 32.0 / 2.8296478278711903
+  cross-row covariance  0.0009169878041839063 / 0.08566316666406923
+N=32 float64:
+  k=3 real square       15.666775262079245 / 16.0 / 1.414213562374232
+  k=3 imaginary square  15.989864900638805 / 16.0 / 1.414213562374232
+  component covariance -0.07552291375795328 / 1.0000000000011369
+  magnitude square      31.656640162718052 / 32.0 / 2.0000000000022737
+  Nyquist square        31.847386240826413 / 32.0 / 2.828427124748464
+  cross-row covariance -0.006612767556031073 / 0.08562621178437732
+```
+
+This Review-owned closeout changes only this work order and the implementation
+index. Cleared production, tests, README, metadata, synchronized Design, and
+governance bytes remain exactly those merged at Candidate 3.
 
 ## Objective
 
@@ -67,7 +177,7 @@ conformance_finding: Not evaluated
 coordination_status: Deferred
 registry_storage_profile: Disabled
 stage_4: Merged / Closed
-stage_5: Design-complete / Undispatched
+stage_5: Merged / Design acceptance pending
 ```
 
 The only permitted Stage 5 execution states are:
