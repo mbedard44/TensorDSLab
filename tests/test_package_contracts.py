@@ -272,20 +272,20 @@ class PackageContractTest(unittest.TestCase):
             "tensor_dslab/readout/tensors.py",
             "tensor_dslab/readout/validation.py",
             "tensor_dslab/readout/simulation.py",
-            "tensor_dslab/readout/_random.py",
             "tensor_dslab/readout/photoelectrons/_product.py",
             "tensor_dslab/readout/charge/_product.py",
-            "tensor_dslab/readout/noise_waveform/_product.py",
         )
         for path in absent:
             self.assertFalse(Path(path).exists(), path)
 
-    def test_deterministic_producers_and_sampling_helper_remain_private(
+    def test_producers_rng_and_sampling_helper_remain_private(
         self,
     ) -> None:
         private_names = (
+            "_RngStream",
             "_require_sampling",
             "_product_pure_waveform",
+            "_product_noise_waveform",
             "_product_analog_waveform",
             "_product_digitized_waveform",
         )
@@ -294,6 +294,10 @@ class PackageContractTest(unittest.TestCase):
             readout,
             __import__(
                 "tensor_dslab.readout.pure_waveform",
+                fromlist=("__all__",),
+            ),
+            __import__(
+                "tensor_dslab.readout.noise_waveform",
                 fromlist=("__all__",),
             ),
             __import__(
@@ -335,9 +339,10 @@ class PackageContractTest(unittest.TestCase):
             }
             self.assertNotIn("tensor_dslab.readout.types", imported, str(path))
 
-    def test_deterministic_producer_imports_are_private_and_acyclic(self) -> None:
+    def test_product_producer_imports_are_private_and_acyclic(self) -> None:
         producer_paths = (
             Path("tensor_dslab/readout/pure_waveform/_product.py"),
+            Path("tensor_dslab/readout/noise_waveform/_product.py"),
             Path("tensor_dslab/readout/analog_waveform/_product.py"),
             Path("tensor_dslab/readout/digitized_waveform/_product.py"),
         )
@@ -349,11 +354,18 @@ class PackageContractTest(unittest.TestCase):
                 "tensor_dslab.readout.pure_waveform.types",
             },
             producer_paths[1]: {
+                "tensor_dslab.common",
+                "tensor_dslab.readout._random",
+                "tensor_dslab.readout._requirements",
+                "tensor_dslab.readout.noise_waveform.types",
+                "tensor_dslab.readout.photoelectrons",
+            },
+            producer_paths[2]: {
                 "tensor_dslab.readout.analog_waveform.types",
                 "tensor_dslab.readout.noise_waveform",
                 "tensor_dslab.readout.pure_waveform",
             },
-            producer_paths[2]: {
+            producer_paths[3]: {
                 "tensor_dslab.readout.analog_waveform",
                 "tensor_dslab.readout.digitized_waveform.types",
             },
@@ -376,7 +388,6 @@ class PackageContractTest(unittest.TestCase):
         )
         forbidden_tensor_dslab_modules = {
             "tensor_dslab",
-            "tensor_dslab.readout._random",
             "tensor_dslab.readout.simulation",
             "tensor_dslab.readout.types",
         }
@@ -408,6 +419,19 @@ class PackageContractTest(unittest.TestCase):
                 accepted_tensor_dslab_imports[path],
             )
 
+    def test_private_random_module_has_no_domain_or_tensorcore_dependency(
+        self,
+    ) -> None:
+        path = Path("tensor_dslab/readout/_random.py")
+        tree = ast.parse(path.read_text(), filename=str(path))
+        imports: set[str] = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.ImportFrom) and node.module is not None:
+                imports.add(node.module)
+            elif isinstance(node, ast.Import):
+                imports.update(alias.name for alias in node.names)
+        self.assertEqual(imports, {"__future__", "enum", "math", "torch"})
+
     def test_fresh_process_imports_are_acyclic_and_isolated(self) -> None:
         environment = os.environ.copy()
         environment["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -420,6 +444,8 @@ class PackageContractTest(unittest.TestCase):
             "tensor_dslab.readout.analog_waveform",
             "tensor_dslab.readout.digitized_waveform",
             "tensor_dslab.readout.pure_waveform._product",
+            "tensor_dslab.readout._random",
+            "tensor_dslab.readout.noise_waveform._product",
             "tensor_dslab.readout.analog_waveform._product",
             "tensor_dslab.readout.digitized_waveform._product",
             "tensor_dslab.readout.types",
