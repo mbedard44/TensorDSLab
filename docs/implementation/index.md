@@ -109,20 +109,37 @@ qualifications are recorded in the work order.
 
 ### [Stage 4: Deterministic Waveform Products](stage_4_deterministic_waveform_products.md)
 
-Status: **Design-complete / Undispatched**. The work order freezes a
-functionality-first slice containing exactly three private producers:
+Status: **Review-cleared / fast-forward merged; Design acceptance pending** at
+exact implementation candidate
+`3eb8ad19a36308ca2b73d41d219a7a3b4b46c1da`, from committed Design/dispatch
+base `b7af45741035821dfa94c8093bdeccea3320e26d`. Fixed-commit Validation and
+independent Review found no unresolved issue. Review fast-forwarded clean
+`main` from `5ff13eb3c0735abfda454a334be59faac35259c2` to the candidate and repeated
+the required post-merge gates. Final Design acceptance remains outstanding.
+No push occurred.
+
+The implementation adds exactly three private producers:
 `_product_pure_waveform(...)` for both accepted TPC/Veto pulse models,
 `_product_analog_waveform(...)`, and `_product_digitized_waveform(...)`.
-It requires scientific/reference correctness, dtype/device/axes behavior,
-source immutability, guaranteed-fresh results, and accepted autograd behavior.
-It makes no kernel-count, fusion, target-temporary, allocation-free,
-throughput, or GPU-performance claim.
+It establishes the frozen equations, binary64 config preparation,
+dtype/device/axes behavior, source immutability, guaranteed-fresh results,
+pure/analog autograd, and nondifferentiable `torch.int32` digitization without
+adding a public API.
+
+Review verified the exact eight-path candidate delta. Against both the clean
+TensorCore `0.7.0` source pin and its independent exact archive, 75 tests ran:
+72 passed and 3 conditional CUDA tests skipped. Pyright `1.1.408` found no
+issue against either dependency form, import isolation returned
+`False False False False`, and diff/artifact checks passed. The exact archive
+SHA-256, environment, scientific checks, and residual qualifications are
+recorded in the work order. CUDA was unavailable, so the evidence makes no GPU
+execution or performance claim; build tooling was unavailable, so it makes no
+editable-install or wheel-build claim.
 
 The whole noise producer, including exact zero noise, remains Stage 5 scope.
 Stage 4 adds no public export, `simulate_readout(...)`, RNG, charge producer,
-workspace, IO, or integration surface. The Design-complete record does not
-authorize production edits; Implementation starts only from a separate
-explicit dispatch of the exact committed Design authority.
+workspace, IO, or integration surface. It makes no kernel-count, fusion,
+target-temporary, allocation-free, throughput, or GPU-performance claim.
 
 ## Candidate Future Stages
 

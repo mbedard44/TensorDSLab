@@ -1,8 +1,51 @@
 # Stage 4 Deterministic Waveform Products Work Order
 
-Status: **Design-complete / Undispatched**. This document freezes a bounded
-production work order. It does not itself authorize production edits, activate
-an execution role, or publish a collaborator-facing simulation API.
+Status: **Review-cleared / fast-forward merged; Design acceptance pending** at
+exact implementation candidate
+`3eb8ad19a36308ca2b73d41d219a7a3b4b46c1da`. The user authorized production
+execution on 2026-07-14 from committed Design/dispatch base
+`b7af45741035821dfa94c8093bdeccea3320e26d`; fixed-commit Validation and
+independent Review found no unresolved finding. Review cleanly fast-forwarded
+`main` from `5ff13eb3c0735abfda454a334be59faac35259c2` to the exact candidate and
+repeated the required post-merge gates. Final Design acceptance remains the
+last closeout gate. No push occurred.
+
+Review verified that the candidate has the exact Design parent and an exact
+eight-path implementation delta comprising five additions and three
+modifications. The full fast-forward from the prior `main` integrates the
+eleven-path committed Design authority and the eight-path candidate as a
+nineteen-path linear change. The feature branch remains fixed at the candidate.
+Every protected initializer, product/config type, metadata file, architecture
+source, governance record, sibling repository, and deferred producer remained
+unchanged across the implementation candidate.
+
+TensorCore was clean at exact `0.7.0` pin
+`b454d738f6385ce6489d85492a618a3dab139bb6`. Review independently archived
+that commit; the ZIP commit comment named the exact pin and its SHA-256 was
+`649c4daac3b953397371cb64647dcaf9a7ca7a857b32fae58c4ec4a856c79796`.
+Before and after the merge, both the source checkout and exact archive ran 75
+tests: 72 passed and 3 conditional CUDA tests skipped, with no failure or
+error. The focused Stage 4 module ran 22 tests: 21 passed and its one CUDA
+test skipped. Independent numerical Review also checked 545 binary64 support
+cases, all six semantic axis orders in both floating dtypes, noncontiguous
+convolution, randomized analog/ADC references, ambient CPU autocast, donor
+hashes, freshness, and autograd without finding a discrepancy.
+
+Pyright `1.1.408` reported 0 errors, warnings, or informational findings
+against both the TensorCore source checkout and the independently extracted
+archive. Import isolation returned `False False False False`; `git diff
+--check`, exact public/private surfaces, dependency/import direction, and
+generated-artifact scans passed. The evidence environment was Python
+`3.13.11`, PyTorch `2.12.1`, macOS `15.7.4` on arm64, and eager execution.
+CUDA and a CUDA runtime were unavailable, and MPS was unavailable, so this is
+CPU evidence and makes no GPU or performance claim. The `build` and
+`hatchling` modules were unavailable, so no editable-install or wheel-build
+claim is made.
+
+This Review-owned closeout changes only this work order and the implementation
+index. Cleared production, tests, README, metadata, and synchronized Design
+bytes remain exactly those merged at candidate
+`3eb8ad19a36308ca2b73d41d219a7a3b4b46c1da`.
 
 ## Objective
 
