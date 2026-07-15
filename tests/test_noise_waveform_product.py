@@ -585,6 +585,83 @@ class PsdPreparationTest(unittest.TestCase):
                 )
             normal.assert_not_called()
 
+    def test_finite_accumulation_guard_accepts_limit_and_rejects_nextafter_before_rng(
+        self,
+    ) -> None:
+        sampling = _sampling(count=4)
+        source = _photoelectrons(sampling)
+        config = _flat_psd_config()
+        original_fsum = math.fsum
+        final_call = sampling.sample_count.value // 2 + 2
+
+        for dtype in (torch.float32, torch.float64):
+            with self.subTest(dtype=dtype):
+                normal_guard = 8.0 if dtype is torch.float32 else 16.0
+                limit = torch.finfo(dtype).max / (
+                    sampling.sample_count.value * normal_guard
+                )
+                above_limit = math.nextafter(limit, math.inf)
+                self.assertTrue(math.isfinite(limit))
+                self.assertLessEqual(
+                    sampling.sample_count.value * normal_guard * limit,
+                    torch.finfo(dtype).max,
+                )
+                self.assertGreater(
+                    sampling.sample_count.value * normal_guard * above_limit,
+                    torch.finfo(dtype).max,
+                )
+
+                accepted_call_count = 0
+
+                def fsum_at_limit(values: Iterable[float]) -> float:
+                    nonlocal accepted_call_count
+                    accepted_call_count += 1
+                    materialized = tuple(values)
+                    if accepted_call_count == final_call:
+                        return limit
+                    return original_fsum(materialized)
+
+                with patch(
+                    "tensor_dslab.readout.noise_waveform._product.math.fsum",
+                    side_effect=fsum_at_limit,
+                ):
+                    accepted = _product_noise_waveform(
+                        source,
+                        sampling=sampling,
+                        config=config,
+                        seed=0,
+                        floating_dtype=dtype,
+                    )
+                self.assertTrue(bool(torch.all(torch.isfinite(accepted.tensor))))
+                self.assertEqual(accepted_call_count, final_call)
+
+                rejected_call_count = 0
+
+                def fsum_above_limit(values: Iterable[float]) -> float:
+                    nonlocal rejected_call_count
+                    rejected_call_count += 1
+                    materialized = tuple(values)
+                    if rejected_call_count == final_call:
+                        return above_limit
+                    return original_fsum(materialized)
+
+                with patch(
+                    "tensor_dslab.readout.noise_waveform._product.math.fsum",
+                    side_effect=fsum_above_limit,
+                ), patch(
+                    "tensor_dslab.readout.noise_waveform._product._standard_normal_pair"
+                ) as normal:
+                    with self.assertRaises(ValueError):
+                        _product_noise_waveform(
+                            source,
+                            sampling=sampling,
+                            config=config,
+                            seed=0,
+                            floating_dtype=dtype,
+                        )
+                    normal.assert_not_called()
+                self.assertEqual(rejected_call_count, final_call)
+
 
 class PsdSynthesisTest(unittest.TestCase):
     def test_small_odd_even_reference_coefficients_dc_and_zero_power(self) -> None:
