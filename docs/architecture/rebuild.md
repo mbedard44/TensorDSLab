@@ -3768,6 +3768,20 @@ schedule, output tuple order, and `0x1bd1_1bda` parity constant. A reduced-round
 variant, PyTorch-internal approximation, or different output-word order is not
 the same algorithm.
 
+The selection rationale is explicit. The
+[Random123 paper](https://www.thesalmons.org/john/random123/papers/random123sc11.pdf)
+establishes the counter-based parallel-RNG model, while the
+[JAX PRNG design](https://docs.jax.dev/en/latest/jep/263-prng.html) is
+supporting evidence that a functional, array-oriented Threefry counter model
+removes global-state sequencing and vectorizes over logical counters. Neither
+source defines TensorDSLab's address schema. `Threefry4x32` was selected for v1
+because its 128-bit key and 128-bit counter represent the accepted seed,
+stream, domain, logical-position, quantum, and raw-word-block coordinates
+without a derived-key collision argument, and its add/rotate/XOR core has a
+clear masked-`int64` Torch reference. Philox remains a possible later
+throughput challenger, but changing the algorithm or packing would require an
+explicitly versioned RNG contract rather than silently changing v1 streams.
+
 The durable private algorithm identifier is:
 
 ```text
@@ -3919,38 +3933,40 @@ For one raw word `w0`, the `float32` conversions are:
 
 ```text
 m24 = w0 >> 8
+m23 = w0 >> 9
 
 U32[0, 1) = float32(m24) * 2**-24
-U32(0, 1) = float32(m24 + 1) * 0x1.fffffep-25
+U32(0, 1) = (float32(0.5) + float32(m23)) * float32(2**-23)
 ```
 
-The open multiplier is exactly `2**-24 - 2**-48`. `U32[0, 1)` ranges from
-zero through `1 - 2**-24`; `U32(0, 1)` ranges from
-`2**-24 - 2**-48` through `1 - 2**-24`. The lower eight raw bits are discarded
-and never reused.
+`U32[0, 1)` ranges from zero through `1 - 2**-24`; `U32(0, 1)` is the
+Random123 midpoint lattice from `2**-24` through `1 - 2**-24`. The closed-open
+conversion discards the lower eight raw bits; the open-open conversion discards
+the lower nine. Discarded bits are never reused.
 
 A `float64` uniform consumes two consecutive raw words. The earlier word is
 the numerical high word, independent of host byte order:
 
 ```text
 m53 = w0 * 2**21 + (w1 >> 11)
+m52 = w0 * 2**20 + (w1 >> 12)
 
 U64[0, 1) = float64(m53) * 2**-53
-U64(0, 1) = float64(m53 + 1) * 0x1.fffffffffffffp-54
+U64(0, 1) = (float64(0.5) + float64(m52)) * float64(2**-52)
 ```
 
 This arithmetic assembly stays within signed `torch.int64`; it does not first
-construct an overflowing unsigned 64-bit carrier. The open multiplier is
-exactly `2**-53 - 2**-106`. `U64[0, 1)` ranges from zero through
-`1 - 2**-53`; `U64(0, 1)` ranges from `2**-53 - 2**-106` through
-`1 - 2**-53`. The lower eleven bits of `w1` are discarded and never reused.
+construct an overflowing unsigned 64-bit carrier. `U64[0, 1)` ranges from zero
+through `1 - 2**-53`; `U64(0, 1)` is the Random123 midpoint lattice from
+`2**-53` through `1 - 2**-53`. The closed-open conversion discards the lower
+eleven bits of `w1`; the open-open conversion discards the lower twelve.
+Discarded bits are never reused.
 
 Bounded phase and interpolation, including the Box-Muller angle, use `[0, 1)`.
 Any logarithm uses `(0, 1)`, so neither logarithmic infinity nor an artificial
-exact-zero inverse-transform result is possible. The endpoint-safe Random123
-open mapping is intentional: the superficially simpler midpoint expression
-`(m + 0.5) * 2**-p` can round its upper value to exactly one in the target
-floating dtype.
+exact-zero inverse-transform result is possible. The exact Random123 midpoint
+evaluation order and target dtype are part of the contract; do not replace it
+with a widened calculation or a different endpoint-safe mapping.
 
 Bernoulli sampling bypasses floating uniforms. From the accepted finite
 binary64 configuration probability `p`, preflight computes:
@@ -4482,8 +4498,8 @@ The rebuild validation matrix includes:
   narrowing casts; source-population validation remains later Charge scope;
 - exact `float32` and `float64` closed-open and open-open conversion oracles for
   zero, maximum, and representative raw words, including endpoint exclusion,
-  numerical two-word order, discarded-bit behavior, and no reuse of discarded
-  bits;
+  numerical two-word order, discarded-bit behavior, adjacent midpoint cells
+  around `0.5`, and no reuse of discarded bits;
 - later Charge-stage Bernoulli ties-to-even threshold construction, exact
   threshold-boundary word comparisons, quantized probability error no greater
   than `2**-33`, and draw-free threshold-zero and threshold-`2**32` results;

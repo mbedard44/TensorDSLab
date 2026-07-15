@@ -132,11 +132,15 @@ Implementation, Validation, and Review must read and reconcile:
 - Random123 `1.14.0` commit
   [`726a093`](https://github.com/DEShawResearch/random123/commit/726a093cd9a73f3ec3c8d7a70ff10ed8efec8d13),
   especially `threefry.h`, `u01fixedpt.h`, and its independent known-answer
-  vectors; and
-- the accepted Threefry and JAX counter-RNG rationale cited by the rebuild
-  architecture.
+  vectors;
+- the [Random123 paper](https://www.thesalmons.org/john/random123/papers/random123sc11.pdf)
+  as the counter-based parallel-RNG rationale; and
+- the [JAX PRNG design](https://docs.jax.dev/en/latest/jep/263-prng.html) as
+  supporting functional/array-oriented Threefry rationale.
 
 Random123 is a normative algorithm/reference source, not a runtime dependency.
+The paper and JAX design are rationale evidence; they do not override
+TensorDSLab's exact schema, streams, bounds, or execution contract.
 Historical work orders and donor repositories are evidence and do not override
 this focused scope.
 
@@ -361,9 +365,10 @@ The exact `float32` conversions from one raw word `w0` are:
 
 ```text
 m24 = w0 >> 8
+m23 = w0 >> 9
 
 U32[0, 1) = float32(m24) * 2**-24
-U32(0, 1) = float32(m24 + 1) * 0x1.fffffep-25
+U32(0, 1) = (float32(0.5) + float32(m23)) * float32(2**-23)
 ```
 
 The exact `float64` conversions from consecutive numerical words `w0`, `w1`
@@ -371,14 +376,19 @@ are:
 
 ```text
 m53 = w0 * 2**21 + (w1 >> 11)
+m52 = w0 * 2**20 + (w1 >> 12)
 
 U64[0, 1) = float64(m53) * 2**-53
-U64(0, 1) = float64(m53 + 1) * 0x1.fffffffffffffp-54
+U64(0, 1) = (float64(0.5) + float64(m52)) * float64(2**-52)
 ```
 
-Discarded low bits are never reused. A logarithm consumes the open-open value;
-the Box-Muller angle consumes the closed-open value. Box-Muller evaluates in
-the selected execution dtype with ambient autocast disabled:
+These are the exact Random123 `u01fixedpt.h` lattices and evaluation order. The
+open-open forms use the midpoint of each 23- or 52-bit cell and range from
+`2**-24` through `1 - 2**-24` for `float32`, and from `2**-53` through
+`1 - 2**-53` for `float64`. Discarded low bits are never reused. A logarithm
+consumes the open-open value; the Box-Muller angle consumes the closed-open
+value. Box-Muller evaluates in the selected execution dtype with ambient
+autocast disabled:
 
 ```text
 radius = sqrt(-2 * log(U(0, 1)))
@@ -733,7 +743,8 @@ to compute expected words. It must cover:
 - invalid non-boolean seeds and every seed/stream/position/quantum/raw-word
   schema-bound overflow, without adding a source-population consumer;
 - exact float32/float64 open-open and closed-open conversion fixtures at zero,
-  maximum, and representative words;
+  maximum, representative words, discarded-bit boundaries, and adjacent
+  midpoint cells around `0.5`;
 - Box-Muller raw-word schedule, ordered cosine/sine components, spare discard,
   target dtype, finite radial cutoff, and same-backend repeatability;
 - arbitrary-rank logical row-major positions independent of physical strides;
@@ -975,17 +986,29 @@ shasum -a 256 /tmp/tensorcore-stage5-b454d738.zip
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:/Users/mbedard/Projects/TensorCore python -m unittest discover -s tests -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:/tmp/tensorcore-stage5-b454d738.zip python -m unittest discover -s tests -v
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:/Users/mbedard/Projects/TensorCore python -c "import sys, tensor_dslab; print('tensor_g4ds' in sys.modules, 'tensor_ml' in sys.modules, 'dslab' in sys.modules, 'g4ds11' in sys.modules)"
-pnpm dlx pyright@1.1.408
+env PATH=/Users/mbedard/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$PATH pnpm dlx pyright@1.1.408 --version
 ```
 
 Recreate the archive from the exact dependency commit for every fixed candidate
 and record its SHA-256. Validation must also extract that archive outside the
 repository and run the static checker with the extracted package as the only
-TensorCore analysis path. Use `pnpm dlx pyright@1.1.408 --project <config>` with
-two temporary configs outside the repository: one whose sole TensorCore
+TensorCore analysis path. Use two temporary configs outside the repository:
+one whose sole TensorCore
 `extraPaths` entry is the exact source checkout, and one whose sole TensorCore
 entry is the extracted archive. Do not edit committed `pyrightconfig.json` to
 switch evidence forms.
+
+Every actual static-check invocation uses this verified launcher prefix:
+
+```text
+env PATH=/Users/mbedard/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin:$PATH \
+  pnpm dlx pyright@1.1.408 \
+  --pythonpath /opt/miniconda3/bin/python
+```
+
+Append `--project` and the applicable temporary config path. If the executor's
+Python or bundled Node location differs from these verified paths, return to
+Design before substituting a different launcher.
 
 Also report:
 
@@ -1080,10 +1103,12 @@ authority or scope. Review does not rewrite production or tests.
   returns to Design.
 - Charge stream assignments, count samplers, PMF preparation, and supported
   population/generation bounds remain unresolved Stage 6 work.
-- Pyright `1.1.408` is the accepted static checker from Stage 4. Its exact
-  launcher and both source/archive analysis paths must be verified before
-  dispatch; missing tooling blocks production clearance rather than weakening
-  the gate.
+- Pyright `1.1.408` is the accepted static checker from Stage 4. Pre-dispatch
+  verification on 2026-07-14 passed against both exact TensorCore source and
+  independently extracted archive forms with the launcher above. The bundled
+  Node directory is not on the default shell path; omitting the prefix fails
+  with `node: not found`. Missing or changed tooling blocks production
+  clearance rather than weakening the gate.
 
 ## Non-Goals And Forbidden Scope
 
