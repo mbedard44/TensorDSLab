@@ -55,6 +55,60 @@ _STIRLING_CORRECTIONS = (
     0.00833056343336287,
 )
 
+_STATISTICAL_SEEDS = (
+    0,
+    1,
+    0x0123456789ABCDEF,
+    0xFFFFFFFFFFFFFFFF,
+)
+
+
+def _statistical_delta(*, scale: float, length: int) -> float:
+    return (
+        64.0
+        * torch.finfo(torch.float64).eps
+        * max(1, math.ceil(math.log2(length)))
+        * abs(scale)
+    )
+
+
+def _multinomial_cross_fourth_moment(
+    count: int,
+    first_probability: float,
+    second_probability: float,
+) -> float:
+    """Return E[(X-E[X])**2 * (Y-E[Y])**2] for two categories."""
+
+    n = float(count)
+    p = first_probability
+    q = second_probability
+    falling_2 = n * (n - 1.0)
+    falling_3 = falling_2 * (n - 2.0)
+    falling_4 = falling_3 * (n - 3.0)
+    mean_x = n * p
+    mean_y = n * q
+    raw_xy = falling_2 * p * q
+    raw_x2 = falling_2 * p * p + mean_x
+    raw_y2 = falling_2 * q * q + mean_y
+    raw_x2y = falling_3 * p * p * q + raw_xy
+    raw_xy2 = falling_3 * p * q * q + raw_xy
+    raw_x2y2 = (
+        falling_4 * p * p * q * q
+        + falling_3 * (p * p * q + p * q * q)
+        + raw_xy
+    )
+    return (
+        raw_x2y2
+        - 2.0 * mean_y * raw_x2y
+        + mean_y * mean_y * raw_x2
+        - 2.0 * mean_x * raw_xy2
+        + 4.0 * mean_x * mean_y * raw_xy
+        - 2.0 * mean_x * mean_y * mean_y * mean_x
+        + mean_x * mean_x * raw_y2
+        - 2.0 * mean_x * mean_x * mean_y * mean_y
+        + mean_x * mean_x * mean_y * mean_y
+    )
+
 
 def _uniform_closed_open_oracle(words: tuple[int, int]) -> float:
     mantissa = words[0] * (1 << 21) + (words[1] >> 11)
@@ -682,6 +736,163 @@ class PoissonSamplingTest(unittest.TestCase):
                 8.0 * variance_standard_error,
             )
 
+    def test_frozen_lambda_four_law_and_independent_superposition(self) -> None:
+        examples_per_seed = 1 << 16
+        positions = torch.arange(examples_per_seed, dtype=torch.int64)
+        direct_parts: list[torch.Tensor] = []
+        first_parts: list[torch.Tensor] = []
+        second_parts: list[torch.Tensor] = []
+        for seed in _STATISTICAL_SEEDS:
+            direct_parts.append(
+                _sample_poisson(
+                    4.0,
+                    shape=(examples_per_seed,),
+                    seed=seed,
+                    stream=_RngStream.CHARGE_DARK_COUNTS,
+                    device="cpu",
+                    logical_positions=positions,
+                )
+            )
+            first_parts.append(
+                _sample_poisson(
+                    1.5,
+                    shape=(examples_per_seed,),
+                    seed=seed,
+                    stream=_RngStream.CHARGE_DIRECT_CROSSTALK,
+                    device="cpu",
+                    logical_positions=positions,
+                )
+            )
+            second_parts.append(
+                _sample_poisson(
+                    2.5,
+                    shape=(examples_per_seed,),
+                    seed=seed,
+                    stream=_RngStream.CHARGE_DELAYED_CROSSTALK,
+                    device="cpu",
+                    logical_positions=positions,
+                )
+            )
+
+        direct = torch.cat(direct_parts).to(torch.float64)
+        first = torch.cat(first_parts).to(torch.float64)
+        second = torch.cat(second_parts).to(torch.float64)
+        superposed = first + second
+        total_examples = direct.numel()
+        self.assertEqual(total_examples, 1 << 18)
+        self.assertEqual(first.numel(), total_examples)
+        self.assertEqual(second.numel(), total_examples)
+
+        def assert_gate(
+            name: str,
+            observed: float,
+            target: float,
+            standard_error: float,
+        ) -> None:
+            delta = _statistical_delta(
+                scale=target,
+                length=total_examples,
+            )
+            bound = 8.0 * standard_error + delta
+            self.assertLessEqual(
+                abs(observed - target),
+                bound,
+                msg=(
+                    f"{name}: observed={observed!r}, target={target!r}, "
+                    f"SE={standard_error!r}, delta={delta!r}, "
+                    f"bound={bound!r}"
+                ),
+            )
+
+        def assert_poisson_moments(
+            name: str,
+            values: torch.Tensor,
+            mean: float,
+        ) -> None:
+            observed_mean = float(torch.mean(values))
+            assert_gate(
+                f"{name} mean",
+                observed_mean,
+                mean,
+                math.sqrt(mean / total_examples),
+            )
+            observed_centered_variance = float(
+                torch.mean((values - mean) ** 2)
+            )
+            centered_variance_standard_error = math.sqrt(
+                (mean + 2.0 * mean * mean) / total_examples
+            )
+            assert_gate(
+                f"{name} centered variance",
+                observed_centered_variance,
+                mean,
+                centered_variance_standard_error,
+            )
+
+        assert_poisson_moments("direct lambda=4", direct, 4.0)
+
+        probability_zero = math.exp(-4.0)
+        probability_four = (
+            math.exp(-4.0) * 4.0**4 / math.factorial(4)
+        )
+        probability_tail = 1.0 - math.fsum(
+            math.exp(-4.0) * 4.0**value / math.factorial(value)
+            for value in range(8)
+        )
+        frequency_cases = (
+            ("direct P(X=0)", direct == 0.0, probability_zero),
+            ("direct P(X=4)", direct == 4.0, probability_four),
+            ("direct P(X>=8)", direct >= 8.0, probability_tail),
+        )
+        for name, mask, probability in frequency_cases:
+            self.assertGreaterEqual(total_examples * probability, 256.0)
+            self.assertGreaterEqual(
+                total_examples * (1.0 - probability),
+                256.0,
+            )
+            assert_gate(
+                name,
+                float(torch.mean(mask.to(torch.float64))),
+                probability,
+                math.sqrt(
+                    probability * (1.0 - probability) / total_examples
+                ),
+            )
+
+        assert_poisson_moments("first lambda=1.5", first, 1.5)
+        assert_poisson_moments("second lambda=2.5", second, 2.5)
+        assert_poisson_moments("superposed lambda=4", superposed, 4.0)
+
+        observed_covariance = float(
+            torch.mean((first - 1.5) * (second - 2.5))
+        )
+        assert_gate(
+            "component covariance",
+            observed_covariance,
+            0.0,
+            math.sqrt(1.5 * 2.5 / total_examples),
+        )
+
+        joint_zero_probability = math.exp(-1.5) * math.exp(-2.5)
+        self.assertGreaterEqual(
+            total_examples * joint_zero_probability,
+            256.0,
+        )
+        self.assertGreaterEqual(
+            total_examples * (1.0 - joint_zero_probability),
+            256.0,
+        )
+        assert_gate(
+            "independent joint P(X=0,Y=0)",
+            float(torch.mean(((first == 0.0) & (second == 0.0)).to(torch.float64))),
+            joint_zero_probability,
+            math.sqrt(
+                joint_zero_probability
+                * (1.0 - joint_zero_probability)
+                / total_examples
+            ),
+        )
+
 
 class ConditionalBinomialSamplingTest(unittest.TestCase):
     def _sample(
@@ -737,6 +948,239 @@ class ConditionalBinomialSamplingTest(unittest.TestCase):
             remaining = remaining - sampled
         categories.append(remaining)
         self.assertTrue(torch.equal(sum(categories[1:], categories[0]), total))
+
+    def test_frozen_q32_aggregate_multinomial_joint_ensemble(self) -> None:
+        count = 32
+        examples_per_seed = 1 << 14
+        conditional_masses = (
+            (0.10, 0.90),
+            (0.15, 0.75),
+            (0.20, 0.55),
+        )
+        category_probabilities = (0.10, 0.15, 0.20, 0.55)
+        position_basis = torch.arange(examples_per_seed, dtype=torch.int64)
+        seed_ensembles: list[torch.Tensor] = []
+
+        original_sampler = _sample_conditional_binomial
+        with patch(
+            f"{__name__}._sample_conditional_binomial",
+            wraps=original_sampler,
+        ) as aggregate_sampler:
+            for seed in _STATISTICAL_SEEDS:
+                total = torch.full(
+                    (examples_per_seed,),
+                    count,
+                    dtype=torch.int64,
+                )
+                remaining = total.clone()
+                categories: list[torch.Tensor] = []
+                for category, (success, later) in enumerate(conditional_masses):
+                    sampled = _sample_conditional_binomial(
+                        remaining,
+                        torch.full(
+                            total.shape,
+                            success,
+                            dtype=torch.float64,
+                        ),
+                        torch.full(
+                            total.shape,
+                            later,
+                            dtype=torch.float64,
+                        ),
+                        seed=seed,
+                        stream=_RngStream.CHARGE_AFTERPULSES,
+                        logical_positions=(
+                            position_basis + category * examples_per_seed
+                        ),
+                    )
+                    categories.append(sampled)
+                    remaining = remaining - sampled
+                categories.append(remaining)
+                ensemble = torch.stack(categories, dim=1)
+                self.assertTrue(
+                    torch.equal(
+                        torch.sum(ensemble, dim=1),
+                        total,
+                    )
+                )
+                seed_ensembles.append(ensemble)
+
+        self.assertEqual(
+            aggregate_sampler.call_count,
+            len(_STATISTICAL_SEEDS) * len(conditional_masses),
+        )
+        for call_index, sampler_call in enumerate(
+            aggregate_sampler.call_args_list
+        ):
+            seed_index, category = divmod(
+                call_index,
+                len(conditional_masses),
+            )
+            counts, success_mass, later_mass = sampler_call.args
+            expected_success, expected_later = conditional_masses[category]
+            self.assertEqual(counts.shape, (examples_per_seed,))
+            self.assertEqual(counts.numel(), examples_per_seed)
+            self.assertLessEqual(int(torch.max(counts)), count)
+            self.assertTrue(
+                bool(torch.all(success_mass == expected_success).item())
+            )
+            self.assertTrue(
+                bool(torch.all(later_mass == expected_later).item())
+            )
+            self.assertEqual(
+                sampler_call.kwargs["seed"],
+                _STATISTICAL_SEEDS[seed_index],
+            )
+            self.assertTrue(
+                torch.equal(
+                    sampler_call.kwargs["logical_positions"],
+                    position_basis + category * examples_per_seed,
+                )
+            )
+
+        no_counts = torch.zeros(8, dtype=torch.int64)
+        unit_counts = torch.full((8,), count, dtype=torch.int64)
+        identity_positions = torch.arange(8, dtype=torch.int64)
+        with patch("tensor_dslab.readout._random._random_block") as raw_words:
+            self.assertTrue(
+                torch.equal(
+                    original_sampler(
+                        no_counts,
+                        torch.full((8,), 0.25, dtype=torch.float64),
+                        torch.full((8,), 0.75, dtype=torch.float64),
+                        seed=0,
+                        stream=_RngStream.CHARGE_AFTERPULSES,
+                        logical_positions=identity_positions,
+                    ),
+                    no_counts,
+                )
+            )
+            self.assertTrue(
+                torch.equal(
+                    original_sampler(
+                        unit_counts,
+                        torch.zeros(8, dtype=torch.float64),
+                        torch.ones(8, dtype=torch.float64),
+                        seed=0,
+                        stream=_RngStream.CHARGE_AFTERPULSES,
+                        logical_positions=identity_positions,
+                    ),
+                    torch.zeros_like(unit_counts),
+                )
+            )
+            self.assertTrue(
+                torch.equal(
+                    original_sampler(
+                        unit_counts,
+                        torch.ones(8, dtype=torch.float64),
+                        torch.zeros(8, dtype=torch.float64),
+                        seed=0,
+                        stream=_RngStream.CHARGE_AFTERPULSES,
+                        logical_positions=identity_positions,
+                    ),
+                    unit_counts,
+                )
+            )
+            raw_words.assert_not_called()
+
+        ensemble = torch.cat(seed_ensembles, dim=0).to(torch.float64)
+        total_examples = len(_STATISTICAL_SEEDS) * examples_per_seed
+        self.assertEqual(total_examples, 1 << 16)
+        self.assertEqual(ensemble.shape, (total_examples, 4))
+
+        for category, probability in enumerate(category_probabilities):
+            values = ensemble[:, category]
+            target_mean = count * probability
+            target_variance = count * probability * (1.0 - probability)
+            observed_mean = float(torch.mean(values))
+            mean_standard_error = math.sqrt(target_variance / total_examples)
+            mean_delta = _statistical_delta(
+                scale=target_mean,
+                length=total_examples,
+            )
+            mean_bound = 8.0 * mean_standard_error + mean_delta
+            self.assertLessEqual(
+                abs(observed_mean - target_mean),
+                mean_bound,
+                msg=(
+                    f"category {category} mean: observed={observed_mean!r}, "
+                    f"target={target_mean!r}, SE={mean_standard_error!r}, "
+                    f"delta={mean_delta!r}, bound={mean_bound!r}"
+                ),
+            )
+
+            observed_variance = float(
+                torch.mean((values - target_mean) ** 2)
+            )
+            fourth_moment = (
+                3.0 * target_variance * target_variance
+                + target_variance
+                * (1.0 - 6.0 * probability * (1.0 - probability))
+            )
+            variance_standard_error = math.sqrt(
+                (fourth_moment - target_variance * target_variance)
+                / total_examples
+            )
+            variance_delta = _statistical_delta(
+                scale=target_variance,
+                length=total_examples,
+            )
+            variance_bound = 8.0 * variance_standard_error + variance_delta
+            self.assertLessEqual(
+                abs(observed_variance - target_variance),
+                variance_bound,
+                msg=(
+                    f"category {category} variance: "
+                    f"observed={observed_variance!r}, "
+                    f"target={target_variance!r}, "
+                    f"SE={variance_standard_error!r}, "
+                    f"delta={variance_delta!r}, bound={variance_bound!r}"
+                ),
+            )
+
+        for first in range(len(category_probabilities)):
+            for second in range(first + 1, len(category_probabilities)):
+                first_probability = category_probabilities[first]
+                second_probability = category_probabilities[second]
+                first_mean = count * first_probability
+                second_mean = count * second_probability
+                target_covariance = (
+                    -count * first_probability * second_probability
+                )
+                observed_covariance = float(
+                    torch.mean(
+                        (ensemble[:, first] - first_mean)
+                        * (ensemble[:, second] - second_mean)
+                    )
+                )
+                cross_fourth = _multinomial_cross_fourth_moment(
+                    count,
+                    first_probability,
+                    second_probability,
+                )
+                covariance_standard_error = math.sqrt(
+                    (cross_fourth - target_covariance * target_covariance)
+                    / total_examples
+                )
+                covariance_delta = _statistical_delta(
+                    scale=target_covariance,
+                    length=total_examples,
+                )
+                covariance_bound = (
+                    8.0 * covariance_standard_error + covariance_delta
+                )
+                self.assertLessEqual(
+                    abs(observed_covariance - target_covariance),
+                    covariance_bound,
+                    msg=(
+                        f"categories ({first}, {second}) covariance: "
+                        f"observed={observed_covariance!r}, "
+                        f"target={target_covariance!r}, "
+                        f"SE={covariance_standard_error!r}, "
+                        f"delta={covariance_delta!r}, "
+                        f"bound={covariance_bound!r}"
+                    ),
+                )
 
     def test_fixed_word_inversion_oracle_crossover_reflection_and_guard(self) -> None:
         cases = (

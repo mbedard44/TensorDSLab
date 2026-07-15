@@ -108,6 +108,33 @@ def _config(
     )
 
 
+def _assert_statistic(
+    test: unittest.TestCase,
+    *,
+    name: str,
+    observed: float,
+    target: float,
+    standard_error: float,
+    dtype: torch.dtype,
+    accumulation_length: int,
+) -> None:
+    delta = (
+        64.0
+        * torch.finfo(dtype).eps
+        * max(1, math.ceil(math.log2(accumulation_length)))
+        * abs(target)
+    )
+    bound = 8.0 * standard_error + delta
+    test.assertLessEqual(
+        abs(observed - target),
+        bound,
+        msg=(
+            f"{name}: observed={observed!r}, target={target!r}, "
+            f"SE={standard_error!r}, delta={delta!r}, bound={bound!r}"
+        ),
+    )
+
+
 class ChargeProductStructureTest(unittest.TestCase):
     def test_all_sixteen_stage_combinations_are_valid(self) -> None:
         source_values = torch.zeros((2, 2, 4), dtype=torch.int64)
@@ -304,6 +331,93 @@ class ChargeProductPreflightTest(unittest.TestCase):
                 )
         self.assertTrue(torch.equal(source.tensor, original))
         self.assertTrue(torch.equal(torch.random.get_rng_state(), state))
+
+
+class DarkCountStatisticalTest(unittest.TestCase):
+    def test_dark_poisson_mean_variance_zero_pmf_and_tail(self) -> None:
+        per_seed = 1 << 16
+        seeds = (0, 1, 0x0123456789ABCDEF, 0xFFFFFFFFFFFFFFFF)
+        sampling = SamplingConfig(
+            sample_period_ps=PositiveInteger(2000),
+            sample_count=PositiveInteger(2),
+        )
+        config = DarkCountConfig(rate_hz=NonnegativeFloat(2.0e9))
+        observations: list[torch.Tensor] = []
+        for seed in seeds:
+            counts = torch.zeros((per_seed, 1, 2), dtype=torch.int64)
+            dark = charge_produce._simulate_dark_counts(
+                counts,
+                sampling=sampling,
+                config=config,
+                seed=seed,
+            )
+            observations.append(dark[:, 0, 0].to(torch.float64))
+
+        values = torch.cat(observations)
+        total = 1 << 18
+        self.assertEqual(values.numel(), total)
+        poisson_mean = 4.0
+        probabilities = [math.exp(-poisson_mean)]
+        for count in range(1, 8):
+            probabilities.append(
+                probabilities[-1] * poisson_mean / float(count)
+            )
+        targets = (
+            (
+                "mean",
+                float(torch.mean(values)),
+                poisson_mean,
+                math.sqrt(poisson_mean / total),
+            ),
+            (
+                "centered variance",
+                float(torch.mean((values - poisson_mean) ** 2)),
+                poisson_mean,
+                math.sqrt(
+                    (poisson_mean + 2.0 * poisson_mean * poisson_mean)
+                    / total
+                ),
+            ),
+            (
+                "zero probability",
+                float(torch.mean((values == 0.0).to(torch.float64))),
+                probabilities[0],
+                math.sqrt(
+                    probabilities[0] * (1.0 - probabilities[0]) / total
+                ),
+            ),
+            (
+                "PMF at four",
+                float(torch.mean((values == 4.0).to(torch.float64))),
+                probabilities[4],
+                math.sqrt(
+                    probabilities[4] * (1.0 - probabilities[4]) / total
+                ),
+            ),
+            (
+                "tail at eight",
+                float(torch.mean((values >= 8.0).to(torch.float64))),
+                1.0 - math.fsum(probabilities),
+                math.sqrt(
+                    (1.0 - math.fsum(probabilities))
+                    * math.fsum(probabilities)
+                    / total
+                ),
+            ),
+        )
+        for name, observed, target, standard_error in targets:
+            if name in ("zero probability", "PMF at four", "tail at eight"):
+                self.assertGreaterEqual(total * target, 256.0, name)
+                self.assertGreaterEqual(total * (1.0 - target), 256.0, name)
+            _assert_statistic(
+                self,
+                name=name,
+                observed=observed,
+                target=target,
+                standard_error=standard_error,
+                dtype=torch.float64,
+                accumulation_length=total,
+            )
 
 
 class ChargeSmearingTest(unittest.TestCase):

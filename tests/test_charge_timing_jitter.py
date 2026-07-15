@@ -38,6 +38,33 @@ def _direct_probability(offset: int, ratio: float) -> float:
     return x_cdf(float(offset + 1)) - x_cdf(float(offset))
 
 
+def _assert_statistic(
+    case: unittest.TestCase,
+    *,
+    name: str,
+    observed: float,
+    target: float,
+    standard_error: float,
+    accumulation_length: int,
+) -> None:
+    delta = (
+        64.0
+        * torch.finfo(torch.float64).eps
+        * max(1, math.ceil(math.log2(accumulation_length)))
+        * abs(target)
+    )
+    bound = 8.0 * standard_error + delta
+    case.assertLessEqual(
+        abs(observed - target),
+        bound,
+        (
+            f"{name}: observed={observed:.17g}, target={target:.17g}, "
+            f"SE={standard_error:.17g}, delta={delta:.17g}, "
+            f"bound={bound:.17g}"
+        ),
+    )
+
+
 class TimingJitterPreparationTest(unittest.TestCase):
     def test_symmetric_complete_law_matches_independent_equation(self) -> None:
         sampling = _sampling(count=8)
@@ -279,7 +306,6 @@ class TimingJitterSimulationTest(unittest.TestCase):
     def test_one_parent_ensemble_matches_prepared_categories(self) -> None:
         sampling = _sampling()
         config = TimingJitterConfig(sigma_ns=NonnegativeFloat(1.0))
-        plan = _prepare_timing_jitter(config, sampling=sampling, tensor_numel=4)
         per_seed = 1 << 16
         seeds = (0, 1, 0x0123456789ABCDEF, 0xFFFFFFFFFFFFFFFF)
         retained = []
@@ -297,23 +323,26 @@ class TimingJitterSimulationTest(unittest.TestCase):
             )
         values = torch.cat(retained, dim=0).to(torch.float64)
         expected = (
-            plan.probabilities[1],
-            plan.probabilities[0],
-            plan.probabilities[1],
-            plan.probabilities[2],
+            _direct_probability(1, 0.5),
+            _direct_probability(0, 0.5),
+            _direct_probability(1, 0.5),
+            _direct_probability(2, 0.5),
         )
         total = values.shape[0]
         self.assertEqual(total, 1 << 18)
-        delta_scale = 64.0 * torch.finfo(torch.float64).eps
         for target, probability in enumerate(expected):
             target_values = values[:, target]
             observed = float(torch.mean(target_values))
             standard_error = math.sqrt(
                 probability * (1.0 - probability) / total
             )
-            self.assertLessEqual(
-                abs(observed - probability),
-                8.0 * standard_error + delta_scale * abs(probability),
+            _assert_statistic(
+                self,
+                name=f"timing-jitter target {target} mean",
+                observed=observed,
+                target=probability,
+                standard_error=standard_error,
+                accumulation_length=total,
             )
 
             target_variance = probability * (1.0 - probability)
@@ -327,10 +356,13 @@ class TimingJitterSimulationTest(unittest.TestCase):
             variance_standard_error = math.sqrt(
                 max(0.0, fourth - target_variance**2) / total
             )
-            self.assertLessEqual(
-                abs(observed_variance - target_variance),
-                8.0 * variance_standard_error
-                + delta_scale * abs(target_variance),
+            _assert_statistic(
+                self,
+                name=f"timing-jitter target {target} centered variance",
+                observed=observed_variance,
+                target=target_variance,
+                standard_error=variance_standard_error,
+                accumulation_length=total,
             )
 
         for first in range(len(expected)):
@@ -357,10 +389,13 @@ class TimingJitterSimulationTest(unittest.TestCase):
                 covariance_standard_error = math.sqrt(
                     max(0.0, second_moment - target_covariance**2) / total
                 )
-                self.assertLessEqual(
-                    abs(observed_covariance - target_covariance),
-                    8.0 * covariance_standard_error
-                    + delta_scale * abs(target_covariance),
+                _assert_statistic(
+                    self,
+                    name=f"timing-jitter targets {first},{second} covariance",
+                    observed=observed_covariance,
+                    target=target_covariance,
+                    standard_error=covariance_standard_error,
+                    accumulation_length=total,
                 )
 
         retained_count = torch.sum(values, dim=1)
@@ -369,9 +404,13 @@ class TimingJitterSimulationTest(unittest.TestCase):
         drop_standard_error = math.sqrt(
             expected_drop * (1.0 - expected_drop) / total
         )
-        self.assertLessEqual(
-            abs(observed_drop - expected_drop),
-            8.0 * drop_standard_error + delta_scale * abs(expected_drop),
+        _assert_statistic(
+            self,
+            name="timing-jitter drop probability",
+            observed=observed_drop,
+            target=expected_drop,
+            standard_error=drop_standard_error,
+            accumulation_length=total,
         )
 
         offsets = torch.tensor((-1.0, 0.0, 1.0, 2.0), dtype=torch.float64)
@@ -391,10 +430,13 @@ class TimingJitterSimulationTest(unittest.TestCase):
         observed_displacement_variance = float(
             torch.mean((displacement - expected_displacement) ** 2)
         )
-        self.assertLessEqual(
-            abs(observed_displacement - expected_displacement),
-            8.0 * math.sqrt(displacement_variance / total)
-            + delta_scale * abs(expected_displacement),
+        _assert_statistic(
+            self,
+            name="timing-jitter displacement mean",
+            observed=observed_displacement,
+            target=expected_displacement,
+            standard_error=math.sqrt(displacement_variance / total),
+            accumulation_length=total,
         )
         fourth_displacement = math.fsum(
             probability * (offset - expected_displacement) ** 4
@@ -403,10 +445,13 @@ class TimingJitterSimulationTest(unittest.TestCase):
         displacement_variance_standard_error = math.sqrt(
             max(0.0, fourth_displacement - displacement_variance**2) / total
         )
-        self.assertLessEqual(
-            abs(observed_displacement_variance - displacement_variance),
-            8.0 * displacement_variance_standard_error
-            + delta_scale * abs(displacement_variance),
+        _assert_statistic(
+            self,
+            name="timing-jitter displacement centered variance",
+            observed=observed_displacement_variance,
+            target=displacement_variance,
+            standard_error=displacement_variance_standard_error,
+            accumulation_length=total,
         )
 
 
