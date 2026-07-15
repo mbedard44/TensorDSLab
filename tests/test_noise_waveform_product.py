@@ -787,6 +787,212 @@ class PsdSynthesisTest(unittest.TestCase):
                 )
                 self.assertLessEqual(abs(float(torch.mean(result.tensor))), mean_bound)
 
+    def test_odd_terminal_imaginary_and_isolated_cosine_sine_bases(self) -> None:
+        sample_count = 5
+        sampling = _sampling(count=sample_count)
+        source = _photoelectrons(sampling, examples=1, channels=1)
+        config = _flat_psd_config()
+        model = config.model
+        assert type(model) is PsdNoiseConfig
+
+        for requested_dtype in (torch.float32, torch.float64):
+            with self.subTest(dtype=requested_dtype):
+                powers = _prepare_psd_powers(
+                    model,
+                    sampling=sampling,
+                    dtype=requested_dtype,
+                )
+
+                def synthesize(
+                    real_values: tuple[float, float],
+                    imaginary_values: tuple[float, float],
+                ) -> torch.Tensor:
+                    real = torch.tensor(
+                        (real_values,),
+                        dtype=requested_dtype,
+                    )
+                    imaginary = torch.tensor(
+                        (imaginary_values,),
+                        dtype=requested_dtype,
+                    )
+
+                    def fake_pair(
+                        *,
+                        seed: int,
+                        stream: _RngStream,
+                        logical_positions: torch.Tensor,
+                        dtype: torch.dtype,
+                    ) -> tuple[torch.Tensor, torch.Tensor]:
+                        self.assertEqual(seed, 19)
+                        self.assertIs(stream, _RngStream.NOISE_PSD_COEFFICIENT)
+                        self.assertEqual(logical_positions.shape, (1, 2))
+                        self.assertIs(dtype, requested_dtype)
+                        return real, imaginary
+
+                    with patch(
+                        "tensor_dslab.readout.noise_waveform._product._standard_normal_pair",
+                        side_effect=fake_pair,
+                    ):
+                        result = _product_noise_waveform(
+                            source,
+                            sampling=sampling,
+                            config=config,
+                            seed=19,
+                            floating_dtype=requested_dtype,
+                        )
+                    return _sample_last(result).reshape(sample_count)
+
+                zero = synthesize((0.0, 0.0), (0.0, 0.0))
+                cosine = synthesize((1.0, 0.0), (0.0, 0.0))
+                terminal_sine = synthesize((0.0, 0.0), (0.0, 1.0))
+
+                expected_cosine = torch.tensor(
+                    tuple(
+                        math.sqrt(powers[1])
+                        * math.cos(math.tau * index / sample_count)
+                        for index in range(sample_count)
+                    ),
+                    dtype=requested_dtype,
+                )
+                expected_terminal_sine = torch.tensor(
+                    tuple(
+                        -math.sqrt(powers[2])
+                        * math.sin(2.0 * math.tau * index / sample_count)
+                        for index in range(sample_count)
+                    ),
+                    dtype=requested_dtype,
+                )
+                reference_scale = max(
+                    float(torch.max(torch.abs(expected_cosine))),
+                    float(torch.max(torch.abs(expected_terminal_sine))),
+                    torch.finfo(requested_dtype).tiny,
+                )
+                tolerance = (
+                    64
+                    * torch.finfo(requested_dtype).eps
+                    * max(1, math.ceil(math.log2(sample_count)))
+                    * reference_scale
+                )
+                self.assertTrue(torch.equal(zero, torch.zeros_like(zero)))
+                self.assertTrue(
+                    torch.allclose(
+                        cosine,
+                        expected_cosine,
+                        rtol=0.0,
+                        atol=tolerance,
+                    )
+                )
+                self.assertTrue(
+                    torch.allclose(
+                        terminal_sine,
+                        expected_terminal_sine,
+                        rtol=0.0,
+                        atol=tolerance,
+                    )
+                )
+                self.assertFalse(torch.equal(terminal_sine, zero))
+                self.assertGreater(float(torch.max(torch.abs(terminal_sine))), 0.0)
+
+    def test_two_sample_psd_is_real_nyquist_only(self) -> None:
+        sample_count = 2
+        sampling = _sampling(count=sample_count)
+        source = _photoelectrons(sampling, examples=1, channels=1)
+        config = _flat_psd_config()
+        model = config.model
+        assert type(model) is PsdNoiseConfig
+        normal_real_value = 1.25
+
+        for requested_dtype in (torch.float32, torch.float64):
+            with self.subTest(dtype=requested_dtype):
+                powers = _prepare_psd_powers(
+                    model,
+                    sampling=sampling,
+                    dtype=requested_dtype,
+                )
+                real = torch.tensor(((normal_real_value,),), dtype=requested_dtype)
+                imaginary = torch.tensor(((7.0,),), dtype=requested_dtype)
+                captured_coefficients: list[torch.Tensor] = []
+                original_irfft = torch.fft.irfft
+
+                def fake_pair(
+                    *,
+                    seed: int,
+                    stream: _RngStream,
+                    logical_positions: torch.Tensor,
+                    dtype: torch.dtype,
+                ) -> tuple[torch.Tensor, torch.Tensor]:
+                    self.assertEqual(seed, 29)
+                    self.assertIs(stream, _RngStream.NOISE_PSD_COEFFICIENT)
+                    self.assertEqual(logical_positions.shape, (1, 1))
+                    self.assertIs(dtype, requested_dtype)
+                    return real, imaginary
+
+                def capture_irfft(
+                    input: torch.Tensor,
+                    **kwargs: object,
+                ) -> torch.Tensor:
+                    captured_coefficients.append(input.clone())
+                    return original_irfft(input, **kwargs)
+
+                with patch(
+                    "tensor_dslab.readout.noise_waveform._product._standard_normal_pair",
+                    side_effect=fake_pair,
+                ), patch(
+                    "tensor_dslab.readout.noise_waveform._product.torch.fft.irfft",
+                    side_effect=capture_irfft,
+                ):
+                    result = _product_noise_waveform(
+                        source,
+                        sampling=sampling,
+                        config=config,
+                        seed=29,
+                        floating_dtype=requested_dtype,
+                    )
+
+                self.assertEqual(len(captured_coefficients), 1)
+                coefficients = captured_coefficients[0]
+                self.assertEqual(coefficients.shape, (1, 2))
+                self.assertEqual(complex(coefficients[0, 0]), 0j)
+                self.assertEqual(float(coefficients[0, 1].imag), 0.0)
+                expected_nyquist = torch.tensor(
+                    sample_count * math.sqrt(powers[1]) * normal_real_value,
+                    dtype=requested_dtype,
+                )
+                expected_output = torch.tensor(
+                    (
+                        math.sqrt(powers[1]) * normal_real_value,
+                        -math.sqrt(powers[1]) * normal_real_value,
+                    ),
+                    dtype=requested_dtype,
+                )
+                reference_scale = max(
+                    abs(float(expected_nyquist)),
+                    float(torch.max(torch.abs(expected_output))),
+                    torch.finfo(requested_dtype).tiny,
+                )
+                tolerance = (
+                    64
+                    * torch.finfo(requested_dtype).eps
+                    * max(1, math.ceil(math.log2(sample_count)))
+                    * reference_scale
+                )
+                self.assertTrue(
+                    torch.allclose(
+                        coefficients[0, 1].real,
+                        expected_nyquist,
+                        rtol=0.0,
+                        atol=tolerance,
+                    )
+                )
+                self.assertTrue(
+                    torch.allclose(
+                        _sample_last(result).reshape(sample_count),
+                        expected_output,
+                        rtol=0.0,
+                        atol=tolerance,
+                    )
+                )
+
     def test_psd_repeatability_no_crop_no_normalization_and_row_independence(self) -> None:
         sampling = _sampling(count=8)
         source = _photoelectrons(sampling, examples=3, channels=2)

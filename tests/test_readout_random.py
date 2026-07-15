@@ -260,6 +260,139 @@ class AddressSchemaTest(unittest.TestCase):
 
 
 class UniformConversionTest(unittest.TestCase):
+    def test_independent_representative_fixtures_and_float64_retained_bits(
+        self,
+    ) -> None:
+        float32_words = torch.tensor(
+            (0x12345678, 0x89ABCDEF),
+            dtype=torch.int64,
+        )
+        expected_float32_closed = torch.tensor(
+            (
+                float.fromhex("0x1.2345600000000p-4"),
+                float.fromhex("0x1.13579a0000000p-1"),
+            ),
+            dtype=torch.float32,
+        )
+        expected_float32_open = torch.tensor(
+            (
+                float.fromhex("0x1.2345700000000p-4"),
+                float.fromhex("0x1.13579a0000000p-1"),
+            ),
+            dtype=torch.float32,
+        )
+        self.assertTrue(
+            torch.equal(
+                _uniform_closed_open(float32_words, dtype=torch.float32),
+                expected_float32_closed,
+            )
+        )
+        self.assertTrue(
+            torch.equal(
+                _uniform_open_open(float32_words, dtype=torch.float32),
+                expected_float32_open,
+            )
+        )
+
+        float64_high_words = torch.tensor(
+            (0x12345678, 0x89ABCDEF),
+            dtype=torch.int64,
+        )
+        float64_low_words = torch.tensor(
+            (0x9ABCDEF0, 0x01234567),
+            dtype=torch.int64,
+        )
+        expected_float64_closed = torch.tensor(
+            (
+                float.fromhex("0x1.23456789abcd8p-4"),
+                float.fromhex("0x1.13579bde02468p-1"),
+            ),
+            dtype=torch.float64,
+        )
+        expected_float64_open = torch.tensor(
+            (
+                float.fromhex("0x1.23456789abcd8p-4"),
+                float.fromhex("0x1.13579bde02469p-1"),
+            ),
+            dtype=torch.float64,
+        )
+        self.assertTrue(
+            torch.equal(
+                _uniform_closed_open(
+                    float64_high_words,
+                    word_1=float64_low_words,
+                    dtype=torch.float64,
+                ),
+                expected_float64_closed,
+            )
+        )
+        self.assertTrue(
+            torch.equal(
+                _uniform_open_open(
+                    float64_high_words,
+                    word_1=float64_low_words,
+                    dtype=torch.float64,
+                ),
+                expected_float64_open,
+            )
+        )
+
+        high = torch.tensor(0x12345678, dtype=torch.int64)
+        low_base = torch.tensor(0x9ABCD000, dtype=torch.int64)
+        closed_base = _uniform_closed_open(
+            high,
+            word_1=low_base,
+            dtype=torch.float64,
+        )
+        self.assertTrue(
+            torch.equal(
+                closed_base,
+                _uniform_closed_open(
+                    high,
+                    word_1=low_base + 0x7FF,
+                    dtype=torch.float64,
+                ),
+            )
+        )
+        self.assertEqual(
+            float(
+                _uniform_closed_open(
+                    high,
+                    word_1=low_base + 0x800,
+                    dtype=torch.float64,
+                )
+                - closed_base
+            ),
+            2.0**-53,
+        )
+
+        open_base = _uniform_open_open(
+            high,
+            word_1=low_base,
+            dtype=torch.float64,
+        )
+        self.assertTrue(
+            torch.equal(
+                open_base,
+                _uniform_open_open(
+                    high,
+                    word_1=low_base + 0xFFF,
+                    dtype=torch.float64,
+                ),
+            )
+        )
+        self.assertEqual(
+            float(
+                _uniform_open_open(
+                    high,
+                    word_1=low_base + 0x1000,
+                    dtype=torch.float64,
+                )
+                - open_base
+            ),
+            2.0**-52,
+        )
+
     def test_float32_lattices_endpoints_discarded_bits_and_midpoints(self) -> None:
         zero = torch.tensor(0, dtype=torch.int64)
         maximum = torch.tensor(MASK, dtype=torch.int64)
@@ -616,20 +749,33 @@ class BoxMullerAndPositionTest(unittest.TestCase):
             self.assertTrue(torch.equal(cpu_words, cuda_words.cpu()))
             for dtype in (torch.float32, torch.float64):
                 if dtype is torch.float32:
-                    cpu_uniform = _uniform_open_open(cpu_words[:, 0], dtype=dtype)
-                    cuda_uniform = _uniform_open_open(cuda_words[:, 0], dtype=dtype)
+                    cpu_open = _uniform_open_open(cpu_words[:, 0], dtype=dtype)
+                    cuda_open = _uniform_open_open(cuda_words[:, 0], dtype=dtype)
+                    cpu_closed = _uniform_closed_open(cpu_words[:, 0], dtype=dtype)
+                    cuda_closed = _uniform_closed_open(cuda_words[:, 0], dtype=dtype)
                 else:
-                    cpu_uniform = _uniform_open_open(
+                    cpu_open = _uniform_open_open(
                         cpu_words[:, 0],
                         word_1=cpu_words[:, 1],
                         dtype=dtype,
                     )
-                    cuda_uniform = _uniform_open_open(
+                    cuda_open = _uniform_open_open(
                         cuda_words[:, 0],
                         word_1=cuda_words[:, 1],
                         dtype=dtype,
                     )
-                self.assertTrue(torch.equal(cpu_uniform, cuda_uniform.cpu()))
+                    cpu_closed = _uniform_closed_open(
+                        cpu_words[:, 0],
+                        word_1=cpu_words[:, 1],
+                        dtype=dtype,
+                    )
+                    cuda_closed = _uniform_closed_open(
+                        cuda_words[:, 0],
+                        word_1=cuda_words[:, 1],
+                        dtype=dtype,
+                    )
+                self.assertTrue(torch.equal(cpu_open, cuda_open.cpu()))
+                self.assertTrue(torch.equal(cpu_closed, cuda_closed.cpu()))
 
 
 if __name__ == "__main__":
