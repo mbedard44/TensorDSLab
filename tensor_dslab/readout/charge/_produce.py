@@ -541,7 +541,12 @@ def _prepare_dark_mean(
     numerator, denominator = rate.as_integer_ratio()
     if numerator * sampling.sample_period_ps.value > denominator * 10**20:
         raise ValueError("dark-count mean exceeds the accepted Poisson domain")
-    mean = rate * sampling.sample_period_ps.value * 1.0e-12
+    mean = float(
+        Fraction(
+            numerator * sampling.sample_period_ps.value,
+            denominator * 10**12,
+        )
+    )
     if not math.isfinite(mean) or not 0.0 < mean <= _MAX_POISSON_MEAN:
         raise ValueError("dark-count mean is outside the accepted Poisson domain")
     return mean

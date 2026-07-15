@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from fractions import Fraction
 import itertools
 import math
 import unittest
@@ -306,6 +307,91 @@ class ChargeProductPreflightTest(unittest.TestCase):
                 complete_grid.to(torch.float64),
             )
         )
+
+    def test_dark_mean_exact_rational_endpoint_and_adjacent_rejection(
+        self,
+    ) -> None:
+        period = 2677300530967072003
+        endpoint_rate = 37.35105523020191
+        above_rate = math.nextafter(endpoint_rate, math.inf)
+        sampling = SamplingConfig(
+            sample_period_ps=PositiveInteger(period),
+            sample_count=PositiveInteger(2),
+        )
+        numerator, denominator = endpoint_rate.as_integer_ratio()
+        exact_endpoint = Fraction(
+            numerator * period,
+            denominator * 10**12,
+        )
+        above_numerator, above_denominator = above_rate.as_integer_ratio()
+        exact_above = Fraction(
+            above_numerator * period,
+            above_denominator * 10**12,
+        )
+        exact_ceiling = Fraction(100_000_000)
+        self.assertLess(exact_endpoint, exact_ceiling)
+        self.assertEqual(float(exact_endpoint), 100_000_000.0)
+        self.assertGreater(exact_above, exact_ceiling)
+        self.assertEqual(math.nextafter(endpoint_rate, math.inf), above_rate)
+
+        endpoint_config = DarkCountConfig(
+            rate_hz=NonnegativeFloat(endpoint_rate)
+        )
+        self.assertEqual(
+            charge_produce._prepare_dark_mean(
+                endpoint_config,
+                sampling=sampling,
+            ),
+            100_000_000.0,
+        )
+        source = _ensemble_field(
+            torch.zeros((1, 1, 2), dtype=torch.int64),
+            sampling=sampling,
+        )
+        original = source.tensor.clone()
+        state = torch.random.get_rng_state().clone()
+        with patch.object(
+            charge_produce,
+            "_sample_poisson",
+            return_value=torch.zeros_like(source.tensor),
+        ) as sampler:
+            accepted = _produce_charge(
+                source,
+                sampling=sampling,
+                config=ChargeConfig(dark_count=endpoint_config),
+                seed=0,
+                floating_dtype=torch.float64,
+            )
+        self.assertEqual(sampler.call_args.args[0], 100_000_000.0)
+        self.assertTrue(torch.equal(accepted.tensor, torch.zeros_like(accepted.tensor)))
+        self.assertTrue(torch.equal(source.tensor, original))
+        self.assertTrue(torch.equal(torch.random.get_rng_state(), state))
+
+        invalid_config = ChargeConfig(
+            dark_count=DarkCountConfig(rate_hz=NonnegativeFloat(above_rate))
+        )
+        with patch.object(
+            charge_produce,
+            "_sample_poisson",
+            side_effect=AssertionError("invalid endpoint must fail before RNG"),
+        ), patch.object(
+            charge_produce,
+            "_simulate_dark_counts",
+            side_effect=AssertionError("invalid endpoint must fail before writes"),
+        ):
+            with self.assertRaisesRegex(
+                ValueError,
+                "dark-count mean exceeds the accepted Poisson domain",
+            ):
+                _produce_charge(
+                    source,
+                    sampling=sampling,
+                    config=invalid_config,
+                    seed=0,
+                    floating_dtype=torch.float64,
+                )
+        self.assertTrue(torch.equal(source.tensor, original))
+        self.assertTrue(torch.equal(torch.random.get_rng_state(), state))
 
     def test_preflight_failure_precedes_rng_and_preserves_source_and_global_rng(self) -> None:
         values = torch.zeros((2, 2, 4), dtype=torch.int64)
