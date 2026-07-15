@@ -188,12 +188,14 @@ tooling was unavailable, so it makes no editable-install or wheel-build claim.
 
 ### [Stage 6: Charge Simulation](stage_6_charge_simulation.md)
 
-Status: **Design-complete / Undispatched**. The work order starts from clean
-Stage 5 Design closeout `bd5e8042a7aab54cb8c5ac15c1e79918b62e840d`
-and retains exact TensorCore `0.7.0` pin
-`b454d738f6385ce6489d85492a618a3dab139bb6`. It is committed documentation
-authority only until Design explicitly dispatches its exact synchronized
-commit through verified Implementation, Validation, and Review routes.
+Status: **Merged / Design acceptance pending**. Exact implementation and
+Review-cleared candidate `fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58`
+is a linear descendant of committed Design/dispatch authority
+`21de93a239302a8c31edf3f7fec120ecb1eeea57`. Fixed-commit Validation cleared
+the completed statistical-evidence candidate. Independent Review returned one
+dark-count exact-ceiling finding, cleared the exact two-file correction, and
+cleanly fast-forwarded unchanged `main` to the final candidate. No push
+occurred.
 
 The complete private slice implements `_produce_charge(...)`, aggregate
 multinomial and hybrid Poisson sampling, dark counts, analytic timing jitter,
@@ -210,6 +212,16 @@ scratch and backend intermediates and makes no allocation-free, compiler,
 fusion, kernel-count, throughput, GPU-performance, public-orchestration, IO,
 or integration claim. `Photoelectrons` remains immutable truth; all avalanche
 state and diagnostics remain private; `simulate_readout(...)` remains Stage 7.
+
+Against the clean exact TensorCore `0.7.0` source, ZIP, and newly extracted
+pin, each full run executed 174 tests: 164 passed and 10 conditional CUDA tests
+skipped. The focused Stage 6 run executed 65 tests: 60 passed and 5 CUDA tests
+skipped. Pyright `1.1.408` reported zero findings against both dependency
+forms, import isolation returned `False False False False`, and topology,
+allowlist, diff, forbidden-surface, and artifact gates passed. The exact
+archive SHA-256, statistical ledger, endpoint correction, environment, and
+residual qualifications are recorded in the work order. Final Design
+acceptance is still required for **Merged / Closed**.
 
 ## Candidate Future Stages
 

@@ -1,10 +1,238 @@
 # Stage 6 Charge Simulation Work Order
 
-Status: **Design-complete / Undispatched**. This documentation-only work order
-defines the first complete private Charge-production slice. It does not itself
-authorize Implementation, Validation, Review, merge, or push. Design must
-explicitly dispatch the exact committed authority after privately verifying
-every required route.
+Status: **Merged / Design acceptance pending**. The user authorized execution
+on 2026-07-15 from committed Design/dispatch authority
+`21de93a239302a8c31edf3f7fec120ecb1eeea57`. The exact linear candidate chain
+was:
+
+```text
+21de93a239302a8c31edf3f7fec120ecb1eeea57
+  -> 00488a3d975104ec0967c988c278540f57b71598
+  -> 40c10f0f598ea3ac95a11426fc927978553215fb
+  -> fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58
+```
+
+Candidate 1 implemented the accepted Stage 6 slice. Candidate 2 was the
+tests-only Validation correction that completed the predeclared statistical
+evidence. Fixed-commit Validation cleared Candidate 2. Independent Review then
+returned one P1 numerical-contract finding: the exact dark-count ceiling guard
+accepted a represented configuration, but the later grouped binary64
+multiplication could round its mean above `1e8` and reject it. The exact
+reproducer was:
+
+```text
+sample_period_ps = 2677300530967072003
+sample_count     = 2
+rate_hz          = 37.35105523020191
+
+exact ceiling relation:       accepted
+correctly rounded exact mean:  100000000.0
+old grouped mean:              100000000.00000001
+```
+
+Candidate 3 changed only `readout/charge/_produce.py` and
+`tests/test_charge_product.py`. It forms the binary64 mean once from the exact
+represented rational product after the exact guard. Its regression proves the
+accepted endpoint reaches the sampler as exactly `100000000.0`, while the
+immediately greater binary64 rate is exactly outside the ceiling and fails
+before RNG use or producer writes with source and global RNG unchanged.
+Independent Review rechecked and cleared the correction with no remaining
+finding, then cleanly fast-forwarded unchanged `main` from the Design authority
+to exact Candidate 3. No merge commit, rebase, squash, amend, or push occurred.
+
+The cumulative candidate changes exactly 24 allowlisted paths: four
+behavior-neutral producer renames, the private Charge producer and RNG/sampler
+work, required config/export retirement, README synchronization, and focused
+runtime/static tests. The cumulative diff is 7038 insertions and 183 deletions.
+Candidate 3's correction is exactly two paths, 92 insertions, and one deletion.
+
+TensorCore remained clean at exact `0.7.0` pin
+`b454d738f6385ce6489d85492a618a3dab139bb6`. Review recreated its exact ZIP;
+the SHA-256 was
+`649c4daac3b953397371cb64647dcaf9a7ca7a857b32fae58c4ec4a856c79796`.
+Before and after the merge, the TensorCore source and ZIP suites each ran 174
+tests: 164 passed and 10 conditional CUDA tests skipped, with no failure or
+error. A newly extracted exact-pin tree produced the same fixed-candidate
+result. The focused count/delay/jitter/cascade/product run executed 65 tests:
+60 passed and 5 CUDA tests skipped.
+
+Pyright `1.1.408` reported 0 errors, warnings, or informational findings
+against both the exact TensorCore source and newly extracted archive.
+Import-isolation output was `False False False False`. Exact topology,
+allowlist, diff, public/private surface, source and global-RNG immutability,
+forbidden-call/import, and generated-artifact gates passed. The evidence
+environment was Python `3.13.11`, PyTorch `2.12.1`, macOS `15.7.4` on arm64,
+and eager CPU execution. CUDA and MPS were unavailable. The `build` and
+`hatchling` modules were unavailable. The closeout therefore makes no CUDA,
+GPU-performance, compile/fusion, editable-install, or wheel-build claim.
+
+The statistical evidence used frozen seeds `0`, `1`,
+`0x0123456789abcdef`, and `0xffffffffffffffff`. Every row below is
+`observed / target / standard error / deterministic accumulation delta /
+accepted bound`. A zero delta means that test's frozen gate is exactly eight
+standard errors. All tests used population moments and predeclared laws,
+sample sizes, and bounds.
+
+Poisson and aggregate-binomial sampler evidence was:
+
+```text
+Poisson, M=2**18:
+  lambda=1 mean      .99852371215820312 / 1 / .001953125 / 2.5579538487363607e-13 / .015625000000255795
+  lambda=1 variance  .99209758253709879 / 1 / .0033829117335329633 / 2.5579538487363607e-13 / .027063293868519502
+  lambda=9.5 mean    9.4965553283691406 / 9.5 / .0060199355497743906 / 2.4300561562995426e-12 / .048159484400625181
+  lambda=9.5 var     9.4569507196781792 / 9.5 / .026921970218926214 / 2.4300561562995426e-12 / .21537576175383977
+  lambda=10 mean     10.000404357910156 / 10 / .0061763235550163663 / 2.5579538487363607e-12 / .049410588442688884
+  lambda=10 var      9.9999388013384305 / 10 / .028303470207401246 / 2.5579538487363607e-12 / .22642776166176792
+  lambda=100 mean    100.00160217285156 / 100 / .01953125 / 2.5579538487363607e-11 / .15625000002557954
+  lambda=100 var     100.18950396371972 / 100 / .27690325935073878 / 2.5579538487363607e-11 / 2.2152260748314898
+
+Binomial n=32, p=.25, M=2**16:
+  mean      7.99517822265625 / 8 / .0095683193077467886 / 1.8189894035458565e-12 / .076546554463793298
+  variance  6.0171581469476223 / 6 / .03297254495338698 / 1.3642420526593924e-12 / .26378035962846008
+
+Multinomial n=32, p=(.10,.15,.20,.55), M=2**16:
+  mean c0  3.196976 / 3.2 / .006629 / 7.28e-13 / .053033
+  mean c1  4.794937 / 4.8 / .007890 / 1.09e-12 / .063122
+  mean c2  6.407791 / 6.4 / .008839 / 1.46e-12 / .070711
+  mean c3  17.600296 / 17.6 / .010993 / 4.00e-12 / .087945
+  var c0   2.884839 / 2.88 / .016533 / 6.55e-13 / .132264
+  var c1   4.100477 / 4.08 / .022861 / 9.28e-13 / .182890
+  var c2   5.166699 / 5.12 / .028339 / 1.16e-12 / .226716
+  var c3   7.986431 / 7.92 / .043077 / 1.80e-12 / .344618
+  cov 01  -.465146 / -.48 / .013360 / 1.09e-13 / .106880
+  cov 02  -.627071 / -.64 / .015039 / 1.46e-13 / .120312
+  cov 03  -1.792622 / -1.76 / .019862 / 4.00e-13 / .158898
+  cov 12  -.990574 / -.96 / .018049 / 2.18e-13 / .144395
+  cov 13  -2.644756 / -2.64 / .024405 / 6.00e-13 / .195237
+  cov 23  -3.549053 / -3.52 / .028270 / 8.00e-13 / .226164
+```
+
+The independent Poisson-4 and dark-operation evidence used `M=2**18`:
+
+```text
+Direct Poisson(4):
+  mean      3.996342 / 4 / .003906 / 1.02e-12 / .031250
+  variance  3.981907 / 4 / .011719 / 1.02e-12 / .093750
+  P(0)      .018547 / .018316 / .000262 / 4.69e-15 / .002095
+  P(4)      .195423 / .195367 / .000774 / 5.00e-14 / .006195
+  P(X>=8)   .050095 / .051134 / .000430 / 1.31e-14 / .003442
+
+Independent superposition Poisson(1.5) + Poisson(2.5):
+  lambda=1.5 mean  1.497169 / 1.5 / .002392 / 3.84e-13 / .019137
+  lambda=1.5 var   1.491486 / 1.5 / .004784 / 3.84e-13 / .038273
+  lambda=2.5 mean  2.498020 / 2.5 / .003088 / 6.39e-13 / .024705
+  lambda=2.5 var   2.505806 / 2.5 / .007564 / 6.39e-13 / .060515
+  sum mean         3.995190 / 4 / .003906 / 1.02e-12 / .031250
+  sum variance     4.002094 / 4 / .011719 / 1.02e-12 / .093750
+  component cov    .002401 / 0 / .003782 / 0 / .030258
+  joint P(0)       .018581 / .018316 / .000262 / 4.69e-15 / .002095
+
+Dark-count operation, lambda=4:
+  mean      3.995975 / 4 / .003906 / 1.02e-12 / .031250
+  variance  3.996624 / 4 / .011719 / 1.02e-12 / .093750
+  P(0)      .018436 / .018316 / .000262 / 4.69e-15 / .002095
+  P(4)      .194878 / .195367 / .000774 / 5.00e-14 / .006195
+  P(X>=8)   .050182 / .051134 / .000430 / 1.31e-14 / .003442
+```
+
+The three-generation DiCT and DeCT checks each used 32 roots, offspring mean
+`.2`, and `M=2**16`. DeCT used an exact one-bin delay and diagnosed generation
+three as right overflow:
+
+```text
+DiCT:
+  G1 mean  6.382767 / 6.4 / .009882 / 1.46e-12 / .079057
+  G1 var   6.426342 / 6.4 / .036710 / 1.46e-12 / .293684
+  G2 mean  1.278366 / 1.28 / .004841 / 2.91e-13 / .038730
+  G2 var   1.529128 / 1.536 / .011123 / 3.49e-13 / .088983
+  G3 mean  .258209 / .256 / .002201 / 5.82e-14 / .017607
+  G3 var   .319319 / .31744 / .003894 / 7.22e-14 / .031153
+  cov 12   1.289277 / 1.28 / .014087 / 2.91e-13 / .112694
+  cov 13   .251226 / .256 / .006070 / 5.82e-14 / .048559
+  cov 23   .308460 / .3072 / .004166 / 6.98e-14 / .033327
+
+DeCT:
+  G1 mean      6.405350 / 6.4 / .009882 / 1.46e-12 / .079057
+  G1 var       6.422100 / 6.4 / .036710 / 1.46e-12 / .293684
+  G2 mean      1.276184 / 1.28 / .004841 / 2.91e-13 / .038730
+  G2 var       1.535004 / 1.536 / .011123 / 3.49e-13 / .088983
+  G3 overflow  .252579 / .256 / .002201 / 5.82e-14 / .017607
+  G3 ovf var   .313245 / .31744 / .003894 / 7.22e-14 / .031153
+  cov 12       1.284482 / 1.28 / .014087 / 2.91e-13 / .112694
+  cov 13       .265824 / .256 / .006070 / 5.82e-14 / .048559
+  cov 23       .308062 / .3072 / .004166 / 6.98e-14 / .033327
+```
+
+The AP check used 32 parents, `p=.25`, source bin 2, inverse delay ratio `.2`,
+inverse recovery ratio `.1`, and `M=2**16`:
+
+```text
+  offset0 mean    .750305 / .749230 / .003341 / 1.70e-13 / .026731
+  offset0 var     .728730 / .731688 / .005096 / 1.66e-13 / .040769
+  offset1 mean    1.320496 / 1.314342 / .004385 / 2.99e-13 / .035083
+  offset1 var     1.273114 / 1.260357 / .007948 / 2.87e-13 / .063581
+  retained mean   2.070801 / 2.063572 / .005427 / 4.69e-13 / .043419
+  retained var    1.945418 / 1.930499 / .011512 / 4.39e-13 / .092097
+  overflow mean   5.932343 / 5.936428 / .008589 / 1.35e-12 / .068715
+  overflow var    4.844987 / 4.835141 / .026839 / 1.10e-12 / .214715
+  stop mean       23.996857 / 24 / .009568 / 5.46e-12 / .076547
+  stop var        5.971619 / 6 / .032973 / 1.36e-12 / .263780
+  charge mean     .144285 / .143689 / .000411 / 3.27e-14 / .003288
+  charge var      .0111920 / .0110737 / 6.87e-5 / 2.52e-15 / 5.49e-4
+  S2 mean         .0117714 / .0117189 / 3.67e-5 / 2.66e-15 / 2.93e-4
+  S2 var          8.905e-5 / 8.812e-5 / 5.54e-7 / 2.00e-17 / 4.44e-6
+  ovf charge mean 2.521241 / 2.522978 / .003651 / 5.74e-13 / .029204
+  ovf charge var  .875123 / .873345 / .004848 / 1.99e-13 / .038783
+  cov off0,off1  -.028213 / -.030773 / .003698 / 7.00e-15 / .029583
+  cov ret,charge  .135810 / .134423 / .000845 / 3.06e-14 / .006762
+  cov ret,ovf    -.409393 / -.382820 / .011888 / 8.70e-14 / .095104
+  cov charge,ovf -.012379 / -.011329 / .000382 / 2.58e-15 / .003057
+```
+
+The AP prepared laws agreed with independent Decimal-80 references within
+`1e-12` locally and `1e-11` over the complete law. Every represented-weight
+ledger check passed its `gamma_L` envelope. The independently positive
+within-category recovery variance remained explicitly outside the selected
+conditional-mean response model.
+
+Timing jitter used one parent in source bin 1, four samples, `sigma/T=.5`,
+`M=2**18`, and only the independent integrated latent-uniform plus Gaussian
+equation:
+
+```text
+  mean b0  .191673 / .190984 / .000768 / 4.89e-14 / .006142
+  mean b1  .609116 / .609548 / .000953 / 1.56e-13 / .007623
+  mean b2  .190777 / .190984 / .000768 / 4.89e-14 / .006142
+  mean b3  .004341 / .004238 / .000127 / 1.08e-15 / .001015
+  var b0   .154935 / .154509 / .000474 / 3.95e-14 / .003796
+  var b1   .238094 / .237999 / .000209 / 6.09e-14 / .001670
+  var b2   .154381 / .154509 / .000474 / 3.95e-14 / .003796
+  var b3   .004322 / .004220 / .000126 / 1.08e-15 / .001006
+  cov 01  -.116751 / -.116414 / .000386 / 2.98e-14 / .003085
+  cov 02  -.036567 / -.036475 / .000181 / 9.33e-15 / .001450
+  cov 03  -.000832 / -.000809 / 2.43e-5 / 2.07e-16 / .000195
+  cov 12  -.116205 / -.116414 / .000386 / 2.98e-14 / .003085
+  cov 13  -.002644 / -.002583 / 7.71e-5 / 6.61e-16 / .000617
+  cov 23  -.000828 / -.000809 / 2.43e-5 / 2.07e-16 / .000195
+  drop     .004093 / .004245 / .000127 / 1.09e-15 / .001016
+  disp mean .007786 / .008476 / .001233 / 2.17e-15 / .009868
+  disp var  .399754 / .398849 / .001051 / 1.02e-13 / .008410
+```
+
+Exact fixed-word inversion/PTRS/BTRS, 80-to-110-digit decision/law fixtures,
+all bypasses, count/address/allocation/ledger endpoints, all 16 Charge stage
+combinations, all eight mechanism combinations, conservation, overflow,
+freshness, axis-order, noncontiguous-source, and stream-isolation checks also
+passed. Conditional CUDA Charge/sampler/statistical tests skipped because no
+CUDA device was available; they produced no GPU observation.
+
+This Review-owned closeout changes only this work order and the implementation
+index. Cleared production, tests, README, package metadata, architecture,
+parity, governance, and dependency bytes remain exactly those merged at
+Candidate 3. Final TensorDSLab Design acceptance remains required before the
+stage becomes **Merged / Closed**. This merge and closeout do not dispatch
+Stage 7, activate Coordination or Profile B, establish conformance or broad
+compatibility, or authorize a push.
 
 ## Objective
 
