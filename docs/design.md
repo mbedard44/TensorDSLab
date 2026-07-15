@@ -308,9 +308,8 @@ slice requires a focused work order, exact dependency and package baselines,
 verified Implementation/Validation/Review routes, fixed-commit validation,
 independent review, a clean Review merge gate, and Design closeout. The
 TensorCore `0.7` structural foundation is Merged / Closed through Stage 3.
-[Stage 4](implementation/stage_4_deterministic_waveform_products.md) is the
-first Design-complete scientific work order, but it remains Undispatched. It
-selects functionality-first pure, analog, and digitized waveform producers;
-the complete noise producer and measured GPU optimization remain later work.
-No scientific producer exists on `main` until Stage 4 is explicitly
-dispatched, implemented, validated, independently reviewed, and closed.
+[Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
+Closed and implements the first scientific slice: functionality-first private
+pure, analog, and digitized waveform producers. The complete noise producer
+remains a candidate Stage 5 slice, and measured GPU optimization remains later
+work. Neither has a dispatched production work order.

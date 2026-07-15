@@ -202,12 +202,12 @@ return.
 
 ### Deterministic Waveforms Are Functionality-First
 
-The Design-complete / Undispatched Stage 4 work order covers exactly the
-private pure, analog, and digitized waveform producers. It freezes scalar
-precision and requires scientific/reference equations, dtype/device/axes,
-accepted autograd behavior, source immutability, and guaranteed-fresh outputs.
-It makes no kernel-count, target-sized-temporary, throughput, or compiler
-claim. The complete noise producer remains Stage 5.
+The Merged / Closed Stage 4 work order implements exactly the private pure,
+analog, and digitized waveform producers. It freezes scalar precision and
+requires scientific/reference equations, dtype/device/axes, accepted autograd
+behavior, source immutability, and guaranteed-fresh outputs. It makes no
+kernel-count, target-sized-temporary, throughput, or compiler claim. The
+complete noise producer remains a candidate Stage 5 slice and is undispatched.
 
 The first pure-waveform producer prepares its config-derived pulse template and
 sampled normalization in Python binary64, then materializes that template once

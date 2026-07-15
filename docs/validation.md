@@ -24,12 +24,16 @@ now implements the product-centered TensorCore `0.7` foundation described in
 remain qualifications rather than GPU evidence.
 
 [Stage 4 work order](implementation/stage_4_deterministic_waveform_products.md)
-is Design-complete / Undispatched. Its focused acceptance matrix covers the
-private pure, analog, and digitized producers with eager functionality first;
-the complete noise producer and measured fusion evidence remain later stages.
-Until an exact Design authority is explicitly dispatched, no Stage 4 runtime,
-static-typing, or parity check is active production clearance and no scientific
-producer is implemented.
+is Merged / Closed. Exact implementation candidate
+`3eb8ad19a36308ca2b73d41d219a7a3b4b46c1da` passed fixed-commit Validation
+and independent Review; Review's clean fast-forward closeout produced `main`
+`b3ebfcd9473537dd385195afea374bd2f426c6c0`. Design independently repeated the
+post-merge full-suite, exact-archive, static-typing, import-isolation, and
+artifact gates without finding an issue. The accepted production package now
+contains the private pure, analog, and digitized producers with eager
+functionality first. The recorded three CUDA skips are qualifications rather
+than GPU evidence. The complete noise producer and measured fusion evidence
+remain later, undispatched stages.
 
 Documentation-only Design work remains in Design unless the user requests an
 independent documentation Validation or Review. At minimum, run:
@@ -212,8 +216,9 @@ helpers:
 - `_require_dtype`;
 - `_require_floating_dtype`;
 - `_require_exact`;
-- `_require_optional_exact`; and
-- `_require_one_of_exact`.
+- `_require_optional_exact`;
+- `_require_one_of_exact`; and
+- `_require_sampling`.
 
 Focused tests should prove their supported relationship behavior, including
 the `TypeError` distinction for malformed types and `ValueError` distinction
@@ -221,6 +226,10 @@ for well-typed values that violate a relationship. The readout-structure
 helper requires exactly one `ExampleAxis`, `ChannelAxis`, and `SampleAxis` in
 any order and `torch.strided` storage. It does not require contiguity, a fixed
 dimension order, or an exact base `torch.Tensor` type.
+
+`_require_sampling` requires exact `SamplingConfig`, locates the exact
+`SampleAxis`, and checks its size, zero start, and period against the config
+without rebuilding or scanning the full axis.
 
 `_require_floating_dtype` accepts exactly `torch.float32` or `torch.float64`.
 It rejects `torch.float16`, `torch.bfloat16`, and every non-floating dtype.
@@ -383,11 +392,10 @@ or import NumPy as a reference implementation.
 
 ## Staged Scientific Validation
 
-Stage 3 does not implement scientific producers, RNG, request planning, or
-`simulate_readout(...)`. The Design-complete / Undispatched Stage 4 work order
-activates only after explicit dispatch and then validates the TPC/Veto pure,
-analog, and digitized producers, including their reference equations,
-freshness, axes/device/dtype behavior, and accepted autograd contracts. It does
+Stage 3 did not implement scientific producers, RNG, request planning, or
+`simulate_readout(...)`. Stage 4 subsequently validated and merged the TPC/Veto
+pure, analog, and digitized producers, including their reference equations,
+freshness, axes/device/dtype behavior, and accepted autograd contracts. It did
 not validate zero noise, stochastic noise, RNG, Charge, public orchestration,
 or GPU fusion.
 

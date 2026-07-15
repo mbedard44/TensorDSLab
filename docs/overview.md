@@ -27,23 +27,25 @@ baselines. Stage 3 is Merged / Closed through exact implementation candidate
 closeout `97e17c3177ac217aeb42a077db78f4bd223d51fa`; Design's accepted final
 Stage 3 closeout is clean `main` at
 `5ff13eb3c0735abfda454a334be59faac35259c2`. It deliberately replaced the
-pre-deployment `0.6` representation without a compatibility layer and still
-implements no scientific readout transform.
+pre-deployment `0.6` representation without a compatibility layer.
 
 [Rebuild Architecture](architecture/rebuild.md) remains the accepted complete
 architecture. Stage 3 selected exact TensorCore `0.7.0` commit
 `b454d738f6385ce6489d85492a618a3dab139bb6` and implements its ordinary
 `TensorAxis`, `TensorField`, and `TensorCollection` ABC roots with direct final
-TensorDSLab semantic leaves. Later scientific producers and public readout
+TensorDSLab semantic leaves. Further scientific producers and public readout
 orchestration remain Design targets only until their own focused work orders
 are written, dispatched, validated, reviewed, and merged.
 
-[Stage 4 work order](implementation/stage_4_deterministic_waveform_products.md)
-is Design-complete / Undispatched. It freezes a functionality-first work order
-for the private pure, analog, and digitized waveform producers, while deferring
-the complete noise producer to Stage 5 and measured GPU fusion to a later
-optimization stage. This status changes no production code and authorizes no
-Implementation work by itself.
+[Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
+Closed through exact implementation candidate
+`3eb8ad19a36308ca2b73d41d219a7a3b4b46c1da` and Review's clean fast-forward
+closeout `b3ebfcd9473537dd385195afea374bd2f426c6c0`. It implements the private
+pure, analog, and digitized waveform producers under a functionality-first
+contract. Fixed-commit Validation, independent Review, and Design's post-merge
+audit found no unresolved issue. The complete noise producer remains a
+candidate Stage 5 slice, and measured GPU fusion remains a later optimization
+stage; neither is dispatched.
 
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`, bound to
 accepted candidate `d634401a853915edeb4f83df4a4943b3553deced`. Conformance is
@@ -197,8 +199,8 @@ are in `architecture/rebuild.md`.
   Merged / Closed TensorCore `0.7` semantic product/config foundation and
   clean replacement scope.
 - [Stage 4 Work Order](implementation/stage_4_deterministic_waveform_products.md):
-  Design-complete / Undispatched functionality-first pure, analog, and
-  digitized waveform producer slice.
+  Merged / Closed functionality-first pure, analog, and digitized waveform
+  producer slice.
 - [Package Governance](governance/index.md): adoption decision and declaration,
   TensorDSLab overlay, semantic rule map, state boundaries, and closeout.
 - [Stage 2 Work Order](implementation/stage_2_package_and_readout_collection_foundation.md):

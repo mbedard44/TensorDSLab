@@ -190,15 +190,17 @@ and Design's post-merge audit found no unresolved issue. The evidence is
 CPU-only because CUDA was unavailable, and no wheel or editable-install claim
 was made because the required build tooling was absent.
 
-Stage 4 is Design-complete / Undispatched through
-`docs/implementation/stage_4_deterministic_waveform_products.md`. It freezes a
-functionality-first work order for exactly the private pure, analog, and
-digitized waveform producers. The complete noise producer remains Stage 5,
-and kernel fusion or target-temporary elimination remains a later measured
-optimization. This documentation state authorizes no production edit. No
-scientific product-builder or later integration stage is dispatched; each
-requires its own focused work order, verified routes, fixed-commit Validation,
-independent Review, and clean merge.
+Stage 4 is Merged / Closed through exact implementation candidate
+`3eb8ad19a36308ca2b73d41d219a7a3b4b46c1da` and Review's clean fast-forward
+closeout `b3ebfcd9473537dd385195afea374bd2f426c6c0`. It implements exactly the
+private pure, analog, and digitized waveform producers under the
+functionality-first contract in
+`docs/implementation/stage_4_deterministic_waveform_products.md`. Fixed-commit
+Validation, independent Review, and Design's post-merge audit found no
+unresolved issue. The evidence is CPU-only because CUDA was unavailable, and
+it makes no GPU-performance, fusion, editable-install, or wheel-build claim.
+The complete noise producer remains a candidate Stage 5 slice; no Stage 5 or
+later integration work order is dispatched.
 
 If implementation reveals a concrete contradiction in the accepted design, stop
 and send the issue back to Design. Do not silently widen architecture, create

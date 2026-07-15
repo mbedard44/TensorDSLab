@@ -17,11 +17,11 @@ The current identity and maturity are:
 
 ```text
 Project/display name: TensorDSLab
-Python import: tensor_dslab (accepted on main through Stage 3)
+Python import: tensor_dslab (accepted on main through Stage 4)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
-Package maturity: Stage 3 TensorCore 0.7 product foundation Merged / Closed
-Next work order: Stage 4 waveforms (Design-complete / Undispatched)
+Package maturity: Stage 4 deterministic waveform products Merged / Closed
+Next production direction: Stage 5 noise/RNG candidate (Undispatched)
 ```
 
 Stage 1 is Design-complete, and Stage 2 is Merged / Closed on `main` at
@@ -48,12 +48,15 @@ result after an independent post-merge audit on clean `main`
 `5ff13eb3c0735abfda454a334be59faac35259c2`. Stage 2 and Maintenance 1 remain
 historical TensorCore `0.6` evidence.
 
-The Stage 4 deterministic waveform work order is Design-complete /
-Undispatched. It covers exactly the private pure, analog, and digitized
-producers under a functionality-first acceptance gate. The complete noise
-producer remains Stage 5, and GPU fusion or target-temporary elimination is a
-later measured optimization. Scientific producers remain unimplemented;
-public readout orchestration and integration remain undispatched future work.
+Stage 4 is Merged / Closed through exact implementation candidate
+`3eb8ad19a36308ca2b73d41d219a7a3b4b46c1da` and Review's clean fast-forward
+closeout `b3ebfcd9473537dd385195afea374bd2f426c6c0`. It implements exactly the
+private pure, analog, and digitized producers under a functionality-first
+acceptance gate. Fixed-commit Validation, independent Review, and Design's
+post-merge audit found no unresolved issue. The complete noise producer
+remains a candidate Stage 5 slice, and GPU fusion or target-temporary
+elimination remains a later measured optimization. Public readout
+orchestration and integration remain undispatched future work.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency
@@ -807,8 +810,9 @@ manifest, rule-coverage, source-anchor, dormant-trigger, deviation, raw-ID,
 changed-file-allowlist, and forbidden-claim checks defined in
 [Validation](docs/validation.md#governance-adoption-checks). Runtime, import,
 dependency, export, environment, and post-merge commands are active for the
-accepted Stage 2 foundation. Integration and later scientific-runtime commands
-remain dormant until their corresponding implemented surfaces exist.
+accepted package surfaces through Stage 4. Integration and unimplemented
+scientific-runtime commands remain dormant until their corresponding surfaces
+exist.
 
 ## Before Production Review
 

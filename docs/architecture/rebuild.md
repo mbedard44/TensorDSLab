@@ -4469,28 +4469,30 @@ Stage 3 subsequently selected exact TensorCore `0.7.0` commit
 and merged the product/config/collection foundation. Historical work orders
 and governance records remain unchanged.
 
-The completed structural step was:
+The completed production steps are:
 
 - commit synchronized Design authority, verify the persistent role routes,
   replace the `0.6` package with the typed axes, sampling, product/config, and
   collection foundation, then clear fixed-commit Validation, independent
-  Review, fast-forward merge, and Design closeout.
+  Review, fast-forward merge, and Design closeout; and
+- implement the deterministic pure, analog, and digitized product producers
+  under the focused Stage 4 work order, then clear the same fixed-commit
+  Validation, independent Review, merge, and Design closeout gates.
 
 The remaining production sequence is:
 
-1. Implement deterministic product producers under focused work orders.
-2. Freeze and implement the private RNG and stochastic-noise contracts under a
+1. Freeze and implement the private RNG and complete noise contracts under a
    focused work order.
-3. Freeze the remaining Poisson/multinomial stream, numerical-tail, and
+2. Freeze the remaining Poisson/multinomial stream, numerical-tail, and
    count-bound contracts, then implement the fixed-`K` charge simulation in
    parity-scoped slices.
-4. Publish request-aware `simulate_readout(...)` only after every required
+3. Publish request-aware `simulate_readout(...)` only after every required
    producer exists and its complete closure can be preflighted.
-5. Profile real GPU memory and execution before designing workspace/output
+4. Profile real GPU memory and execution before designing workspace/output
    reuse.
-6. Design the exact TensorG4DS-to-truth-Photoelectrons bridge.
-7. Design explicit TensorML/reconstruction adapters.
-8. Design durable artifacts only after in-memory contracts stabilize.
+5. Design the exact TensorG4DS-to-truth-Photoelectrons bridge.
+6. Design explicit TensorML/reconstruction adapters.
+7. Design durable artifacts only after in-memory contracts stabilize.
 
 Each production slice uses the repository Implementation/Validation/Review
 loop and fixed-commit evidence. No compatibility alias preserves `0.6`.
@@ -4540,13 +4542,13 @@ It also created the Stage 3 work order, which was later implemented, validated,
 independently reviewed, fast-forwarded, and accepted as Merged / Closed.
 Governance records and earlier completed work orders remain historical records.
 
-The subsequent Stage 4 Design pass creates the focused
-`stage_4_deterministic_waveform_products.md` work order and synchronizes the
-functionality-first execution decision. Stage 4 remains Design-complete /
-Undispatched: exactly the private pure, analog, and digitized producers are in
-scope; the complete noise producer remains Stage 5 and measured GPU fusion is
-a later optimization gate. This documentation state changes no production
-module or public API.
+The subsequent Stage 4 Design pass created the focused
+`stage_4_deterministic_waveform_products.md` work order and synchronized the
+functionality-first execution decision. Stage 4 is now Merged / Closed and
+implements exactly the private pure, analog, and digitized producers. It added
+no public API. The complete noise producer remains a candidate Stage 5 slice,
+and measured GPU fusion remains a later optimization gate; neither is
+dispatched.
 
 ## Closed Decisions And Remaining Design Gates
 

@@ -613,13 +613,14 @@ foundation: exact dependency pin, axes, sampling, product field/config types,
 `ReadoutCollection`, exports, and focused structural/static tests. It created
 no empty simulation, RNG, or product-builder module.
 
-Stage 4 is Design-complete / Undispatched. It freezes a functionality-first
-work order for exactly the private pure, analog, and digitized waveform
-producers. Stage 5 will own the complete zero/white/PSD noise producer and its
-RNG prerequisites. Later focused stages close stochastic Charge/RNG and finally
-expose complete request-aware `simulate_readout`. A partial public simulation
-API must not imply unsupported product closures. Measured GPU fusion remains a
-separate optimization stage after functional producers exist.
+Stage 4 is Merged / Closed and implements exactly the private pure, analog, and
+digitized waveform producers under the functionality-first contract. A
+candidate Stage 5 slice will own the complete zero/white/PSD noise producer and
+its RNG prerequisites, but no Stage 5 work order is dispatched. Later focused
+stages close stochastic Charge/RNG and finally expose complete request-aware
+`simulate_readout`. A partial public simulation API must not imply unsupported
+product closures. Measured GPU fusion remains a separate optimization stage
+after functional producers exist.
 
 ## Return To Design Before
 

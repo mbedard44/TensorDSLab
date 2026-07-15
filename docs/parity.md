@@ -1,8 +1,10 @@
 # IV-DSLab Parity And Intentional Divergences
 
 Status: active Design contract for evaluating IV-DSLab and DSLab donor
-behavior. No production parity implementation or fixture corpus has been
-dispatched.
+behavior. Merged Stage 4 production tests provide bounded deterministic
+evidence for the TPC/Veto pure-waveform, analog-composition, and digitization
+boundaries described below. No stochastic parity implementation or
+comprehensive donor fixture corpus has been dispatched.
 
 ## Purpose
 
@@ -125,11 +127,14 @@ A sampled golden output cannot prove distributional parity. Conversely, two
 implementations may pass selected statistical checks without sharing the same
 law; such a result must remain classified as statistical parity.
 
-Because TensorDSLab has no scientific-transform implementation or parity
-fixture corpus yet, classifications in this page are Design targets or
-accepted divergence labels, not claims that a test suite has already
-demonstrated parity. A future work order must supply the required evidence
-before reporting a target as achieved.
+Stage 4 is the first scientific-transform implementation. Its reviewed tests
+establish only the named TPC/Veto pulse checkpoints, independent deterministic
+reference equations, conditional analog composition, and representation-mapped
+ADC behavior in that work order's accepted CPU evidence domain. They do not
+establish complete eventwise IV parity, stochastic parity, a comprehensive
+donor fixture corpus, or GPU evidence. Every other classification in this page
+remains a Design target or accepted divergence label until a focused work order
+supplies its required evidence.
 
 ## Required Shape Of A Parity Claim
 
@@ -731,8 +736,9 @@ convolution domain.
 
 The sampled-maximum and analytic-normalization choices are close but not
 identical; for the audited IV default parameters their peak normalization
-differs by roughly 66 parts per million. The production work order must lock a
-fixture and tolerance rather than rely on that audit estimate.
+differs by roughly 66 parts per million. Stage 4 locks reviewed TPC and Veto
+checkpoint values, independent binary64 reference equations, and explicit
+`float32`/`float64` tolerances rather than relying on that audit estimate.
 
 IV's eventwise sub-bin amplitude correction is **not applicable** at the
 post-binned boundary because true PE phase has been discarded. Loss of the

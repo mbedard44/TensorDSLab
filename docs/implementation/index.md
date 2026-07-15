@@ -109,14 +109,14 @@ qualifications are recorded in the work order.
 
 ### [Stage 4: Deterministic Waveform Products](stage_4_deterministic_waveform_products.md)
 
-Status: **Review-cleared / fast-forward merged; Design acceptance pending** at
-exact implementation candidate
+Status: **Merged / Closed**. Exact implementation candidate
 `3eb8ad19a36308ca2b73d41d219a7a3b4b46c1da`, from committed Design/dispatch
-base `b7af45741035821dfa94c8093bdeccea3320e26d`. Fixed-commit Validation and
-independent Review found no unresolved issue. Review fast-forwarded clean
-`main` from `5ff13eb3c0735abfda454a334be59faac35259c2` to the candidate and repeated
-the required post-merge gates. Final Design acceptance remains outstanding.
-No push occurred.
+base `b7af45741035821dfa94c8093bdeccea3320e26d`, passed fixed-commit Validation
+and independent Review with no unresolved issue. Review's documentation-only
+closeout and clean fast-forward produced `main`
+`b3ebfcd9473537dd385195afea374bd2f426c6c0`; Design accepted that closeout on
+2026-07-14 after independently repeating the post-merge package, dependency,
+static-typing, import-isolation, and artifact gates. No push occurred.
 
 The implementation adds exactly three private producers:
 `_product_pure_waveform(...)` for both accepted TPC/Veto pulse models,

@@ -1,14 +1,14 @@
 # Stage 4 Deterministic Waveform Products Work Order
 
-Status: **Review-cleared / fast-forward merged; Design acceptance pending** at
-exact implementation candidate
-`3eb8ad19a36308ca2b73d41d219a7a3b4b46c1da`. The user authorized production
-execution on 2026-07-14 from committed Design/dispatch base
-`b7af45741035821dfa94c8093bdeccea3320e26d`; fixed-commit Validation and
-independent Review found no unresolved finding. Review cleanly fast-forwarded
-`main` from `5ff13eb3c0735abfda454a334be59faac35259c2` to the exact candidate and
-repeated the required post-merge gates. Final Design acceptance remains the
-last closeout gate. No push occurred.
+Status: **Merged / Closed**. Exact implementation candidate
+`3eb8ad19a36308ca2b73d41d219a7a3b4b46c1da`, from committed Design/dispatch
+base `b7af45741035821dfa94c8093bdeccea3320e26d`, passed fixed-commit Validation
+and independent Review with no unresolved finding. Review's documentation-only
+closeout and clean fast-forward produced `main`
+`b3ebfcd9473537dd385195afea374bd2f426c6c0`. TensorDSLab Design accepted the
+closeout on 2026-07-14 after independently repeating the post-merge package,
+dependency, full-suite, exact-archive, static-typing, import-isolation, and
+artifact gates. No push occurred.
 
 Review verified that the candidate has the exact Design parent and an exact
 eight-path implementation delta comprising five additions and three
@@ -46,6 +46,14 @@ This Review-owned closeout changes only this work order and the implementation
 index. Cleared production, tests, README, metadata, and synchronized Design
 bytes remain exactly those merged at candidate
 `3eb8ad19a36308ca2b73d41d219a7a3b4b46c1da`.
+
+Final Design repeated both 75-test runs against the clean TensorCore source pin
+and an independently extracted exact archive: each ran 72 passing tests with 3
+conditional CUDA skips and no failure or error. Pyright `1.1.408` again
+reported zero findings against both dependency forms; archive identity, import
+isolation, diff, and generated-artifact checks also passed. This final
+documentation closeout changes no production, test, package metadata, public
+API, dependency, or governance byte.
 
 ## Objective
 
