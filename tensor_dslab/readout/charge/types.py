@@ -87,28 +87,9 @@ class ExponentialDelayConfig:
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
-class NormalDelayConfig:
-    location_ns: NonnegativeFloat
-    sigma_ns: PositiveFloat
-
-    def __post_init__(self) -> None:
-        _require_exact(
-            self.location_ns,
-            NonnegativeFloat,
-            "NormalDelayConfig.location_ns",
-        )
-        _require_exact(
-            self.sigma_ns,
-            PositiveFloat,
-            "NormalDelayConfig.sigma_ns",
-        )
-
-
-@final
-@dataclass(frozen=True, slots=True, kw_only=True)
 class DirectCrosstalkConfig:
     mean_offspring_per_parent: NonnegativeFloat
-    delay: FixedDelayConfig | ExponentialDelayConfig | NormalDelayConfig
+    delay: FixedDelayConfig | ExponentialDelayConfig
 
     def __post_init__(self) -> None:
         _require_exact(
@@ -118,7 +99,7 @@ class DirectCrosstalkConfig:
         )
         _require_one_of_exact(
             self.delay,
-            (FixedDelayConfig, ExponentialDelayConfig, NormalDelayConfig),
+            (FixedDelayConfig, ExponentialDelayConfig),
             "DirectCrosstalkConfig.delay",
         )
 
@@ -127,7 +108,7 @@ class DirectCrosstalkConfig:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DelayedCrosstalkConfig:
     mean_offspring_per_parent: NonnegativeFloat
-    delay: FixedDelayConfig | ExponentialDelayConfig | NormalDelayConfig
+    delay: FixedDelayConfig | ExponentialDelayConfig
 
     def __post_init__(self) -> None:
         _require_exact(
@@ -137,7 +118,7 @@ class DelayedCrosstalkConfig:
         )
         _require_one_of_exact(
             self.delay,
-            (FixedDelayConfig, ExponentialDelayConfig, NormalDelayConfig),
+            (FixedDelayConfig, ExponentialDelayConfig),
             "DelayedCrosstalkConfig.delay",
         )
 

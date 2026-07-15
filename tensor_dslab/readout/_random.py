@@ -19,12 +19,34 @@ _ROTATIONS = (
     (25, 10),
     (18, 20),
 )
+_MAX_CHARGE_COUNT = (1 << 53) - 1
+_MAX_POISSON_MEAN = 1.0e8
+_STIRLING_CORRECTIONS = (
+    0.0810614667953272,
+    0.0413406959554092,
+    0.0276779256849983,
+    0.02079067210376509,
+    0.0166446911898211,
+    0.0138761288230707,
+    0.0118967099458917,
+    0.0104112652619720,
+    0.00925546218271273,
+    0.00833056343336287,
+)
 
 
 @unique
 class _RngStream(Enum):
     NOISE_WHITE = 0x0000_0001
     NOISE_PSD_COEFFICIENT = 0x0000_0002
+    CHARGE_DARK_COUNTS = 0x0000_0003
+    CHARGE_DIRECT_CROSSTALK = 0x0000_0004
+    CHARGE_DIRECT_CROSSTALK_OVERFLOW = 0x0000_0005
+    CHARGE_DELAYED_CROSSTALK = 0x0000_0006
+    CHARGE_DELAYED_CROSSTALK_OVERFLOW = 0x0000_0007
+    CHARGE_TIMING_JITTER = 0x0000_0008
+    CHARGE_AFTERPULSES = 0x0000_0009
+    CHARGE_SMEARING = 0x0000_000A
 
 
 def _require_bounded_integer(
@@ -333,3 +355,462 @@ def _standard_normal_pair(
         radius = torch.sqrt(torch.log(radius_uniform) * minus_two)
         angle = tau * angle_uniform
         return radius * torch.cos(angle), radius * torch.sin(angle)
+
+
+def _require_count_shape(shape: object) -> tuple[int, ...]:
+    if type(shape) is not tuple:
+        raise TypeError("shape must be exactly a tuple")
+    checked: list[int] = []
+    count = 1
+    for size in shape:
+        if type(size) is not int:
+            raise TypeError("every shape size must be exactly an integer")
+        if size < 0:
+            raise ValueError("shape sizes must be nonnegative")
+        count *= size
+        if count > (1 << 63) - 1:
+            raise ValueError("shape element count exceeds the accepted range")
+        checked.append(size)
+    return tuple(checked)
+
+
+def _require_logical_positions(
+    logical_positions: torch.Tensor | None,
+    *,
+    shape: tuple[int, ...],
+    device: torch.device,
+) -> torch.Tensor:
+    if logical_positions is None:
+        return _logical_positions(shape, device=device)
+    if logical_positions.dtype is not torch.int64:
+        raise TypeError("logical_positions must have dtype torch.int64")
+    if logical_positions.shape != shape:
+        raise ValueError("logical_positions must have the exact output shape")
+    if logical_positions.device != device:
+        raise ValueError("logical_positions must be on the output device")
+    if bool(torch.any(logical_positions < 0).item()):
+        raise ValueError("logical_positions must be nonnegative")
+    # A nonnegative int64 value is already strictly below 2**63.  Comparing
+    # an int64 tensor with the unrepresentable Python integer 2**63 would wrap
+    # the scalar in Torch and reject every valid position.
+    return logical_positions
+
+
+def _prepare_poisson_mean(
+    mean: float | torch.Tensor,
+    *,
+    shape: tuple[int, ...],
+    device: torch.device,
+) -> torch.Tensor:
+    if type(mean) is float:
+        means = torch.full(shape, mean, dtype=torch.float64, device=device)
+    elif type(mean) is torch.Tensor:
+        if mean.dtype is not torch.float64:
+            raise TypeError("Poisson mean tensor must have dtype torch.float64")
+        if mean.shape != shape:
+            raise ValueError("Poisson mean tensor must have the exact output shape")
+        if mean.device != device:
+            raise ValueError("Poisson mean tensor must be on the output device")
+        means = mean
+    else:
+        raise TypeError("Poisson mean must be exactly float or torch.Tensor")
+    if not bool(torch.all(torch.isfinite(means)).item()):
+        raise ValueError("Poisson means must be finite")
+    if bool(torch.any(means < 0.0).item()):
+        raise ValueError("Poisson means must be nonnegative")
+    if bool(torch.any(means > _MAX_POISSON_MEAN).item()):
+        raise ValueError("Poisson means exceed the accepted ceiling")
+    return means
+
+
+def _sample_poisson(
+    mean: float | torch.Tensor,
+    *,
+    shape: tuple[int, ...],
+    seed: int,
+    stream: _RngStream,
+    device: torch.device | str,
+    logical_positions: torch.Tensor | None = None,
+) -> torch.Tensor:
+    """Sample independent Poisson counts at fixed positional RNG addresses."""
+
+    checked_shape = _require_count_shape(shape)
+    checked_device = torch.device(device)
+    checked_stream = _require_stream(stream)
+    means = _prepare_poisson_mean(
+        mean,
+        shape=checked_shape,
+        device=checked_device,
+    )
+    positions = _require_logical_positions(
+        logical_positions,
+        shape=checked_shape,
+        device=checked_device,
+    )
+    active = means > 0.0
+    if not bool(torch.any(active).item()):
+        return torch.zeros(checked_shape, dtype=torch.int64, device=checked_device)
+    checked_seed = _require_seed(seed)
+
+    flat_means = means.reshape(-1)
+    flat_positions = positions.reshape(-1)
+    output = torch.zeros(
+        flat_means.shape,
+        dtype=torch.int64,
+        device=checked_device,
+    )
+
+    inversion_mask = (flat_means > 0.0) & (flat_means < 10.0)
+    if bool(torch.any(inversion_mask).item()):
+        indices = torch.nonzero(inversion_mask, as_tuple=False).flatten()
+        selected_mean = flat_means[indices]
+        selected_positions = flat_positions[indices]
+        words = _random_block(
+            seed=checked_seed,
+            stream=checked_stream,
+            logical_positions=selected_positions,
+        )
+        uniform = _uniform_closed_open(
+            words[..., 0],
+            word_1=words[..., 1],
+            dtype=torch.float64,
+        )
+        probability = torch.exp(-selected_mean)
+        cumulative = probability.clone()
+        unresolved = torch.ones_like(indices, dtype=torch.bool)
+        selected_output = torch.zeros_like(indices, dtype=torch.int64)
+        for count in range(64):
+            accepted = unresolved & (uniform < cumulative)
+            selected_output[accepted] = count
+            unresolved = unresolved & ~accepted
+            if not bool(torch.any(unresolved).item()):
+                break
+            if count == 63:
+                raise RuntimeError("Poisson inversion exhausted its 64 terms")
+            count_float = float(count + 1)
+            probability = probability * selected_mean / count_float
+            cumulative = cumulative + probability
+        output[indices] = selected_output
+
+    ptrs_mask = flat_means >= 10.0
+    if bool(torch.any(ptrs_mask).item()):
+        indices = torch.nonzero(ptrs_mask, as_tuple=False).flatten()
+        selected_mean = flat_means[indices]
+        selected_positions = flat_positions[indices]
+        sqrt_mean = torch.sqrt(selected_mean)
+        log_mean = torch.log(selected_mean)
+        b = 0.931 + 2.53 * sqrt_mean
+        a = -0.059 + 0.02483 * b
+        inverse_alpha = 1.1239 + 1.1328 / (b - 3.4)
+        v_rectangle = 0.9277 - 3.6224 / (b - 2.0)
+        unresolved = torch.ones_like(indices, dtype=torch.bool)
+        selected_output = torch.zeros_like(indices, dtype=torch.int64)
+        for attempt in range(64):
+            local = torch.nonzero(unresolved, as_tuple=False).flatten()
+            words = _random_block(
+                seed=checked_seed,
+                stream=checked_stream,
+                logical_positions=selected_positions[local],
+                block=attempt,
+            )
+            uniform = _uniform_open_open(
+                words[..., 0],
+                word_1=words[..., 1],
+                dtype=torch.float64,
+            )
+            variate = _uniform_open_open(
+                words[..., 2],
+                word_1=words[..., 3],
+                dtype=torch.float64,
+            )
+            u = uniform - 0.5
+            u_s = 0.5 - torch.abs(u)
+            proposal_float = torch.floor(
+                (2.0 * a[local] / u_s + b[local]) * u
+                + selected_mean[local]
+                + 0.43
+            )
+            too_large = (
+                torch.isfinite(proposal_float)
+                & (proposal_float >= 0.0)
+                & (proposal_float > float(_MAX_CHARGE_COUNT))
+            )
+            if bool(torch.any(too_large).item()):
+                raise RuntimeError("Poisson proposal exceeds the Charge count ceiling")
+            supported = (
+                torch.isfinite(proposal_float)
+                & (proposal_float >= 0.0)
+                & (proposal_float <= float(_MAX_CHARGE_COUNT))
+            )
+            proposal = torch.zeros_like(local, dtype=torch.int64)
+            proposal[supported] = proposal_float[supported].to(torch.int64)
+            quick_accept = (
+                supported
+                & (u_s >= 0.07)
+                & (variate <= v_rectangle[local])
+            )
+            quick_reject = (~supported) | (
+                (u_s < 0.013) & (variate > u_s)
+            )
+            full = supported & ~quick_accept & ~quick_reject
+            full_accept = torch.zeros_like(full)
+            if bool(torch.any(full).item()):
+                full_local = torch.nonzero(full, as_tuple=False).flatten()
+                k = proposal[full_local]
+                left = (
+                    torch.log(variate[full_local])
+                    + torch.log(inverse_alpha[local[full_local]])
+                    - torch.log(
+                        a[local[full_local]]
+                        / (u_s[full_local] * u_s[full_local])
+                        + b[local[full_local]]
+                    )
+                )
+                right = (
+                    -selected_mean[local[full_local]]
+                    + k.to(torch.float64) * log_mean[local[full_local]]
+                    - torch.lgamma(k.to(torch.float64) + 1.0)
+                )
+                full_accept[full_local] = left <= right
+            accepted = quick_accept | full_accept
+            if bool(torch.any(accepted).item()):
+                accepted_local = local[accepted]
+                selected_output[accepted_local] = proposal[accepted]
+                unresolved[accepted_local] = False
+            if not bool(torch.any(unresolved).item()):
+                break
+            if attempt == 63:
+                raise RuntimeError("Poisson PTRS exhausted its 64 attempts")
+        output[indices] = selected_output
+
+    return output.reshape(checked_shape)
+
+
+def _stirling_correction(values: torch.Tensor) -> torch.Tensor:
+    if values.dtype is not torch.int64:
+        raise TypeError("Stirling arguments must have dtype torch.int64")
+    result = torch.empty_like(values, dtype=torch.float64)
+    small = values < 10
+    if bool(torch.any(small).item()):
+        table = torch.tensor(
+            _STIRLING_CORRECTIONS,
+            dtype=torch.float64,
+            device=values.device,
+        )
+        result[small] = table[values[small]]
+    if bool(torch.any(~small).item()):
+        x = values[~small].to(torch.float64) + 1.0
+        x2 = x * x
+        inner = (1.0 / 360.0) - ((1.0 / 1260.0) / x2)
+        result[~small] = ((1.0 / 12.0) - (inner / x2)) / x
+    return result
+
+
+def _sample_conditional_binomial(
+    counts: torch.Tensor,
+    success_mass: torch.Tensor,
+    later_mass: torch.Tensor,
+    *,
+    seed: int,
+    stream: _RngStream,
+    logical_positions: torch.Tensor,
+) -> torch.Tensor:
+    """Sample one stable aggregate-multinomial conditional category."""
+
+    if counts.dtype is not torch.int64:
+        raise TypeError("counts must have dtype torch.int64")
+    if success_mass.dtype is not torch.float64 or later_mass.dtype is not torch.float64:
+        raise TypeError("conditional masses must have dtype torch.float64")
+    if success_mass.shape != counts.shape or later_mass.shape != counts.shape:
+        raise ValueError("conditional masses must have the exact count shape")
+    if success_mass.device != counts.device or later_mass.device != counts.device:
+        raise ValueError("conditional masses must be on the count device")
+    positions = _require_logical_positions(
+        logical_positions,
+        shape=tuple(counts.shape),
+        device=counts.device,
+    )
+    if bool(torch.any(counts < 0).item()) or bool(
+        torch.any(counts > _MAX_CHARGE_COUNT).item()
+    ):
+        raise ValueError("counts exceed the accepted Charge count domain")
+    for name, mass in (("success", success_mass), ("later", later_mass)):
+        if not bool(torch.all(torch.isfinite(mass)).item()):
+            raise ValueError(f"{name} masses must be finite")
+        if bool(torch.any((mass < 0.0) | (mass > 1.0)).item()):
+            raise ValueError(f"{name} masses must lie in [0, 1]")
+
+    flat_counts = counts.reshape(-1)
+    flat_success = success_mass.reshape(-1)
+    flat_later = later_mass.reshape(-1)
+    flat_positions = positions.reshape(-1)
+    output = torch.zeros_like(flat_counts)
+
+    both_zero = (flat_success == 0.0) & (flat_later == 0.0)
+    if bool(torch.any(both_zero & (flat_counts != 0)).item()):
+        raise ValueError("zero conditional mass cannot own a remaining count")
+    deterministic_all = (flat_later == 0.0) & (flat_success > 0.0)
+    output[deterministic_all] = flat_counts[deterministic_all]
+    active = (
+        (flat_counts > 0)
+        & (flat_success > 0.0)
+        & (flat_later > 0.0)
+    )
+    if not bool(torch.any(active).item()):
+        return output.reshape(counts.shape)
+    checked_seed = _require_seed(seed)
+    checked_stream = _require_stream(stream)
+
+    indices = torch.nonzero(active, as_tuple=False).flatten()
+    n = flat_counts[indices]
+    a_mass = flat_success[indices]
+    b_mass = flat_later[indices]
+    total = a_mass + b_mass
+    if not bool(torch.all(torch.isfinite(total) & (total > 0.0)).item()):
+        raise ValueError("conditional mass totals must be finite and positive")
+    complement = b_mass < a_mass
+    p = torch.minimum(a_mass, b_mass) / total
+    if bool(torch.any((p <= 0.0) | (p > 0.5)).item()):
+        raise ValueError("reduced conditional probabilities must lie in (0, 0.5]")
+    selected = torch.zeros_like(n)
+
+    inversion = n.to(torch.float64) * p < 10.0
+    if bool(torch.any(inversion).item()):
+        local = torch.nonzero(inversion, as_tuple=False).flatten()
+        local_n = n[local]
+        local_p = p[local]
+        words = _random_block(
+            seed=checked_seed,
+            stream=checked_stream,
+            logical_positions=flat_positions[indices[local]],
+        )
+        uniform = _uniform_closed_open(
+            words[..., 0],
+            word_1=words[..., 1],
+            dtype=torch.float64,
+        )
+        q = 1.0 - local_p
+        probability = torch.exp(local_n.to(torch.float64) * torch.log1p(-local_p))
+        cumulative = probability.clone()
+        unresolved = torch.ones_like(local, dtype=torch.bool)
+        local_output = torch.zeros_like(local_n)
+        for count in range(64):
+            inside_support = local_n >= count
+            accepted = unresolved & inside_support & (uniform < cumulative)
+            local_output[accepted] = count
+            unresolved = unresolved & ~accepted
+            if not bool(torch.any(unresolved).item()):
+                break
+            if count == 63 or bool(
+                torch.any(unresolved & (local_n <= count)).item()
+            ):
+                raise RuntimeError("Binomial inversion exhausted its 64 terms")
+            advanced_probability = probability.clone()
+            advanced_probability[unresolved] = probability[unresolved] * (
+                (local_n[unresolved].to(torch.float64) - float(count))
+                / float(count + 1)
+            ) * (local_p[unresolved] / q[unresolved])
+            probability = advanced_probability
+            advanced_cumulative = cumulative.clone()
+            advanced_cumulative[unresolved] = (
+                cumulative[unresolved] + probability[unresolved]
+            )
+            cumulative = advanced_cumulative
+        selected[local] = local_output
+
+    btrs = ~inversion
+    if bool(torch.any(btrs).item()):
+        local = torch.nonzero(btrs, as_tuple=False).flatten()
+        local_n = n[local]
+        local_p = p[local]
+        n_float = local_n.to(torch.float64)
+        s = torch.sqrt(n_float * local_p * (1.0 - local_p))
+        b = 1.15 + 2.53 * s
+        a = -0.0873 + 0.0248 * b + 0.01 * local_p
+        c = n_float * local_p + 0.5
+        v_r = 0.92 - 4.2 / b
+        r = local_p / (1.0 - local_p)
+        alpha = (2.83 + 5.1 / b) * s
+        m = torch.floor((n_float + 1.0) * local_p).to(torch.int64)
+        unresolved = torch.ones_like(local, dtype=torch.bool)
+        local_output = torch.zeros_like(local_n)
+        for attempt in range(64):
+            pending = torch.nonzero(unresolved, as_tuple=False).flatten()
+            words = _random_block(
+                seed=checked_seed,
+                stream=checked_stream,
+                logical_positions=flat_positions[indices[local[pending]]],
+                block=attempt,
+            )
+            u_0 = _uniform_open_open(
+                words[..., 0],
+                word_1=words[..., 1],
+                dtype=torch.float64,
+            )
+            v = _uniform_open_open(
+                words[..., 2],
+                word_1=words[..., 3],
+                dtype=torch.float64,
+            )
+            u = u_0 - 0.5
+            u_s = 0.5 - torch.abs(u)
+            proposal_float = torch.floor(
+                (2.0 * a[pending] / u_s + b[pending]) * u + c[pending]
+            )
+            supported = (
+                torch.isfinite(proposal_float)
+                & (proposal_float >= 0.0)
+                & (proposal_float <= n_float[pending])
+            )
+            proposal = torch.zeros_like(pending, dtype=torch.int64)
+            proposal[supported] = proposal_float[supported].to(torch.int64)
+            quick_accept = supported & (u_s >= 0.07) & (v <= v_r[pending])
+            full = supported & ~quick_accept
+            full_accept = torch.zeros_like(full)
+            if bool(torch.any(full).item()):
+                full_pending = torch.nonzero(full, as_tuple=False).flatten()
+                k = proposal[full_pending]
+                chosen = pending[full_pending]
+                d = k - m[chosen]
+                left = torch.log(
+                    v[full_pending]
+                    * alpha[chosen]
+                    / (a[chosen] / (u_s[full_pending] * u_s[full_pending]) + b[chosen])
+                )
+                k_float = k.to(torch.float64)
+                d_float = d.to(torch.float64)
+                log_left = torch.log1p(
+                    d_float / (n_float[chosen] - k_float + 1.0)
+                )
+                log_right = torch.log1p(-d_float / (k_float + 1.0))
+                log_ratio = torch.log(
+                    r[chosen]
+                    * (n_float[chosen] - k_float + 1.0)
+                    / (k_float + 1.0)
+                )
+                main = (
+                    (n_float[chosen] - m[chosen].to(torch.float64) + 0.5)
+                    * log_left
+                    + (m[chosen].to(torch.float64) + 0.5) * log_right
+                ) + d_float * log_ratio
+                correction = (
+                    _stirling_correction(m[chosen])
+                    + _stirling_correction(local_n[chosen] - m[chosen])
+                    - _stirling_correction(k)
+                    - _stirling_correction(local_n[chosen] - k)
+                )
+                full_accept[full_pending] = left <= main + correction
+            accepted = quick_accept | full_accept
+            if bool(torch.any(accepted).item()):
+                accepted_pending = pending[accepted]
+                local_output[accepted_pending] = proposal[accepted]
+                unresolved[accepted_pending] = False
+            if not bool(torch.any(unresolved).item()):
+                break
+            if attempt == 63:
+                raise RuntimeError("Binomial BTRS exhausted its 64 attempts")
+        selected[local] = local_output
+
+    selected = torch.where(complement, n - selected, selected)
+    output[indices] = selected
+    return output.reshape(counts.shape)

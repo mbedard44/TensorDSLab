@@ -23,7 +23,7 @@ def _round_finite_scalar(
     return rounded
 
 
-def _product_digitized_waveform(
+def _produce_digitized_waveform(
     analog: AnalogWaveform,
     *,
     config: DigitizedWaveformConfig,

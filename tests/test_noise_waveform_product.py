@@ -31,9 +31,9 @@ from tensor_dslab.readout._random import (
     _logical_positions,
     _standard_normal_pair,
 )
-from tensor_dslab.readout.noise_waveform._product import (
+from tensor_dslab.readout.noise_waveform._produce import (
     _prepare_psd_powers,
-    _product_noise_waveform,
+    _produce_noise_waveform,
 )
 
 
@@ -210,7 +210,7 @@ class NoiseProductBranchTest(unittest.TestCase):
                 source_values = source.tensor.clone()
                 for config in configs:
                     with self.subTest(order=order, dtype=dtype, model=type(config.model)):
-                        result = _product_noise_waveform(
+                        result = _produce_noise_waveform(
                             source,
                             sampling=sampling,
                             config=config,
@@ -236,18 +236,18 @@ class NoiseProductBranchTest(unittest.TestCase):
         source = _photoelectrons(sampling)
         state = torch.random.get_rng_state().clone()
         with patch(
-            "tensor_dslab.readout.noise_waveform._product._logical_positions"
+            "tensor_dslab.readout.noise_waveform._produce._logical_positions"
         ) as positions, patch(
-            "tensor_dslab.readout.noise_waveform._product._standard_normal_pair"
+            "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair"
         ) as normal:
-            without_seed = _product_noise_waveform(
+            without_seed = _produce_noise_waveform(
                 source,
                 sampling=sampling,
                 config=_zero_config(),
                 seed=None,
                 floating_dtype=torch.float32,
             )
-            with_seed = _product_noise_waveform(
+            with_seed = _produce_noise_waveform(
                 source,
                 sampling=sampling,
                 config=_zero_config(),
@@ -265,11 +265,11 @@ class NoiseProductBranchTest(unittest.TestCase):
         sampling = _sampling(count=8)
         source = _photoelectrons(sampling)
         with patch(
-            "tensor_dslab.readout.noise_waveform._product._standard_normal_pair"
+            "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair"
         ) as normal:
             for config in (_white_config(), _flat_psd_config()):
                 with self.assertRaises(ValueError):
-                    _product_noise_waveform(
+                    _produce_noise_waveform(
                         source,
                         sampling=sampling,
                         config=config,
@@ -278,7 +278,7 @@ class NoiseProductBranchTest(unittest.TestCase):
                     )
             for invalid_seed in (True, -1, 1 << 64):
                 with self.assertRaises((TypeError, ValueError)):
-                    _product_noise_waveform(
+                    _produce_noise_waveform(
                         source,
                         sampling=sampling,
                         config=_zero_config(),
@@ -286,7 +286,7 @@ class NoiseProductBranchTest(unittest.TestCase):
                         floating_dtype=torch.float32,
                     )
             with self.assertRaises(TypeError):
-                _product_noise_waveform(
+                _produce_noise_waveform(
                     source,
                     sampling=sampling,
                     config=_white_config(),
@@ -294,7 +294,7 @@ class NoiseProductBranchTest(unittest.TestCase):
                     floating_dtype=torch.float16,
                 )
             with self.assertRaises(ValueError):
-                _product_noise_waveform(
+                _produce_noise_waveform(
                     source,
                     sampling=_sampling(count=8, period_ps=2_000),
                     config=_white_config(),
@@ -305,7 +305,7 @@ class NoiseProductBranchTest(unittest.TestCase):
 
         meta_source = _photoelectrons(sampling, device="meta")
         with self.assertRaises(ValueError):
-            _product_noise_waveform(
+            _produce_noise_waveform(
                 meta_source,
                 sampling=sampling,
                 config=_zero_config(),
@@ -320,7 +320,7 @@ class NoiseProductBranchTest(unittest.TestCase):
             with self.subTest(dtype=dtype):
                 rms_input = 0.1
                 represented_rms = _round(rms_input, dtype)
-                result = _product_noise_waveform(
+                result = _produce_noise_waveform(
                     source,
                     sampling=sampling,
                     config=_white_config(rms_input),
@@ -346,21 +346,21 @@ class NoiseProductBranchTest(unittest.TestCase):
             fill_offset=10_000,
             label_prefix="renamed",
         )
-        first = _product_noise_waveform(
+        first = _produce_noise_waveform(
             first_source,
             sampling=sampling,
             config=_white_config(),
             seed=99,
             floating_dtype=torch.float64,
         )
-        repeated = _product_noise_waveform(
+        repeated = _produce_noise_waveform(
             first_source,
             sampling=sampling,
             config=_white_config(),
             seed=99,
             floating_dtype=torch.float64,
         )
-        relabeled = _product_noise_waveform(
+        relabeled = _produce_noise_waveform(
             second_source,
             sampling=sampling,
             config=_white_config(),
@@ -382,7 +382,7 @@ class NoiseProductBranchTest(unittest.TestCase):
         sampling = _sampling(count=8)
         source = _photoelectrons(sampling)
         for config in (_white_config(), _flat_psd_config()):
-            expected = _product_noise_waveform(
+            expected = _produce_noise_waveform(
                 source,
                 sampling=sampling,
                 config=config,
@@ -390,7 +390,7 @@ class NoiseProductBranchTest(unittest.TestCase):
                 floating_dtype=torch.float32,
             )
             with torch.autocast(device_type="cpu", dtype=torch.bfloat16):
-                actual = _product_noise_waveform(
+                actual = _produce_noise_waveform(
                     source,
                     sampling=sampling,
                     config=config,
@@ -406,7 +406,7 @@ class NoiseProductBranchTest(unittest.TestCase):
         for dtype, guard in ((torch.float32, 8.0), (torch.float64, 16.0)):
             finfo = torch.finfo(dtype)
             with self.subTest(dtype=dtype, boundary="tiny"):
-                accepted = _product_noise_waveform(
+                accepted = _produce_noise_waveform(
                     source,
                     sampling=sampling,
                     config=_white_config(finfo.tiny),
@@ -416,10 +416,10 @@ class NoiseProductBranchTest(unittest.TestCase):
                 self.assertTrue(bool(torch.all(torch.isfinite(accepted.tensor))))
             with self.subTest(dtype=dtype, boundary="subnormal"):
                 with patch(
-                    "tensor_dslab.readout.noise_waveform._product._standard_normal_pair"
+                    "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair"
                 ) as normal:
                     with self.assertRaises(ValueError):
-                        _product_noise_waveform(
+                        _produce_noise_waveform(
                             source,
                             sampling=sampling,
                             config=_white_config(finfo.tiny / 2.0),
@@ -429,7 +429,7 @@ class NoiseProductBranchTest(unittest.TestCase):
                     normal.assert_not_called()
             maximum_rms = float(torch.tensor(finfo.max / guard, dtype=dtype))
             with self.subTest(dtype=dtype, boundary="maximum"):
-                accepted = _product_noise_waveform(
+                accepted = _produce_noise_waveform(
                     source,
                     sampling=sampling,
                     config=_white_config(maximum_rms),
@@ -445,10 +445,10 @@ class NoiseProductBranchTest(unittest.TestCase):
             )
             with self.subTest(dtype=dtype, boundary="above maximum"):
                 with patch(
-                    "tensor_dslab.readout.noise_waveform._product._standard_normal_pair"
+                    "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair"
                 ) as normal:
                     with self.assertRaises(ValueError):
-                        _product_noise_waveform(
+                        _produce_noise_waveform(
                             source,
                             sampling=sampling,
                             config=_white_config(rejected_rms),
@@ -540,12 +540,12 @@ class PsdPreparationTest(unittest.TestCase):
             ),
         )
         with patch(
-            "tensor_dslab.readout.noise_waveform._product._standard_normal_pair"
+            "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair"
         ) as normal:
             for model in invalid_models:
                 with self.subTest(model=model):
                     with self.assertRaises(ValueError):
-                        _product_noise_waveform(
+                        _produce_noise_waveform(
                             source,
                             sampling=sampling,
                             config=NoiseWaveformConfig(model=model),
@@ -570,13 +570,13 @@ class PsdPreparationTest(unittest.TestCase):
             return original_fsum(materialized)
 
         with patch(
-            "tensor_dslab.readout.noise_waveform._product.math.fsum",
+            "tensor_dslab.readout.noise_waveform._produce.math.fsum",
             side_effect=fail_final_fsum,
         ), patch(
-            "tensor_dslab.readout.noise_waveform._product._standard_normal_pair"
+            "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair"
         ) as normal:
             with self.assertRaises(ValueError):
-                _product_noise_waveform(
+                _produce_noise_waveform(
                     source,
                     sampling=sampling,
                     config=config,
@@ -622,10 +622,10 @@ class PsdPreparationTest(unittest.TestCase):
                     return original_fsum(materialized)
 
                 with patch(
-                    "tensor_dslab.readout.noise_waveform._product.math.fsum",
+                    "tensor_dslab.readout.noise_waveform._produce.math.fsum",
                     side_effect=fsum_at_limit,
                 ):
-                    accepted = _product_noise_waveform(
+                    accepted = _produce_noise_waveform(
                         source,
                         sampling=sampling,
                         config=config,
@@ -646,13 +646,13 @@ class PsdPreparationTest(unittest.TestCase):
                     return original_fsum(materialized)
 
                 with patch(
-                    "tensor_dslab.readout.noise_waveform._product.math.fsum",
+                    "tensor_dslab.readout.noise_waveform._produce.math.fsum",
                     side_effect=fsum_above_limit,
                 ), patch(
-                    "tensor_dslab.readout.noise_waveform._product._standard_normal_pair"
+                    "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair"
                 ) as normal:
                     with self.assertRaises(ValueError):
-                        _product_noise_waveform(
+                        _produce_noise_waveform(
                             source,
                             sampling=sampling,
                             config=config,
@@ -711,13 +711,13 @@ class PsdSynthesisTest(unittest.TestCase):
                     return original_irfft(input, **kwargs)
 
                 with patch(
-                    "tensor_dslab.readout.noise_waveform._product._standard_normal_pair",
+                    "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair",
                     side_effect=fake_pair,
                 ), patch(
-                    "tensor_dslab.readout.noise_waveform._product.torch.fft.irfft",
+                    "tensor_dslab.readout.noise_waveform._produce.torch.fft.irfft",
                     side_effect=capture_irfft,
                 ):
-                    result = _product_noise_waveform(
+                    result = _produce_noise_waveform(
                         source,
                         sampling=sampling,
                         config=NoiseWaveformConfig(model=model),
@@ -830,10 +830,10 @@ class PsdSynthesisTest(unittest.TestCase):
                         return real, imaginary
 
                     with patch(
-                        "tensor_dslab.readout.noise_waveform._product._standard_normal_pair",
+                        "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair",
                         side_effect=fake_pair,
                     ):
-                        result = _product_noise_waveform(
+                        result = _produce_noise_waveform(
                             source,
                             sampling=sampling,
                             config=config,
@@ -935,13 +935,13 @@ class PsdSynthesisTest(unittest.TestCase):
                     return original_irfft(input, **kwargs)
 
                 with patch(
-                    "tensor_dslab.readout.noise_waveform._product._standard_normal_pair",
+                    "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair",
                     side_effect=fake_pair,
                 ), patch(
-                    "tensor_dslab.readout.noise_waveform._product.torch.fft.irfft",
+                    "tensor_dslab.readout.noise_waveform._produce.torch.fft.irfft",
                     side_effect=capture_irfft,
                 ):
-                    result = _product_noise_waveform(
+                    result = _produce_noise_waveform(
                         source,
                         sampling=sampling,
                         config=config,
@@ -996,14 +996,14 @@ class PsdSynthesisTest(unittest.TestCase):
     def test_psd_repeatability_no_crop_no_normalization_and_row_independence(self) -> None:
         sampling = _sampling(count=8)
         source = _photoelectrons(sampling, examples=3, channels=2)
-        first = _product_noise_waveform(
+        first = _produce_noise_waveform(
             source,
             sampling=sampling,
             config=_flat_psd_config(),
             seed=5,
             floating_dtype=torch.float64,
         )
-        second = _product_noise_waveform(
+        second = _produce_noise_waveform(
             source,
             sampling=sampling,
             config=_flat_psd_config(),
@@ -1028,7 +1028,7 @@ class NoiseStatisticalContractTest(unittest.TestCase):
         source = _photoelectrons(sampling, examples=64, channels=32)
         for dtype in (torch.float32, torch.float64):
             values_by_seed = tuple(
-                _product_noise_waveform(
+                _produce_noise_waveform(
                     source,
                     sampling=sampling,
                     config=_white_config(1.0),
@@ -1076,7 +1076,7 @@ class NoiseStatisticalContractTest(unittest.TestCase):
                 )
                 rows_by_seed = tuple(
                     _sample_last(
-                        _product_noise_waveform(
+                        _produce_noise_waveform(
                             source,
                             sampling=sampling,
                             config=NoiseWaveformConfig(model=model),
@@ -1207,14 +1207,14 @@ class NoiseStatisticalContractTest(unittest.TestCase):
         for config in (_zero_config(), _white_config(), _flat_psd_config()):
             for dtype in (torch.float32, torch.float64):
                 seed = None if type(config.model) is ZeroNoiseConfig else 11
-                first = _product_noise_waveform(
+                first = _produce_noise_waveform(
                     source,
                     sampling=sampling,
                     config=config,
                     seed=seed,
                     floating_dtype=dtype,
                 )
-                second = _product_noise_waveform(
+                second = _produce_noise_waveform(
                     source,
                     sampling=sampling,
                     config=config,

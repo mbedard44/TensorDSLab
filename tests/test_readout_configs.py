@@ -29,7 +29,6 @@ from tensor_dslab import (
     ExponentialDelayConfig,
     FixedDelayConfig,
     NoiseWaveformConfig,
-    NormalDelayConfig,
     PsdNoiseConfig,
     PureWaveformConfig,
     ReadoutConfig,
@@ -94,10 +93,6 @@ def make_digitized_config(
 def make_all_valid_configs() -> tuple[object, ...]:
     fixed = FixedDelayConfig(delay_ns=NonnegativeFloat(0.0))
     exponential = ExponentialDelayConfig(mean_delay_ns=PositiveFloat(10.0))
-    normal = NormalDelayConfig(
-        location_ns=NonnegativeFloat(0.0),
-        sigma_ns=PositiveFloat(1.0),
-    )
     direct = DirectCrosstalkConfig(
         mean_offspring_per_parent=NonnegativeFloat(0.3),
         delay=fixed,
@@ -153,7 +148,6 @@ def make_all_valid_configs() -> tuple[object, ...]:
         DarkCountConfig(rate_hz=NonnegativeFloat(0.0)),
         fixed,
         exponential,
-        normal,
         direct,
         delayed,
         recovery,
@@ -205,14 +199,10 @@ class ReadoutConfigsTest(unittest.TestCase):
                     with self.assertRaises(TypeError):
                         replace(config, **{component.name: object()})
 
-    def test_charge_configs_accept_all_delay_models_and_optional_composition(self) -> None:
+    def test_charge_configs_accept_mvp_delay_models_and_optional_composition(self) -> None:
         delay_models = (
             FixedDelayConfig(delay_ns=NonnegativeFloat(0.0)),
             ExponentialDelayConfig(mean_delay_ns=PositiveFloat(1.0)),
-            NormalDelayConfig(
-                location_ns=NonnegativeFloat(0.0),
-                sigma_ns=PositiveFloat(1.0),
-            ),
         )
         for delay in delay_models:
             self.assertIs(

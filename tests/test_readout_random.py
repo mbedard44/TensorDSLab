@@ -27,8 +27,8 @@ from tensor_dslab.readout._random import (
     _uniform_closed_open,
     _uniform_open_open,
 )
-from tensor_dslab.readout.noise_waveform._product import (
-    _product_noise_waveform,
+from tensor_dslab.readout.noise_waveform._produce import (
+    _produce_noise_waveform,
 )
 
 
@@ -103,9 +103,17 @@ class RngStreamContractTest(unittest.TestCase):
             (
                 ("NOISE_WHITE", 0x0000_0001),
                 ("NOISE_PSD_COEFFICIENT", 0x0000_0002),
+                ("CHARGE_DARK_COUNTS", 0x0000_0003),
+                ("CHARGE_DIRECT_CROSSTALK", 0x0000_0004),
+                ("CHARGE_DIRECT_CROSSTALK_OVERFLOW", 0x0000_0005),
+                ("CHARGE_DELAYED_CROSSTALK", 0x0000_0006),
+                ("CHARGE_DELAYED_CROSSTALK_OVERFLOW", 0x0000_0007),
+                ("CHARGE_TIMING_JITTER", 0x0000_0008),
+                ("CHARGE_AFTERPULSES", 0x0000_0009),
+                ("CHARGE_SMEARING", 0x0000_000A),
             ),
         )
-        self.assertEqual(len(_RngStream.__members__), 2)
+        self.assertEqual(len(_RngStream.__members__), 10)
         self.assertNotIn(0, tuple(member.value for member in _RngStream))
 
 
@@ -707,10 +715,10 @@ class BoxMullerAndPositionTest(unittest.TestCase):
             return zeros, zeros
 
         with patch(
-            "tensor_dslab.readout.noise_waveform._product._standard_normal_pair",
+            "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair",
             side_effect=fake_pair,
         ):
-            _product_noise_waveform(
+            _produce_noise_waveform(
                 photoelectrons,
                 sampling=sampling,
                 config=config,

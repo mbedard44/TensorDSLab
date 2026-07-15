@@ -204,7 +204,7 @@ def _psd_noise(
     return sample_last.reshape(sample_last_shape).movedim(-1, sample_dimension)
 
 
-def _product_noise_waveform(
+def _produce_noise_waveform(
     photoelectrons: Photoelectrons,
     *,
     sampling: SamplingConfig,

@@ -15,7 +15,6 @@ from tensor_dslab.readout.charge import (
     DirectCrosstalkConfig,
     ExponentialDelayConfig,
     FixedDelayConfig,
-    NormalDelayConfig,
     TimingJitterConfig,
 )
 from tensor_dslab.readout.digitized_waveform import (
@@ -57,7 +56,6 @@ __all__ = (
     "FixedDelayConfig",
     "NoiseWaveform",
     "NoiseWaveformConfig",
-    "NormalDelayConfig",
     "Photoelectrons",
     "PsdNoiseConfig",
     "PureWaveform",

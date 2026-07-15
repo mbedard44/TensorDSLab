@@ -30,20 +30,20 @@ from tensor_dslab import (
     TpcFebSnrPulseConfig,
     VetoPduPulseConfig,
 )
-from tensor_dslab.readout.analog_waveform._product import (
-    _product_analog_waveform,
+from tensor_dslab.readout.analog_waveform._produce import (
+    _produce_analog_waveform,
 )
 from tensor_dslab.readout.analog_waveform.types import (
     _require_valid_values as require_valid_analog,
 )
-from tensor_dslab.readout.digitized_waveform._product import (
-    _product_digitized_waveform,
+from tensor_dslab.readout.digitized_waveform._produce import (
+    _produce_digitized_waveform,
 )
 from tensor_dslab.readout.digitized_waveform.types import (
     _require_valid_values as require_valid_digitized,
 )
-from tensor_dslab.readout.pure_waveform._product import (
-    _product_pure_waveform,
+from tensor_dslab.readout.pure_waveform._produce import (
+    _produce_pure_waveform,
 )
 from tensor_dslab.readout.pure_waveform.types import (
     _require_valid_values as require_valid_pure,
@@ -417,7 +417,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                     sampling,
                     dtype=dtype,
                 )
-                result = _product_pure_waveform(
+                result = _produce_pure_waveform(
                     charge,
                     sampling=sampling,
                     config=config,
@@ -472,7 +472,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                     sampling,
                     dtype=dtype,
                 )
-                result = _product_pure_waveform(
+                result = _produce_pure_waveform(
                     charge,
                     sampling=sampling,
                     config=config,
@@ -502,7 +502,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         sampling = _sampling(count=4)
         config = _tpc_config(support_time_ns=16.0, peak_mv=-2.0)
         charge = _charge([1.0, 0.0, 0.0, 0.0], sampling, dtype=torch.float64)
-        result = _product_pure_waveform(
+        result = _produce_pure_waveform(
             charge,
             sampling=sampling,
             config=config,
@@ -520,7 +520,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         sampling = _sampling(count=4)
         config = _tpc_config()
         charge = _charge([1.0, 0.0, 0.0, 0.0], sampling, dtype=torch.float64)
-        result = _product_pure_waveform(
+        result = _produce_pure_waveform(
             charge,
             sampling=sampling,
             config=config,
@@ -537,7 +537,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
             sampling,
             dtype=torch.float64,
         )
-        result = _product_pure_waveform(
+        result = _produce_pure_waveform(
             charge,
             sampling=sampling,
             config=config,
@@ -546,7 +546,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         self.assertEqual(float(result.tensor.flatten()[0]), 0.0)
         self.assertEqual(float(result.tensor.flatten()[1]), 0.0)
         zero_charge = _charge([0.0] * 8, sampling, dtype=torch.float64)
-        zero_result = _product_pure_waveform(
+        zero_result = _produce_pure_waveform(
             zero_charge,
             sampling=sampling,
             config=config,
@@ -580,7 +580,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         )
         self.assertFalse(charge.tensor.is_contiguous())
         config = _tpc_config(support_time_ns=32.0)
-        result = _product_pure_waveform(
+        result = _produce_pure_waveform(
             charge,
             sampling=sampling,
             config=config,
@@ -621,7 +621,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                 )
                 original = charge.tensor.clone()
                 version = charge.tensor._version
-                result = _product_pure_waveform(
+                result = _produce_pure_waveform(
                     charge,
                     sampling=sampling,
                     config=config,
@@ -638,7 +638,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                 torch.testing.assert_close(charge.tensor, original)
                 self.assertIsNone(require_valid_pure(result))
                 saved_result = result.tensor.clone()
-                _product_pure_waveform(charge, sampling=sampling, config=config)
+                _produce_pure_waveform(charge, sampling=sampling, config=config)
                 torch.testing.assert_close(result.tensor, saved_result)
 
                 result.tensor.square().sum().backward()
@@ -669,7 +669,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         )
 
         def pure_function(values: torch.Tensor) -> torch.Tensor:
-            return _product_pure_waveform(
+            return _produce_pure_waveform(
                 Charge(tensor=values, axes=axes),
                 sampling=sampling,
                 config=config,
@@ -721,7 +721,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         for charge, expected_sampling in mismatch_cases:
             with self.subTest(axis=charge.axis(SampleAxis).coordinates):
                 with self.assertRaises(ValueError):
-                    _product_pure_waveform(
+                    _produce_pure_waveform(
                         charge,
                         sampling=expected_sampling,
                         config=config,
@@ -735,11 +735,11 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         before = charge.tensor.clone()
         version = charge.tensor._version
         with patch(
-            "tensor_dslab.readout.pure_waveform._product.functional.conv1d",
+            "tensor_dslab.readout.pure_waveform._produce.functional.conv1d",
             side_effect=AssertionError("payload convolution started"),
         ):
             with self.assertRaises(ValueError):
-                _product_pure_waveform(
+                _produce_pure_waveform(
                     charge,
                     sampling=sampling,
                     config=_tpc_config(support_time_ns=1e308),
@@ -757,11 +757,11 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         for peak_mv in (3.5e38, 1e-50):
             with self.subTest(peak_mv=peak_mv):
                 with patch(
-                    "tensor_dslab.readout.pure_waveform._product.functional.conv1d",
+                    "tensor_dslab.readout.pure_waveform._produce.functional.conv1d",
                     side_effect=AssertionError("payload convolution started"),
                 ):
                     with self.assertRaises(ValueError):
-                        _product_pure_waveform(
+                        _produce_pure_waveform(
                             charge,
                             sampling=sampling,
                             config=_tpc_config(
@@ -790,7 +790,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
             device_type="cpu",
             dtype=torch.bfloat16,
         ):
-            result = _product_pure_waveform(
+            result = _produce_pure_waveform(
                 charge,
                 sampling=sampling,
                 config=config,
@@ -829,7 +829,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
             noise = _noise(noise_samples, sampling, dtype=dtype)
             for config in configs:
                 with self.subTest(dtype=dtype, saturation=config.saturation):
-                    result = _product_analog_waveform(pure, noise, config=config)
+                    result = _produce_analog_waveform(pure, noise, config=config)
                     expected = torch.add(pure.tensor, noise.tensor)
                     if config.saturation is not None:
                         minimum = (
@@ -861,10 +861,10 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         bounded = configs[-1]
         real_clamp = torch.clamp
         with patch(
-            "tensor_dslab.readout.analog_waveform._product.torch.clamp",
+            "tensor_dslab.readout.analog_waveform._produce.torch.clamp",
             wraps=real_clamp,
         ) as clamp_call:
-            _product_analog_waveform(pure, noise, config=bounded)
+            _produce_analog_waveform(pure, noise, config=bounded)
         minimum = clamp_call.call_args.kwargs["min"]
         maximum = clamp_call.call_args.kwargs["max"]
         self.assertEqual(minimum.ndim, 0)
@@ -884,7 +884,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
             period_ps=4_000,
         )
         with self.assertRaises(ValueError):
-            _product_analog_waveform(
+            _produce_analog_waveform(
                 pure,
                 _noise(
                     [0.0] * 4,
@@ -895,13 +895,13 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                 config=AnalogWaveformConfig(),
             )
         with self.assertRaises(ValueError):
-            _product_analog_waveform(
+            _produce_analog_waveform(
                 pure,
                 _noise([0.0] * 4, sampling, dtype=torch.float64),
                 config=AnalogWaveformConfig(),
             )
         with self.assertRaises(ValueError):
-            _product_analog_waveform(
+            _produce_analog_waveform(
                 pure,
                 _noise(
                     [0.0] * 4,
@@ -934,11 +934,11 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         for config in bad_configs:
             with self.subTest(config=config):
                 with patch(
-                    "tensor_dslab.readout.analog_waveform._product.torch.add",
+                    "tensor_dslab.readout.analog_waveform._produce.torch.add",
                     side_effect=AssertionError("payload addition started"),
                 ):
                     with self.assertRaises(ValueError):
-                        _product_analog_waveform(pure, noise, config=config)
+                        _produce_analog_waveform(pure, noise, config=config)
 
     def test_analog_waveform_is_fresh_preserves_inputs_and_autograd(self) -> None:
         sampling = _sampling(count=5)
@@ -976,7 +976,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                         maximum_mv=FiniteFloat(10.0),
                     )
                 )
-                result = _product_analog_waveform(pure, noise, config=config)
+                result = _produce_analog_waveform(pure, noise, config=config)
                 self.assertIs(type(result), AnalogWaveform)
                 self.assertIs(result.axes, pure.axes)
                 self.assertEqual(result.shape, pure.shape)
@@ -991,7 +991,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                 torch.testing.assert_close(pure.tensor, pure_before)
                 torch.testing.assert_close(noise.tensor, noise_before)
                 saved_result = result.tensor.clone()
-                _product_analog_waveform(pure, noise, config=config)
+                _produce_analog_waveform(pure, noise, config=config)
                 torch.testing.assert_close(result.tensor, saved_result)
 
                 result.tensor.square().sum().backward()
@@ -1040,7 +1040,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
             pure_values: torch.Tensor,
             noise_values: torch.Tensor,
         ) -> torch.Tensor:
-            return _product_analog_waveform(
+            return _produce_analog_waveform(
                 PureWaveform(tensor=pure_values, axes=gradcheck_axes),
                 NoiseWaveform(tensor=noise_values, axes=gradcheck_axes),
                 config=AnalogWaveformConfig(),
@@ -1074,7 +1074,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                 axes=axes,
                 noncontiguous=True,
             )
-            result = _product_digitized_waveform(analog, config=config)
+            result = _produce_digitized_waveform(analog, config=config)
             expected = _guarded_adc_reference(analog.tensor, config)
             self.assertTrue(torch.equal(result.tensor, expected))
             self.assertIs(type(result), DigitizedWaveform)
@@ -1097,7 +1097,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         samples = [-1.0, -0.2, 0.0, 0.6, 1.0]
         for dtype in (torch.float32, torch.float64):
             analog = _analog(samples, sampling, dtype=dtype)
-            result = _product_digitized_waveform(analog, config=config)
+            result = _produce_digitized_waveform(analog, config=config)
             expected = _guarded_adc_reference(analog.tensor, config)
             self.assertTrue(torch.equal(result.tensor, expected))
             self.assertEqual(result.tensor.flatten()[0].item(), 0)
@@ -1130,7 +1130,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                 _sampling(count=2),
                 dtype=dtype,
             )
-            guarded = _product_digitized_waveform(analog, config=endpoint_config)
+            guarded = _produce_digitized_waveform(analog, config=endpoint_config)
             self.assertTrue(
                 torch.equal(
                     guarded.tensor,
@@ -1157,11 +1157,11 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         for config in configs:
             with self.subTest(config=config):
                 with patch(
-                    "tensor_dslab.readout.digitized_waveform._product.torch.mul",
+                    "tensor_dslab.readout.digitized_waveform._produce.torch.mul",
                     side_effect=AssertionError("payload mapping started"),
                 ):
                     with self.assertRaises(ValueError):
-                        _product_digitized_waveform(analog, config=config)
+                        _produce_digitized_waveform(analog, config=config)
 
     def test_digitized_waveform_truncates_at_code_transitions(self) -> None:
         sampling = _sampling(count=5)
@@ -1170,7 +1170,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
             sampling,
             dtype=torch.float64,
         )
-        result = _product_digitized_waveform(
+        result = _produce_digitized_waveform(
             analog,
             config=_adc_config(
                 bit_depth=2,
@@ -1194,7 +1194,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
             sampling,
             dtype=torch.float32,
         )
-        result = _product_digitized_waveform(
+        result = _produce_digitized_waveform(
             analog,
             config=_adc_config(
                 bit_depth=16,
@@ -1238,10 +1238,10 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
             return result
 
         with patch(
-            "tensor_dslab.readout.digitized_waveform._product.torch.tensor",
+            "tensor_dslab.readout.digitized_waveform._produce.torch.tensor",
             side_effect=tensor_spy,
         ):
-            result = _product_digitized_waveform(analog, config=config)
+            result = _produce_digitized_waveform(analog, config=config)
         self.assertIs(type(result), DigitizedWaveform)
         self.assertIs(result.axes, analog.axes)
         self.assertEqual(result.shape, analog.shape)
@@ -1279,7 +1279,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
             atol=0.0,
         )
         saved_result = result.tensor.clone()
-        _product_digitized_waveform(analog, config=config)
+        _produce_digitized_waveform(analog, config=config)
         self.assertTrue(torch.equal(result.tensor, saved_result))
 
     @unittest.skipUnless(torch.cuda.is_available(), "CUDA unavailable")
@@ -1299,7 +1299,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                     device="cuda",
                     noncontiguous=True,
                 )
-                pure = _product_pure_waveform(
+                pure = _produce_pure_waveform(
                     charge,
                     sampling=sampling,
                     config=_tpc_config(support_time_ns=32.0),
@@ -1324,12 +1324,12 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                     device="cuda",
                     noncontiguous=True,
                 )
-                analog = _product_analog_waveform(
+                analog = _produce_analog_waveform(
                     pure,
                     noise,
                     config=AnalogWaveformConfig(),
                 )
-                digitized = _product_digitized_waveform(
+                digitized = _produce_digitized_waveform(
                     analog,
                     config=_adc_config(),
                 )

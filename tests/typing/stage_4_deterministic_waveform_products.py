@@ -19,14 +19,14 @@ from tensor_dslab import (
     SamplingConfig,
     TpcFebSnrPulseConfig,
 )
-from tensor_dslab.readout.analog_waveform._product import (
-    _product_analog_waveform,
+from tensor_dslab.readout.analog_waveform._produce import (
+    _produce_analog_waveform,
 )
-from tensor_dslab.readout.digitized_waveform._product import (
-    _product_digitized_waveform,
+from tensor_dslab.readout.digitized_waveform._produce import (
+    _produce_digitized_waveform,
 )
-from tensor_dslab.readout.pure_waveform._product import (
-    _product_pure_waveform,
+from tensor_dslab.readout.pure_waveform._produce import (
+    _produce_pure_waveform,
 )
 
 
@@ -52,7 +52,7 @@ pure_config = PureWaveformConfig(
         peak_voltage_mv_per_pe=FiniteFloat(-7.0),
     )
 )
-pure = _product_pure_waveform(
+pure = _produce_pure_waveform(
     charge,
     sampling=sampling,
     config=pure_config,
@@ -63,14 +63,14 @@ noise = NoiseWaveform(
     tensor=torch.zeros((1, 1, 4), dtype=torch.float64),
     axes=axes,
 )
-analog = _product_analog_waveform(
+analog = _produce_analog_waveform(
     pure,
     noise,
     config=AnalogWaveformConfig(),
 )
 assert_type(analog, AnalogWaveform)
 
-digitized = _product_digitized_waveform(
+digitized = _produce_digitized_waveform(
     analog,
     config=DigitizedWaveformConfig(
         bit_depth=PositiveInteger(12),

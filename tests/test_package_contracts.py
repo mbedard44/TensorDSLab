@@ -75,7 +75,6 @@ class PackageContractTest(unittest.TestCase):
             "FixedDelayConfig",
             "NoiseWaveform",
             "NoiseWaveformConfig",
-            "NormalDelayConfig",
             "Photoelectrons",
             "PsdNoiseConfig",
             "PureWaveform",
@@ -112,7 +111,6 @@ class PackageContractTest(unittest.TestCase):
                 "FixedDelayConfig",
                 "NoiseWaveform",
                 "NoiseWaveformConfig",
-                "NormalDelayConfig",
                 "Photoelectrons",
                 "PsdNoiseConfig",
                 "PureWaveform",
@@ -146,7 +144,6 @@ class PackageContractTest(unittest.TestCase):
                 "DirectCrosstalkConfig",
                 "ExponentialDelayConfig",
                 "FixedDelayConfig",
-                "NormalDelayConfig",
                 "TimingJitterConfig",
             ),
             "tensor_dslab.readout.pure_waveform": (
@@ -274,6 +271,10 @@ class PackageContractTest(unittest.TestCase):
             "tensor_dslab/readout/simulation.py",
             "tensor_dslab/readout/photoelectrons/_product.py",
             "tensor_dslab/readout/charge/_product.py",
+            "tensor_dslab/readout/pure_waveform/_product.py",
+            "tensor_dslab/readout/noise_waveform/_product.py",
+            "tensor_dslab/readout/analog_waveform/_product.py",
+            "tensor_dslab/readout/digitized_waveform/_product.py",
         )
         for path in absent:
             self.assertFalse(Path(path).exists(), path)
@@ -284,10 +285,11 @@ class PackageContractTest(unittest.TestCase):
         private_names = (
             "_RngStream",
             "_require_sampling",
-            "_product_pure_waveform",
-            "_product_noise_waveform",
-            "_product_analog_waveform",
-            "_product_digitized_waveform",
+            "_produce_charge",
+            "_produce_pure_waveform",
+            "_produce_noise_waveform",
+            "_produce_analog_waveform",
+            "_produce_digitized_waveform",
         )
         public_modules = (
             tensor_dslab,
@@ -341,31 +343,39 @@ class PackageContractTest(unittest.TestCase):
 
     def test_product_producer_imports_are_private_and_acyclic(self) -> None:
         producer_paths = (
-            Path("tensor_dslab/readout/pure_waveform/_product.py"),
-            Path("tensor_dslab/readout/noise_waveform/_product.py"),
-            Path("tensor_dslab/readout/analog_waveform/_product.py"),
-            Path("tensor_dslab/readout/digitized_waveform/_product.py"),
+            Path("tensor_dslab/readout/charge/_produce.py"),
+            Path("tensor_dslab/readout/pure_waveform/_produce.py"),
+            Path("tensor_dslab/readout/noise_waveform/_produce.py"),
+            Path("tensor_dslab/readout/analog_waveform/_produce.py"),
+            Path("tensor_dslab/readout/digitized_waveform/_produce.py"),
         )
         accepted_tensor_dslab_imports = {
             producer_paths[0]: {
+                "tensor_dslab.common",
+                "tensor_dslab.readout._random",
+                "tensor_dslab.readout._requirements",
+                "tensor_dslab.readout.charge.types",
+                "tensor_dslab.readout.photoelectrons",
+            },
+            producer_paths[1]: {
                 "tensor_dslab.common",
                 "tensor_dslab.readout._requirements",
                 "tensor_dslab.readout.charge",
                 "tensor_dslab.readout.pure_waveform.types",
             },
-            producer_paths[1]: {
+            producer_paths[2]: {
                 "tensor_dslab.common",
                 "tensor_dslab.readout._random",
                 "tensor_dslab.readout._requirements",
                 "tensor_dslab.readout.noise_waveform.types",
                 "tensor_dslab.readout.photoelectrons",
             },
-            producer_paths[2]: {
+            producer_paths[3]: {
                 "tensor_dslab.readout.analog_waveform.types",
                 "tensor_dslab.readout.noise_waveform",
                 "tensor_dslab.readout.pure_waveform",
             },
-            producer_paths[3]: {
+            producer_paths[4]: {
                 "tensor_dslab.readout.analog_waveform",
                 "tensor_dslab.readout.digitized_waveform.types",
             },
@@ -443,11 +453,12 @@ class PackageContractTest(unittest.TestCase):
             "tensor_dslab.readout.noise_waveform",
             "tensor_dslab.readout.analog_waveform",
             "tensor_dslab.readout.digitized_waveform",
-            "tensor_dslab.readout.pure_waveform._product",
+            "tensor_dslab.readout.charge._produce",
+            "tensor_dslab.readout.pure_waveform._produce",
             "tensor_dslab.readout._random",
-            "tensor_dslab.readout.noise_waveform._product",
-            "tensor_dslab.readout.analog_waveform._product",
-            "tensor_dslab.readout.digitized_waveform._product",
+            "tensor_dslab.readout.noise_waveform._produce",
+            "tensor_dslab.readout.analog_waveform._produce",
+            "tensor_dslab.readout.digitized_waveform._produce",
             "tensor_dslab.readout.types",
             "tensor_dslab.readout",
             "tensor_dslab",

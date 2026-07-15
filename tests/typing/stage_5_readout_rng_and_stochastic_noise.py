@@ -16,8 +16,8 @@ from tensor_dslab import (
     WhiteNoiseConfig,
     ZeroNoiseConfig,
 )
-from tensor_dslab.readout.noise_waveform._product import (
-    _product_noise_waveform,
+from tensor_dslab.readout.noise_waveform._produce import (
+    _produce_noise_waveform,
 )
 
 
@@ -35,7 +35,7 @@ photoelectrons = Photoelectrons(
     axes=axes,
 )
 
-zero = _product_noise_waveform(
+zero = _produce_noise_waveform(
     photoelectrons,
     sampling=sampling,
     config=NoiseWaveformConfig(model=ZeroNoiseConfig()),
@@ -44,7 +44,7 @@ zero = _product_noise_waveform(
 )
 assert_type(zero, NoiseWaveform)
 
-white = _product_noise_waveform(
+white = _produce_noise_waveform(
     photoelectrons,
     sampling=sampling,
     config=NoiseWaveformConfig(
@@ -55,7 +55,7 @@ white = _product_noise_waveform(
 )
 assert_type(white, NoiseWaveform)
 
-psd = _product_noise_waveform(
+psd = _produce_noise_waveform(
     photoelectrons,
     sampling=sampling,
     config=NoiseWaveformConfig(

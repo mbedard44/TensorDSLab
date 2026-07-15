@@ -25,7 +25,7 @@ def _round_finite_bound(
     return rounded
 
 
-def _product_analog_waveform(
+def _produce_analog_waveform(
     pure: PureWaveform,
     noise: NoiseWaveform,
     *,

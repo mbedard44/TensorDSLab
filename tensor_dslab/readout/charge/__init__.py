@@ -10,7 +10,6 @@ from tensor_dslab.readout.charge.types import (
     DirectCrosstalkConfig,
     ExponentialDelayConfig,
     FixedDelayConfig,
-    NormalDelayConfig,
     TimingJitterConfig,
 )
 
@@ -26,6 +25,5 @@ __all__ = (
     "DirectCrosstalkConfig",
     "ExponentialDelayConfig",
     "FixedDelayConfig",
-    "NormalDelayConfig",
     "TimingJitterConfig",
 )

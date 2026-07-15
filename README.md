@@ -62,16 +62,19 @@ assert readout.field(Photoelectrons) is photoelectrons
 `Photoelectrons` is an already-produced dense, binned photon-origin truth
 input. TensorDSLab does not yet construct it from TensorG4DS data.
 
-Private implementation seams now produce `PureWaveform`, `AnalogWaveform`,
-`DigitizedWaveform`, and complete zero, white, or PSD-shaped `NoiseWaveform`
-values. Noise production uses private positional RNG prerequisites. None of
-these seams or RNG mechanics is a public collaborator API; ordinary users
-should continue to import only the documented package-root types and configs.
+Private implementation seams now produce complete `Charge`, `PureWaveform`,
+`NoiseWaveform`, `AnalogWaveform`, and `DigitizedWaveform` values. Charge
+production includes its configured dark-count, timing-jitter, fixed-generation
+correlated-avalanche, recovery-ledger, and smearing submodels; noise supports
+zero, white, and caller-supplied PSD models. These seams and their positional
+RNG mechanics remain private. Ordinary users should continue to import only
+the documented package-root types and configs until public orchestration is
+implemented.
 
 ## Explicit Exclusions
 
-This foundation does not yet implement `simulate_readout(...)`, charge
-production, public RNG, PE binning, TensorG4DS or TensorML adapters, IO,
+This foundation does not yet implement `simulate_readout(...)`, public atomic
+product transforms, public RNG, PE binning, TensorG4DS or TensorML adapters, IO,
 caches, `out=`, workspaces, movement/selection helpers, or an allocation-free
 execution path. It makes no GPU-execution, release, deployment,
 backward-compatibility, conformance, or broad cross-package compatibility

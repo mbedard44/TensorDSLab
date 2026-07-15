@@ -81,7 +81,7 @@ def _round_finite_scalar(
     return rounded
 
 
-def _product_pure_waveform(
+def _produce_pure_waveform(
     charge: Charge,
     *,
     sampling: SamplingConfig,
