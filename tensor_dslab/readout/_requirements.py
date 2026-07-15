@@ -3,7 +3,12 @@ from __future__ import annotations
 import torch
 from tensor_core import TensorField
 
-from tensor_dslab.common import ChannelAxis, ExampleAxis, SampleAxis
+from tensor_dslab.common import (
+    ChannelAxis,
+    ExampleAxis,
+    SampleAxis,
+    SamplingConfig,
+)
 
 
 def _require_readout_structure(field: TensorField) -> None:
@@ -25,6 +30,24 @@ def _require_dtype(field: TensorField, expected: torch.dtype) -> None:
 def _require_floating_dtype(field: TensorField) -> None:
     if field.tensor.dtype not in (torch.float32, torch.float64):
         raise ValueError("field tensor dtype must be torch.float32 or torch.float64")
+
+
+def _require_sampling(
+    field: TensorField,
+    sampling: SamplingConfig,
+) -> None:
+    _require_exact(
+        sampling,
+        SamplingConfig,
+        "_require_sampling.sampling",
+    )
+    sample_axis = field.axis(SampleAxis)
+    if sample_axis.size != sampling.sample_count.value:
+        raise ValueError("sample-axis size must agree with SamplingConfig")
+    if sample_axis.start_ps != 0:
+        raise ValueError("sample-axis start must be zero")
+    if sample_axis.sample_period_ps != sampling.sample_period_ps.value:
+        raise ValueError("sample-axis period must agree with SamplingConfig")
 
 
 def _require_exact(

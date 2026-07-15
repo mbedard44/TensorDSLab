@@ -275,13 +275,41 @@ class PackageContractTest(unittest.TestCase):
             "tensor_dslab/readout/_random.py",
             "tensor_dslab/readout/photoelectrons/_product.py",
             "tensor_dslab/readout/charge/_product.py",
-            "tensor_dslab/readout/pure_waveform/_product.py",
             "tensor_dslab/readout/noise_waveform/_product.py",
-            "tensor_dslab/readout/analog_waveform/_product.py",
-            "tensor_dslab/readout/digitized_waveform/_product.py",
         )
         for path in absent:
             self.assertFalse(Path(path).exists(), path)
+
+    def test_deterministic_producers_and_sampling_helper_remain_private(
+        self,
+    ) -> None:
+        private_names = (
+            "_require_sampling",
+            "_product_pure_waveform",
+            "_product_analog_waveform",
+            "_product_digitized_waveform",
+        )
+        public_modules = (
+            tensor_dslab,
+            readout,
+            __import__(
+                "tensor_dslab.readout.pure_waveform",
+                fromlist=("__all__",),
+            ),
+            __import__(
+                "tensor_dslab.readout.analog_waveform",
+                fromlist=("__all__",),
+            ),
+            __import__(
+                "tensor_dslab.readout.digitized_waveform",
+                fromlist=("__all__",),
+            ),
+        )
+        for module in public_modules:
+            for name in private_names:
+                with self.subTest(module=module.__name__, name=name):
+                    self.assertNotIn(name, module.__all__)
+                    self.assertFalse(hasattr(module, name))
 
     def test_production_uses_only_public_tensorcore_imports(self) -> None:
         for path in Path("tensor_dslab").rglob("*.py"):
@@ -307,6 +335,79 @@ class PackageContractTest(unittest.TestCase):
             }
             self.assertNotIn("tensor_dslab.readout.types", imported, str(path))
 
+    def test_deterministic_producer_imports_are_private_and_acyclic(self) -> None:
+        producer_paths = (
+            Path("tensor_dslab/readout/pure_waveform/_product.py"),
+            Path("tensor_dslab/readout/analog_waveform/_product.py"),
+            Path("tensor_dslab/readout/digitized_waveform/_product.py"),
+        )
+        accepted_tensor_dslab_imports = {
+            producer_paths[0]: {
+                "tensor_dslab.common",
+                "tensor_dslab.readout._requirements",
+                "tensor_dslab.readout.charge",
+                "tensor_dslab.readout.pure_waveform.types",
+            },
+            producer_paths[1]: {
+                "tensor_dslab.readout.analog_waveform.types",
+                "tensor_dslab.readout.noise_waveform",
+                "tensor_dslab.readout.pure_waveform",
+            },
+            producer_paths[2]: {
+                "tensor_dslab.readout.analog_waveform",
+                "tensor_dslab.readout.digitized_waveform.types",
+            },
+        }
+        forbidden_prefixes = (
+            "dag",
+            "dask",
+            "dselec",
+            "dslab",
+            "g4ds",
+            "g4ds11",
+            "io",
+            "iv_dslab",
+            "numpy",
+            "prefect",
+            "ray",
+            "scipy",
+            "tensor_g4ds",
+            "tensor_ml",
+        )
+        forbidden_tensor_dslab_modules = {
+            "tensor_dslab",
+            "tensor_dslab.readout._random",
+            "tensor_dslab.readout.simulation",
+            "tensor_dslab.readout.types",
+        }
+        for path in producer_paths:
+            tree = ast.parse(path.read_text(), filename=str(path))
+            imports: list[str] = []
+            for node in ast.walk(tree):
+                if isinstance(node, ast.ImportFrom) and node.module is not None:
+                    imports.append(node.module)
+                elif isinstance(node, ast.Import):
+                    imports.extend(alias.name for alias in node.names)
+            for imported in imports:
+                with self.subTest(path=str(path), imported=imported):
+                    self.assertNotIn(imported, forbidden_tensor_dslab_modules)
+                    self.assertFalse(
+                        any(
+                            imported == prefix
+                            or imported.startswith(f"{prefix}.")
+                            for prefix in forbidden_prefixes
+                        )
+                    )
+            self.assertEqual(
+                {
+                    imported
+                    for imported in imports
+                    if imported == "tensor_dslab"
+                    or imported.startswith("tensor_dslab.")
+                },
+                accepted_tensor_dslab_imports[path],
+            )
+
     def test_fresh_process_imports_are_acyclic_and_isolated(self) -> None:
         environment = os.environ.copy()
         environment["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -318,6 +419,9 @@ class PackageContractTest(unittest.TestCase):
             "tensor_dslab.readout.noise_waveform",
             "tensor_dslab.readout.analog_waveform",
             "tensor_dslab.readout.digitized_waveform",
+            "tensor_dslab.readout.pure_waveform._product",
+            "tensor_dslab.readout.analog_waveform._product",
+            "tensor_dslab.readout.digitized_waveform._product",
             "tensor_dslab.readout.types",
             "tensor_dslab.readout",
             "tensor_dslab",
