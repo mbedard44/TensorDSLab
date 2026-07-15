@@ -268,13 +268,13 @@ lost variables such as sub-bin phase and states the assumed distribution.
 The common default for unknown source-bin phase is:
 
 ```text
-U ~ Uniform(0, sample_period)
+U ~ Uniform([0, sample_period))
 ```
 
 That assumption can establish conditional distributional parity for an ideal
-mathematical binned transition kernel. A selected finite digital sampler may
-still reduce the implemented claim to statistical parity, as it does for the
-timing-jitter normal below. The assumption cannot reproduce eventwise IV
+mathematical binned transition kernel. Binary64 analytic preparation and the
+selected finite aggregate sampler still reduce the implemented timing-jitter
+claim to statistical parity. The assumption cannot reproduce eventwise IV
 behavior when the original PE phases were known or were not conditionally
 uniform. Nor does an isolated private-submodel result establish parity for the
 public requested-`Charge` composition.
@@ -335,7 +335,7 @@ stochastic laws are identical.
 | package, collection/field, rank, and TensorCore representation | not applicable | TensorDSLab is a clean-slate tensor-native architecture. |
 | full stochastic effect order | intentional divergence | IV jitters after recursive noise and optional smearing; the rebuild adds dark roots, jitters truth plus dark roots, then runs causal fixed-`K` branching. |
 | end-to-end requested `Charge` | statistical | Compare named aggregate `Charge` observables from common `Photoelectrons` ensembles; internal divergences preclude equality of the complete law. |
-| timing jitter in isolation | statistical, with an ideal-kernel analytic oracle | The ideal iid-uniform-phase/Gaussian transition law is the oracle; the selected finite digital normal and backend math preclude literal distributional identity. |
+| timing jitter in isolation | statistical, with an ideal-kernel analytic oracle | The ideal iid-uniform-phase/Gaussian transition law is integrated analytically; binary64 preparation, aggregate conditional-binomial sampling, and different RNG streams preclude literal donor identity. |
 | dark counts in complete equal-width cells | distributional, conditional | Follows from Poisson splitting for homogeneous rates; DB variation and edge/order effects are excluded. |
 | crosstalk | statistical/intentional divergence | The rebuild uses fixed-`K` unmarked recursion with separate ordinary-Poisson DiCT and DeCT mechanisms; IV has no audited DeCT and uses charge-dependent recursive quirks. |
 | correlated-noise recursion | statistical/intentional divergence | Generated retained children feed every enabled mechanism only in the next frozen generation, with caller-selected finite `K`. |
@@ -363,25 +363,46 @@ stochastic laws are identical.
 `src/dselec/daq.py:add_daq_jitter` adds an independent Gaussian draw to every
 sparse PE time. Because the true PE time is available, IV preserves the actual
 sub-bin phase before jitter. The executable applies jitter after dark counts,
-correlated-noise expansion, and optional DB smearing.
+correlated-noise expansion, and optional DB smearing. The audited donor config
+uses `sigma = 5 ns` with `125 MHz` sampling, hence `T = 8 ns` and
+`sigma / T = 0.625`; the executable is an IID PE-time displacement even though
+the nearby configuration comment describes clock-period variation.
 
 ### TensorDSLab Timing Behavior
 
 The rebuild keeps `Photoelectrons` as immutable truth. Inside
-`_product_charge(...)`, an effective `_simulate_dark_counts(...)` block precedes
+`_produce_charge(...)`, an effective `_simulate_dark_counts(...)` block precedes
 an effective `_simulate_timing_jitter(...)` block. Jitter therefore
 redistributes truth plus dark roots when both execute, truth alone when the dark
 block is skipped, and performs no redistribution when jitter itself is skipped.
 For source sample `s`, sample period `T`, latent phase `U`, and jitter `J`:
 
 ```text
-U ~ Uniform(0, T)
+U ~ Uniform([0, T))
 J ~ Normal(0, sigma)
 target = s + floor((U + J) / T)
 ```
 
-The target tensor-native implementation will sample aggregate target/drop
-bucket counts rather than materializing one PE row per quantum.
+Preflight analytically integrates the ideal Gaussian over the latent uniform
+phase to prepare every in-window target probability. Runtime samples aggregate
+target counts through sequential conditional binomials and assigns the one
+combined out-of-window category the exact remaining integer count. The binary64
+preparation uses the log-domain one-sided cumulative tail selected in
+`architecture/rebuild.md`; it does not repeatedly subtract rounded categories
+from one, clip a negative tail, or normalize a residual. It does not draw a
+Gaussian per PE, use Box-Muller for timing jitter, or materialize one PE row per
+quantum. Target bins are scanned increasingly, which is increasing signed
+offset order for each fixed source bin. No arbitrary tail cutoff removes a
+possibly in-window destination.
+
+The first accepted numerical domain is
+`2**-52 <= sigma / T <= 64`, `2 <= sample_count <= 8192`, and
+`S * N <= 2**63`; exact `sigma == 0` is a separate no-draw identity. The
+fixed category/tail/identity absolute tolerance is `1e-12`, and the complete
+represented source law must be within `1e-11` L1 of the independent high-
+precision ideal law. Unsupported positive ratios and window sizes fail rather
+than silently changing the physics. The dedicated append-only stream is
+`CHARGE_TIMING_JITTER = 0x0000_0008`.
 
 ### Timing Parity Claim
 
@@ -393,24 +414,28 @@ The ideal binned target law is the same as individually jittering PEs only
 when:
 
 - conditional source-bin phases are independent and uniform;
-- jitter draws are independent with the same Gaussian width;
+- ideal latent Gaussian displacements are independent with the same width;
 - the sample period, window, and boundary convention match;
 - out-of-window targets are dropped in both comparisons;
 - the comparison ignores the different position of jitter in the full chain.
 
-The selected finite-lattice Box-Muller normal and backend transcendental
-arithmetic do not reproduce IV's finite digital normal law exactly. Validation
-therefore measures the analytic transition probabilities, moments, and named
-tails rather than upgrading the implemented comparison to distributional
-parity.
+TensorDSLab's analytically prepared binary64 kernel, aggregate binomial sampler,
+and positional RNG do not reproduce IV's per-PE finite digital normal or draw
+sequence exactly. Validation therefore measures the analytic transition/drop
+probabilities, multinomial moments and covariance, and named tails rather than
+upgrading the implemented comparison to distributional parity.
 
 If IV source phases are known and nonuniform, TensorDSLab's result is a
 statistical approximation to the marginalized binned behavior, not
 distributional parity for that event.
 
-Validation should compare transition probabilities, the explicit drop bucket,
-conditional mean/variance of bin displacement, and count conservation including
-drops. It should not compare same-seed PE destinations.
+Validation should compare transition probabilities through the farthest
+in-window destinations, the explicit final drop bucket, the represented law
+induced by the prepared conditional masses, conditional mean/variance and
+multinomial covariance of bin displacement, and exact count conservation
+including drops. It should include the evaluator boundary, natural underflow,
+and rejection just outside the supported domain. It should not compare same-
+seed PE destinations.
 
 ## Dark Counts
 
@@ -424,7 +449,7 @@ rate and assigns uniform times within the gate.
 
 ### TensorDSLab Dark-Count Behavior
 
-Inside the private `_product_charge(...)` path, TensorDSLab adds an independent
+Inside the private `_produce_charge(...)` path, TensorDSLab adds an independent
 count to each eligible channel/sample cell of a private working grid:
 
 ```text
@@ -434,6 +459,10 @@ count ~ Poisson(rate_hz * sample_period_ns * 1e-9)
 The rebuild uses one global rate. Typed per-channel rates are deferred. The
 resulting grid is an ephemeral submodel observable, not a recognized
 `ReadoutCollection` field.
+TensorDSLab realizes each cell law with its selected binary64 hybrid sampler:
+one-uniform inverse-CDF sampling below mean `10` and Hoermann PTRS from `10`
+through its accepted execution ceiling `1e8`. This is an implementation of the
+named Poisson target law, not donor RNG or same-seed parity.
 
 ### Dark-Count Parity Claim
 
@@ -447,6 +476,14 @@ cells represent complete equal channel-time exposure. The claim excludes:
 - partial final samples or mismatched gate conventions;
 - the different ordering relative to timing jitter;
 - later recursive branching, smearing, and boundary filtering.
+
+The mathematical-kernel equivalence does not upgrade executable samples to
+bitwise or eventwise equality. TensorDSLab uses finite binary64 uniform
+lattices—the 53-bit closed-open lattice for inversion and 52-bit midpoint
+open-open lattices for PTRS—plus position-addressed Threefry streams, bounded
+failure policies, and backend transcendental arithmetic. Donor comparisons
+therefore validate the Poisson observables statistically even where the ideal
+count law has conditional distributional parity.
 
 For a stationary homogeneous Poisson process, independent timing displacement
 preserves the interior rate. Finite-window edge behavior can still differ
@@ -489,20 +526,33 @@ A_direct[g + 1, u]  ~ Poisson(R_direct[g + 1, u])
 A_delayed[g + 1, u] ~ Poisson(R_delayed[g + 1, u])
 ```
 
+The two retained modes and their two overflow roles use separate fixed streams
+and the same private hybrid Poisson sampler. Every actual aggregate cell rate
+must be binary64, finite, nonnegative, and no greater than `1e8`. The sampler
+choice changes neither the declared Poisson law nor the intentional donor
+divergences below; its raw-word sequence has no IV-parity claim.
+
 Rates are never superimposed and no Gamma latent surrounds either supplied
 mean. Every retained child contributes one avalanche and unit deposited charge
 and enters the ordinary unmarked next frontier. A caller-selected `K` bounds
 genealogical depth; `K=1` is the first-generation case. DeCT is a distinct
 optional TensorDSLab model with no audited IV counterpart.
 
-Each CT mode may independently select a fixed, exponential, or zero-clipped
-normal physical-delay family. For the normal family,
-`X ~ Normal(location_ns, sigma_ns)` and `Delta = max(X, 0)`, so the negative
-latent tail becomes an exact prompt atom of size
-`Phi(-location_ns / sigma_ns)`. This is neither a truncated normal nor an IV
-parity behavior. All three families satisfy the shared nonnegative causal-delay
-contract; common preparation rejects negative-offset support or an underflow
-category instead of silently clipping an arbitrary invalid model.
+Each CT mode may independently select a fixed or exponential physical-delay
+family. Both satisfy the shared nonnegative causal-delay contract; common
+preparation rejects negative-offset support or an underflow category instead
+of silently clipping an invalid model. The earlier zero-clipped normal proposal
+is retired from the MVP: its negative latent tail would create a calibration-
+sensitive prompt atom, it has no IV-parity basis, and a future truncated,
+clipped, lognormal, or tabulated family requires a separately calibrated
+scientific decision and a new explicit config type.
+
+For the selected fixed and exponential families, phase-marginalized category
+masses and analytic right tails use the frozen binary64 mappings and numerical
+domains in `architecture/rebuild.md`. Exponential AP recovery uses the same
+integrated category law and its stable effective-mean difference. These rules
+define TensorDSLab execution; they do not strengthen either mechanism's donor
+parity classification.
 
 ### Crosstalk Parity Claim
 
@@ -513,9 +563,9 @@ IV's numeric value can support generation-level statistical comparison but
 does not reproduce IV's source-charge-frozen hidden subtree or signed
 post-jitter edge displacement. Validation should report results as a function
 of `K`, sampling, and boundary policy. Private mechanism diagnostics do not
-create public crosstalk products or transforms. The normal-delay option is a
-TensorDSLab calibrated extension and must not be described as better IV parity
-or greater scientific accuracy without calibration evidence.
+create public crosstalk products or transforms. No normal-delay option remains
+in the MVP. Any future delay family must be calibrated and must not be
+described as better IV parity or greater scientific accuracy without evidence.
 
 ## Afterpulses
 
@@ -633,7 +683,7 @@ the same explicit smearing implementation.
 
 ### TensorDSLab Charge-Smearing Behavior
 
-As the terminal private submodel inside `_product_charge(...)`, the completed
+As the terminal private submodel inside `_produce_charge(...)`, the completed
 fixed-`K` ledgers are:
 
 ```text
@@ -743,7 +793,7 @@ checkpoint values, independent binary64 reference equations, and explicit
 IV's eventwise sub-bin amplitude correction is **not applicable** at the
 post-binned boundary because true PE phase has been discarded. Loss of the
 eventwise phase does not make every statistical correction impossible: under
-an accepted latent phase `U ~ Uniform(0, T)`, TensorDSLab could derive and apply
+an accepted latent phase `U ~ Uniform([0, T))`, TensorDSLab could derive and apply
 the expected correction factor for the IV response model. The first MVP omits
 both eventwise and marginalized correction, which is an **intentional
 divergence** rather than an impossibility claim.
@@ -930,6 +980,24 @@ IV-DSLab. The algorithms consume different representations, group draws
 differently, use different operation order, and require position-addressed
 device-resident streams.
 
+The selected aggregate multinomial implementation uses sequential conditional
+binomials with stable prepared current/later-category masses and the frozen
+forward-CDF/BTRS mapping. It does not repeatedly subtract represented
+categories from one; that implementation detail was rejected after the timing-
+jitter numerical study corrupted small residual tails. BTRS is an internal
+TensorDSLab execution choice, not a claim that IV or its NumPy dependency uses
+the same binomial algorithm or consumes uniforms in the same order. Parity is
+therefore assessed against the named binomial/multinomial probability laws and
+their moments, covariance, boundaries, and tails rather than returned samples.
+The frozen BTRS acceptance calculation uses a finite binary64 Stirling-tail
+approximation and therefore does not claim ideal bitwise Binomial sampling.
+Its accepted cancellation-resistant grouping is algebraically identical to the
+earlier three-log form and supports aggregate counts through `2**53 - 1`.
+Central candidates own the frozen `1e-6` absolute local gate; complete support
+uses the documented mixed absolute/relative side allowances, decision-
+separation rule, and fixed-word uncertainty-band ownership. The Stage 6
+statistical-law policy separately validates the resulting Binomial law.
+
 The rebuild RNG targets are:
 
 - exact repeatability for identical TensorDSLab input values, shape, dimension
@@ -937,8 +1005,11 @@ The rebuild RNG targets are:
   the same supported backend and eager execution mode;
 - exact Threefry raw-word and fixed-point-uniform agreement between accepted
   eager CPU/CUDA implementations;
-- cross-backend statistical agreement for completed Box-Muller and PSD values
-  with the accepted probability kernel;
+- exact same-backend/mode integer avalanche history across float32 and float64
+  Charge requests because discrete sampler control is always binary64;
+- cross-backend statistical agreement for completed Box-Muller, PSD, Poisson,
+  conditional-binomial, and aggregate-multinomial values with the accepted
+  probability kernels;
 - finite-sample statistical validation as evidence for that cross-backend
   agreement contract;
 - no CPU/GPU bitwise guarantee for completed values involving transcendental
@@ -978,7 +1049,7 @@ The rebuild accepts these donor differences:
 - add private dark roots before timing redistribution and then branch from the
   post-jitter truth-plus-dark frontier;
 - keep dark-count, generation-frontier, mechanism, overflow, S1, and S2 values
-  private inside `_product_charge(...)` rather than exposing avalanche products;
+  private inside `_produce_charge(...)` rather than exposing avalanche products;
 - use fixed-`K` unmarked recursive feeding with independently phase-marginalized
   causal edges rather than IV's sparse queue and source-charge-dependent quirks;
 - keep DiCT and DeCT as separate ordinary-Poisson mechanisms and make no
@@ -1039,9 +1110,9 @@ Suggested minimum parity observables are:
 
 | Operation | Required observables |
 | --- | --- |
-| timing jitter | transition/drop probabilities, displacement mean/variance, conservation including drops |
+| timing jitter | analytic transition/drop probabilities, displacement mean/variance, multinomial covariance, conservation including drops, and no-cutoff edge behavior |
 | dark counts | exposure-normalized rate, variance, zero probability, cell covariance, edge cells |
-| crosstalk | multiplicity mean/variance, zero probability, tail quantiles, generation policy, offset PMF/time profile, clipped-normal prompt-zero mass, right-overflow fraction |
+| crosstalk | multiplicity mean/variance, zero probability, tail quantiles, generation policy, fixed/exponential offset PMF/time profile, right-overflow fraction |
 | afterpulses | fire probability, delay law/CDF, overflow fraction, recovery-amplitude relation, integer-count/charge covariance, omitted within-category recovery variance, recursion policy |
 | charge smearing | conditional mean/variance, negative tail, clipping bias, heterogeneous-charge exclusions |
 | end-to-end requested `Charge` | per-channel/sample charge mean and variance, zero-cell probability, total response, occupancy, edge loss, selected tails and time profile |
@@ -1054,17 +1125,40 @@ Suggested minimum parity observables are:
 Production work orders must replace qualitative phrases such as “close enough”
 with concrete tolerances and sample sizes before implementation is accepted.
 
+For Stage 6 conformance to the selected TensorDSLab model, the frozen
+statistical policy uses seeds `0`, `1`, `0x0123_4567_89ab_cdef`, and
+`0xffff_ffff_ffff_ffff`; `M=2**18` for scalar/one-parent laws and `M=2**16`
+for aggregate `Q=32`, small-grid `K<=3`, and completed-`Charge` fixtures. One
+example is one independent replicate. Each predeclared statistic must satisfy
+`abs(observed-target) <= 8*SE + delta`, where target-law moments determine
+`SE` and
+`delta = 64*eps(dtype)*max(1, ceil(log2(length)))*abs(scale)`. Frequency
+assertions require at least 256 expected hits and misses; rarer cases use
+probability and fixed-word evidence. These model-conformance tolerances do not
+upgrade an intentional donor divergence.
+
+No universal IV percentage is accepted. A future observable-specific donor
+margin `Delta` must come from calibration or collaborator review and requires
+`abs(theta_TensorDSLab-theta_IV) + 8*combined_SE <= Delta`, with its sample
+size frozen so the eight-SE half-width is at most `Delta/2`. Until then,
+finite-`K` recursion, DeCT, corrected AP delay/recovery, clipped smearing, and
+detector-level requested Charge remain unestablished IV statistical targets,
+not Stage 6 implementation failures. This is an honest absence of a donor
+equivalence claim rather than an open numerical implementation tolerance.
+
 ## Deferred Decisions
 
-- exact private Charge stream assignments, Poisson/multinomial raw-word
-  schedules, supported count/rate bounds, and CPU/GPU repeatability evidence;
-- exact prepared offset-PMF normalization and tail-rounding tolerances;
+- CPU/GPU Charge implementation and sampler evidence under the selected
+  aggregate algorithms; all Charge streams and the source/frontier/
+  accumulated-count, generation/address, ledger, and failure envelopes are
+  closed Design;
 - per-channel parameter representation;
 - whether any calibrated crosstalk approximation should match selected IV
   moments or remain a standalone TensorDSLab model;
 - whether pure rendering needs a latent-phase-marginalized amplitude
   correction to meet peak/area tolerances;
-- numeric and statistical tolerances for later Charge and integration slices;
+- observable-specific IV equivalence margins for intentionally divergent
+  Charge mechanisms and later integration slices;
 - whether a future source-aware path should preserve actual sub-bin phase,
   explicitly accepted window history, or per-PE charge weights;
 - whether campaign-level IV comparisons are scientifically necessary after

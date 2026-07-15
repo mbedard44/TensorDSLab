@@ -208,8 +208,10 @@ caller-supplied PSD noise under
 Fixed-commit Validation, independent Review, and Design's post-merge audit
 found no unresolved issue. The evidence is eager CPU-only because CUDA was
 unavailable; it makes no GPU execution, performance, fusion, editable-install,
-or wheel-build claim. No Charge, public orchestration, or later integration
-production work is dispatched.
+or wheel-build claim. Stage 6 Charge Simulation is Design-complete /
+Undispatched under
+`docs/implementation/stage_6_charge_simulation.md`; no public orchestration or
+later integration production work is dispatched.
 
 If implementation reveals a concrete contradiction in the accepted design, stop
 and send the issue back to Design. Do not silently widen architecture, create
@@ -246,25 +248,25 @@ tensor_dslab/
       types.py
     charge/
       types.py
-      _product.py
+      _produce.py
     pure_waveform/
       types.py
-      _product.py
+      _produce.py
     noise_waveform/
       types.py
-      _product.py
+      _produce.py
     analog_waveform/
       types.py
-      _product.py
+      _produce.py
     digitized_waveform/
       types.py
-      _product.py
+      _produce.py
 ```
 
 This is an ownership target, not permission to create placeholders. Materialize
 only modules with real behavior accepted by the active work order. Each product
 owns its final `TensorField` leaf, public configs, product validation, and
-eventual private `_product_*` builder. Private `_simulate_*` functions implement
+eventual private `_produce_*` builder. Private `_simulate_*` functions implement
 scientific submodels. `readout.types` contains only `ReadoutConfig` and
 `ReadoutCollection`; `readout.simulation` owns the one public
 `simulate_readout(...)` orchestration function. Shared axes and sampling belong
@@ -277,8 +279,67 @@ exports. Product packages must not import `ReadoutConfig`, `ReadoutCollection`,
 or `simulate_readout(...)`. Do not promote `_random.py` to `common` until a
 second TensorDSLab domain needs the exact same accepted mechanics.
 
+The merged Stage 4 and Stage 5 code still uses transitional `_product_*`
+callable names. Do not add another callable in that family. The next authorized
+production work touching the producer surface must rename the existing
+callables and tests to `_produce_*` and rename the existing product-owned
+modules from `_product.py` to `_produce.py` without changing behavior. New
+product producers and modules use `_produce_*` and `_produce.py` from the
+outset.
+
+Future Charge implementation must use the aggregate multinomial and hybrid
+Poisson contracts selected in `docs/architecture/rebuild.md`. The five Poisson
+roles, timing jitter, AP, and charge smearing have fixed append-only
+`_RngStream` values through `CHARGE_SMEARING = 0x0000_000A`; discrete
+probabilities, rates, and sampler control use binary64 independently of the
+requested Charge dtype.
+Conditional binomials use stable prepared current/later-category masses, the
+selected exact small-mean inversion, and the cancellation-resistant large-mean
+BTRS mapping with its central `1e-6` and complete-support mixed
+absolute/relative high-precision log-bound gates; they do not
+repeatedly subtract categories from one or recover a tiny complement as
+`1-p`. The earlier BTRD direction and cancellation-prone three-log grouping
+are retired. Active Charge count cells are bounded by `2**53 - 1`, additions
+are checked before execution, and `K` is limited only by the accepted
+role-address and requested-dtype accumulator-depth relations. Do not substitute per-
+avalanche expansion, dependency distribution samplers, `torch.poisson`, a
+normal approximation, global RNG, clipping, residual assignment,
+renormalization, reseeding, or another exhaustion fallback. This is accepted
+Design only; the Stage 6 work order is Design-complete / Undispatched at this
+documentation baseline.
+
+The active MVP crosstalk delay union is exactly
+`FixedDelayConfig | ExponentialDelayConfig`. Although Stage 3 historically
+implemented and exported `NormalDelayConfig`, the first Stage 6 production
+slice must remove that class, both union memberships, all three export layers,
+and its tests without a compatibility shim. Do not leave it dormant or revive
+its zero-clipped law. Any later normal, lognormal, tabulated, or other delay
+family requires a new calibrated scientific and API decision. Closed Stage 3
+records remain historical and are not rewritten.
+
+Fixed and exponential phase-marginalized delay preparation is frozen in
+`docs/architecture/rebuild.md`. Fixed delay accepts every finite nonnegative
+value and uses its exact represented two-point law with no PMF tolerance.
+Exponential delay and AP recovery use their documented bounded ratio/sample
+domains, analytic right tails, stable binary64 branches, and `1e-12` local /
+`1e-11` complete-law tolerances. Do not replace these mappings with per-edge
+latent draws, cutoff tails, clipping, residual assignment, renormalization, or
+subtraction-derived overflow.
+
+Timing jitter specifically integrates the latent-uniform plus ideal-Gaussian
+law into binary64 destination probabilities during preflight. Its frozen log-
+tail evaluator supports `2**-52 <= sigma / T <= 64`,
+`2 <= sample_count <= 8192`, and `S * N <= 2**63`, with exact zero sigma as a
+separate identity, `1e-12` local probability tolerance, and `1e-11` complete-
+source-law L1 tolerance. Runtime scans every in-window target bin in increasing
+order through aggregate conditional binomials and leaves one combined drop
+category as the final no-draw count remainder. It must not draw a normal per
+PE, call Box-Muller for jitter, impose an arbitrary Gaussian tail cutoff, clip
+or normalize its law, or trade correctness for subquadratic sample-count work
+without a later focused Design decision.
+
 `Photoelectrons` is an already-produced dense truth input. It has no
-`PhotoelectronsConfig`, no TensorDSLab readout producer, and no `_product.py`.
+`PhotoelectronsConfig`, no TensorDSLab readout producer, and no `_produce.py`.
 Source construction and PE binning remain part of the future TensorG4DS bridge.
 
 Runtime commands launched from the project root should use the project root on

@@ -272,33 +272,33 @@ tensor_dslab/
     charge/
       __init__.py
       types.py               # Charge and Charge-related configs
-      _product.py            # _product_charge() and private submodels
+      _produce.py            # _produce_charge() and private submodels
 
     pure_waveform/
       __init__.py
       types.py               # field, wrapper config, TPC/Veto model configs
-      _product.py            # _product_pure_waveform()
+      _produce.py            # _produce_pure_waveform()
 
     noise_waveform/
       __init__.py
       types.py               # field and zero/white/PSD configs
-      _product.py            # _product_noise_waveform()
+      _produce.py            # _produce_noise_waveform()
 
     analog_waveform/
       __init__.py
       types.py               # field, config, and saturation config
-      _product.py            # _product_analog_waveform()
+      _produce.py            # _produce_analog_waveform()
 
     digitized_waveform/
       __init__.py
       types.py               # DigitizedWaveform and its config
-      _product.py            # _product_digitized_waveform()
+      _produce.py            # _produce_digitized_waveform()
 ```
 
 The tree is organized around semantic products rather than implementation
 layers. Each product's `types.py` owns its exact `TensorField` leaf and that
-product's public configuration types. Its `_product.py`, once implemented,
-owns the private `_product_*` builder and any `_simulate_*` scientific
+product's public configuration types. Its `_produce.py`, once implemented,
+owns the private `_produce_*` builder and any `_simulate_*` scientific
 submodels needed by that product. Product-specific deep validation remains
 with the product; `_requirements.py` contains only relationships genuinely
 shared across readout products.
@@ -316,7 +316,7 @@ and future Reconstruction may share the same sample-grid contract. This does
 not add source binning to the current readout package.
 
 `Photoelectrons` is an already-produced dense truth input. Its package has no
-`PhotoelectronsConfig` and no `_product.py`; source construction and PE binning
+`PhotoelectronsConfig` and no `_produce.py`; source construction and PE binning
 remain deferred to the future TensorG4DS bridge. `simulate_readout(...)`
 borrows the supplied field and validates its realized `SampleAxis` against the
 caller's `SamplingConfig`.
@@ -335,14 +335,14 @@ tensor_core
   -> tensor_dslab.common
   -> readout._requirements
   -> product types
-  -> product _product modules and prerequisite product types
+  -> product _produce modules and prerequisite product types
   -> readout.types
   -> readout.simulation
   -> deliberate package-root exports
 ```
 
 Product packages do not import `ReadoutConfig`, `ReadoutCollection`, or
-`simulate_readout(...)`. Product `_product.py` modules import only their own
+`simulate_readout(...)`. Product `_produce.py` modules import only their own
 types, explicit prerequisite product types, shared sampling facts, private RNG
 when needed, and focused requirements. `readout.simulation` is the sole layer
 allowed to import the complete product graph and orchestrate it.
@@ -354,24 +354,25 @@ import from nested product modules. `simulation.py`, rather than a generic
 `api.py`, names the behavior it owns. Do not add global `configs/`,
 `fields.py`, `builders.py`, or `validation.py` dumping grounds.
 
-Create `_random.py`, any `_product.py`, or another future module only when an
+Create `_random.py`, any `_produce.py`, or another future module only when an
 accepted implementation stage gives it real behavior. Do not create empty
 files to reserve this tree.
 
-### Exact Foundation Symbol Inventory
+### Active MVP Symbol Inventory
 
-The first rebuild foundation stage freezes this concrete ownership inventory.
-It may add module-private implementation details needed to express these
-contracts, but it must not move public types between modules, introduce a
-second registry, or create a later behavior module as a placeholder.
+This is the active post-cleanup ownership inventory. The closed Stage 3 work
+order remains the exact historical inventory for what that foundation stage
+implemented. Future slices may add module-private details needed to express
+accepted contracts, but must not move public types between modules, introduce
+a second registry, or create a later behavior module as a placeholder.
 
-| Module | Public symbols owned by the foundation stage | Shared private symbols |
+| Module | Public symbols in the active MVP | Shared private symbols |
 | --- | --- | --- |
 | `common/axes.py` | `ExampleAxis`, `ChannelAxis`, `SampleAxis` | none |
 | `common/sampling.py` | `SamplingConfig` | none; this common module validates its own config directly |
 | `readout/_requirements.py` | none | `_require_readout_structure`, `_require_dtype`, `_require_floating_dtype`, `_require_exact`, `_require_optional_exact`, `_require_one_of_exact` |
 | `readout/photoelectrons/types.py` | `Photoelectrons` | product-local `_require_valid_values` |
-| `readout/charge/types.py` | `Charge`, `TimingJitterConfig`, `DarkCountConfig`, `FixedDelayConfig`, `ExponentialDelayConfig`, `NormalDelayConfig`, `DirectCrosstalkConfig`, `DelayedCrosstalkConfig`, `AfterpulseRecoveryConfig`, `AfterpulseConfig`, `CorrelatedAvalancheConfig`, `ChargeSmearingConfig`, `ChargeConfig` | product-local `_require_valid_values` |
+| `readout/charge/types.py` | `Charge`, `TimingJitterConfig`, `DarkCountConfig`, `FixedDelayConfig`, `ExponentialDelayConfig`, `DirectCrosstalkConfig`, `DelayedCrosstalkConfig`, `AfterpulseRecoveryConfig`, `AfterpulseConfig`, `CorrelatedAvalancheConfig`, `ChargeSmearingConfig`, `ChargeConfig` | product-local `_require_valid_values` |
 | `readout/pure_waveform/types.py` | `PureWaveform`, `TpcFebSnrPulseConfig`, `VetoPduPulseConfig`, `PureWaveformConfig` | product-local `_require_valid_values` |
 | `readout/noise_waveform/types.py` | `NoiseWaveform`, `ZeroNoiseConfig`, `WhiteNoiseConfig`, `PsdNoiseConfig`, `NoiseWaveformConfig` | product-local `_require_valid_values` |
 | `readout/analog_waveform/types.py` | `AnalogWaveform`, `AnalogSaturationConfig`, `AnalogWaveformConfig` | product-local `_require_valid_values` |
@@ -385,6 +386,13 @@ remain private to their product under the consistently scoped
 That name is fixed for the foundation work order and tests but remains private,
 not a downstream compatibility surface.
 
+Stage 3 historically implemented and exported `NormalDelayConfig`. The active
+MVP supersedes that portion of the Stage 3 surface: the first Stage 6
+production slice removes the class, both crosstalk-union memberships, all three
+export layers, and its current tests without a compatibility shim. The closed
+Stage 3 work order remains unchanged as historical evidence. TensorDSLab is
+pre-deployment and makes no backward-compatibility claim.
+
 Every product subpackage root re-exports only its public row above. The
 `common` and `readout` roots compose those deliberate exports, and the package
 root re-exports the collaborator-facing axes, sampling/config types, product
@@ -396,9 +404,9 @@ The following behavior symbols belong to later focused stages and are not
 created by the foundation stage:
 
 - `readout.simulation.simulate_readout`;
-- `_product_charge`, `_product_pure_waveform`, `_product_noise_waveform`,
-  `_product_analog_waveform`, and `_product_digitized_waveform` in their
-  corresponding product `_product.py` modules;
+- `_produce_charge`, `_produce_pure_waveform`, `_produce_noise_waveform`,
+  `_produce_analog_waveform`, and `_produce_digitized_waveform` in their
+  corresponding product `_produce.py` modules;
 - Charge's private `_simulate_*` scientific submodels; and
 - the still-private, gate-dependent contents of `readout._random`.
 
@@ -1128,28 +1136,9 @@ class ExponentialDelayConfig:
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
-class NormalDelayConfig:
-    location_ns: NonnegativeFloat
-    sigma_ns: PositiveFloat
-
-    def __post_init__(self) -> None:
-        _require_exact(
-            self.location_ns,
-            NonnegativeFloat,
-            "NormalDelayConfig.location_ns",
-        )
-        _require_exact(
-            self.sigma_ns,
-            PositiveFloat,
-            "NormalDelayConfig.sigma_ns",
-        )
-
-
-@final
-@dataclass(frozen=True, slots=True, kw_only=True)
 class DirectCrosstalkConfig:
     mean_offspring_per_parent: NonnegativeFloat
-    delay: FixedDelayConfig | ExponentialDelayConfig | NormalDelayConfig
+    delay: FixedDelayConfig | ExponentialDelayConfig
 
     def __post_init__(self) -> None:
         _require_exact(
@@ -1159,7 +1148,7 @@ class DirectCrosstalkConfig:
         )
         _require_one_of_exact(
             self.delay,
-            (FixedDelayConfig, ExponentialDelayConfig, NormalDelayConfig),
+            (FixedDelayConfig, ExponentialDelayConfig),
             "DirectCrosstalkConfig.delay",
         )
 
@@ -1168,7 +1157,7 @@ class DirectCrosstalkConfig:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DelayedCrosstalkConfig:
     mean_offspring_per_parent: NonnegativeFloat
-    delay: FixedDelayConfig | ExponentialDelayConfig | NormalDelayConfig
+    delay: FixedDelayConfig | ExponentialDelayConfig
 
     def __post_init__(self) -> None:
         _require_exact(
@@ -1178,7 +1167,7 @@ class DelayedCrosstalkConfig:
         )
         _require_one_of_exact(
             self.delay,
-            (FixedDelayConfig, ExponentialDelayConfig, NormalDelayConfig),
+            (FixedDelayConfig, ExponentialDelayConfig),
             "DelayedCrosstalkConfig.delay",
         )
 
@@ -1640,11 +1629,13 @@ their configured delay families happen to match. Each owns its own
 nonnegative Poisson mean and exact causal delay model; neither name is merely a
 synonym for offset zero or a later bin. A zero mean is a draw-free identity.
 An exact fixed delay of zero produces an in-bin edge after uniform
-phase marginalization, while fixed, exponential, and zero-clipped normal delay
-models may place children in later bins. `NormalDelayConfig.location_ns` is
-the location of its latent Gaussian, not the mean of the resulting clipped
-physical delay. Its `sigma_ns` must be strictly positive; an exact zero-width
-law is expressed with `FixedDelayConfig`. `afterpulse=None` disables AP. A present
+phase marginalization, while nonzero fixed and exponential delay models may
+place children in later bins. The MVP deliberately omits a normal-family delay:
+the earlier zero-clipped proposal introduced a calibration-sensitive prompt
+atom and disproportionate numerical/validation complexity. A later calibrated
+truncated-normal, clipped-normal, lognormal, tabulated, or other delay family
+requires a focused scientific and API decision rather than revival of the
+retired class. `afterpulse=None` disables AP. A present
 `AfterpulseConfig(recovery=None)` retains AP with unit deposited charge, and a
 present recovery record selects the exact exponential recovery response
 documented below. None of these records carries a persistence or execution
@@ -1652,12 +1643,11 @@ policy.
 
 Every physical-delay model in the readout simulation is causal and must define
 a nonnegative realized delay. That is a shared scientific and preparation
-invariant, not a universal silent clamp: fixed inputs are validated,
-exponential laws have nonnegative support by definition, and the normal family
-explicitly includes clipping in its declared law. Common kernel preflight must
-reject any prepared negative-offset mass or underflow category rather than
-repairing an invalid model. Timing jitter is a signed displacement and is not
-a physical-delay model, so this invariant does not apply to it.
+invariant, not a universal silent clamp: fixed inputs are validated and
+exponential laws have nonnegative support by definition. Common kernel
+preflight must reject any prepared negative-offset mass or underflow category
+rather than repairing an invalid model. Timing jitter is a signed displacement
+and is not a physical-delay model, so this invariant does not apply to it.
 
 The caller-facing spectral contract is only `PsdNoiseConfig`. Callers provide
 one left edge per PSD bin, one separate exclusive frequency stop, and one-sided
@@ -1744,7 +1734,7 @@ fixtures, but they receive already-preflighted values from
 supported direct-call API:
 
 ```python
-def _product_charge(
+def _produce_charge(
     photoelectrons: Photoelectrons,
     *,
     sampling: SamplingConfig,
@@ -1755,7 +1745,7 @@ def _product_charge(
     ...
 
 
-def _product_pure_waveform(
+def _produce_pure_waveform(
     charge: Charge,
     *,
     sampling: SamplingConfig,
@@ -1764,7 +1754,7 @@ def _product_pure_waveform(
     ...
 
 
-def _product_noise_waveform(
+def _produce_noise_waveform(
     photoelectrons: Photoelectrons,
     *,
     sampling: SamplingConfig,
@@ -1775,7 +1765,7 @@ def _product_noise_waveform(
     ...
 
 
-def _product_analog_waveform(
+def _produce_analog_waveform(
     pure: PureWaveform,
     noise: NoiseWaveform,
     *,
@@ -1784,7 +1774,7 @@ def _product_analog_waveform(
     ...
 
 
-def _product_digitized_waveform(
+def _produce_digitized_waveform(
     analog: AnalogWaveform,
     *,
     config: DigitizedWaveformConfig,
@@ -1792,10 +1782,19 @@ def _product_digitized_waveform(
     ...
 ```
 
-The naming split is intentional: `_product_*` constructs one semantic product,
-while `_simulate_*` names a private scientific submodel used inside a product
-builder. Neither family is public; `simulate_readout(...)` remains the one
-ordinary collaborator-facing simulation API.
+The naming split is intentional: `_produce_*` constructs and returns one
+completed semantic product, while `_simulate_*` names a private scientific
+submodel used inside a product producer. Neither family is public;
+`simulate_readout(...)` remains the one ordinary collaborator-facing
+simulation API.
+
+The merged Stage 4 and Stage 5 implementation still uses transitional
+`_product_*` callable names. The next authorized production work that touches
+this surface must rename those callables, their `_product.py` modules, imports,
+and tests without changing behavior. New producers use `_produce_*` in
+product-owned `_produce.py` modules from the outset. The module and callable
+therefore communicate the same action, while `types.py` remains the sole owner
+of product identity and configuration.
 
 The two pointwise waveform-tail producers own their product arithmetic directly.
 Do not add `_apply_analog_saturation(...)`, `_digitize(...)`, or another
@@ -1804,7 +1803,7 @@ implementation uses ordinary eager Torch expressions. A later measured
 optimization may fuse either expression without adding another Python API
 layer.
 
-After structural and config preflight, `_product_analog_waveform(...)` evaluates
+After structural and config preflight, `_produce_analog_waveform(...)` evaluates
 one elementwise product expression:
 
 ```text
@@ -1820,7 +1819,7 @@ addition. The producer returns one new `AnalogWaveform` with guaranteed fresh
 storage independent of `pure.tensor` and `noise.tensor`. The functional stage
 makes no claim about eager or backend-created target-sized intermediates.
 
-`_product_digitized_waveform(...)` computes its scalar transfer constants once
+`_produce_digitized_waveform(...)` computes its scalar transfer constants once
 during preflight:
 
 ```text
@@ -1865,9 +1864,9 @@ product steps:
 
 ```text
 PureWaveform + NoiseWaveform
-  -> _product_analog_waveform(...)
+  -> _produce_analog_waveform(...)
   -> AnalogWaveform
-  -> _product_digitized_waveform(...)
+  -> _produce_digitized_waveform(...)
   -> DigitizedWaveform
 ```
 
@@ -1878,7 +1877,7 @@ MVP. Such fusion would require a separate proof that requesting or retaining
 `AnalogWaveform` cannot change digitized values, product execution, autograd,
 or lifetime behavior.
 
-`_product_noise_waveform(...)` uses `Photoelectrons` only as the authoritative
+`_produce_noise_waveform(...)` uses `Photoelectrons` only as the authoritative
 axes/device/shape reference; it does not read PE counts as a noise input.
 
 Private charge subfunctions receive their exact config:
@@ -1938,7 +1937,7 @@ public preflight rejects `None` before any effective stochastic branch. Every
 stochastic leaf uses the same public root seed with its own globally unique
 fixed numeric operation stream; product producers never share a mutable
 sequential stream between leaves.
-`_product_charge(...)` is the private typed product producer named by the
+`_produce_charge(...)` is the private typed product producer named by the
 scientific contract. The public way to request that result is
 `simulate_readout(..., products=[Charge], ...)`.
 
@@ -1987,7 +1986,7 @@ _preflight_request(
 )
 
 charge = (
-    _product_charge(
+    _produce_charge(
         photoelectrons,
         sampling=config.sampling,
         config=_require_config(config.charge, Charge),
@@ -1999,7 +1998,7 @@ charge = (
 )
 
 pure = (
-    _product_pure_waveform(
+    _produce_pure_waveform(
         _require_value(charge, Charge),
         sampling=config.sampling,
         config=_require_config(config.pure_waveform, PureWaveform),
@@ -2009,7 +2008,7 @@ pure = (
 )
 
 noise = (
-    _product_noise_waveform(
+    _produce_noise_waveform(
         photoelectrons,
         sampling=config.sampling,
         config=_require_config(config.noise_waveform, NoiseWaveform),
@@ -2021,7 +2020,7 @@ noise = (
 )
 
 analog = (
-    _product_analog_waveform(
+    _produce_analog_waveform(
         _require_value(pure, PureWaveform),
         _require_value(noise, NoiseWaveform),
         config=_require_config(config.analog_waveform, AnalogWaveform),
@@ -2031,7 +2030,7 @@ analog = (
 )
 
 digitized = (
-    _product_digitized_waveform(
+    _produce_digitized_waveform(
         _require_value(analog, AnalogWaveform),
         config=_require_config(
             config.digitized_waveform,
@@ -2078,6 +2077,10 @@ Preflight completes before the first RNG draw or tensor write. It validates:
   `slope`, `intercept`, and pre-gain endpoint thresholds are valid,
   representable, and noncollapsed in the selected execution dtype before
   either waveform-tail producer launches; and
+- every statically known discrete-control probability and Poisson mean is
+  valid in binary64, every enabled Poisson address/cap is representable, and
+  each dynamically realized crosstalk rate field will be checked before its
+  corresponding sampler requests words or writes its result; and
 - exact seed type/range, a present seed when an effective enabled submodel is
   stochastic, and positional RNG/backend compatibility.
 
@@ -2157,15 +2160,203 @@ p(target=t) = P(t*T <= s*T + U + J < (t + 1)*T)
 ```
 
 The latent phase is required because dense truth counts no longer retain each
-PE's sub-bin time. The implementation samples aggregate target/drop buckets
-rather than materializing a jagged row per PE.
+PE's sub-bin time. The latent phase and ideal Gaussian are integrated
+analytically during preflight; runtime draws neither value per PE and does not
+use the Stage 5 Box-Muller primitive for jitter. Define the standard-normal CDF
+and PDF as `Phi` and `phi`, and:
+
+```text
+X = U + J
+H(z) = z * Phi(z) + phi(z)
+
+F_X(x)
+    = P(X < x)
+    = (sigma / T)
+      * (H(x / sigma) - H((x - T) / sigma))
+
+q[k]
+    = P(k*T <= X < (k + 1)*T)
+    = F_X((k + 1)*T) - F_X(k*T)
+```
+
+The scientific closure assigns every avalanche one independent pair `(U, J)`;
+the two values in a pair are mutually independent, and pairs are identically
+distributed and independent across avalanches. That IID closure is what makes
+one source cell's aggregate destination counts multinomial with probabilities
+derived from `q`.
+
+This formula is the scientific target for `sigma > 0`; it also gives the
+symmetry `q[-k] = q[k]`. The first implementation supports the explicit
+numerical domain:
+
+```text
+r = sigma / T
+2**-52 <= r <= 64
+2 <= S <= 8192
+S * N <= 2**63
+```
+
+Here `S` is the sample count and `N` is the complete count-grid `numel`.
+`sigma == 0` remains the separate exact identity. A positive ratio outside the
+supported interval, an oversized timing window, or nonfinite preparation fails
+before RNG use or writes; it is not rounded into the identity or another
+supported law. Preflight first forms `T_ps = float(sample_period_ps)`, checks
+the unconverted config value against
+`(T_ps * 2**-52) * 1e-3 <= sigma_ns <= (T_ps * 64) * 1e-3`, and only then
+forms `sigma_ps = sigma_ns * 1e3`, divides `r = sigma_ps / T_ps`, and rechecks
+the represented ratio. The accepted upper comparison proves that the later
+unit conversion cannot overflow. Extending either bound requires a new
+numerical sweep and a focused Design change.
+
+Direct second differences of `H` are not the accepted evaluator: they suffer
+catastrophic cancellation and can produce negative represented tail cells.
+Preflight instead prepares the one-sided tail lattice
+
+```text
+G(z) = phi(z) - z * (1 - Phi(z)) = H(-z)
+
+L[m]
+    = P(X < -m*T)
+    = P(offset >= m + 1)
+    = r * (G(m / r) - G((m + 1) / r))
+```
+
+for every `m = 0, ..., S - 1`. It evaluates `log(G)` as follows:
+
+```text
+log_phi(z) = -0.5*z*z - 0.5*log(2*pi)
+
+z == 0:
+    log_G(z) = log_phi(0)
+
+0 < z < 8:
+    log_G(z) = log(
+        phi(z) - 0.5*z*erfc(z / sqrt(2))
+    )
+
+z >= 8:
+    A(z) = z**-2 - 3*z**-4 + 15*z**-6 - 105*z**-8 + ...
+    log_G(z) = log_phi(z) + log(A(z))
+```
+
+The asymptotic branch starts with `term = total = z**-2`. For candidate terms
+`n = 2, ..., 100`, it forms
+`next = -(2*n - 1) * term / z**2`, stops *before* the first candidate whose
+absolute value does not decrease, and also stops when adding a candidate does
+not change the binary64 total. Otherwise it adds the candidate and advances
+`term = next`. The final total must be finite and strictly positive. These
+rules freeze evaluation machinery, not a probability cutoff.
+
+With `ell[m] = log(L[m])`, each tail difference uses the stable identity
+
+```text
+ell[m]
+    = log(r) + log_G(m / r)
+      + log(-expm1(log_G((m + 1) / r) - log_G(m / r)))
+
+q[0]
+    = erf(1 / (sqrt(2)*r))
+      + r*sqrt(2/pi)*expm1(-1 / (2*r*r))
+
+q[k]
+    = exp(
+        ell[k - 1]
+        + log(-expm1(ell[k] - ell[k - 1]))
+      ),  k >= 1
+```
+
+Negative offsets reuse `q[abs(k)]`; they are never independently evaluated.
+This gives exact represented offset symmetry. Natural binary64 underflow may
+make a far evaluated tail or category exact zero, but no destination is omitted
+from preparation because of a chosen tail radius.
+
+Preflight requires `L` to be finite, in `[0, 0.5]`, and nonincreasing and every
+`q` to be finite and in `[0, 1]` exactly. It never admits a small negative
+value through a tolerance. Preflight uses the fixed absolute tolerance
+`1e-12` for the central identity `q[0] + 2*L[0] = 1` and its analytic tail/
+telescoping diagnostics; independent high-precision category-oracle
+comparisons use the same bound in validation. A diagnostic retained-plus-drop
+residual, formed with `math.fsum` over the retained categories plus the two
+analytic tails, may have either sign within that tolerance; it is never used to
+clip, normalize, or move probability mass. Validation additionally
+requires the complete represented source law to differ from its high-precision
+ideal law by at most `1e-11` in L1 distance. These are private algorithm
+contracts, not caller-configurable accuracy knobs. Arbitrary precision is
+validation-only fixture/oracle tooling; the production evaluator has no SciPy,
+`mpmath`, or runtime arbitrary-precision dependency.
+
+For one source bin `s`, retained target categories are the destination bins
+`t = 0, ..., S - 1` in increasing order, with ideal probabilities
+`p[t] = q[t - s]`. This is equivalently increasing signed-offset order for
+that source. The analytic combined out-of-window mass is:
+
+```text
+p_drop[s]
+    = P(X < -s*T) + P(X >= (S - s)*T)
+    = L[s] + L[S - s - 1]
+```
+
+The runtime never constructs this mass as `1 - sum(p)`. Nor does it repeatedly
+subtract represented category probabilities from a running value initially
+equal to one. Both forms corrupt very small tails. Instead each conditional
+binomial receives a prepared success mass `A` and the mass `B` of every later
+category, including the final drop. For `k = t - s`:
+
+```text
+k = -m < 0:  A = q[m]   B = 1 - L[m - 1] + L[s]
+k = 0:       A = q[0]   B = L[s] + L[0]
+k > 0:       A = q[k]   B = L[s] + L[k]
+```
+
+The displayed grouping is normative. For a nondegenerate step, preflight
+requires finite `A` and `B` in `[0, 1]`, forms finite positive
+`total = A + B`, then forms `p_star = min(A, B) / total` and requires it in
+`[0, 0.5]`. An explicit complement flag is true exactly when `B < A`. The
+binomial core samples the smaller side and applies the complement only after
+acceptance. It never recovers that side by forming `1 - p` from a rounded near-
+one conditional probability.
+`A == 0` assigns zero and draws nothing; `B == 0` assigns the complete remaining
+integer count and draws nothing. If both are represented zero, the remaining
+integer count must already be zero. A violation fails rather than inventing
+probability mass.
+
+For validation, the represented conditional law is reconstructed in high
+precision from those exact binary64 `A`, `B`, complement, and division results.
+Its categories, final drop, moments, and covariance are compared with the
+ideal law. The analytic two-tail value above remains a diagnostic; malformed
+or insufficiently accurate preparation fails rather than clipping or silently
+renormalizing probabilities. Every in-window destination is evaluated even if
+its represented probability later rounds to exact zero.
+
+Runtime samples this `S + 1` category law through the accepted aggregate
+conditional-binomial factorization. Category `c = t` uses
+`logical_position = t * N + source_flat_position`, where `N` is the complete
+count-grid `numel`. The combined drop category is last, receives the exact
+remaining count, and consumes no draw. Preflight requires the complete
+retained-category lattice to satisfy the domain above. The exact append-only
+stream is `_RngStream.CHARGE_TIMING_JITTER = 0x0000_0008`; every timing
+conditional is an aggregate cell draw with `source_quantum = 0`. A represented
+zero-probability destination may skip physical work without shifting any later
+address. The implementation therefore redistributes dense integer counts
+directly and never materializes a per-PE table or per-PE normal field.
 
 Accepted policies:
 
 - `sigma_ns == 0` is an exact logical identity and consumes no jitter draws;
 - out-of-window shifted truth and dark-count seeds are dropped;
-- conservation includes an explicit dropped bucket; and
+- retained destination counts plus the explicit dropped count equal every
+  source count exactly;
+- every possibly in-window destination is evaluated as its own category, with
+  no arbitrary tail cutoff;
 - the truth `Photoelectrons` tensor is never mutated or replaced.
+
+Let `R = N / S` be the number of example-channel waveform rows. The
+correctness-first reference may require `S` conditional-binomial category
+steps for each of `N = R * S` source cells: `O(R * S**2)` work. That is
+accepted for the first implementation. A later measured
+optimization may exploit symmetry, sparsity, or a separately approved error
+budget, but it must not silently truncate Gaussian mass or change the prepared
+law.
 
 Moving jitter into charge simulation changes the old public timing-transform
 boundary. The synchronized parity document compares truth `Photoelectrons` to
@@ -2213,7 +2404,7 @@ return Charge(
 )
 ```
 
-Lowercase `charge` remains a `torch.Tensor` throughout `_product_charge(...)`.
+Lowercase `charge` remains a `torch.Tensor` throughout `_produce_charge(...)`.
 It is the single evolving payload, not a `Charge` instance and not a durable
 product identity. Each entered optional block completely replaces that tensor
 with its stage result. When an enclosing condition is false, the block performs
@@ -2250,6 +2441,12 @@ dark_count ~ Poisson(lambda_per_cell)
 
 A zero rate is an exact zero contribution: the dark block is skipped, no
 `dark` variable is bound, and no dark-count draw is consumed.
+Every positive cell uses the shared private Poisson sampler selected in
+[Poisson Count Sampling](#poisson-count-sampling). The dark-count lattice is
+noniterative: `logical_position = source_flat_position`,
+`source_quantum = 0`, and the operation uses its dedicated dark-count stream.
+The scalar mean is prepared in binary64. A negative, nonfinite, or greater-than-
+`1e8` mean fails before this sampler requests a word or starts its output write.
 
 For an unbounded homogeneous Poisson dark process, independent timing
 displacement preserves the homogeneous law. The finite MVP window is more
@@ -2308,6 +2505,14 @@ children are recorded but do not continue.
 present. Such configs still validate structurally, but they do not make an
 otherwise deterministic request require a seed. Likewise, a zero DiCT/DeCT
 mean or zero AP probability is a draw-free identity for that mechanism.
+Contextual delay-kernel preparation follows the same rule: `K=0` prepares no
+CT or AP delay/recovery kernel; a zero CT mean prepares no kernel for that CT
+mode; and zero AP probability prepares neither the AP delay kernel nor its
+optional recovery response. Only the already-constructed config records are
+structurally valid on those unused paths. Sampling-dependent ratio,
+sample-count, tail, and recovery numerical gates apply only when the
+corresponding mechanism can execute. This skip is resolved during complete
+public preflight before any RNG request or producer write.
 
 The exact `CorrelatedAvalancheConfig` and mechanism records are defined in the
 configuration section above. Structural `None` disables a mechanism. With all
@@ -2329,14 +2534,22 @@ Every successful primary, dark-count, DiCT, DeCT, or AP avalanche contributes
 exactly one integer count to its generation frontier. `F[g]`, never `S1` or
 `S2`, determines every enabled offspring law.
 
-`S1`, `S2`, all prepared rate fields, and AP charge diagnostics use the exact
-`floating_dtype` selected for `Charge`; no accumulator silently widens or
-narrows. Config-derived CDF/PMF preparation may use host binary64 arithmetic
-before one explicit checked cast because configs are small semantic records,
-not payload tensors. Preflight must prove every prepared probability and rate
-finite and representable in the selected execution dtype. A nonfinite ledger or
-checked `int64` count overflow is a hard algorithm failure and never a valid
-partial `Charge` result.
+`S1`, `S2`, AP charge diagnostics, and the terminal product use the exact
+`floating_dtype` selected for `Charge`; no physical charge accumulator silently
+widens or narrows. Discrete stochastic control is deliberately separate. Every
+prepared categorical probability, Poisson mean/rate field, and binomial or
+Poisson control calculation uses binary64, represented by `torch.float64` on
+the execution device. Config-derived CDF/PMF preparation likewise uses host
+binary64 before one checked device materialization. This makes the integer
+avalanche realization independent of whether the caller requests float32 or
+float64 `Charge` on the same backend and execution mode. It does not make the
+floating ledgers or final products bitwise equal across those dtypes.
+
+Preflight and each dynamically constructed generation-rate boundary prove the
+relevant probabilities and rates finite, nonnegative, and inside their selected
+sampler domains before that draw begins. A nonfinite ledger, unsupported rate,
+sampler exhaustion, or checked `int64` count overflow is a hard algorithm
+failure and never a valid partial `Charge` result.
 
 The response model makes this explicit microcell assumption:
 
@@ -2375,8 +2588,8 @@ For that current frontier, the three mechanisms are conditionally independent
 and are drawn separately. DiCT and DeCT are two physical or calibrated modes of
 correlated crosstalk; they are not synonyms for same-bin and later-bin
 children. Each mode `m` in `{direct, delayed}` has its own fixed mean offspring
-count `lambda_m` and its own exact `FixedDelayConfig`,
-`ExponentialDelayConfig`, or `NormalDelayConfig`. These are
+count `lambda_m` and its own exact `FixedDelayConfig` or
+`ExponentialDelayConfig`. These are
 sampling-independent causal physical-delay models. Preflight combines each
 one with the exact `SamplingConfig` to prepare an integer-offset PMF
 `q_m[d; sampling]`.
@@ -2384,28 +2597,14 @@ one with the exact `SamplingConfig` to prepare an integer-offset PMF
 ```text
 FixedDelayConfig:       Delta_m = delay_ns
 ExponentialDelayConfig: Delta_m ~ Exponential(mean_delay_ns)
-NormalDelayConfig:      X_m ~ Normal(location_ns, sigma_ns)
-                        Delta_m = max(X_m, 0)
 ```
 
-The normal family is a **zero-clipped (rectified) normal**, not a
-truncated-and-renormalized normal and not a folded `abs(X_m)` distribution. It
-therefore has a deliberate prompt atom:
-
-```text
-P(Delta_m = 0) = Phi(-location_ns / sigma_ns)
-
-F_Delta(x) = 0,                                      x < 0
-F_Delta(x) = Phi((x - location_ns) / sigma_ns),       x >= 0
-```
-
-Negative latent Gaussian mass maps to an exact zero physical delay. No
-strictly-positive epsilon is introduced. In particular, a latent location of
-zero assigns one half of the delay probability to that zero atom. This can be a
-substantial prompt component when `location_ns` and `sigma_ns` are comparable,
-so calibration must select the family and parameters consciously. A future
-truncated-normal law would require a different config and scientific decision
-because it has no zero atom and a different positive-delay density.
+`NormalDelayConfig` is not an accepted MVP family. The earlier zero-clipped
+proposal is retired rather than left as an executable-looking dormant option.
+Its negative latent tail would have become a calibration-sensitive prompt atom,
+while a truncated, folded, or tabulated alternative would encode a different
+law. Any later distributed family beyond the ordinary exponential requires a
+new calibrated scientific decision and a new explicit config type.
 
 The binned phase policy is independent per parent-child edge. Conceptually,
 every realized CT child edge or fired AP edge receives a fresh
@@ -2418,16 +2617,373 @@ q_m[d; sampling]
     = P(d * T <= U_edge + Delta_m < (d + 1) * T),  d in Z_{≥0}
 ```
 
+#### Fixed-Delay Preparation
+
+For the represented fixed physical delay `D`, write:
+
+```text
+D / T = n + f
+n = floor(D / T)
+0 <= f < 1
+
+q_fixed[n]     = 1 - f
+q_fixed[n + 1] = f
+q_fixed[d]     = 0 otherwise
+```
+
+When `f == 0`, only offset `n` has unit mass. Immediately below an exact
+multiple `m*T`, the two offsets are `m - 1` and `m`; immediately above it they
+are `m` and `m + 1`. Preparation never epsilon-snaps a represented delay across
+that boundary.
+
+`FixedDelayConfig.delay_ns` remains any finite nonnegative value. Preflight
+first compares its exact binary64 integer ratio against the exact rational
+window stop in nanoseconds: for
+`delay_num, delay_den = delay_ns.as_integer_ratio()`, the all-overflow test is
+`delay_num * 1000 >= delay_den * window_stop_ps`. A delay satisfying that test
+becomes an analytic all-overflow plan before unit multiplication or index
+formation. Otherwise it keeps the picosecond conversion exact in integer-ratio
+arithmetic and performs:
+
+```text
+n, remainder = divmod(
+    delay_num * 1000,
+    delay_den * sample_period_ps,
+)
+f = float(Fraction(remainder, delay_den * sample_period_ps))
+```
+
+The exact integer `divmod` prevents either a rounded unit multiplication or a
+rounded floating quotient from crossing an offset boundary. The only floating
+rounding is the final fractional mass. For a nonzero exact remainder, both
+represented masses must remain strictly between zero and one; if that
+conversion makes either side deterministic, preflight rejects it instead of
+snapping. The two masses must satisfy exact represented
+`math.fsum((1.0 - f, f)) == 1.0`. This exact two-point construction uses no PMF
+tolerance. There is no arbitrary maximum fixed delay: every finite nonnegative
+value is either representable inside the window or analytically all-overflow.
+
+For source bin `t`, let `R = S - t` be the number of bins from that source
+through the right edge. Its exact source-relative overflow probability is:
+
+```text
+n >= R        -> 1
+n + 1 == R    -> f
+otherwise     -> 0
+```
+
+Code compares `n` with `R`; it never forms `t + n` in signed tensor arithmetic.
+Fixed delay owns no RNG stream and draws no latent phase. Its prepared masses
+only thin the existing retained and overflow CT Poisson rate fields. An exact
+single-bin retained plan still uses the retained CT stream for a positive
+rate, an all-overflow plan uses only the overflow stream, and an exact zero
+rate requests no words.
+
+#### Exponential-Delay Preparation
+
+The same prepared exponential kernel is used by
+`ExponentialDelayConfig.mean_delay_ns` for either CT mode and by
+`AfterpulseConfig.mean_delay_ns`. Let:
+
+```text
+r = mean_delay / T
+x = 1 / r
+a = 1 - exp(-x) = -expm1(-x)
+C = a / x
+```
+
+The first implementation supports the explicit domain:
+
+```text
+2**-52 <= r <= 2**52
+2 <= S <= 8192
+```
+
+A mean outside this ratio interval or an active exponential preparation with
+more than 8192 samples fails before RNG use or writes rather than being rounded
+into a prompt or infinite-delay law. An unused kernel is skipped under the
+identity rules above and receives no contextual numerical gate. The
+sample-count bound is an evidenced MVP preparation limit, not a property of
+the exponential distribution; extending it requires a focused numerical
+sweep. Active preflight uses the same overflow-safe unit pattern as timing
+jitter: it bounds the unconverted nanosecond value against the exact
+picosecond period first, converts to floating picoseconds only after the
+accepted bounds prove the multiplication finite, forms `r`, and rechecks the
+represented ratio. Concretely, for
+`mean_num, mean_den = mean_delay_ns.as_integer_ratio()`, the exact host checks
+are
+`mean_num * 1000 * 2**52 >= mean_den * sample_period_ps` and
+`mean_num * 1000 <= mean_den * sample_period_ps * 2**52` before forming
+`mean_delay_ps = mean_delay_ns * 1000.0`.
+
+For integer offset `d`, define the analytic right tail
+`R[d] = P(offset >= d)`. The complete phase-marginalized law is:
+
+```text
+R[0] = 1
+R[d] = C * exp(-(d - 1)*x),                 d >= 1
+
+q_exp[0] = 1 - C
+q_exp[d] = R[d] * a,                        d >= 1
+```
+
+Runtime preparation does not obtain positive-offset masses by subtracting two
+rounded tails. It computes `a` with `expm1`, then uses
+`log_C = log(C)`, `log_a = log(a)`,
+`log_R[d] = log_C - (d - 1)*x`, and
+`log_q[d] = log_R[d] + log_a`; `exp` rounds each final requested value once.
+Natural IEEE binary64 underflow may make an evaluated far tail or category
+exact zero. There is no explicit delay cutoff, clipping, residual assignment,
+or renormalization.
+
+For the central probability, direct `1 - C` is accepted when `x > 0.5`. At
+`x <= 0.5`, preflight avoids cancellation with the convergent series:
+
+```text
+q_exp[0] = x/2 - x**2/6 + x**3/24 - x**4/120 + ...
+```
+
+The frozen evaluation is the degree-20 Horner polynomial
+`q_exp[0] = x * Horner(c[1], ..., c[20])`, where
+`c[n] = (-1)**(n + 1) / (n + 1)!`. It starts with `h = c[20]`, updates
+`h = c[n] + x*h` for `n = 19, ..., 1`, and returns `x*h`. This fixed degree and
+operation order are part of the binary64 mapping. Each coefficient is rounded
+once with `float(Fraction((-1)**(n + 1), factorial(n + 1)))`; each multiply and
+add is a separate host binary64 operation with no fused contraction.
+
+Preflight requires finite `a`, `C`, tails, and categories in `[0, 1]`, a
+nonincreasing tail, and no negative value under any tolerance. The fixed
+absolute bound for `q_exp[0] + R[1] = 1`, telescoping/tail diagnostics, and
+independent high-precision category/tail fixtures is `1e-12`. The complete
+represented finite-window law
+`q_exp[0:S]` plus `R[S]` must differ from its ideal high-precision law by at
+most `1e-11` in L1 distance. These are private algorithm constants, not public
+config knobs. Arbitrary precision is validation-only and adds no production
+dependency.
+
+For CT from source bin `t`, right overflow is the tail `R[S - t]`; retained
+rate fields use the corresponding `q_exp[d]`. Neither value is recovered from
+one minus a finite sum. Exponential delay owns no separate RNG stream: these
+masses thin the existing retained and overflow CT Poisson roles.
+
+For AP with represented fire probability `p`, retained offsets are ordered
+increasingly, followed by overflow and then the final no-AP remainder. For a
+retained offset `d` and source-relative first outside offset `L = S - t`, the
+stable multinomial masses are:
+
+```text
+retained d:  A = p * q_exp[d]
+             B = (1 - p) + p * R[d + 1]
+
+overflow:    A = p * R[L]
+             B = 1 - p
+
+stop:        final integer remainder, no draw
+```
+
+Those `A`/`B` pairs feed the already-selected reduced conditional-binomial
+core. The AP builder never constructs overflow as
+`1 - sum(q_exp[0:L])` and never forms a tiny conditional side as `1-p_step`.
+AP sampling uses the fixed `CHARGE_AFTERPULSES = 0x0000_0009` stream and the
+generation/category/source address lattice below; delay-kernel preparation
+itself consumes no random word.
+
+#### Exponential Afterpulse-Recovery Preparation
+
+The AP delay kernel answers **which time bin receives a fired afterpulse**.
+When recovery is configured, a second preparation step answers **how much
+charge that binned afterpulse deposits**. It does not change the sampled AP
+count, destination, or later branching.
+
+Let `tau` be the exponential AP-delay mean, `tau_recovery` the recovery time
+constant, and:
+
+```text
+x = T / tau
+y = T / tau_recovery
+tau_effective = tau * tau_recovery / (tau + tau_recovery)
+c = tau_effective / tau = x / (x + y)
+```
+
+Write `q_x[d]` and `R_x[L]` for the exponential category and right-tail
+functions above when their dimensionless inverse mean is `x`. Multiplying the
+exponential delay density by the unrecovered fraction
+`exp(-Delta / tau_recovery)` gives another normalized exponential density with
+mean `tau_effective`, scaled by `c`. Therefore the exact integrated recovery
+mass is:
+
+```text
+h[d] = q_x[d] - c * q_(x + y)[d]
+h_ap_tail[L] = R_x[L] - c * R_(x + y)[L]
+
+rho_bar[d] = h[d] / q_x[d]                 when q_x[d] > 0
+rho_bar_tail[L] = h_ap_tail[L] / R_x[L]
+                                              when R_x[L] > 0
+```
+
+These identities are the production definition. They integrate both the
+physical delay and the same latent uniform phase used for bin placement;
+`rho_bar[d]` is not a bin-edge or bin-center evaluation. Preparation does not
+evaluate either displayed subtraction directly, because the two terms can be
+nearly equal when recovery is slow.
+
+The recovery ratio has the same bounded binary64 domain as the delay ratio:
+
+```text
+2**-52 <= tau_recovery / T <= 2**52
+```
+
+When the nonzero AP mechanism and its recovery response are active, the exact
+pre-conversion checks for
+`recovery_num, recovery_den = tau_recovery_ns.as_integer_ratio()` are
+`recovery_num * 1000 * 2**52 >= recovery_den * sample_period_ps` and
+`recovery_num * 1000 <= recovery_den * sample_period_ps * 2**52`. Only after
+those checks may preflight form the binary64 picosecond value and `y`.
+Although the two configured ratios each retain that bound, recovery also
+evaluates the exponential helper at the effective inverse ratio `x + y`.
+Its frozen auxiliary domain is therefore:
+
+```text
+2**-51 <= x + y <= 2**53
+```
+
+This extension belongs only to prepared effective-mean evaluation; it does not
+widen either public configured-ratio domain. The private helper accepts this
+auxiliary interval without reapplying the public delay-ratio gate.
+
+For stable evaluation, define:
+
+```text
+f(z) = log((-expm1(-z)) / z)
+g(z) = log(q_exp_zero(z) / z)
+```
+
+where `q_exp_zero(z)` is the already-frozen `q_exp[0]` evaluator. For every
+represented nonzero category or tail, preflight computes the log ratio of the
+unrecovered mass to the complete category mass:
+
+```text
+ell[0] = g(x + y) - g(x)
+ell[d] = 2 * (f(x + y) - f(x)) - (d - 1) * y,       d >= 1
+ell_overflow[L]
+    = -log1p(y / x) + f(x + y) - f(x) - (L - 1) * y
+
+rho_bar = -expm1(ell)
+h = q * rho_bar
+```
+
+The same `ell_overflow` mapping is used with the analytic right tail; overflow
+recovery is never reconstructed by summing finite categories. The frozen
+difference evaluator for either `f(x + y) - f(x)` or
+`g(x + y) - g(x)` is:
+
+1. If `x + y <= 0.5`, evaluate the appropriate degree-14 Taylor-polynomial
+   difference with the frozen divided-power recurrence below. Production does
+   not evaluate two nearby polynomials and subtract them.
+2. Otherwise, if `y <= 2**-16 * max(1, x)`, use the frozen midpoint mapping
+   `y * f'(x + y/2)` or `y * g'(x + y/2)`, with:
+
+   ```text
+   f'(z) = exp(-z) / (-expm1(-z)) - 1/z
+
+   a(z) = -expm1(-z)
+   q0(z) = 1 - a(z)/z
+   q0'(z) = (a(z) - z*exp(-z)) / z**2
+   g'(z) = q0'(z)/q0(z) - 1/z
+   ```
+
+3. Otherwise, use:
+
+   ```text
+   f(x + y) - f(x)
+       = log1p(exp(-x) * (-expm1(-y)) / (-expm1(-x)))
+         - log1p(y/x)
+
+   g(x + y) - g(x)
+       = log(q_exp_zero(x + y) / q_exp_zero(x))
+         - log1p(y/x)
+   ```
+
+The degree-14 Taylor coefficients are fixed. Unlisted powers have coefficient
+zero, and the constant in `g` cancels from the difference:
+
+```text
+f:
+  1: -1/2
+  2:  1/24
+  4: -1/2880
+  6:  1/181440
+  8: -1/9676800
+ 10:  1/479001600
+ 12: -691/15692092416000
+ 14:  1/1046139494400
+
+g (constant -log(2) omitted):
+  1: -1/3
+  2:  1/36
+  3: -1/810
+  4: -1/12960
+  5:  1/68040
+  6: -1/12247200
+  7: -1/6123600
+  8:  13/1175731200
+  9:  307/218245104000
+ 10: -479/2036954304000
+ 11: -167/39720608928000
+ 12:  100921/28598838428160000
+ 13: -109/649973600640000
+ 14: -3391/85796515284480000
+```
+
+Each displayed rational coefficient is converted once with
+`float(Fraction(numerator, denominator))` into host binary64 before the loop.
+Let `z = x + y`. The exact reference loop for either coefficient table is:
+
+```python
+divided_power_difference = 1.0  # (z**1 - x**1) / y
+x_power = 1.0                   # x**0
+terms = []
+
+for degree in range(1, 15):
+    if degree in coefficients:
+        terms.append(coefficients[degree] * divided_power_difference)
+    if degree < 14:
+        x_power = x_power * x
+        divided_power_difference = (
+            z * divided_power_difference + x_power
+        )
+
+difference = y * math.fsum(terms)
+```
+
+All multiply and add operations above are separate host binary64 operations;
+the reference does not contract them into fused multiply-add. The increasing
+degree order is fixed. A faster implementation may replace this loop only
+after proving the accepted probability tolerances against this mapping.
+
+Preflight requires every evaluated `ell` to be finite and nonpositive, every
+`rho_bar` to be finite in `[0, 1]`, and every recovery mass to lie in `[0, q]`.
+It clips neither a log ratio nor a response into range. Placement absence and
+no-division behavior are controlled only by `q_x[d] == 0` or `R_x[L] == 0`.
+If `h` or `h_ap_tail` rounds or underflows to zero while its placement mass
+remains positive, the realized AP count and destination remain present and its
+prepared deposited response is exact zero.
+
+The same `1e-12` local absolute tolerance and `1e-11` complete-law L1 tolerance
+used by the exponential delay kernel apply to independent high-precision
+recovery fixtures. The prepared identity `h + c*q_(x+y) = q_x` is checked
+within the local tolerance. `afterpulse_charge_square_sum` uses the square of
+the category's prepared `rho_bar` for each realized AP, not a separately
+prepared conditional second moment and not the square of aggregate AP charge.
+
 Both CT modes are causal: `Delta_m >= 0`, so their prepared kernels have no
 negative-offset or underflow category. A fixed zero-delay DiCT model therefore
 lands in offset zero with probability one; a cross-bin DiCT model requires an
-explicitly nonzero causal delay. The clipped-normal zero atom likewise lands
-in offset zero with probability one after phase marginalization. Preflight
-derives its complete offset PMF and analytic right tail from the clipped law;
-the aggregate simulation does not draw a target-sized normal tensor and clamp
-it on the hot path. Every prepared delay kernel must have nonnegative support
-and satisfy the accepted PMF-plus-right-tail normalization tolerance, or
-preflight fails before RNG consumption or writes. The selected TensorDSLab
+explicitly nonzero causal delay. Preflight derives each accepted kernel's
+complete offset PMF and analytic right tail; the aggregate simulation draws no
+per-edge delay tensor on the hot path. Every prepared delay kernel must have
+nonnegative support and satisfy the accepted PMF-plus-right-tail numerical
+contract, or preflight fails before RNG consumption or writes. The selected TensorDSLab
 timing policy does not fold a later independent child-jitter draw into
 `Delta_m`. IV's later independent jitter of parent and child rows can produce a
 signed post-binned relative displacement, but that is a donor timing divergence
@@ -2450,6 +3006,12 @@ A_direct_crosstalk[g + 1, u]
 A_delayed_crosstalk[g + 1, u]
     ~ Poisson(R_delayed[g + 1, u])
 ```
+
+Both retained fields use the shared private Poisson sampler. Direct and delayed
+crosstalk own distinct streams, and each actual destination-cell rate—not only
+the configured scalar `lambda_m`—must lie in `[0, 1e8]`. For generation `g`, a
+retained mode uses `logical_position = g * N + destination_flat_position`,
+where `N` is the complete destination grid size, and `source_quantum = 0`.
 
 The selected algorithm keeps these as two explicit Poisson draws. It does not
 sample `Poisson(R_direct + R_delayed)` and does not recover the modes with a
@@ -2494,6 +3056,11 @@ Each mode retains its own overflow draw and diagnostic; modes are not
 superimposed there either. `direct_crosstalk=None` or
 `delayed_crosstalk=None` disables the corresponding mode structurally and
 requires no mode draw or physical zero contribution buffer.
+Direct and delayed overflow each own a stream distinct from both one another
+and their retained mode. Their generation address is
+`logical_position = g * N + source_flat_position`, with `source_quantum = 0`.
+An exact zero tail or rate requests no word. Every positive overflow mean uses
+the same `[0, 1e8]` private Poisson domain.
 
 The initial finite-window algorithm uses an absorbing right boundary. Every CT
 or AP overflow child is counted and removed before the next generation; its
@@ -2516,8 +3083,8 @@ independent-edge phase closure. The exponential law satisfies the same shared
 causal-delay invariant by construction, and its prepared kernel must likewise
 have no underflow category and must preserve its complete right tail. For source
 bin `t` containing `Q` parents, define
-`q_ap_overflow[t] = 1 - sum(q_ap[d], d=0..S-1-t)`. The exact direct outcome law
-is:
+`q_ap_overflow[t] = R_ap[S - t]` from the analytic right tail. It is never
+reconstructed as one minus retained mass. The exact direct outcome law is:
 
 ```text
 (A[t, 0], ..., A[t, S - 1 - t], A[t, overflow], A[t, stop])
@@ -2526,7 +3093,7 @@ is:
         p_ap * q_ap[0],
         ...,
         p_ap * q_ap[S - 1 - t],
-        p_ap * q_ap_overflow[t],
+        p_ap * R_ap[S - t],
         1 - p_ap,
     )
 ```
@@ -2620,14 +3187,15 @@ the selected event-level algorithm. Likewise, a Poisson AP count is not
 interchangeable with the selected bounded multinomial law because it permits
 more than one direct AP child per parent.
 
-For overflow-charge diagnostics, preflight also prepares:
+For overflow-charge diagnostics, preflight also prepares the analytic recovery
+tail from the frozen exponential-recovery mapping:
 
 ```text
-h_ap_overflow[t] = sum(h_ap[d], d >= S - t)
+h_ap_overflow[t] = h_ap_tail[S - t]
 
 rho_bar_ap_overflow[t]
-    = h_ap_overflow[t] / q_ap_overflow[t]
-      when q_ap_overflow[t] > 0
+    = h_ap_tail[S - t] / R_ap[S - t]
+      when R_ap[S - t] > 0
 ```
 
 It applies that source-position-dependent conditional mean recovery to the same
@@ -2645,6 +3213,9 @@ The symmetric `draw_direct_crosstalk`, `draw_delayed_crosstalk`, and
 `_simulate_correlated_avalanches(...)`. They are not public transforms or
 additional product producers, and an implementation may inline or fuse them
 while preserving their separate laws, streams, and diagnostics.
+The two crosstalk roles construct their scientific rate fields and call one
+generic private `_sample_poisson(..., stream=...)`; they do not own competing
+Poisson algorithms.
 
 ```python
 plan = prepare_correlated_avalanche_plan(
@@ -2804,12 +3375,12 @@ identity path before this loop. The names show scientific roles, not a required
 one-buffer-per-name execution plan; later workspace design may safely reuse
 storage only after preserving every simultaneously live count and charge role.
 
-The pseudocode names mathematical integer samplers. It does not prescribe
-PyTorch's floating distribution APIs, TensorDSLab stream numbers, positional
-addresses, raw-word budgets, fusion, or scratch scheduling. Adapting the fixed
-algorithm to the package RNG convention is a later design step. Avalanche
-counts remain nonnegative `int64` throughout the branching simulation; rates,
-probabilities, and deposited charge use separate floating computation. No
+The pseudocode names mathematical integer samplers. The selected private
+Poisson algorithm, streams, addresses, raw-word schedule, supported per-cell
+mean, and failure policy are fixed below. Fusion and scratch scheduling remain
+later measured implementation choices. Avalanche counts remain nonnegative
+`int64` throughout the branching simulation; binary64 rates/probabilities and
+requested-dtype deposited charge remain separate floating computations. No
 floating charge value is converted back into a parent count or sampler
 parameter. The eventual implementation must detect or preclude integer
 overflow rather than permit wrapping.
@@ -2817,8 +3388,10 @@ overflow rather than permit wrapping.
 For homogeneous parameters, the unwindowed mean reproduction per unit parent
 is `lambda_direct + lambda_delayed + p_ap`. Fixed `K` makes the algorithm finite
 even when that value is at least one, but does not make explosive count growth
-safe or well calibrated. Supported parameter bounds and resource-risk policy
-remain focused-stage gates rather than an implicit change to `K`.
+safe or well calibrated. The Poisson sampler accepts an actual cell mean no
+larger than `1e8`; the exact per-cell count, relational `K`, address,
+accumulator-depth, and allocation envelope is frozen below rather than hidden
+inside an implicit change to `K`.
 
 The frontier and two ledgers above are semantic roles, not a literal
 three-buffer ceiling. Whenever the correlated stage executes, its algorithm
@@ -2867,6 +3440,17 @@ integer root counts. Otherwise `_simulate_charge_smearing(...)` evaluates the
 normal law above in the selected floating dtype and applies the documented
 nonnegative clipping. No count, rate, or later offspring law reads the smeared
 result.
+
+Enabled smearing uses exact stream
+`CHARGE_SMEARING = 0x0000_000A`, `source_quantum = 0`, and the row-major
+product-grid flat position directly as `logical_position`. The eager reference
+visits every one of the `N` grid positions, including a cell whose represented
+`S2` is zero. Such a cell still owns and consumes its addressed scalar normal;
+its zero scale makes the draw observationally inert without introducing a
+value-dependent compacted schedule or a device-wide active-cell decision. A
+scalar consumer always uses `z0` from the position's ordinary dtype-matched
+Box-Muller pair and discards `z1`; it never lends that spare result to another
+position. Absent smearing or exact zero `relative_sigma` skips the whole stream.
 
 Within `draw_afterpulses(...)`, the corresponding private output is
 `afterpulse_charge_square_sum`. It accumulates each realized category as
@@ -2939,7 +3523,7 @@ in that result. These are private diagnostic/state values, not
 `ReadoutCollection` fields, durable products, or independently ordered public
 transforms. Only the terminally finalized `Charge` is a recognized field. The
 public charge path invokes `_simulate_correlated_avalanches(...)` at most once
-inside `_product_charge(...)`, and only when that stage's enclosing condition
+inside `_produce_charge(...)`, and only when that stage's enclosing condition
 is true. The final frontier is the included generation `K` whose children were
 not evaluated; it is a truncation indicator, not an estimate of the complete
 omitted population.
@@ -3059,11 +3643,12 @@ or scientific alternative must begin as a new Design proposal rather than
 entering implementation as an undocumented substitution.
 
 The scientific transition law, config ownership, recovery response, causal
-window policy, and diagnostic roles are closed above. The focused algorithm
-stage must still freeze the precise Poisson and multinomial samplers, their
-numeric stream assignments and raw-word budgets, prepared-PMF precision and
-tail tolerances, supported count/rate/`K` bounds, checked-overflow mechanics,
-and concrete parity tolerances. Fusion and scratch scheduling remain measured
+window policy, diagnostic roles, aggregate multinomial factorization,
+stabilized inversion/BTRS mapping, hybrid Poisson sampler, AP and smearing
+streams, supported count/address/accumulation envelope, failure policy, and
+model-conformance tolerances are closed above and below. The exact fixed-delay
+mapping and the exponential delay/recovery evaluators, domains, and tolerances
+are likewise closed. Fusion and scratch scheduling remain measured
 implementation decisions; smarter automatic `K` selection would be a later
 scientific Design change. Because descendants from every mechanism feed every
 enabled mechanism in the following generation, the private boundary remains
@@ -3526,7 +4111,7 @@ Box-Muller and PSD values require cross-backend statistical agreement rather
 than bitwise identity because transcendental and FFT implementations may
 differ.
 
-`_product_noise_waveform(...)` performs only contextual preflight needed for
+`_produce_noise_waveform(...)` performs only contextual preflight needed for
 its algorithm. It requires exact sampling/source agreement, an exact
 `torch.float32` or `torch.float64` output dtype, and an accepted CPU/CUDA
 device. A seed is exactly a non-boolean Python `int` in `[0, 2**64)`.
@@ -3551,7 +4136,7 @@ Pure and noise must have equal axes, device, dtype, shape, and mV reference
 plane. One optional pair of scalar saturation bounds applies to every channel
 and example. No implicit broadcast or coordinate-dependent limit lookup is
 accepted. This clamp models physical analog/front-end saturation. It belongs
-inside `_product_analog_waveform(...)` and is distinct from the finite ADC code
+inside `_produce_analog_waveform(...)` and is distinct from the finite ADC code
 range. An absent lower or upper bound leaves that side unbounded; with no
 bounds the equation reduces to `pure + noise`.
 
@@ -3744,15 +4329,18 @@ the special case `G = 1` and `p = u`.
 
 The fixed-`K` correlated-avalanche simulation uses this rule directly. For the
 draws that produce offspring generation `g + 1`, `j = g` with
-`0 <= g < K`. Each DiCT, DeCT, and AP-category draw role has its own fixed
-numeric stream and fixed per-generation lattice; a delay-category dimension,
-when required, is part of that role's frozen row-major lattice. Terminal
-smearing owns a separate noniterative stream and product-grid lattice. A
-zero frontier requests no words and may skip physical work, but it never
-compacts later positions or changes another role's address. Preflight requires
-`K * N <= 2**63` independently for every enabled generation role. Exact Charge
-stream numbers, Poisson/multinomial raw-word schedules, and exhaustion behavior
-remain the later Charge gate; generation identity itself is no longer open.
+`0 <= g < K`. Each stochastic role has its own fixed numeric stream and fixed
+per-generation lattice. Retained DiCT/DeCT Poisson fields use destination-grid
+positions; their overflow fields use source-grid positions. In either case,
+`p = g * N + u`, `q = 0`, and the Poisson attempt owns the raw-word block. A
+delay-category dimension, when required by a non-Poisson role, is part of that
+role's frozen row-major lattice. Terminal smearing owns a separate
+noniterative stream and product-grid lattice. A zero frontier requests no words
+and may skip physical work, but it never derives later addresses from active-
+only compaction. Preflight applies the role-specific relational address bounds
+below: `K*N` for each effective CT role and `K*(S+1)*N` for effective AP. The
+complete append-only Charge stream values and raw-word schedules are fixed
+below.
 
 ### Private Raw Engine And Address Schema
 
@@ -3864,9 +4452,42 @@ class _RngStream(Enum):
 
 `Enum`, rather than `IntEnum`, preserves strong typing; numeric packing uses a
 member's `.value`. Stream zero remains unassigned. `ZeroNoiseConfig` owns no
-stream and requests no raw words. Stage 5 assigns no Charge member or reserved
-Charge range. A later accepted stochastic operation appends a globally unique
-explicit member without renumbering, reusing, or repurposing an existing one.
+stream and requests no raw words. Stage 5 historically assigned no Charge
+member or reserved Charge range. This later Design pass appends the accepted
+Poisson roles without changing those closed Stage 5 bytes or meanings:
+
+```python
+@unique
+class _RngStream(Enum):
+    NOISE_WHITE = 0x0000_0001
+    NOISE_PSD_COEFFICIENT = 0x0000_0002
+    CHARGE_DARK_COUNTS = 0x0000_0003
+    CHARGE_DIRECT_CROSSTALK = 0x0000_0004
+    CHARGE_DIRECT_CROSSTALK_OVERFLOW = 0x0000_0005
+    CHARGE_DELAYED_CROSSTALK = 0x0000_0006
+    CHARGE_DELAYED_CROSSTALK_OVERFLOW = 0x0000_0007
+    CHARGE_TIMING_JITTER = 0x0000_0008
+    CHARGE_AFTERPULSES = 0x0000_0009
+    CHARGE_SMEARING = 0x0000_000A
+```
+
+The unsuffixed crosstalk members mean retained destination-grid draws. Timing
+jitter, AP, and charge smearing own the next three append-only values. No
+existing member is renumbered, reused, or repurposed. Numeric stream order
+records append-only identity, not physical execution order: timing jitter is
+numerically greater than the crosstalk values while still executing first.
+One AP stream owns its complete categorical realization. Retained count,
+overflow count, recovery-weighted charge, and charge-square sum all derive from
+those same sampled categories; separate AP streams would incorrectly break
+that coupling.
+
+For seed zero, logical position zero, source quantum zero, and block zero, the
+independent scalar Threefry oracle fixes the two newly assigned stream blocks:
+
+```text
+CHARGE_AFTERPULSES: 1f53a380 e9f15c80 6113c5f0 dd68b867
+CHARGE_SMEARING:    5f643fe4 c4c88a72 a83fd264 a1443af3
+```
 
 Threefry operates on mathematical unsigned 32-bit words. The reference Torch
 implementation may carry each word in `torch.int64`, provided every live word
@@ -3907,8 +4528,9 @@ bitwise identical across backends. Stage 5 requires exact accepted-CPU/CUDA
 agreement for fixed-point uniform conversion, exact same-backend repeatability
 for Box-Muller and completed noise products, and cross-backend statistical
 agreement for completed Gaussian and PSD values. Bernoulli, exponential,
-Poisson, categorical, and rejection behavior remain future Charge contracts
-and are not Stage 5 implementation claims.
+Poisson, categorical, and rejection behavior are not Stage 5 implementation
+claims. The Poisson contract is now selected Design for a later Charge work
+order; it remains nonoperative until that work is dispatched and accepted.
 
 The implementation must not read or mutate PyTorch's global RNG state, create
 a `torch.Generator`, use `torch.poisson` as the normative sampler, or depend on
@@ -3919,12 +4541,18 @@ changes TensorCore nor creates a Random123 runtime dependency.
 ### Selected RNG Distribution Contracts
 
 Stage 5 implements the precision-matched uniform conversions and Box-Muller
-mapping used by white and PSD noise. The Bernoulli and exponential contracts
-below are selected future Charge Design and remain nonoperative until a focused
-Charge work order activates them. The MVP uses the conventional
-precision-matched Random123 fixed-point
-conversions rather than a widened `float64` inverse-transform path for
-`float32` products. The normative conversion reference is Random123 `1.14.0`
+mapping used by white and PSD noise. The Poisson and aggregate-binomial
+contracts below are selected future Charge Design and remain nonoperative until
+a focused Charge work order activates them. The standalone Bernoulli threshold
+and continuous exponential inversion remain recorded generic candidates but
+have no accepted MVP Charge consumer: AP uses aggregate conditional binomials,
+and physical delay laws are integrated into prepared categories. Noise and
+continuous product-dtype transforms use the conventional precision-matched
+Random123 fixed-point conversions rather than a widened `float64` path for
+`float32` products. Discrete count probabilities, Poisson means, and Poisson
+sampler control intentionally use binary64 so the integer avalanche history
+does not depend on the requested Charge dtype. The normative
+uniform-conversion reference is Random123 `1.14.0`
 [`u01fixedpt.h`](https://github.com/DEShawResearch/random123/blob/726a093cd9a73f3ec3c8d7a70ff10ed8efec8d13/include/Random123/u01fixedpt.h).
 This keeps the GPU path simple and makes the finite precision and tail limits
 explicit.
@@ -3962,14 +4590,383 @@ through `1 - 2**-53`; `U64(0, 1)` is the Random123 midpoint lattice from
 eleven bits of `w1`; the open-open conversion discards the lower twelve.
 Discarded bits are never reused.
 
+### Aggregate Multinomial Sampling
+
+Timing redistribution and AP placement sample aggregate cell counts rather
+than expanding individual avalanches. One private multinomial primitive
+realizes an ordered law through sequential conditional binomial draws. Each
+scientific law prepares two stable binary64 masses for every category except
+the final remainder: `A[c]` is that category's mass and `B[c]` is the combined
+mass of every later category, including the remainder. For total count `n` and
+remaining count `n_r`:
+
+```text
+n_r = n
+
+for category c = 0 .. C - 2:
+    if A[c] == 0:
+        x[c] = 0
+    else if B[c] == 0:
+        x[c] = n_r
+    else:
+        total = A[c] + B[c]
+        complement = B[c] < A[c]
+        p_star = min(A[c], B[c]) / total
+        y ~ Binomial(n_r, p_star)
+        x[c] = n_r - y if complement else y
+    n_r -= x[c]
+
+x[C - 1] = n_r
+```
+
+The final category is an exact remainder and consumes no draw. Preflight
+constructs and validates every mass in binary64, uses stable analytic
+cumulative tails or equivalent prepared remaining masses, and rejects a law
+outside its explicit numerical contract. It never obtains `B` by repeatedly
+subtracting rounded categories from one, silently clips, or renormalizes a
+malformed law. Exact `n = 0`, `A = 0`, and `B = 0` are draw-free paths. If
+`A == B`, the step is not complemented. If `A == B == 0`, `n_r` must already
+be zero.
+
+Each nontrivial conditional binomial receives the already reduced
+`p_star` in `(0, 0.5]` plus the explicit complement flag above. This is the
+stable realization of `min(p, 1 - p)`; it does not form `1 - p` from a
+rounded near-one value. For
+`n * p_star < 10`, it uses one `U64[0, 1)` and binary64 forward-CDF inversion.
+For `n * p_star >= 10`, it uses Hoermann BTRS. The exact `n = 0`, `A = 0`, and
+`B = 0` paths are handled before this core and request no raw word. Reflection
+remains strict: only `B < A` returns `n - k` after a candidate has been
+accepted; equal masses are not reflected. These are aggregate cell draws with
+`source_quantum = 0`.
+
+The small-mean inversion path uses raw-word block zero, lanes zero and one, to
+construct its one `U64[0, 1)` value. With `q = 1 - p_star`, all arithmetic
+below is binary64:
+
+```text
+f = exp(float64(n) * log1p(-p_star))  # P(X = 0)
+cumulative = f
+last_k = min(n, 63)
+
+for k = 0 .. last_k:
+    if U < cumulative:
+        accept k
+    if k == last_k:
+        fail by deterministic inversion exhaustion
+    f *= (float64(n - k) / float64(k + 1)) * (p_star / q)
+    cumulative += f
+```
+
+The strict comparison makes the returned value the first `k` whose represented
+CDF is greater than `U`. The guard covers at most the 64 probability terms
+`k = 0 .. min(n, 63)` and never evaluates beyond the binomial support. A
+rounded top-lattice CDF may accept the maximum closed-open uniform; if no
+represented term accepts it, exhaustion remains the specified hard failure
+rather than a clamp to `63` or `n`.
+
+Across the complete supported inversion domain, every represented probability
+term and cumulative CDF value must agree with an independent at-least-
+80-decimal-digit Binomial oracle for the same represented `n` and `p_star`
+within `1e-12` absolute error. This is a local executable-mapping gate, not a
+Monte Carlo tolerance.
+
+The large-mean path uses the short transformed-rejection BTRS algorithm from
+[Hoermann's binomial paper](https://doi.org/10.1080/00949659308811496), with a
+cancellation-resistant algebraic regrouping of the corrected log-domain
+acceptance form used by
+[PyTorch 2.12.1](https://github.com/pytorch/pytorch/blob/v2.12.1/aten/src/ATen/native/Distributions.h).
+The earlier tentative BTRD choice is retired. BTRD's decomposition primarily
+reduces the number of uniform variates; TensorDSLab already reserves one whole
+Threefry block, containing exactly two binary64 uniforms, for every addressed
+attempt. BTRS therefore uses the same block schedule and central fast-accept
+probability without BTRD's variable-consumption and near-/far-mode branches.
+
+For `p_star` in `(0, 0.5]`, BTRS precomputes in binary64:
+
+```text
+s     = sqrt(float64(n) * p_star * (1 - p_star))
+b     = 1.15 + 2.53 * s
+a     = -0.0873 + 0.0248 * b + 0.01 * p_star
+c     = float64(n) * p_star + 0.5
+v_r   = 0.92 - 4.2 / b
+r     = p_star / (1 - p_star)
+alpha = (2.83 + 5.1 / b) * s
+m     = int64(floor(float64(n + 1) * p_star))
+```
+
+Attempt `j = 0 .. 63` owns raw-word block `j`. Lanes zero and one construct
+the first `U64(0, 1)` value `u_0`; lanes two and three construct the second
+value `v`. The proposal and first acceptance region are:
+
+```text
+u = u_0 - 0.5
+u_s = 0.5 - abs(u)
+k_f = floor((2 * a / u_s + b) * u + c)
+
+if k_f is nonfinite or k_f < 0 or k_f > n:
+    reject this attempt
+else:
+    k = int64(k_f)
+
+if u_s >= 0.07 and v <= v_r:
+    accept k
+```
+
+The support check precedes both integer conversion and quick acceptance. For a
+candidate outside the quick-accept region, define the displacement from the
+center and three cancellation-resistant logarithms:
+
+```text
+ell = log(v * alpha / (a / (u_s * u_s) + b))
+
+d = k - m
+log_left = log1p(d / (n - k + 1))
+log_right = log1p(-d / (k + 1))
+log_ratio = log(r * (n - k + 1) / (k + 1))
+
+main = (
+    (n - m + 0.5) * log_left
+    + (m + 0.5) * log_right
+) + d * log_ratio
+correction = ((fc(m) + fc(n - m)) - fc(k)) - fc(n - k)
+upper_bound = main + correction
+
+accept k if ell <= upper_bound
+```
+
+This main term is algebraically identical in real arithmetic to the earlier
+three-log Hoermann/PyTorch expression, but avoids subtracting large nearly
+equal terms when `n` is large and `k` is near `m`. For every supported
+`0 <= k <= n`, both `log1p` arguments are strictly greater than `-1`. The
+displayed parentheses and operation order are normative binary64 reference
+behavior.
+
+`fc` is the binary64 Stirling-tail correction. Its first ten frozen decimal
+literals, each rounded to binary64 by ordinary Torch construction, are:
+
+```text
+0.0810614667953272,  0.0413406959554092,
+0.0276779256849983,  0.02079067210376509,
+0.0166446911898211,  0.0138761288230707,
+0.0118967099458917,  0.0104112652619720,
+0.00925546218271273, 0.00833056343336287
+```
+
+For integer `j >= 10`:
+
+```text
+x = float64(j + 1)
+x2 = x * x
+inner = (1/360) - ((1/1260) / x2)
+fc(j) = ((1/12) - (inner / x2)) / x
+```
+
+After attempts `0 .. 63` reject, BTRS fails by deterministic exhaustion. Both
+inversion and BTRS forbid reseeding, approximation, clipping, dependency RNG,
+or an alternate fallback. The supported domain below ensures that every
+accepted `n`, `n + 1`, proposal, and accepted candidate is exactly and safely
+representable under this binary64/int64 mapping.
+
+The assignments, displayed parentheses, and left-to-right sum grouping above
+are normative for the eager reference. A later compiled or fused mode may not
+reassociate them while claiming the same executable stream. This freezes a
+finite binary64 BTRS mapping; it does **not** claim mathematically exact
+sampling from the ideal real-arithmetic Binomial law for every supported
+parameter. The published Stirling-tail evaluation is approximate, and finite
+rounding can change a decision arbitrarily close to an acceptance boundary.
+Independent at-least-80-decimal-digit Design sweeps through
+`n = 2**53 - 1`, from the `n*p_star = 10` crossover through `p_star = 0.5`,
+kept central candidates through 25 standard deviations within `1e-6` absolute
+local log-bound error. Complete-support validation uses the same scale-aware
+rule as PTRS. For high-precision reference side `x`, define:
+
+```text
+allowance(x) = 1e-6 + 64*eps(float64)*max(1, abs(x))
+```
+
+Both represented acceptance sides must lie within their allowances. When the
+high-precision sides are separated by more than their summed allowances, the
+represented decision must agree; fixed-word fixtures own decisions inside the
+finite uncertainty band. This retains a strict `1e-6` central gate without
+making an impossible absolute-error demand of overwhelmingly rejected support-
+edge log magnitudes. The replaced cancellation-prone grouping reached
+order-one central error near the top of the count domain and is not an accepted
+implementation alternative. As with the delay evaluators, this is a frozen
+finite-domain test matrix rather than a proof over every real-valued
+probability; a violation inside the declared domain returns to Design instead
+of silently narrowing or approximating the law.
+
+Category order is part of each stochastic role. For each timing-jitter source
+cell, retained destination bins `t = 0 .. S - 1` are scanned increasingly;
+because `k = t - s`, this is also increasing signed-offset order. Conditional
+category `c = t` uses
+`logical_position = t * N + source_flat_position`. The combined out-of-window
+drop category is the final exact count remainder and consumes no draw. AP scans
+retained causal offsets in increasing order, then overflow, with stop as the
+final exact remainder. Let `g` be the zero-based parent-generation index in
+`0 <= g < K`, `d` a causal retained offset, `u` the source cell's row-major
+flat position, and `N` the complete grid size. Its fixed category index and
+logical position are:
+
+```text
+c = d,  0 <= d < S       retained offset slots
+c = S                    right-overflow slot
+
+p = ((g * (S + 1) + c) * N) + u
+q = 0
+```
+
+For a source in sample bin `t`, only `0 <= d < S - t` is scientifically valid;
+larger retained-offset slots stay reserved and unused rather than being
+compacted. Overflow always uses `c = S`, and stop has no address or draw.
+Preflight requires `K * (S + 1) * N <= 2**63` whenever nonzero AP can execute.
+This is generation-major, offset/category-major, then source-position-major.
+Zero-probability categories may skip physical work without changing later
+positions. AP uses exact stream `CHARGE_AFTERPULSES = 0x0000_0009`; it never
+shares a stream or derives identity from active-only compaction. Inversion uses
+raw ordinals zero and one at one AP address; BTRS attempt `j` uses ordinals
+`4*j` through `4*j + 3`, so attempt 63 ends at ordinal 255.
+
+### Poisson Count Sampling
+
+One generic private `_sample_poisson(...)` serves dark counts and the retained
+and overflow draws for both crosstalk modes. It accepts a binary64 mean tensor,
+an exact output shape, the root seed, one explicit `_RngStream`, and the owning
+operation's already-defined positional lattice. A mean is either scalar or
+exactly the output shape; arbitrary implicit broadcasting is not part of this
+private contract. The result is a fresh nonnegative `torch.int64` tensor. The
+sampler does not know about sampling periods, delay PMFs, generations,
+crosstalk semantics, or overflow meaning.
+
+The selected rate-by-rate algorithm is:
+
+```text
+lambda == 0             -> exact zero; no raw word
+0 < lambda < 10         -> one-uniform forward-CDF inversion
+10 <= lambda <= 1e8     -> Hoermann PTRS transformed rejection
+otherwise               -> hard unsupported-rate failure
+```
+
+The crossover uses each actual aggregate cell mean. A configured crosstalk
+offspring mean below ten does not force the small branch when source
+superposition makes a destination rate ten or larger. Every mean and sampler
+control value is binary64 regardless of the requested `Charge` dtype. Negative,
+nonfinite, or greater-than-`1e8` rates fail before that sampler call requests a
+word or writes its result. Exactly `1e8` is accepted. The fixed ceiling is a
+conservative v1 numerical domain, not a clipping rule or a statement that such
+a detector rate is physically reasonable.
+
+For `0 < lambda < 10`, raw-word ordinals zero and one form one
+`U64[0, 1)`. The remaining two lanes in block zero are unused and cannot be
+reassigned. Binary64 inversion starts from:
+
+```text
+probability_0 = exp(-lambda)
+probability_k = probability_(k - 1) * lambda / k
+
+sample = the smallest k for which U < sum(probability_i, i=0..k)
+```
+
+The reference checks at most the 64 terms `k = 0` through `63`. The mathematical
+tail beyond that bound is negligible for `lambda < 10`, but sequential
+binary64 recurrence and cumulative addition can still leave a top-lattice
+uniform unresolved through rounding. That case is the documented deterministic
+exhaustion failure; it does not consume another uniform, restart, or fall back
+to a different method. This single-uniform inversion is selected over Knuth's
+product loop because it avoids an expected `lambda + 1` expensive Threefry
+evaluations while retaining the same intended Poisson target law on successful
+draws. Every represented term and cumulative CDF value must agree with an
+independent at-least-80-decimal-digit Poisson oracle for the same represented
+rate within `1e-12` absolute error.
+
+For `10 <= lambda <= 1e8`, TensorDSLab uses Hoermann's transformed rejection
+with squeeze (PTRS). Preflight computes in binary64:
+
+```text
+sqrt_lambda = sqrt(lambda)
+log_lambda = log(lambda)
+b = 0.931 + 2.53 * sqrt_lambda
+a = -0.059 + 0.02483 * b
+inverse_alpha = 1.1239 + 1.1328 / (b - 3.4)
+v_rectangle = 0.9277 - 3.6224 / (b - 2)
+```
+
+Attempt `r` consumes exactly Threefry block `r`: raw-word ordinals
+`4*r, 4*r + 1` form open-open `U`, and `4*r + 2, 4*r + 3` form open-open `V`.
+The open endpoints keep division and logarithms finite. Each unresolved cell
+then evaluates:
+
+```text
+u = U - 0.5
+u_s = 0.5 - abs(u)
+k = floor((2 * a / u_s + b) * u + lambda + 0.43)
+
+quick accept: k >= 0 and u_s >= 0.07 and V <= v_rectangle
+quick reject: k < 0 or (u_s < 0.013 and V > u_s)
+
+full accept when:
+log(V) + log(inverse_alpha) - log(a / u_s**2 + b)
+    <= -lambda + k * log_lambda - lgamma(k + 1)
+```
+
+For every supported finite proposal, compare the complete represented
+full-accept left and right sides with an independent at-least-80-decimal-digit
+evaluation of the same represented inputs and equations. For high-precision
+reference side `x`, the local log-space allowance is:
+
+```text
+1e-6 + 64*eps(float64)*max(1, abs(x))
+```
+
+When the high-precision sides are separated by more than their summed
+allowances, the represented decision must agree. Fixed-word fixtures own
+decisions inside that finite uncertainty band; ensemble tests separately own
+agreement with the target Poisson law. This mixed absolute/relative guard
+keeps the cancellation-sensitive central region strict without pretending an
+absolute `1e-6` representation of obviously rejected, extremely large
+log-probability magnitudes.
+
+Candidates are checked for finiteness and `int64` representability before
+conversion. The reference permits exactly 64 attempts, numbered zero through
+63. Any unresolved cell after attempt 63 causes deterministic hard failure.
+There is no reseed, wrap, clamp, Gaussian approximation, alternate algorithm,
+or biased fallback. A finite rejection cap adds a failure outcome; it does not
+change values successfully accepted before that cap.
+
+An eager implementation may update unresolved masks or select unresolved cells
+for physical work, but every cell retains its original full-grid logical
+position. Active-only ordering never becomes random identity. Direct and
+delayed rates are never superimposed, retained and overflow draws never share a
+stream, and aggregate destination Poisson draws are never replaced by
+per-parent expansion. `source_quantum` is zero for every MVP Poisson role.
+`torch.poisson`, PyTorch global RNG, and `torch.Generator` are not normative or
+fallback implementations.
+
+Threefry words and uniform conversion remain exact across accepted CPU/CUDA
+implementations. Completed Poisson samples require exact repeatability only for
+the same backend and execution mode. Inversion uses `exp`; PTRS additionally
+uses square root, logarithm, and `lgamma`, so completed CPU/CUDA fields compare
+statistically rather than bitwise. On one unchanged backend/mode, the same
+input, config, seed, and positional lattice must produce the same integer
+history for float32 and float64 `Charge` requests.
+
+The primary PTRS reference is W. Hoermann,
+[*The transformed rejection method for generating Poisson random
+variables*](https://research.wu.ac.at/files/18953249/document.pdf). NumPy's
+`2.4.3` production implementation at exact release commit
+`8bcb2e72e67c343e55165e6064fe6a9dc011e954` is corroborating evidence for the
+crossover, constants, and acceptance equations; see
+[`random_poisson_ptrs`](https://github.com/numpy/numpy/blob/8bcb2e72e67c343e55165e6064fe6a9dc011e954/numpy/random/src/distributions/distributions.c#L550-L613).
+
 Bounded phase and interpolation, including the Box-Muller angle, use `[0, 1)`.
 Any logarithm uses `(0, 1)`, so neither logarithmic infinity nor an artificial
 exact-zero inverse-transform result is possible. The exact Random123 midpoint
 evaluation order and target dtype are part of the contract; do not replace it
 with a widened calculation or a different endpoint-safe mapping.
 
-Bernoulli sampling bypasses floating uniforms. From the accepted finite
-binary64 configuration probability `p`, preflight computes:
+A standalone Bernoulli primitive, if a future accepted consumer needs it, may
+bypass floating uniforms. From a finite binary64 configuration probability
+`p`, its selected candidate mapping is:
 
 ```text
 T = round_ties_to_even(p * 2**32)
@@ -3981,8 +4978,9 @@ fires = raw_word < T
 Threshold zero returns false without requesting a word; threshold `2**32`
 returns true without requesting a word. Every interior threshold consumes one
 assigned raw word. This avoids the systematic downward bias of a floored
-threshold and gives both `float32` and `float64` consumers the same Bernoulli
-law.
+threshold and gives both `float32` and `float64` consumers the same represented
+Bernoulli law. Stage 6 must not implement this unused standalone path merely
+because it is documented; its aggregate binomial primitive owns AP outcomes.
 
 An ordinary exponential variate of configured mean `tau` is:
 
@@ -4006,8 +5004,11 @@ prepared categories. Its exponential-law qualification is therefore numerical
 CDF/PMF preparation and categorical sampling, not the finite inverse-transform
 tail above.
 
-Standard-normal variates use ordinary Box-Muller in the selected execution
-dtype:
+Operations that actually request standard-normal variates—Stage 5 white/PSD
+noise and future terminal charge smearing—use ordinary Box-Muller in the
+selected execution dtype. Timing jitter is not a variate consumer: it
+analytically integrates its ideal Gaussian into categorical probabilities as
+specified above.
 
 ```text
 radius = sqrt(-2 * log(U(0, 1)))
@@ -4043,15 +5044,21 @@ Stage 5 proves that uniform conversions reproduce the same target-dtype values
 bit-for-bit on every accepted CPU/CUDA implementation. Box-Muller outputs
 retain the same-backend repeatability boundary because `log`, square root,
 sine, and cosine may differ across backends. Later Charge work must separately
-activate and prove the selected Bernoulli and exponential behavior. None of
-these selections creates a CPU/CUDA bitwise guarantee for completed stochastic
-products.
+activate and prove the selected analytic timing preparation, aggregate-
+binomial and Poisson behavior, and smearing's Box-Muller use. It
+activates standalone Bernoulli or continuous exponential behavior only if a
+later accepted consumer actually uses it. None of these selections creates a
+CPU/CUDA bitwise guarantee for completed stochastic products.
 
-Variable-count operations assign a source quantum the deterministic address
-`(source_flat_position, quantum_ordinal, raw_word_ordinal)` before
-redistribution. `quantum_ordinal` is the zero-based ordinal within its source
-cell and never depends on parallel execution order. A distribution-level draw
-may consume more than one raw word, so `raw_word_ordinal` must not be renamed or
+An operation that genuinely expands source quanta would assign each one the
+deterministic address `(source_flat_position, quantum_ordinal,
+raw_word_ordinal)` before redistribution. `quantum_ordinal` would be the
+zero-based ordinal within its source cell and could never depend on parallel
+execution order. The MVP Charge samplers do not use that expansion: Poisson and
+multinomial roles operate on aggregate cell counts with `source_quantum = 0`.
+The generic address component remains available without imposing a `2**32`
+population limit on aggregate Stage 6 inputs. A distribution-level draw may
+consume more than one raw word, so `raw_word_ordinal` must not be renamed or
 treated as a one-word draw number.
 
 Stage 5 preflight is deliberately contextual: it checks the optional or
@@ -4059,11 +5066,13 @@ required seed, exact floating dtype and accepted device, sampling/source shape
 agreement, recognized noise stream, checked logical position arithmetic, the
 fixed normal raw-word schedule, and model-specific RMS/PSD representation
 before output allocation or random-word generation. It does not adversarially
-police privately constructed position tensors. Source-population limits,
-variable-attempt rejection, and exhaustion behavior remain part of the future
-Charge gate. A later rejection sampler must still fail deterministically rather
-than wrap, reseed, reuse an address, change algorithms, clamp the sample, or
-emit a biased fallback.
+police privately constructed position tensors. The corresponding Charge
+population, address, accumulation, and failure envelope is frozen below.
+Poisson PTRS and binomial BTRS rejection are each fixed at 64 addressed
+attempts, while binomial and Poisson inversion each have their fixed 64-term
+guard. Exhaustion fails deterministically rather than wrapping, reseeding,
+reusing an address, changing algorithms, clamping the sample, or emitting a
+biased fallback.
 
 Required behavior is:
 
@@ -4103,6 +5112,183 @@ contract. The rebuild initially keeps it private to TensorDSLab: generic shape
 alone does not justify expanding TensorCore before the algorithm,
 distribution, backend, and repeatability evidence exists.
 
+### Stage 6 Count, Address, And Numeric Envelope
+
+The active Charge path uses one contextual per-cell count ceiling:
+
+```text
+C_max = 2**53 - 1
+```
+
+`C_max` is the largest nonnegative integer for which both `n` and `n + 1` are
+exact binary64 integers. It therefore preserves every integer operand used by
+the stabilized BTRS mapping while leaving the Poisson mean ceiling as the
+independent `1e8` bound above. This is a Charge-producer contract, not a new
+generic `Photoelectrons` construction invariant, public configuration value,
+or package-level identity constant.
+
+Before Charge execution, every source cell must lie in `[0, C_max]`. The same
+interval then applies to every post-dark and post-jitter cell, current and next
+frontier cell, newly drawn mechanism cell, retained or overflow diagnostic
+cell, cumulative per-cell count, conditional-binomial count/remainder, and
+accepted Poisson sample. There is deliberately no whole-grid, row, batch, or
+example population ceiling: many cells may each equal `C_max`.
+
+All integer additions use checked nonnegative arithmetic before the addition:
+
+```text
+rhs <= C_max - lhs
+```
+
+This rule applies to destination/category superposition, combination of the
+three child mechanisms, cumulative mechanism and overflow diagnostics, and
+`total_count`. Conditional-binomial remainders subtract only after proving
+`category_count <= remaining_count`. An accepted Poisson proposal greater than
+`C_max` is a hard count-domain failure; it is never converted, retried as a
+rejection, clamped, or allowed to wrap. A wide sparse row is not rejected in
+advance merely because a hypothetical concentration could exceed `C_max`; a
+realized destination addition is checked when it occurs.
+
+Dark-count preparation compares its represented configuration exactly before
+forming the binary64 rate. With
+`rate_num, rate_den = rate_hz.as_integer_ratio()`, the accepted relation is:
+
+```text
+rate_num * sample_period_ps <= rate_den * 10**20
+```
+
+This is exactly `rate_hz * sample_period_ps * 1e-12 <= 1e8` without a
+boundary-crossing floating multiplication. For either CT mode, preparation
+first forms the nonnegative binary64 thinning/convolution basis from exact
+binary64 conversions of counts no greater than `C_max`. For positive scalar
+offspring mean `a`, a branched/scaled comparison proves
+`basis <= 1e8 / a` before multiplication. If the represented division rounds
+to positive infinity, that branch is accepted only after proving the
+mathematical threshold exceeds the greatest finite binary64 basis, so every
+finite basis is safe. The represented product is then rechecked finite in
+`[0, 1e8]`. A zero basis or rate is draw-free. No independent scalar cap is
+placed on `a`; the actual aggregate cell rate owns the sampler limit.
+
+Let `S` be the sample count, `N` the complete source-grid element count, and
+`K` the configured maximum generation count. Checked Python-integer arithmetic
+requires `0 < N <= 2**63 - 1`, and each planned tensor satisfies
+`N * element_size <= 2**63 - 1`. Logical address products obey:
+
+```text
+noniterative dark/smearing roles: N positions
+timing jitter:                      S * N <= 2**63
+each effective CT role:             K * N <= 2**63
+effective AP:                       K * (S + 1) * N <= 2**63
+```
+
+The inclusive product bounds are correct because the greatest addressed
+position is one less than the product. `S <= 8192` remains the separate
+contextual limit for active jitter or exponential-kernel preparation. There is
+no arbitrary fixed upper bound on `K`: ineffective generation mechanisms have
+no execution/address gate, while effective mechanisms derive their supported
+`K` from these address relations and the accumulator-depth relation below.
+Implementations never materialize the `S*N` or `K*(S+1)*N` address lattices.
+
+For one cell, let `T` be the exact cumulative retained avalanche count. The
+count checks give `T <= C_max`; every response weight lies in `[0, 1]`, so the
+scientific real-arithmetic ledgers obey:
+
+```text
+0 <= S2 = sum(w_i**2) <= S1 = sum(w_i) <= T <= C_max
+```
+
+The functionality-first eager reference also freezes logical accumulation
+order. Generations increase from zero; within each generation the mechanism
+order is direct crosstalk, delayed crosstalk, then afterpulsing. For each CT
+destination, causal source sample bins contribute in increasing source-bin
+order; CT overflow is source-indexed in increasing source-bin order. AP scans
+source bins increasingly and, within one source, scans retained offsets
+increasingly before overflow and the final no-draw stop remainder. Count,
+charge, and squared-charge contributions enter their destination and cumulative
+diagnostics in that traversal, followed by the mechanism's `S1`/`S2` update.
+Independent nonsample index tuples and independent destinations may execute in
+parallel, but the eager reference does not use a repeated-index scatter or
+atomic reduction with unspecified order. A later optimized execution mode may
+replace this traversal only with its own proved sampler and rounding mapping.
+
+Let `p_d` be `24` for `float32` or `53` for `float64`, let
+`u = 2**(-p_d)`, and let `E` be the number from zero through three of effective
+retained mechanism contributions added per generation. For the eager
+functionality-first plan, the conservative maximum rounding depth is:
+
+```text
+without a retained recovery-weighted AP contribution: L = E*K + 1
+with a retained recovery-weighted AP contribution:    L = E*K + S + 3
+```
+
+The second expression covers response-weight formation, count conversion and
+multiplication, at most `S - 1` source-category additions, and the top-level
+ledger additions. A unit-response path without a correlated stage uses
+`L = 1`. Preflight requires the exact integer relation `L < 2**p_d`; this is
+the floating-accuracy generation gate rather than a magic `K` constant. Define
+
+```text
+gamma_L = L / (2**p_d - L)
+```
+
+and let `eta_d` be the smallest positive subnormal in the requested dtype. For
+the exact realized counts and represented recovery weights, the per-cell
+high-precision-oracle bound is:
+
+```text
+abs(represented_ledger - real_sum)
+    <= gamma_L * T + L * eta_d
+```
+
+A conservative finite magnitude bound for either represented ledger is
+`B = C_max*(1 + gamma_L) + L*eta_d`. Exact zero remains exact. Any later compiled,
+fused, widened, or reassociated accumulator must prove and document its own
+rounding depth and result mapping; it cannot silently inherit this eager bound.
+
+An exact-zero smearing width skips the stage. Otherwise `relative_sigma` is
+rounded exactly once to the requested Charge dtype and must remain finite and
+strictly positive. Let:
+
+```text
+Z_float32 = sqrt(-2 * log(2**-24))
+Z_float64 = sqrt(-2 * log(2**-53))
+```
+
+with each bound rounded upward. These are the maximum absolute `z0` magnitudes
+on the accepted dtype-specific Box-Muller lattices. With target maximum finite
+value `F_d`, scalar preflight uses upward-rounded arithmetic to prove:
+
+```text
+B + Z_d * relative_sigma_d * sqrt(B) <= F_d
+```
+
+and the prepared target-dtype sequence is rechecked before RNG use. This
+guarantees finite scale, excursion, pre-clipped draw, and returned Charge for
+every raw-word outcome. It is a derived contextual representation bound, not
+a physics calibration cap. Enabled smearing still visits `S2 == 0` cells under
+its frozen full-grid schedule; the represented zero scale makes their draw
+inert.
+
+Public semantic/config/address/source-count validation completes before any
+RNG request or producer write. After that boundary, the functionality-first
+implementation may allocate TensorDSLab-managed output, private scratch, and
+ordinary backend intermediates as its operations require. It makes no
+allocation-free or no-library-temporary claim. Every package-planned shape uses
+the checked byte arithmetic above, while actual allocator failure remains the
+resource gate rather than an arbitrary device-memory ceiling. Managed storage
+remains raw and unexposed until its writes are complete and the semantic field
+is constructed. Dynamically realized rates, counts, additions, and ledgers are
+checked before their next dependent draw or arithmetic operation.
+
+Malformed supported public inputs retain their documented `TypeError` or
+`ValueError` boundary. Sampler exhaustion or a dynamically realized
+rate/count/ledger-domain violation raises `RuntimeError`. A preflight failure
+consumes no words and writes nothing. A failure after backend work begins has
+no rollback promise for private scratch, but source/config objects remain
+unchanged, stateless RNG state cannot advance, no semantic field, collection,
+or partial diagnostic is constructed or returned, and retrying the same
+backend/mode reproduces the same outcome.
+
 ## Functional, Memory, And Lifetime Contract
 
 The initial rebuild adopts TensorCore's operation-owned result taxonomy. Its
@@ -4132,7 +5318,7 @@ generic root:
   accepted; and
 - stochastic count simulation and digitization make no blanket autograd claim.
 
-`_product_noise_waveform(...)` uses `Photoelectrons` only for its exact axes,
+`_produce_noise_waveform(...)` uses `Photoelectrons` only for its exact axes,
 shape, and device; it never reads the integer payload. Every zero, white, or
 PSD result is a guaranteed-fresh `NoiseWaveform` with the requested floating
 dtype and `requires_grad=False`. It has no differentiable tensor input or
@@ -4162,8 +5348,8 @@ may keep local prerequisite references until final assembly, and autograd may
 retain them longer through the result graph.
 
 The first waveform implementation is functionality-first. The direct eager
-Torch equations owned by `_product_analog_waveform(...)` and
-`_product_digitized_waveform(...)` are the correctness references and may
+Torch equations owned by `_produce_analog_waveform(...)` and
+`_produce_digitized_waveform(...)` are the correctness references and may
 materialize ordinary backend intermediates. Their functional work order proves
 scientific values, dtype/device/axes, autograd where applicable, source
 immutability, and guaranteed-fresh outputs; it makes no kernel-count,
@@ -4285,8 +5471,10 @@ Examples:
 The scientific targets retained by this architecture are:
 
 - conditional statistical timing-jitter parity under the binned latent-phase
-  assumption, including redistribution means, variances, edge loss, and named
-  tails rather than equality of the donor's finite digital normal law;
+  assumption, using the analytically prepared ideal-Gaussian offset law and
+  aggregate conditional-binomial runtime, including redistribution means,
+  variances, edge loss, and named tails rather than equality of the donor's
+  per-PE finite digital normal or random stream;
 - conditional distributional homogeneous dark-count parity, including the
   finite-gate loss when private dark-count avalanches are jittered out of the
   configured window;
@@ -4364,6 +5552,146 @@ runtime becomes a production dependency.
 
 ## Validation Strategy
 
+### Stage 6 Statistical Acceptance Policy
+
+Stage 6 validates conformance to the selected TensorDSLab probability model;
+it does not manufacture a universal IV-DSLab equivalence margin for mechanisms
+whose laws intentionally differ. Statistical fixtures reuse the four frozen
+Stage 5 seeds without tuning them after observing a candidate:
+
+```text
+0
+1
+0x0123_4567_89ab_cdef
+0xffff_ffff_ffff_ffff
+```
+
+The fixed primary ensemble sizes are:
+
+- scalar and one-parent laws: `M = 2**18`, with exactly `2**16` independent
+  examples per seed;
+- aggregate `Q = 32` multinomial or one-generation laws: `M = 2**16`, with
+  exactly `2**14` independent examples per seed; and
+- small-grid `K <= 3` cascade and completed-`Charge` model fixtures:
+  `M = 2**16`, again with exactly `2**14` independent examples per seed.
+
+One example is one independent replicate. Correlated channel/sample cells
+within an example never inflate `M`. For a predeclared statistic `f(X)` with
+analytic target `theta` and target-law standard error `SE`, the frozen gate is:
+
+```text
+abs(observed - theta) <= 8*SE + delta(dtype, scale, length)
+
+delta(dtype, scale, length)
+    = 64 * eps(dtype)
+         * max(1, ceil(log2(length)))
+         * abs(scale)
+```
+
+The target law, not the observed sample variance, supplies `SE`. A separately
+bounded finite-lattice or sampler-mapping bias is added explicitly rather than
+hidden inside Monte Carlo tolerance. A Bernoulli, PMF, CDF, or exceedance
+frequency is asserted only when both expected hits and expected misses are at
+least 256; rarer cases use high-precision probability fixtures and fixed-word
+sampler tests. Tail checks use predeclared CDF thresholds, not unstable
+empirical quantiles. Checks and sample sizes are frozen before candidate
+execution and are not added, removed, or enlarged after seeing results.
+
+Exact conservation, bypass, identity, source-immutability, integer-history,
+address, and fixed-delay claims remain exact and receive no statistical
+allowance. The existing `1e-12` local and `1e-11` complete-law numerical gates
+for jitter and exponential delay/recovery also remain separate. Binomial and
+Poisson executable-mapping bias is bounded against independent high-precision
+oracles over the accepted count/rate domain before ensemble evidence is used.
+
+Recovery-weighted `S1` and `S2` compare with a higher-precision reference by the
+numeric-envelope bound above. With exact retained count `T`, conservative
+rounding depth `L`, dtype precision `p_d`, and smallest positive subnormal
+`eta_d`:
+
+```text
+gamma_L = L / (2**p_d - L)
+abs(ledger - reference) <= gamma_L*T + L*eta_d
+```
+
+The work order must make its actual rounding path no longer than the accepted
+`L`; it may not substitute a fixed percentage. Unit-weight cases whose integer
+totals remain exactly representable in the requested dtype require exact
+ledger equality.
+
+Operation-level analytic oracles cover dark-count Poisson moments and zero
+probability; jitter multinomial means/covariance and edge loss; separate
+DiCT/DeCT Poisson fields and finite-`K` branching moments; AP retained,
+overflow, stop, count/charge, and recovery moments; and rectified-normal
+smearing. For `X ~ Poisson(lambda)` over `M` examples, the primary dark/CT
+standard errors are:
+
+```text
+SE(mean(X)) = sqrt(lambda/M)
+SE(mean((X-lambda)**2))
+    = sqrt((lambda + 2*lambda**2)/M)
+SE(fraction(X == 0))
+    = sqrt(exp(-lambda)*(1-exp(-lambda))/M)
+SE(independent centered cross-product) = lambda/sqrt(M)
+```
+
+For a one-bin DiCT-only Galton-Watson fixture with `Q` roots and Poisson mean
+`lambda`, the generation oracle includes:
+
+```text
+E[Z_g] = Q*lambda**g
+Var(Z_g) = Q*lambda**g*(lambda**g - 1)/(lambda - 1)
+Cov(Z_g, Z_h) = lambda**(h-g)*Var(Z_g),  h >= g
+```
+
+The continuous limit at `lambda == 1` is used rather than dividing by zero.
+Finite-window position moments come from an independent matrix oracle. For one
+AP parent with retained category masses `pi[d]` and recovery weights `rho[d]`,
+the joint count/charge oracle includes:
+
+```text
+E[W] = sum_d pi[d]*rho[d]
+E[W**2] = sum_d pi[d]*rho[d]**2
+Cov(retained_count, W)
+    = E[W] - P(retained)*E[W]
+```
+
+Independent-parent moments add for `Q=32`; the omitted within-category
+recovery variance is reported separately, never absorbed into tolerance.
+
+For fixed smearing ledgers `mu = S1` and
+`s = relative_sigma*sqrt(S2)`, validation uses:
+
+```text
+a = mu / s
+E[max(N(mu, s**2), 0)]
+    = mu*Phi(a) + s*phi(a)
+E[max(N(mu, s**2), 0)**2]
+    = (mu**2 + s**2)*Phi(a) + mu*s*phi(a)
+P(output == 0) = Phi(-a)
+```
+
+Degenerate `s == 0` uses its exact deterministic identity. A small independent
+scalar moment/PGF oracle supplies completed-model means, variances,
+covariances, occupancy, edge loss, and predeclared CDF thresholds.
+
+No detector-level IV equivalence margin is guessed. A later donor claim must
+receive an observable-specific scientific margin `Delta` from calibration or
+collaborator review and pass:
+
+```text
+abs(theta_TensorDSLab - theta_IV)
+    + 8*sqrt(SE_TensorDSLab**2 + SE_IV**2)
+    <= Delta
+```
+
+For paired examples, the paired-difference standard error replaces the
+independent sum. The acceptance sample size is chosen beforehand so the
+eight-SE half-width is no greater than `Delta/2`. Until such margins exist,
+finite-`K` versus IV recursion, DeCT, corrected AP delay/recovery, clipped
+smearing, and detector-level requested Charge remain explicitly unestablished
+IV statistical targets rather than Stage 6 implementation gates.
+
 The rebuild validation matrix includes:
 
 - exact TensorCore dependency, package-root imports, and ordinary-ABC static
@@ -4402,7 +5730,7 @@ The rebuild validation matrix includes:
 - proof that every MVP calibration value is scalar and applies uniformly to
   all example/channel positions in one invocation, without channel-coordinate
   lookup, implicit parameter broadcasting, or tensors hidden inside configs;
-- `_product_analog_waveform(...)` reference checks for no saturation, each
+- `_produce_analog_waveform(...)` reference checks for no saturation, each
   one-sided bound, and two-sided bounds, including exact bound values and proof
   that the input fields remain unchanged;
 - analog scalar preflight rejects nonfinite field-dtype conversions and bounds
@@ -4500,32 +5828,126 @@ The rebuild validation matrix includes:
   zero, maximum, and representative raw words, including endpoint exclusion,
   numerical two-word order, discarded-bit behavior, adjacent midpoint cells
   around `0.5`, and no reuse of discarded bits;
-- later Charge-stage Bernoulli ties-to-even threshold construction, exact
-  threshold-boundary word comparisons, quantized probability error no greater
-  than `2**-33`, and draw-free threshold-zero and threshold-`2**32` results;
+- if a later work order accepts a standalone Bernoulli consumer, ties-to-even
+  threshold construction, exact threshold-boundary word comparisons, quantized
+  probability error no greater than `2**-33`, and draw-free threshold-zero and
+  threshold-`2**32` results; Stage 6 does not implement this unused primitive;
 - Box-Muller raw-word schedule and ordered cosine/sine components at one exact
   positional address, scalar-consumer spare-result discard, two-component PSD
   use, native-dtype execution, same-backend repeatability, component moments
   and covariance, and explicit `float32`/`float64` radial cutoffs;
-- later Charge-stage exponential endpoint, mean, and finite-tail fixtures in
-  each accepted dtype, with no hidden widened `float64` path for a `float32`
-  operation;
+- if a later accepted consumer explicitly samples a continuous exponential
+  variate, endpoint, mean, finite-tail, and native-dtype fixtures for that
+  separately dispatched operation; Stage 6 CT/AP delay placement instead uses
+  binary64 prepared categorical laws and activates no such variate consumer;
 - globally unique fixed numeric operation-stream assignments that do not
   change with the requested subset, enabled branches, or later appended
   operations;
+- exact values `0x0000_0003` through `0x0000_000A` for dark counts, retained
+  DiCT, DiCT overflow, retained DeCT, DeCT overflow, timing jitter, AP, and
+  charge smearing respectively, including noncollision with the two Stage 5
+  noise streams and exact absence of a word request for disabled or
+  whole-stage zero-effect roles;
+- independent high-precision timing-jitter oracles for the analytic
+  latent-uniform plus ideal-Gaussian `q[k]` law, including ideal symmetry
+  `q[-k] = q[k]` and represented agreement within the accepted numerical
+  tolerance, representative and extreme supported `sigma / T` ratios, central
+  cells, named tails, and the farthest destinations that can remain inside both
+  window edges;
+- timing-preflight proof over `2**-52 <= sigma / T <= 64` and
+  `2 <= S <= 8192` that every possibly in-window destination is evaluated
+  without an arbitrary tail cutoff; the exact `z = 8` evaluator boundary and
+  asymptotic-series stopping paths; finite monotone nonnegative `L`, finite
+  nonnegative `q`, exact represented offset symmetry, stable `A`/`B` category
+  masses, and the `1e-12` category/tail/identity tolerance; and rejection of an
+  invalid law without clipping, residual assignment, or renormalization;
+- timing-runtime fixtures for increasing destination/address order, exact
+  `S * N <= 2**63` address-bound enforcement, retained-plus-drop count
+  conservation, the combined drop category as final no-draw remainder, source
+  immutability, and `sigma == 0` whole-stage bypass;
+  plus high-precision category fixtures and a complete represented-source-law
+  L1 error no greater than `1e-11`; ensemble agreement with analytic
+  multinomial mean, variance, covariance, displacement, and edge-loss
+  observables; and proof that production jitter neither expands individual PEs
+  nor calls Box-Muller;
+- aggregate multinomial fixtures for exact zero/one/no-count branches,
+  conditional-binomial conservation, fixed category order, binary64
+  probabilities, the exact small-mean inversion recurrence and strict CDF
+  comparison, stabilized large-mean BTRS proposal/quick-accept/log-bound paths,
+  real-algebra identity with the retired grouping, at-least-80-decimal-digit
+  fixtures through `n = 2**53 - 1`, the central `1e-6` absolute local gate,
+  complete-support mixed per-side allowances and decision separation,
+  fixed-word uncertainty-band ownership, a large-count cancellation regression
+  for the retired grouping, exact
+  raw-block schedules, reflection/complement behavior, 64-term/attempt
+  exhaustion injection, and covariance against the analytic multinomial law
+  without per-avalanche expansion;
+- AP address fixtures for generation-major, fixed offset-category-major, then
+  source-position-major order; overflow fixed at category `S`; reserved
+  invalid-from-source offsets left unused rather than compacted; stop as the
+  no-draw remainder; exact `K * (S + 1) * N <= 2**63`; block zero, one, and 63
+  schedules through raw ordinal 255; and identical category draws with and
+  without recovery enabled;
+- charge-smearing fixtures for exact stream `0x0000_000A`, every row-major
+  full-grid position including zero-S2 cells, `source_quantum = 0`, scalar
+  `z0` use with `z1` discarded in both dtypes, whole-stage zero-sigma bypass,
+  and no value-dependent position compaction;
+- active-Charge count-envelope fixtures for exact per-cell
+  `C_max = 2**53 - 1` acceptance and `C_max + 1` rejection across sources,
+  working grids, frontiers,
+  mechanism/overflow diagnostics, cumulative counts, binomial counts, and
+  accepted Poisson samples; checked-add success at the exact boundary and
+  failure one above without wrap; and multiple `C_max` cells proving there is no
+  whole-grid, row, batch, or example population ceiling;
+- exact address-product boundaries and immediate rejection above them for
+  `S*N`, `K*N`, and `K*(S+1)*N`, no arbitrary `K` gate for ineffective
+  mechanisms, checked shape-byte products, and proof that no complete address
+  lattice is materialized;
+- accumulator-depth fixtures at `L = 2**p_d - 1` and `L = 2**p_d`, plus
+  float32/float64 unit and recovered-AP ledgers against
+  `gamma_L*T + L*eta_d`, scientific `S2 <= S1 <= T`, exact-zero behavior, and
+  rejection of an unproved reassociated mapping;
+- smearing-envelope fixtures at the derived target-dtype sigma boundary and
+  its next representable neighbor, positive sigma that rounds to zero or
+  infinity, maximum-radius raw words, and zero-S2 cells, proving finite scale,
+  excursion, pre-clipped draw, and returned Charge on every accepted path;
+- Poisson scalar-oracle fixtures for `lambda = 0`, representative small rates,
+  values immediately below and at the exact crossover `10`, representative
+  PTRS rates, and the accepted endpoint `1e8`, plus rejection of negative,
+  nonfinite, and greater-than-`1e8` means before that sampler requests words or
+  writes its result;
+- at-least-80-decimal-digit Poisson executable-mapping fixtures requiring
+  `1e-12` absolute agreement for every inversion term/CDF value and the frozen
+  mixed absolute/relative local allowance for each PTRS full-accept side;
+  high-precision/represented decision agreement outside the summed uncertainty
+  band and fixed-word decisions inside it;
+- scalar and exact-output-shaped `torch.float64` means, rejection of arbitrary
+  broadcasting and wrong dtypes, exact-shape fresh nonnegative `torch.int64`
+  results, and a mixed zero/inversion/PTRS tensor proving masks preserve every
+  cell's original positional identity;
+- fixed-word Poisson inversion/CDF boundaries, PTRS quick acceptance, guarded
+  rejection, full log acceptance, one-block-per-attempt addressing, and
+  deterministic 64-attempt exhaustion through a reviewed synthetic sampler
+  oracle rather than a searched production seed, plus the maximum closed-open
+  uniform at a binary64 rate immediately below `10` to fix the inversion
+  recurrence's exact success-or-exhaustion result;
+- Poisson mean, variance, zero probability, selected PMF/tail, aggregate
+  superposition, no-`torch.poisson`, and no-fallback evidence, with exact
+  same-backend/mode repeatability, exact same-backend integer-history equality
+  across float32/float64 Charge requests, and conditional CUDA statistical
+  agreement rather than completed-field bitwise identity;
 - arbitrary-rank and arbitrary-shape positional RNG oracles, including scalar
   and empty results where the selected backend accepts them;
 - row-major logical flat positions derived from current dimension order rather
   than physical storage offsets, including noncontiguous-view fixtures;
-- for every later accepted iterative Charge role, exact
-  virtual-leading-iteration addressing `p = j * N + u`, checked
-  `G * N <= 2**63`, global rather
-  than block-local iteration identity, and no activity-compacted positions;
-- later Charge-stage deterministic source-quantum and raw-word ordinals,
-  collision-free address
-  encoding across every accepted root-seed/stream/position/quantum/raw-word
-  tuple, and the distinction between address uniqueness and ordinary repeated
-  32-bit output values;
+- for every accepted iterative Charge role, exact virtual-leading-generation
+  addressing, global rather than block-local generation identity, the fixed
+  CT `K*N` and AP `K*(S+1)*N` bounds, and no activity-compacted positions;
+- deterministic source-quantum and raw-word ordinals in generic schema tests,
+  collision-free address encoding across every accepted root-seed/stream/
+  position/quantum/raw-word tuple, the distinction between address uniqueness
+  and ordinary repeated 32-bit output values, and exact `source_quantum = 0`
+  for every aggregate MVP Charge sampler;
 - exact raw-word agreement between the scalar oracle and every Stage 5
   accepted vectorized eager implementation, plus proof that TensorDSLab neither
   reads nor mutates PyTorch global RNG state and does not construct a
@@ -4555,24 +5977,61 @@ The rebuild validation matrix includes:
   dark roots when present, but never the public truth field;
 - `K=0` roots-only and `K=1` direct-child off-by-one fixtures for the one
   coupled `_simulate_correlated_avalanches(...)` path;
+- contextual preflight fixtures proving `K=0` skips every delay/recovery
+  numerical gate, a zero CT mean skips that mode's kernel, and zero AP
+  probability skips both AP delay and recovery preparation, even when the
+  unused config/sampling pair would fall outside an active kernel's numerical
+  domain; all remain draw-free and retain structural config validation;
 - all eight DiCT/DeCT/AP enablement combinations, including exact
   all-disabled identity and no-draw behavior;
 - one frozen unmarked integer frontier per generation, with every retained
   child entering the next frontier exactly once and no charge value entering
   an offspring law;
+- exact eager traversal in increasing generation order; direct CT, delayed CT,
+  then AP mechanism order; increasing CT source bins within each destination;
+  increasing AP source bins and retained offsets before overflow/stop; and no
+  repeated-index scatter or atomic reduction with unspecified accumulation
+  order in the reference path;
 - separate DiCT and DeCT rate fields, ordinary Poisson draws, streams,
   accumulators, and right-overflow diagnostics, with no rate superposition,
-  conditional mode split, Gamma latent, or negative-binomial substitution;
-- analytic fixed-, exponential-, and zero-clipped-normal-delay PMFs under
-  independent per-edge uniform phase marginalization, plus dtype-aware
-  preparation tolerances, including the clipped-normal zero atom, zero-delay
-  DiCT staying in-bin, no shared or inherited phase, and no correlated-stage
-  underflow;
-- clipped-normal fixtures proving
-  `P(Delta = 0) = Phi(-location_ns / sigma_ns)`, PMF-plus-right-tail
-  normalization without silent renormalization, agreement with an explicit
-  edge-level Monte Carlo reference, and convergence toward
-  `FixedDelayConfig(location_ns)` as positive `sigma_ns` approaches zero;
+  conditional mode split, Gamma latent, or negative-binomial substitution,
+  plus distinct retained-destination and overflow-source positional fixtures;
+- analytic fixed- and exponential-delay PMFs under independent per-edge
+  uniform phase marginalization, plus their frozen binary64 preparation
+  contracts, zero-delay DiCT staying in-bin, no shared or inherited phase, and
+  no correlated-stage underflow;
+- fixed-delay fixtures for exact zero, `0.25*T`, `2.25*T`, exact `m*T`, and
+  `math.nextafter` immediately below and above a representable boundary;
+  exact two-point mass conservation; rejection when a nonzero exact remainder
+  collapses to a represented deterministic law; source-relative overflow
+  values zero, `f`, and one; window-stop and huge finite all-overflow plans;
+  exact integer-ratio unit conversion without a boundary-crossing
+  multiplication; no signed `source + n` formation; and exact absence of a
+  delay-specific RNG request;
+- exponential-delay fixtures across
+  `mean_delay/T in {2**-52, 2**-40, 1e-6, 0.1, 0.5, 1, 2, 16,
+  2**40, 2**52}`, both sides of the `x=0.5` central-mass branch, sample counts
+  `{2, 3, 8, 64, 512, 8192}`, and immediate rejection outside every ratio or
+  sample-count bound; independent 100-decimal-digit checks of every retained
+  category and analytic right tail; nonincreasing tails; natural far-tail
+  underflow; `1e-12` local identities; `1e-11` complete-law L1 error; and exact
+  absence of cutoff, clipping, residual assignment, renormalization, or a
+  delay-specific RNG request;
+- stable AP `A`/`B` conditional masses and analytic overflow tails from the
+  exponential law, plus exponential-recovery fixtures spanning both accepted
+  delay/recovery ratio domains, the auxiliary
+  `2**-51 <= x + y <= 2**53` domain including both endpoints, and all three
+  frozen log-difference branches; high-precision agreement for `rho_bar[d]`,
+  `h[d]`, and `h_ap_tail[L]`; exact
+  `recovery=None` unit response; finite `0 <= h <= q` and
+  `0 <= rho_bar <= 1` without clipping; the identities
+  `h[d] + c*q_(x+y)[d] = q_x[d]` and
+  `h_ap_tail[L] + c*R_(x+y)[L] = R_x[L]`; analytic zero-tail handling without
+  division; and recovery changing neither realized AP count/destination nor
+  descendant branching;
+- exact absence of `NormalDelayConfig` from the active class, union, export,
+  and package-contract surfaces after the first Stage 6 cleanup slice, while
+  the closed Stage 3 work order remains unchanged as historical evidence;
 - AP's one-child multinomial law, shared realized categories for integer count
   and deposited charge, and separate stop, retained, and right-overflow
   accounting;
@@ -4643,9 +6102,10 @@ The completed production steps are:
 
 The remaining production sequence is:
 
-1. Freeze the remaining Poisson/multinomial stream, numerical-tail, and
-   count-bound contracts, then implement the fixed-`K` charge simulation in
-   parity-scoped slices.
+1. Explicitly dispatch the Design-complete Stage 6 work order that implements
+   the closed aggregate multinomial, hybrid Poisson, fixed-`K` charge,
+   fixed/exponential delay/recovery, count/address/failure, RNG-stream, and
+   statistical-evidence contracts in bounded slices.
 2. Publish request-aware `simulate_readout(...)` only after every required
    producer exists and its complete closure can be preflighted.
 3. Profile real GPU memory and execution before designing workspace/output
@@ -4679,7 +6139,7 @@ following historical `0.6` contracts.
 | public atomic collection transforms | private typed product producers plus one public request API |
 | generic selection/movement plus reconstruction | explicit downstream operations when needed |
 | `readout/tensors.py` | retired |
-| global config/field/builder modules | product-owned `types.py` and `_product.py` modules plus `readout.simulation` |
+| global config/field/builder modules | product-owned `types.py` and `_produce.py` modules plus `readout.simulation` |
 | immediate public workspace architecture | functional first; optimize after measurement |
 | field-ID model selection | explicit ordered product-type selection |
 | field-ID parity boundaries | product-request/builder parity boundaries |
@@ -4762,16 +6222,18 @@ The private raw RNG core and positional address encoding are closed. RNG schema
 `tensordslab.threefry4x32-20/v1` uses the exact standard Random123
 `Threefry4x32_R<20>` word algorithm, numeric seed/stream/domain-tag key packing,
 logical-position/quantum/raw-word-block counter packing, lane selection, and
-accepted bounds specified above. This closes raw-bit generation only; it does
-not select the stream numbers for deferred algorithms.
+accepted bounds specified above. Stage 5 closed raw-bit generation for its two
+noise streams; later Design appended all eight Charge streams through
+`CHARGE_SMEARING = 0x0000_000A` without changing that historical evidence.
 
 The noise-required distribution layer is closed for Stage 5:
 precision-matched Random123-style `float32` and `float64`
 closed-open/open-open conversions and address-local ordered Box-Muller pairs.
 Ties-to-even 32-bit Bernoulli thresholds and native-dtype exponential inversion
 remain selected future Charge Design rather than Stage 5 implementation scope.
-The documented finite normal tail is an accepted bounded-MVP approximation and
-parity qualification, not a hidden claim of unbounded continuous support.
+The documented finite Box-Muller tail is an accepted bounded-MVP approximation
+for actual variate consumers such as noise and charge smearing, not timing
+jitter and not a hidden claim of unbounded continuous support.
 
 Stage 3 completed the TensorCore selection, inherited-constructor typing,
 public-import, and fixed consumer-probe gate at exact commit
@@ -4779,43 +6241,38 @@ public-import, and fixed consumer-probe gate at exact commit
 
 The remaining gates are:
 
-1. Exact private Charge stream assignments, Poisson algorithm and crossover,
-   operation-specific per-quantum versus exact aggregate sampling choices,
-   Charge-specific execution-dtype and raw-word-budget choices,
-   rejection/exhaustion behavior, and supported execution-mode repeatability
-   evidence. The Threefry engine, address packing, uniform conversion, and
-   Box-Muller mapping are no longer open. Bernoulli and exponential equations
-   are selected, but their implementation/evidence activates only with an
-   accepted Charge consumer.
-2. Exact fixed/exponential/zero-clipped-normal offset-PMF preparation
-   precision, stable normal-CDF and right-tail evaluation, normalization and
-   tail-rounding tolerance; supported `maximum_generations`, rate,
-   source-count, and accumulated-count bounds; and hard checked-overflow
-   behavior. These are execution-support limits, not alternate scientific
-   laws.
-3. Waveform-tail optimization evidence after the functional producers are
+1. Explicit dispatch, implementation, and supported-execution-mode evidence
+   under the Design-complete Stage 6 work order. The
+   scientific transition, delay/recovery preparation, stabilized aggregate
+   samplers, all eight Charge streams, positional schedules, per-cell count
+   ceiling, relational generation/address bounds, ledger/smearing envelope,
+   failure effects, and TensorDSLab-model statistical policy are no longer open
+   Design. Standalone Bernoulli and sampled continuous-exponential equations
+   remain recorded, but their implementation and evidence activate only if a
+   later accepted consumer actually uses them.
+2. Waveform-tail optimization evidence after the functional producers are
    accepted: compiler/execution mode, equivalence to the frozen eager
    reference, one-kernel/no-target-sized-temporary instrumentation, and the
    fallback gate for a purpose-built kernel. Cross-product analog/digitized
    fusion remains excluded.
-4. Digitization-config association for independent/durable consumers.
-5. Exact TensorG4DS source and dense truth-binning bridge, including provenance
+3. Digitization-config association for independent/durable consumers.
+4. Exact TensorG4DS source and dense truth-binning bridge, including provenance
    origin, left-edge construction, exact boundary assignment at `0`, `i * T`,
    and exclusive `N * T`, plus `underflow_hit_count` and
    `overflow_hit_count` accounting.
-6. Whether typed collection convenience properties materially improve the API.
+5. Whether typed collection convenience properties materially improve the API.
 
 The fixed-`K` correlated-avalanche model itself is closed at the scientific
 algorithm level: exact config ownership, independent per-edge phase closure,
 ordinary separate DiCT/DeCT Poisson laws, AP's bounded categorical law,
-fixed/exponential/zero-clipped-normal CT delay families, optional composed
-exponential recovery response, unmarked cross-feeding, S1/S2 ledgers, terminal
+fixed/exponential CT delay families, optional composed exponential recovery
+response, unmarked cross-feeding, S1/S2 ledgers, terminal
 smearing rule, causal right-overflow policy, and private diagnostic vocabulary
-are selected above. The remaining Charge gates are the sampler/RNG and
-supported-numerical-domain items 1 and 2, plus concrete parity tolerances. No
-work order may substitute a same-bin closure, generation-wave plan, marked
-recovery process, Gamma-Poisson law, or separate public mechanism pipeline for
-this baseline.
+are selected above. The remaining Charge gate is execution: explicit dispatch
+of the Design-complete Stage 6 work order, implementation, and fixed-commit
+evidence for the closed design. No work order may substitute a same-bin closure,
+generation-wave plan, marked recovery process, Gamma-Poisson law, or separate
+public mechanism pipeline for this baseline.
 
 `Config(ABC)`, product-level `persist` flags, jagged builder input, and public
 truth-replacing timing jitter are deliberately omitted. Persistence remains a

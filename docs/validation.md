@@ -45,6 +45,13 @@ caller-supplied PSD noise producer. The five conditional CUDA skips are
 qualifications rather than GPU evidence. Measured fusion remains a later
 stage.
 
+The focused
+[Stage 6 work order](implementation/stage_6_charge_simulation.md) is
+Design-complete / Undispatched at this documentation baseline. It activates
+the exact Charge sampler, delay, timing, cascade, ledger, smearing, and
+statistical gates below only after Design explicitly dispatches its committed
+authority. No Stage 6 production evidence exists yet.
+
 Documentation-only Design work remains in Design unless the user requests an
 independent documentation Validation or Review. At minimum, run:
 
@@ -288,9 +295,12 @@ or relationship in [Scientific Configuration](architecture/rebuild.md#scientific
 At minimum, cover:
 
 - `TimingJitterConfig`, `DarkCountConfig`, `FixedDelayConfig`,
-  `ExponentialDelayConfig`, `NormalDelayConfig`, `DirectCrosstalkConfig`,
+  `ExponentialDelayConfig`, `DirectCrosstalkConfig`,
   `DelayedCrosstalkConfig`, `AfterpulseRecoveryConfig`, `AfterpulseConfig`,
   `CorrelatedAvalancheConfig`, `ChargeSmearingConfig`, and `ChargeConfig`;
+- after the first Stage 6 cleanup slice, exact two-member fixed/exponential
+  crosstalk unions and complete `NormalDelayConfig` absence from production,
+  package exports, and current package-contract expectations, without a shim;
 - `TpcFebSnrPulseConfig`, `VetoPduPulseConfig`, and the exact two-model
   `PureWaveformConfig` union;
 - `ZeroNoiseConfig`, `WhiteNoiseConfig`, `PsdNoiseConfig`, and the exact
@@ -433,6 +443,183 @@ same-backend repeatability, and deterministic PSD construction. Its stochastic
 checks use analytic estimator uncertainty for white/PSD moments and covariance.
 The PSD DC coefficient is exact zero; the sample-domain record mean is bounded
 by inverse-FFT roundoff rather than required to equal zero exactly.
+
+Later Design selected the aggregate multinomial and hybrid Poisson contracts
+for the Design-complete Stage 6 work order; this changes no Stage 5 evidence
+and is not yet production validation. When explicitly dispatched, that work
+order must activate at least:
+
+- the frozen Stage 6 statistical policy: seeds `0`, `1`,
+  `0x0123_4567_89ab_cdef`, and `0xffff_ffff_ffff_ffff`; `M=2**18` for scalar
+  and one-parent laws; `M=2**16` for aggregate `Q=32`, small-grid `K<=3`, and
+  completed-`Charge` fixtures; examples rather than correlated cells as the
+  independent replicates; target-law standard errors; the predeclared
+  `8*SE + 64*eps*max(1,ceil(log2(length)))*abs(scale)` gate; and at least 256
+  expected hits and misses for every asserted frequency;
+- exact separation between TensorDSLab-model conformance and later IV
+  equivalence: no fabricated universal donor percentage, no IV runtime test,
+  and an observable-specific collaborator/calibration margin before applying
+  the documented `abs(delta_mean)+8*combined_SE <= margin` donor rule;
+
+- timing-jitter probability fixtures from an independent scalar oracle using
+  at least 100 decimal digits for the analytically integrated latent-uniform
+  plus ideal-Gaussian law, covering `sigma / T` values
+  `{2**-52, 2**-40, 2**-20, 1e-3, 0.1, 0.625, 1, 4, 16, 64}`;
+  sample counts `{2, 3, 8, 64, 512, 8192}`; central cells; offsets bracketing
+  standardized distance `z = 8`; named tails near `z = 20, 37, 38`; farthest
+  destinations; both window edges; ideal symmetry; exact represented symmetry;
+  category/tail/identity absolute error no greater than `1e-12`; and complete
+  represented-source-law L1 error no greater than `1e-11`;
+- proof that timing preflight evaluates every destination capable of remaining
+  inside the window, introduces no arbitrary tail cutoff, produces finite
+  monotone nonnegative one-sided tails and finite nonnegative offset masses,
+  exercises the direct/asymptotic evaluator boundary and both asymptotic stop
+  conditions, prepares stable success/later-category `A`/`B` masses, and
+  rejects rather than clips, assigns a residual, or silently renormalizes an
+  out-of-contract law;
+- exact `sigma == 0` whole-stage identity with no jitter stream access, no
+  replacement tensor, and no perturbation of later role addresses; increasing
+  target-bin/category addressing through exact stream
+  `CHARGE_TIMING_JITTER = 0x0000_0008` for `sigma > 0`; checked
+  `2**-52 <= sigma / T <= 64`, `2 <= S <= 8192`, and `S * N <= 2**63`;
+  the overflow-safe picosecond conversion/precheck; rejection immediately
+  outside every bound before a word request or write;
+  the combined drop category as a final no-draw count remainder; exact source-
+  count conservation across retained destinations plus drop; and source
+  `Photoelectrons` immutability;
+- aggregate timing-jitter ensemble agreement with the analytic multinomial
+  means, variances, covariance, displacement moments, and drop probability,
+  including an explicit per-PE ideal-law oracle used only for validation; plus
+  exact repeatability for the same accepted backend/mode/environment and
+  statistical CPU/CUDA agreement for completed jitter unless stronger evidence
+  is later ratified; and proof that production jitter neither expands PEs nor
+  calls the Box-Muller normal primitive;
+- fixed-delay scalar-oracle fixtures for exact zero, fractional offsets,
+  representable period boundaries and their immediate `nextafter` neighbors,
+  exact two-point mass conservation, source-relative overflow values zero,
+  `f`, and one, huge finite all-overflow plans, collapse rejection, no signed
+  `source + offset` arithmetic, exact integer-ratio
+  nanosecond-to-picosecond conversion without boundary-crossing
+  multiplication, and no delay-specific RNG request;
+- exponential-delay comparison against an independent at-least-100-decimal-
+  digit oracle across the complete supported
+  `2**-52 <= mean_delay/T <= 2**52` domain, both sides of the frozen `x=0.5`
+  central-mass branch, `2 <= S <= 8192`, every retained category and analytic
+  right tail, natural far-tail underflow, and immediate out-of-domain
+  rejection; require `1e-12` local absolute identities and `1e-11`
+  complete-law L1 error, with no cutoff, clipping, residual assignment,
+  renormalization, subtraction-derived overflow, or delay-specific RNG;
+- exponential AP conditional-binomial `A`/`B` mass fixtures and stable
+  recovery fixtures spanning both accepted delay/recovery ratio domains and
+  the auxiliary `2**-51 <= x + y <= 2**53` effective-rate domain, including
+  both endpoints, and all three frozen log-difference branches; compare
+  `rho_bar[d]`, retained `h[d]`, and `h_ap_tail[L]` with the independent
+  high-precision oracle; prove finite `0 <= h <= q`,
+  `0 <= rho_bar <= 1`, `h[d] + c*q_(x+y)[d] = q_x[d]`, and
+  `h_ap_tail[L] + c*R_(x+y)[L] = R_x[L]` within the local tolerance without
+  clipping; and prove recovery changes only deposited charge, while
+  `recovery=None` is the exact unit-response law;
+- contextual identity fixtures proving `K=0` skips every CT/AP delay and
+  recovery numerical gate, a zero CT mean skips that mode's kernel, and zero
+  AP probability skips its delay and recovery preparation, including
+  structurally valid unused config/sampling pairs outside the active kernel's
+  numerical domain; each path remains draw-free and begins no producer write;
+- exact zero/one/no-count multinomial/binomial paths, fixed category order,
+  stable prepared success/later-category masses without repeated remaining-
+  probability subtraction, strict `B < A` complement selection, conservation,
+  binary64 probability control, the exact forward-CDF/BTRS
+  crossover, inversion recurrence and strict comparison, BTRS proposal,
+  support check, quick acceptance and log-bound acceptance, fixed word order,
+  reflection/complement timing, and deterministic 64-term/attempt exhaustion;
+- independent fixed-word scalar binomial oracles covering inversion acceptance
+  at `k = 0`, an interior CDF boundary, represented top-lattice
+  success-or-exhaustion, the exact crossover on both sides, BTRS support
+  rejection, quick acceptance, full log acceptance, 64 rejected attempts,
+  `A == B` without reflection, and `B < A` with complement only after
+  acceptance;
+- algebraic identity between the stabilized and earlier real-arithmetic BTRS
+  bounds, plus an at-least-80-decimal-digit sweep over `n` values including
+  crossover cases, `2**32 - 1`, `2**52 - 1`, `2**52`, `2**52 + 1`, and
+  `2**53 - 1`; `p_star` at and immediately around `n*p_star = 10`, extreme
+  accepted probabilities, and `0.5`; support edges and quick/full-accept
+  paths; a `1e-6` absolute local stabilized log-bound gate through 25 standard
+  deviations; the frozen mixed per-side allowances and decision-separation
+  rule over complete support; fixed-word ownership inside the uncertainty
+  band; and a regression demonstrating the retired grouping's large-count
+  cancellation;
+- exact-zero no-draw Poisson behavior; rejection of negative, nonfinite, and
+  greater-than-`1e8` means; inverse-CDF fixtures below `10`; PTRS fixtures at
+  and above `10`; acceptance of exactly `1e8`; and deterministic 64-attempt
+  exhaustion without reseed, clamp, approximation, algorithm switch, or
+  `torch.poisson`;
+- at-least-80-decimal-digit Poisson mapping oracles: `1e-12` absolute error for
+  every represented inversion term/CDF value, and the frozen
+  `1e-6 + 64*eps(float64)*max(1,abs(reference_side))` allowance for each PTRS
+  full-accept side; exact high-precision/represented decision agreement when
+  the reference sides are separated by more than their summed allowances, and
+  fixed-word ownership of decisions inside that finite uncertainty band;
+- exact values and noncollision for the five selected Poisson streams, dark
+  noniterative addressing, retained-destination versus overflow-source
+  generation lattices, `source_quantum = 0`, and no active-compaction-derived
+  position;
+- exact append-only values `0x0000_0009` and `0x0000_000A` for AP and charge
+  smearing, AP's coupled generation/offset/source lattice with overflow fixed
+  at category `S` and stop as the no-draw remainder, enforcement of
+  `K * (S + 1) * N <= 2**63`, and full-grid smearing positions including
+  zero-S2 cells with scalar `z0` use and `z1` discard;
+- the universal active-Charge per-cell count ceiling `C_max = 2**53 - 1`:
+  exact source/working/frontier/diagnostic/cumulative pass at `C_max`, rejection
+  at `C_max + 1`, checked-add success at the exact boundary, forced
+  `C_max + 1` failure
+  without wrap, conditional remainders bounded by their remaining count, and a
+  small tensor containing multiple `C_max` cells to prove there is no whole-grid
+  or row population cap;
+- independent Poisson mean/count boundaries: successful `lambda = 1e8`
+  sampling, an injected accepted proposal above `C_max` causing hard failure rather
+  than rejection/clipping, exact dark-rate rational boundary checks, and CT
+  rate formation that compares the thinning basis before multiplication and
+  rechecks the represented rate;
+- exact relational address boundaries and their immediate failures for
+  `S*N`, `K*N`, and `K*(S+1)*N`; no arbitrary `K` cap on ineffective
+  mechanisms; and proof that the implementation never materializes a complete
+  address lattice;
+- exact eager reference traversal in increasing generation order; direct CT,
+  delayed CT, then AP mechanism order; increasing source bins within each CT
+  destination; increasing AP source bins and retained offsets before
+  overflow/stop; and rejection of repeated-index scatter/atomic accumulation
+  with unspecified order in the reference path;
+- accumulator-depth boundaries `L = 2**p_d - 1` and `L = 2**p_d` without
+  executing that many generations; float32/float64 unit and recovery-weighted
+  ledgers against the frozen `gamma_L*T + L*eta_d` oracle; scientific
+  `S2 <= S1 <= T`; exact-zero preservation; and rejection of reassociation
+  that claims the eager bound without a new depth proof;
+- smearing representation guards at the derived dtype-specific sigma boundary
+  and its next representable neighbor, positive config values that round to
+  zero or infinity, `S2 == 0`, and fixed raw words realizing the greatest
+  Box-Muller radius; all successful pre-clipped and clipped results remain
+  finite;
+- scalar and exact-shaped binary64 Poisson means, rejection of unsupported
+  broadcasting and wrong dtypes, exact-shaped fresh nonnegative `int64`
+  results, and a mixed zero/inversion/PTRS tensor proving branch masking does
+  not compact or perturb another cell's address;
+- analytic Poisson mean, variance, zero probability, selected PMF/tails,
+  superposition, dark-count cell independence, and separate DiCT/DeCT retained
+  and overflow accounting;
+- exact same-backend/mode repeatability and integer-history equality across
+  float32/float64 Charge requests, with conditional CPU/CUDA statistical
+  agreement for completed Poisson values rather than bitwise equality; and
+- synthetic forced-exhaustion and checked-overflow fixtures proving that no
+  partial semantic `Charge` is returned after failure, including a maximum
+  closed-open uniform with a binary64 rate immediately below `10` to lock the
+  selected inversion recurrence's success-or-exhaustion result; source/config
+  immutability, no fallback or partial diagnostic exposure, deterministic retry
+  on the same backend/mode, and stateless RNG behavior after both preflight and
+  dynamic failures; and
+- allocation-boundary fixtures proving checked package-planned shape-byte
+  arithmetic, ordinary managed/backend allocation and OOM propagation without
+  a fabricated memory cap or allocation-free claim, raw storage remaining
+  unexposed while writable, and absence of a returned semantic object on
+  failure.
 
 Later checks activate only under focused production work orders. They must not
 be weakened merely because earlier stages establish related semantic types or

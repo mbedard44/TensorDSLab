@@ -54,6 +54,16 @@ Review, and Design's post-merge audit found no unresolved issue. CUDA was
 unavailable, so the evidence is eager CPU-only; measured GPU fusion remains a
 later optimization stage.
 
+[Stage 6](implementation/stage_6_charge_simulation.md) is Design-complete /
+Undispatched at this documentation baseline. Its focused work order closes the
+production scope for the private aggregate samplers, dark counts, analytic
+timing jitter, fixed-generation DiCT/DeCT/AP cascade, S1/S2 ledgers,
+right-overflow diagnostics, charge smearing, and `_produce_charge(...)`. It
+also owns retirement of `NormalDelayConfig` and the behavior-neutral waveform
+producer rename. The committed work order remains documentation authority
+until Design explicitly dispatches its exact synchronized commit through the
+verified execution roles.
+
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`, bound to
 accepted candidate `d634401a853915edeb4f83df4a4943b3553deced`. Conformance is
 `Not evaluated`, Coordination is `Deferred`, and Profile B is `Disabled`.
@@ -124,8 +134,10 @@ computes every transitive prerequisite once, and returns exactly the requested
 products in an immutable completed `ReadoutCollection`. Unrequested
 prerequisites remain private temporaries. `Photoelectrons` remains immutable
 truth: dark roots and timing redistribution occur privately inside charge
-production. The fixed-`K` model in `architecture/rebuild.md` is the sole active
-correlated-avalanche baseline.
+production. Timing jitter analytically prepares its binned Gaussian transition
+law and samples aggregate counts rather than per-PE normal values. The fixed-
+`K` model in `architecture/rebuild.md` is the sole active correlated-avalanche
+baseline.
 
 The rebuild begins with a functional simulation path. It does not carry the
 old public `out`, preconstructed destination, `ReadoutWorkspace`, lease,
@@ -171,19 +183,25 @@ tensor_dslab/
     _requirements.py
     _random.py                # Stage 5 private RNG behavior
     photoelectrons/types.py
-    charge/{types.py,_product.py}
-    pure_waveform/{types.py,_product.py}
-    noise_waveform/{types.py,_product.py}
-    analog_waveform/{types.py,_product.py}
-    digitized_waveform/{types.py,_product.py}
+    charge/{types.py,_produce.py}
+    pure_waveform/{types.py,_produce.py}
+    noise_waveform/{types.py,_produce.py}
+    analog_waveform/{types.py,_produce.py}
+    digitized_waveform/{types.py,_produce.py}
 ```
 
 Each product package owns its field, configs, validation, and eventual private
-`_product_*` producer. `readout/types.py` owns only the two cross-product
+`_produce_*` producer. `readout/types.py` owns only the two cross-product
 composition types. `readout/simulation.py` owns the one public orchestration
 function. `_requirements.py` and `_random.py` are private. No behavior module
 is created as an empty placeholder; the complete ownership and import rules
 are in `architecture/rebuild.md`.
+
+The merged Stage 4 and Stage 5 production files still carry transitional
+`_product.py` module and `_product_*` callable names. The next authorized
+production slice touching them performs one behavior-neutral rename to
+`_produce.py` and `_produce_*`; the tree above is the accepted destination,
+not a claim that the rename has already occurred.
 
 ## Documentation Map
 
@@ -193,6 +211,9 @@ are in `architecture/rebuild.md`.
 - [Rebuild Architecture](architecture/rebuild.md): complete selected rebuild
   contract, config sketches, scientific algorithms, RNG design, package
   ownership, closed decisions, and remaining gates.
+- [Correlated-Avalanche Physics](physics/correlated_avalanches.md):
+  newcomer-facing explanation of the physical assumptions, aggregate
+  statistics, fixed-generation algorithm, and visual tensor example.
 - [TensorCore Integration](architecture/tensors.md): the accepted TensorCore
   `0.7` extension and result contracts for TensorDSLab.
 - [Post-Binned Readout](architecture/readout.md): readout product semantics,
@@ -211,6 +232,9 @@ are in `architecture/rebuild.md`.
 - [Stage 5 Work Order](implementation/stage_5_readout_rng_and_stochastic_noise.md):
   Merged / Closed private positional RNG and complete zero/white/PSD noise
   producer slice.
+- [Stage 6 Work Order](implementation/stage_6_charge_simulation.md):
+  Design-complete / Undispatched private Charge producer, aggregate sampler,
+  timing, fixed-generation cascade, ledger, and smearing slice.
 - [Package Governance](governance/index.md): adoption decision and declaration,
   TensorDSLab overlay, semantic rule map, state boundaries, and closeout.
 - [Stage 2 Work Order](implementation/stage_2_package_and_readout_collection_foundation.md):

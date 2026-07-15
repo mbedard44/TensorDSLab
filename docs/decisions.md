@@ -111,7 +111,7 @@ not part of the rebuild surface.
 ### Photoelectrons Is An Already-Produced Truth Input
 
 Readout simulation accepts one dense `Photoelectrons` field. It has no
-`PhotoelectronsConfig` and no readout `_product.py`. A future TensorDSLab-owned
+`PhotoelectronsConfig` and no readout `_produce.py`. A future TensorDSLab-owned
 bridge will construct it from an exact accepted TensorG4DS product using the
 caller's sampling policy. That bridge, not `simulate_readout`, owns provenance
 mapping, channel mapping, and PE binning.
@@ -145,10 +145,20 @@ Request order has no meaning. Changing retention alone must not change a
 common product value. Missing config, invalid seed, or another request-level
 error fails before any random draw or tensor write.
 
-Private `_product_*` functions construct semantic products. Private
+Private `_produce_*` functions construct semantic products. Private
 `_simulate_*` functions implement scientific submodels inside a product
 producer. There is no public sequential API through which callers can
 accidentally feed one private avalanche contribution into another.
+
+The `_produce_*` verb is the accepted target because these functions return a
+completed typed product; `_simulate_*` remains reserved for scientific work
+inside that production boundary. Product-owned `_produce.py` modules house
+that behavior, while `types.py` owns product identity and configuration. The
+merged Stage 4 and Stage 5 code still uses transitional `_product_*` callables
+in `_product.py` modules. A focused production work order must rename those
+callables, modules, imports, and tests without changing behavior before public
+readout orchestration closes. New product producers, beginning with Charge,
+use `_produce_*` in `_produce.py` from the outset.
 
 ### Scientific Configuration Is Immutable And Compositional
 
@@ -173,7 +183,7 @@ relationships and RNG live in `_requirements.py` and `_random.py` only when
 implemented.
 
 Each product subpackage owns a `types.py` containing its field and product
-configs, and later a `_product.py` containing its private producer and
+configs, and later a `_produce.py` containing its private producer and
 submodels. `photoelectrons` has only `types.py`. Product packages never import
 the cross-product collection, config, or public simulation layer.
 
@@ -229,15 +239,21 @@ The Merged / Closed Stage 5 work order selects private
 `tensordslab.threefry4x32-20/v1` and one central strongly typed `_RngStream`
 enum. Its initial exact members are `NOISE_WHITE = 0x0000_0001` and
 `NOISE_PSD_COEFFICIENT = 0x0000_0002`; stream zero is unassigned, zero noise
-owns no stream, and Charge assignments remain open. The root API remains one
-ordinary non-boolean 64-bit seed. No public RNG object, `torch.Generator`,
-semantic coordinate, timestamp, or loose stream constant is introduced.
+owns no stream, and Charge assignments were outside that historical work
+order. The later Charge decisions below append all eight Charge members through
+`CHARGE_SMEARING = 0x0000_000A` without changing either Stage 5 value. The root API
+remains one ordinary non-boolean 64-bit seed. No public RNG object,
+`torch.Generator`, semantic coordinate, timestamp, or loose stream constant is
+introduced.
 
 Stage 5 implements only the raw engine, fixed-point uniforms, and Box-Muller
-behavior consumed by zero/white/PSD noise. Bernoulli, exponential, Poisson,
-categorical, rejection, source-quantum, and generation mechanics remain Charge
-scope. White RMS and PSD cells are prepared in Python binary64, PSD overlaps
-use `math.fsum`, and executed values are rounded once into the requested dtype.
+behavior consumed by zero/white/PSD noise. At that historical boundary,
+Bernoulli, exponential, Poisson, categorical, rejection, source-quantum, and
+generation mechanics remained later Design scope. The decision below now
+selects aggregate binomial and Poisson behavior; standalone Bernoulli and
+continuous exponential inversion still have no accepted MVP consumer. White
+RMS and PSD cells are prepared in Python binary64, PSD overlaps use `math.fsum`,
+and executed values are rounded once into the requested dtype.
 Those values define ideal-standard-normal targets; the finite Box-Muller
 lattice is not renormalized. White RMS must remain in the selected dtype's
 positive normal range. Conservative host bounds reject that unsupported
@@ -249,6 +265,181 @@ completed normal and PSD products are exactly repeatable only on the same
 backend/mode and compare statistically across backends. Results are fresh,
 source-payload-independent `NoiseWaveform` values with `requires_grad=False`.
 Compiled execution and performance optimization remain later measured work.
+
+### Charge Uses Aggregate Multinomial And Hybrid Poisson Sampling
+
+Timing jitter and AP placement use aggregate multinomial laws realized through
+sequential conditional binomials, never per-avalanche categorical expansion.
+Their binomial primitive uses exact zero/one/no-count branches, probability
+reflection, one-uniform forward-CDF inversion when `n * p_star < 10`, and
+Hoermann BTRS otherwise. Inversion checks at most the terms
+`k = 0 .. min(n, 63)` using the frozen binary64 recurrence and strict
+`U < cumulative` test. BTRS owns one
+Threefry block per addressed attempt, maps its two word pairs to `u` then `v`,
+checks support before conversion or quick acceptance, uses the frozen
+log-domain bound, and permits attempts `0 .. 63`. Each multinomial law prepares
+the current-category mass `A` and later-category mass `B`; reflection is strict
+at `B < A`, and complementation occurs only after acceptance. Equal masses are
+not reflected. This avoids repeated remaining-mass subtraction and avoids
+forming a tiny side as `1-p`. Either exhaustion is a deterministic hard
+failure. For each timing-jitter source cell, increasing
+target-bin order is increasing signed-offset order; the combined drop bucket
+is the final exact count remainder. AP orders retained causal offsets
+increasingly, then overflow, with stop as the exact remainder.
+
+BTRD is rejected for this v1 mapping. Its additional decomposition primarily
+saves uniform variates, while TensorDSLab's positional RNG reserves the same
+complete two-uniform Threefry block for each attempt. BTRS retains the same
+transformed-rejection target and central fast-accept region with fewer
+branches and one fixed tensor-friendly word schedule. “Exact BTRS mapping” in
+this Design means the frozen binary64 equations, operation grouping, word
+addresses, and comparisons; it is not a claim of exact ideal-binomial sampling
+despite finite Stirling-tail approximation and rounding. The accepted
+cancellation-resistant `log1p` grouping is algebraically identical to the
+earlier three-log form and supports `n <= 2**53 - 1`. Central candidates
+through 25 standard deviations own a `1e-6` absolute local log-bound gate;
+complete support uses
+`1e-6 + 64*eps(float64)*max(1,abs(reference_side))` per side, exact decision
+agreement outside the summed uncertainty band, and fixed-word decisions inside
+it. The frozen statistical-law gate provides the separate distribution
+evidence.
+
+Dark counts and retained/overflow DiCT and DeCT use one generic private
+Poisson sampler. Its exact-zero path requests no word; positive means below
+`10` use one-uniform binary64 forward-CDF inversion; means from `10` through
+`1e8` inclusive use Hoermann PTRS; and unsupported means fail. Inversion checks
+64 probability terms. PTRS consumes two open-open float64 uniforms from one
+Threefry block per attempt and permits 64 attempts. Exhaustion never reseeds,
+clamps, approximates, changes algorithms, or returns a fallback.
+Poisson inversion owns a `1e-12` absolute term/CDF oracle gate. PTRS owns the
+mixed `1e-6 + 64*eps(float64)*max(1,abs(reference_side))` local log-side gate
+and exact decision agreement outside the resulting uncertainty band; fixed
+words define decisions within that band.
+
+All discrete probabilities, Poisson rate fields, and sampler control use
+binary64 independently of the requested `Charge` dtype. Avalanche counts are
+`int64`; S1/S2, AP charge diagnostics, and the final product remain in the
+requested floating dtype. On one unchanged backend/mode, integer avalanche
+history must therefore be identical for float32 and float64 Charge requests.
+Completed CPU/CUDA Poisson fields compare statistically rather than bitwise
+because the selected algorithms use transcendental functions.
+
+The complete append-only MVP Charge stream assignments are:
+
+```text
+CHARGE_DARK_COUNTS                  = 0x0000_0003
+CHARGE_DIRECT_CROSSTALK             = 0x0000_0004
+CHARGE_DIRECT_CROSSTALK_OVERFLOW    = 0x0000_0005
+CHARGE_DELAYED_CROSSTALK            = 0x0000_0006
+CHARGE_DELAYED_CROSSTALK_OVERFLOW   = 0x0000_0007
+CHARGE_TIMING_JITTER                = 0x0000_0008
+CHARGE_AFTERPULSES                  = 0x0000_0009
+CHARGE_SMEARING                     = 0x0000_000A
+```
+
+Dark counts use `p = source_flat_position`. Every crosstalk role uses
+`p = generation * N + local_flat_position`, where retained roles are
+destination-indexed and overflow roles are source-indexed. All are aggregate
+cell draws with `source_quantum = 0`; an attempt is the raw-word block. Direct
+and delayed rates are never superimposed, and retained/overflow roles never
+share a stream. Timing jitter uses
+`p = target_bin * N + source_flat_position`, `q = 0`, and leaves its combined
+drop category as a no-draw integer remainder. `torch.poisson`, global RNG,
+normal approximations, and per-parent expansion are rejected substitutions.
+
+AP uses one stream for its coupled retained, overflow, charge, and S2 outcome:
+`p = ((generation * (S + 1) + category) * N) + source_flat_position`, with
+retained offset categories `0..S-1`, fixed overflow category `S`, stop as the
+no-draw remainder, and `q = 0`. Enabled smearing uses one full-grid scalar
+normal per row-major flat position with `q = 0`; zero-scale cells retain their
+addresses, while absent or zero-sigma smearing skips the stream entirely.
+
+### Charge Uses A Relational Numeric Envelope
+
+Active Charge execution uses the universal per-cell count ceiling
+`C_max = 2**53 - 1`, covering source/working/frontier cells, mechanism and overflow
+diagnostics, cumulative counts, aggregate-binomial counts, and accepted Poisson
+samples. Every nonnegative integer addition proves `rhs <= C_max - lhs` before it
+executes. The Poisson mean ceiling remains the independent `1e8`; neither bound
+is a whole-grid, row, batch, or example population limit.
+
+There is no magic maximum-generation constant. Checked role addresses require
+`S*N <= 2**63` for jitter, `K*N <= 2**63` for each effective CT role, and
+`K*(S+1)*N <= 2**63` for effective AP. The eager ledger plan additionally
+requires `L < 2**p_d`, where `p_d` is 24 or 53 and
+`L = E*K + 1`, or `E*K + S + 3` when recovered AP charge is retained. Its
+forward-error bound is `gamma_L*T + L*eta_d`, with
+`gamma_L = L/(2**p_d-L)`. Smearing uses the resulting worst-case ledger bound
+plus the exact finite Box-Muller radius to reject only a contextual dtype
+overflow risk. The eager reference fixes generation, direct-CT/delayed-CT/AP
+mechanism, source-bin, and AP-offset accumulation order and forbids an
+unspecified repeated-index atomic reduction. Details and failure effects are
+normative in
+[`architecture/rebuild.md`](architecture/rebuild.md#stage-6-count-address-and-numeric-envelope).
+
+### Stage 6 Separates Model Conformance From Donor Equivalence
+
+Stage 6 reuses the four frozen Stage 5 seeds and fixes `2**18` independent
+examples for scalar/one-parent laws and `2**16` for aggregate `Q=32`,
+small-grid `K<=3`, and completed-Charge fixtures. A predeclared statistic must
+satisfy `abs(observed-target) <= 8*SE + delta`, with target-law moments defining
+`SE` and the frozen dtype/reduction allowance defining `delta`. Exact identities
+and the `1e-12`/`1e-11` probability-preparation gates remain separate.
+
+This validates TensorDSLab's selected model. It does not invent an IV-DSLab
+percentage for finite-`K` recursion, DeCT, corrected AP, clipped smearing, or
+detector-level Charge. A later donor-equivalence claim requires an
+observable-specific collaborator/calibration margin and the combined-SE rule
+in [`parity.md`](parity.md).
+
+### Timing Jitter Uses An Analytically Prepared Gaussian Kernel
+
+The timing-jitter scientific law is `U + J`, where the lost source-bin phase
+`U` is uniform on the bin and `J` is an ideal zero-mean Gaussian. Each
+avalanche receives one `(U, J)` pair whose components are independent, and the
+pairs are IID across avalanches. Preflight analytically integrates that law
+into binary64 probabilities for every destination that can remain inside the
+finite sample window. The runtime owns
+no per-PE Gaussian or Box-Muller draw: it applies the selected aggregate
+conditional-binomial sampler to increasing destination bins and leaves the one
+combined out-of-window category as the final no-draw count remainder.
+
+There is no arbitrary Gaussian tail cutoff. Every possibly in-window
+destination is evaluated, retained destinations plus the drop category
+conserve each source count, and `sigma == 0` skips the complete stage without
+RNG.
+
+The stable evaluator is now closed. With `r = sigma / T`, the first
+implementation supports `2**-52 <= r <= 64` and `2 <= sample_count <= 8192`,
+subject also to `S * N <= 2**63`. It prepares the one-sided cumulative tail
+`L[m] = r * (G(m/r) - G((m+1)/r))`, where
+`G(z) = phi(z) - z*(1-Phi(z))`, in the log domain. `log(G)` uses the direct
+`erfc` form below `z = 8` and the frozen decreasing-term asymptotic series at
+and above `8`; stable `expm1` log differences produce both tails and offset
+masses. Negative offsets reuse the same positive-offset mass exactly.
+
+Each timing conditional receives stable success/later-category masses `A` and
+`B`; it samples `min(A,B)/(A+B)` with an explicit complement flag. It never
+repeatedly subtracts represented categories from one or obtains a tiny failure
+probability as `1-p`. The fixed absolute category/tail/identity tolerance is
+`1e-12`, and the complete represented source law must be within `1e-11` L1 of
+the high-precision ideal oracle. Neither value is public configuration or
+permission to admit negative probabilities, clip, assign a residual, or
+renormalize. The exact stream is
+`CHARGE_TIMING_JITTER = 0x0000_0008`.
+
+This selection follows a finite Design sweep through the supported ratio and
+sample-count boundaries, central and far tails, and natural binary64
+underflow. Direct `H` second differences and naive remaining-mass subtraction
+produced negative or materially corrupted tail values and are rejected. The
+study is finite-grid evidence, not a proof over real values outside the
+accepted domain. Production implementation and supported-mode evidence remain
+Stage 6 work. The correctness-first reference may perform quadratic sample-
+count work; a later optimization requires measured evidence and may not
+silently change the law. Completed jitter requires exact repeatability only on
+the same accepted backend, eager mode, dependency environment, inputs, axis
+order, config, and seed; CPU/CUDA completed values compare statistically unless
+later evidence supports a stronger claim.
 
 ### Public Validation Does Not Mean Adversarial Hardening
 
@@ -380,16 +571,61 @@ Same-bin recursive closure, causal-scan, generation-wave, and recovery-marked
 alternatives are superseded as implementation directions. The fixed-generation
 model in `architecture/rebuild.md` is the only active baseline.
 
+### Normal Delay Is Retired From The MVP
+
+The active crosstalk config union is exactly
+`FixedDelayConfig | ExponentialDelayConfig`. The earlier zero-clipped
+`NormalDelayConfig` proposal is retired: its negative latent tail creates a
+calibration-sensitive prompt atom, it has no IV-parity basis, and carrying its
+Gaussian CDF/tail machinery is disproportionate for the first Charge
+implementation. This does not select a truncated, folded, lognormal, or
+tabulated replacement. A later calibrated distributed family requires a new
+scientific decision and an explicit new config type.
+
+Stage 3 historically implemented and exported `NormalDelayConfig`. Because
+TensorDSLab is pre-deployment and makes no backward-compatibility claim, the
+first Stage 6 slice removes that class, its union memberships, all export
+layers, and its tests completely, without a compatibility shim. The closed
+Stage 3 work order remains unmodified historical evidence.
+
+### Fixed And Exponential Delay Preparation Is Frozen
+
+The independent-edge latent-uniform phase closure has exact prepared kernels
+for the two accepted MVP delay families. Fixed delay uses its exact represented
+rational position in the sample period to produce at most two adjacent offset
+masses, with analytic source-relative overflow and no delay RNG. Exponential
+delay uses analytic phase-marginalized categories and right tails, stable
+binary64 central-mass evaluation, and no cutoff, clipping, residual assignment,
+or renormalization.
+
+The initial exponential domain is
+`2**-52 <= mean_delay / sample_period <= 2**52` with
+`2 <= sample_count <= 8192`. A configured AP recovery constant has the same
+ratio domain. Exponential delay and integrated recovery use a `1e-12` local
+absolute tolerance and `1e-11` complete-law L1 tolerance against independent
+high-precision oracles. The exact formulas, operation branches, Taylor
+coefficients, overflow construction, and failure rules in
+[`architecture/rebuild.md`](architecture/rebuild.md) are part of the frozen
+mapping, not implementation suggestions.
+
+Afterpulse recovery remains charge-only. It uses the exact difference between
+the ordinary exponential category and a scaled effective-mean category, but
+preparation evaluates the corresponding log ratio stably and obtains the
+conditional response with `-expm1`. It never clips a response into range,
+changes the realized AP destination or count, or enters recursive state.
+
 ## Open
 
-### Charge RNG And Supported Numerical Domain
+### Stage 6 Implementation And Evidence
 
-Before stochastic Charge implementation, Design must close the numeric stream
-table, Poisson sampler and crossover, per-quantum versus aggregate sampling,
-execution dtype and raw-word budgets, rejection/exhaustion behavior,
-repeatability modes, PMF preparation precision and tolerances, stable
-normal-tail evaluation, supported generation/rate/count bounds, checked
-overflow, and parity tolerances.
+The Charge scientific, numerical, stream, address, count, accumulator,
+failure-effect, and TensorDSLab-model statistical contracts are closed. What
+remains is explicit dispatch of the Design-complete Stage 6 work order,
+implementation, fixed-commit Validation/Review, and supported-backend
+evidence. This does not
+establish an IV-DSLab equivalence margin for intentionally divergent
+mechanisms; such a claim still requires an observable-specific collaborator or
+calibration margin under `docs/parity.md`.
 
 ### Waveform-Tail Optimization Evidence
 

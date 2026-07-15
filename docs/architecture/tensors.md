@@ -195,7 +195,7 @@ Product relationships appear in private function signatures, not in collection
 membership or TensorCore:
 
 ```python
-def _product_analog_waveform(
+def _produce_analog_waveform(
     pure: PureWaveform,
     noise: NoiseWaveform,
     *,

@@ -184,6 +184,33 @@ qualifications are recorded in the work order. CUDA was unavailable, so this
 is CPU-only evidence and makes no GPU execution or performance claim; build
 tooling was unavailable, so it makes no editable-install or wheel-build claim.
 
+## Stage 6 Production Work Order
+
+### [Stage 6: Charge Simulation](stage_6_charge_simulation.md)
+
+Status: **Design-complete / Undispatched**. The work order starts from clean
+Stage 5 Design closeout `bd5e8042a7aab54cb8c5ac15c1e79918b62e840d`
+and retains exact TensorCore `0.7.0` pin
+`b454d738f6385ce6489d85492a618a3dab139bb6`. It is committed documentation
+authority only until Design explicitly dispatches its exact synchronized
+commit through verified Implementation, Validation, and Review routes.
+
+The complete private slice implements `_produce_charge(...)`, aggregate
+multinomial and hybrid Poisson sampling, dark counts, analytic timing jitter,
+the fixed-generation DiCT/DeCT/AP cascade, S1/S2 ledgers, mechanism and
+right-overflow diagnostics, charge smearing, all eight append-only Charge
+streams, the per-cell `2**53 - 1` count ceiling, relational address/accumulator
+bounds, and the frozen TensorDSLab-model statistical policy. It first retires
+`NormalDelayConfig` without a shim and behavior-neutrally renames the four
+transitional waveform producer modules/callables to `_produce.py` and
+`_produce_*`.
+
+The stage is eager and functionality-first. It permits ordinary private
+scratch and backend intermediates and makes no allocation-free, compiler,
+fusion, kernel-count, throughput, GPU-performance, public-orchestration, IO,
+or integration claim. `Photoelectrons` remains immutable truth; all avalanche
+state and diagnostics remain private; `simulate_readout(...)` remains Stage 7.
+
 ## Candidate Future Stages
 
 These are planning labels, not accepted work orders. Design must write a
@@ -191,14 +218,6 @@ focused stage document before Implementation starts any of them. When donor
 behavior is in scope, the work order must name the comparison boundary, parity
 classification, acceptance criteria, and intentional divergences defined in
 [Parity](../parity.md).
-
-### Stage 6: Charge Simulation
-
-Possible goal: freeze the remaining Poisson/PMF/numerical-domain gates and
-implement `_product_charge(...)` with private dark counts, timing jitter,
-fixed-generation correlated avalanches, S1/S2 ledgers, overflow diagnostics,
-and charge smearing. `Photoelectrons` remains immutable truth and all
-intermediate avalanche state remains private.
 
 ### Stage 7: Public Readout Orchestration
 

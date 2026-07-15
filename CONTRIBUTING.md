@@ -21,7 +21,9 @@ Python import: tensor_dslab (accepted on main through Stage 5)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
 Package maturity: Stage 5 readout RNG and stochastic noise Merged / Closed
-Next Design direction: remaining Charge RNG, sampler, and numerical-bound contracts
+Next production gate: Stage 6 Charge Simulation is Design-complete /
+Undispatched; explicit dispatch must name its exact synchronized authority and
+verified execution routes
 ```
 
 Stage 1 is Design-complete, and Stage 2 is Merged / Closed on `main` at
@@ -63,8 +65,9 @@ Box-Muller pair, and complete exact-zero, IID-white, and caller-supplied PSD
 noise producer. Its fixed-commit Validation, independent Review, and Design
 post-merge audit found no unresolved issue. CUDA was unavailable, so the
 evidence is eager CPU-only and makes no GPU execution or performance claim.
-GPU fusion, Charge, public readout orchestration, and integration remain
-undispatched future work.
+Stage 6 Charge production has a Design-complete work order but remains
+undispatched at this documentation baseline. GPU fusion, public readout
+orchestration, and integration remain later work.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency
@@ -209,11 +212,11 @@ TensorDSLab/
       _requirements.py        # private shared readout relationships
       _random.py              # private Stage 5 readout RNG
       photoelectrons/types.py
-      charge/{types,_product}.py
-      pure_waveform/{types,_product}.py
-      noise_waveform/{types,_product}.py
-      analog_waveform/{types,_product}.py
-      digitized_waveform/{types,_product}.py
+      charge/{types,_produce}.py
+      pure_waveform/{types,_produce}.py
+      noise_waveform/{types,_produce}.py
+      analog_waveform/{types,_produce}.py
+      digitized_waveform/{types,_produce}.py
   tests/
 ```
 
@@ -226,8 +229,8 @@ when there is a real concept, behavior, or contract to house.
 
 This product-centered tree is the accepted rebuild ownership target, not a
 request to materialize every path at once. Product `types.py` modules own their
-final field leaf, configs, and validation. Product `_product.py` modules own
-private `_product_*` construction and `_simulate_*` scientific submodels when
+final field leaf, configs, and validation. Product `_produce.py` modules own
+private `_produce_*` construction and `_simulate_*` scientific submodels when
 implemented. There is no global `configs/`, `fields.py`, `builders.py`, or
 `validation.py`. `Photoelectrons` is an already-produced dense truth input and
 has neither a config nor a readout producer.
@@ -389,8 +392,8 @@ recipes are bridges around the domain model, not replacements for it.
 
 The readout domain is organized around products rather than generic layers.
 Each product package owns one `types.py` containing its final `TensorField`
-leaf and product configs. Its `_product.py`, when real, owns one private
-`_product_*` builder and focused `_simulate_*` scientific submodels. Do not
+leaf and product configs. Its `_produce.py`, when real, owns one private
+`_produce_*` builder and focused `_simulate_*` scientific submodels. Do not
 create global `configs/`, `fields.py`, `builders.py`, `validation.py`, or
 `tensors.py` dumping grounds.
 
@@ -435,13 +438,20 @@ product-specific configs. Config absence is structural. Product configs use
 exact model types rather than string switches. There is no generic `Config`
 ABC merely for uniformity and no `PhotoelectronsConfig`.
 
-Private `_product_*` functions build semantic products. Private `_simulate_*`
+Private `_produce_*` functions build semantic products. Private `_simulate_*`
 functions implement scientific submodels. Their module paths are not public
 APIs, and they may trust preconditions established by the public boundary.
 Charge privately applies enabled dark counts, timing jitter, fixed-generation
 correlated avalanches, and smearing without mutating truth. Pure/noise produce
 zero-referenced components; analog composes them; digitization applies its ADC
 transfer.
+
+`_produce_*` and product-owned `_produce.py` modules are the target convention
+even though the merged Stage 4 and Stage 5 implementation still carries
+transitional `_product_*` callables in `_product.py` modules. A focused
+production change must rename those callables, modules, imports, and tests
+without changing behavior before public orchestration closes. New producers
+must not extend the transitional naming family.
 
 The builder does not load sources, perform IO, move or cast inputs, persist
 products, own DAG scheduling, or accept an ambient generator. Its public random
@@ -454,7 +464,83 @@ The Merged / Closed Stage 5 work order fixes private
 `NOISE_PSD_COEFFICIENT = 0x0000_0002`. Do not use loose stream constants,
 `IntEnum`, `auto()`, hashes, declaration order, or mutable/global generators.
 Stage 5 implements only uniform and Box-Muller behavior consumed by noise;
-Charge-only distributions and streams wait for their actual consumer.
+the later accepted Charge Design appends these exact Poisson roles:
+
+```text
+CHARGE_DARK_COUNTS                  = 0x0000_0003
+CHARGE_DIRECT_CROSSTALK             = 0x0000_0004
+CHARGE_DIRECT_CROSSTALK_OVERFLOW    = 0x0000_0005
+CHARGE_DELAYED_CROSSTALK            = 0x0000_0006
+CHARGE_DELAYED_CROSSTALK_OVERFLOW   = 0x0000_0007
+CHARGE_TIMING_JITTER                = 0x0000_0008
+CHARGE_AFTERPULSES                  = 0x0000_0009
+CHARGE_SMEARING                     = 0x0000_000A
+```
+
+These members and the selected Charge distributions remain nonoperative until
+a focused production work order. New streams append explicit values without
+renumbering an existing member.
+
+Charge timing/AP redistribution uses aggregate multinomial factorization
+through conditional binomials: exact no-draw degeneracies, strict reflection,
+the frozen one-uniform forward-CDF inversion below `n * p_star = 10`, and the
+frozen cancellation-resistant BTRS mapping at and above that crossover. BTRD
+and the cancellation-prone three-log grouping are not accepted v1 mappings.
+Aggregate counts are supported through the per-cell ceiling `2**53 - 1`; the
+stabilized BTRS log bound owns a central `1e-6` and complete-support mixed
+absolute/relative high-precision oracle gate.
+Multinomial laws must prepare stable current-category and later-
+category masses; never update a remaining probability by repeated subtraction
+from one or recover a tiny complement as `1-p`.
+
+Timing jitter analytically prepares the latent-uniform plus ideal-Gaussian law
+through the frozen log-domain one-sided tail evaluator in `rebuild.md`. Its
+initial domain is `2**-52 <= sigma / T <= 64`,
+`2 <= sample_count <= 8192`, and `S * N <= 2**63`; exact zero sigma is a
+separate identity. It scans every possibly in-window target in increasing
+order, uses stream `CHARGE_TIMING_JITTER = 0x0000_0008`, and leaves one final
+no-draw drop remainder. The local absolute tolerance is `1e-12` and the
+complete source-law L1 tolerance is `1e-11`. Negative probabilities, clipping,
+residual assignment, normalization, per-PE normals, Box-Muller jitter, and an
+arbitrary timing-tail cutoff are forbidden. Correctness-first quadratic
+sample-count work is accepted until a later measured optimization preserves
+the same law. Dark counts and the four
+crosstalk roles use the shared private Poisson sampler: exact-zero no-draw,
+one-uniform CDF inversion below mean `10`, and Hoermann PTRS from `10` through
+`1e8`. Discrete
+probabilities, rate fields, and sampler control use binary64 independently of
+the requested `Charge` dtype. The private samplers return integer counts; the
+physical charge ledgers retain the requested product dtype. Never substitute
+per-avalanche expansion, `torch.poisson`, a normal approximation, global RNG,
+reseed-on-exhaustion, clipping, or a fallback algorithm. The exact caps,
+addressing, repeatability boundary, and validation oracles live in
+`docs/architecture/rebuild.md`.
+
+The active Charge numeric envelope is relational. Every source, working,
+frontier, mechanism, overflow, and cumulative count cell is no greater than
+`2**53 - 1`; nonnegative additions are checked before execution and there is no
+whole-grid population cap. Jitter, CT, and AP addresses respectively prove
+`S*N <= 2**63`, `K*N <= 2**63`, and `K*(S+1)*N <= 2**63`. The requested-dtype
+ledger depth must satisfy the frozen `L < 2**p_d` relation, and enabled
+smearing proves finiteness against the maximum dtype-specific Box-Muller
+radius. Do not replace these with wrapping arithmetic, an arbitrary `K`, a
+silent clamp, or a guessed memory ceiling.
+
+The MVP accepts exactly `FixedDelayConfig | ExponentialDelayConfig` for each
+crosstalk mode. `NormalDelayConfig` is retired despite its historical Stage 3
+implementation; the first Stage 6 slice removes its class, union memberships,
+exports, and tests without a compatibility shim. Do not retain an unsupported
+public config. A later calibrated delay family requires a new explicit type and
+Design decision.
+
+Fixed and exponential phase-marginalized delay preparation is closed Design.
+The fixed law accepts every finite nonnegative delay, uses an exact two-point
+mapping, and has no PMF tolerance. Exponential delay and recovery use the
+bounded ratio/sample domains, binary64 evaluation branches, analytic right
+tails, and `1e-12` local / `1e-11` complete-law tolerances normative in
+`docs/architecture/rebuild.md`. Implementations must not replace either law
+with latent per-edge draws, clipping, a cutoff, residual assignment,
+renormalization, or subtraction-derived tiny tails.
 
 White RMS and PSD cells are prepared in Python binary64, PSD overlaps use
 `math.fsum`, and executed values round once into the selected output dtype.

@@ -20,11 +20,11 @@ does not own native G4DS parsing, TensorG4DS clustering, TensorML training, or
 campaign orchestration.
 
 The accepted rebuild target is specified in
-[`architecture/rebuild.md`](architecture/rebuild.md). It replaces the current
-pre-deployment TensorCore `0.6` representation rather than preserving a
-compatibility layer. Stage 2 and Maintenance 1 remain historical evidence for
-the package that was implemented on `main`; they do not constrain the rebuild
-to the retired representation.
+[`architecture/rebuild.md`](architecture/rebuild.md). Stage 3 replaced the
+historical pre-deployment TensorCore `0.6` representation without a
+compatibility layer. Stage 2 and Maintenance 1 remain historical evidence and
+do not constrain the current TensorCore `0.7` package to the retired
+representation.
 
 ## Collaborator Surface
 
@@ -164,6 +164,19 @@ Photoelectrons axes/device/shape + noise config -> NoiseWaveform
 PureWaveform + NoiseWaveform -> AnalogWaveform -> DigitizedWaveform
 ```
 
+Private timing jitter uses an analytically prepared latent-uniform plus
+ideal-Gaussian offset law. Runtime samples aggregate destination counts with
+conditional binomials and one final drop remainder; it never expands PEs or
+draws one Gaussian value per PE. The first implementation preserves every
+possibly in-window destination without an arbitrary tail cutoff, even though
+that correctness-first rule can make work quadratic in sample count.
+The accepted binary64 preparation uses a log-domain one-sided tail over
+`2**-52 <= sigma / T <= 64` and `2 <= sample_count <= 8192`, with stable
+success/later-category conditional masses, `1e-12` local probability
+tolerance, `1e-11` source-law L1 tolerance, and the dedicated append-only
+stream `CHARGE_TIMING_JITTER = 0x0000_0008`. Unsupported values fail before
+RNG use rather than being clipped or normalized.
+
 The fixed-generation charge algorithm, pulse equations, PSD construction,
 analog saturation, ADC transfer, RNG schema, and deliberate donor divergences
 are specified in [`architecture/rebuild.md`](architecture/rebuild.md) and
@@ -196,23 +209,23 @@ tensor_dslab/
     charge/
       __init__.py
       types.py               # Charge and charge configs
-      _product.py            # _product_charge() and _simulate_* submodels
+      _produce.py            # _produce_charge() and _simulate_* submodels
     pure_waveform/
       __init__.py
       types.py               # field and TPC/Veto pulse configs
-      _product.py
+      _produce.py
     noise_waveform/
       __init__.py
       types.py               # field and zero/white/PSD configs
-      _product.py
+      _produce.py
     analog_waveform/
       __init__.py
       types.py               # field and saturation config
-      _product.py
+      _produce.py
     digitized_waveform/
       __init__.py
       types.py               # field and digitization config
-      _product.py
+      _produce.py
 ```
 
 Files are created only when an accepted implementation slice gives them real
@@ -222,11 +235,17 @@ layer allowed to import and orchestrate the complete product graph. Package
 roots deliberately re-export the collaborator-facing API; physical file paths
 do not define public visibility.
 
-Private `_product_*` functions construct semantic products. Private
+Private `_produce_*` functions construct semantic products. Private
 `_simulate_*` functions implement scientific submodels inside a product
 producer. `_requirements.py` and `_random.py` remain unsupported private
 implementation modules. There are no global `configs`, `fields`, `builders`,
 or `validation` dumping grounds.
+
+The target producer module name is `_produce.py`, matching its `_produce_*`
+entry point. Merged Stage 4 and Stage 5 production remains temporarily in
+`_product.py` with `_product_*` callables; the next authorized slice touching
+that surface must rename modules, callables, imports, and tests together
+without changing behavior.
 
 ## Functional, Storage, And Exposure Contract
 
@@ -315,4 +334,8 @@ and complete-noise
 is also Merged / Closed through exact implementation candidate
 `538089910be0fcaceff363c43e41e92e87af2efd` and Review closeout
 `c6a506d3658b24197806b9e230480211a254a35a`. Measured GPU optimization and
-the remaining Charge/public-orchestration slices remain later work.
+public orchestration remain later work. The complete private Charge slice now
+has a Design-complete / Undispatched
+[Stage 6 work order](implementation/stage_6_charge_simulation.md); it remains
+documentation authority until explicitly dispatched through the verified
+execution roles.

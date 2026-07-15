@@ -217,13 +217,13 @@ the complete `ReadoutConfig`.
 
 Private functions use one naming distinction:
 
-- `_product_*` constructs one semantic product; and
+- `_produce_*` constructs one semantic product; and
 - `_simulate_*` implements a scientific submodel inside a product producer.
 
 Conceptual product signatures are:
 
 ```python
-def _product_charge(
+def _produce_charge(
     photoelectrons: Photoelectrons,
     *,
     sampling: SamplingConfig,
@@ -234,7 +234,7 @@ def _product_charge(
     ...
 
 
-def _product_pure_waveform(
+def _produce_pure_waveform(
     charge: Charge,
     *,
     sampling: SamplingConfig,
@@ -243,7 +243,7 @@ def _product_pure_waveform(
     ...
 
 
-def _product_noise_waveform(
+def _produce_noise_waveform(
     photoelectrons: Photoelectrons,
     *,
     sampling: SamplingConfig,
@@ -254,7 +254,7 @@ def _product_noise_waveform(
     ...
 
 
-def _product_analog_waveform(
+def _produce_analog_waveform(
     pure: PureWaveform,
     noise: NoiseWaveform,
     *,
@@ -263,7 +263,7 @@ def _product_analog_waveform(
     ...
 
 
-def _product_digitized_waveform(
+def _produce_digitized_waveform(
     analog: AnalogWaveform,
     *,
     config: DigitizedWaveformConfig,
@@ -329,10 +329,30 @@ unchanged.
 ### Timing Jitter
 
 For each source bin, private timing jitter marginalizes a uniform latent
-within-bin phase with a zero-mean normal displacement. It prepares aggregate
-target/drop probabilities and redistributes counts without materializing a
-jagged PE table. `sigma == 0` is draw-free identity. Shifted values outside the
-window are dropped with explicit conservation diagnostics.
+within-bin phase with a zero-mean ideal-normal displacement. The phase and
+displacement are independent within each avalanche and IID across avalanches.
+Preflight analytically integrates that law into binary64 probabilities for
+every target bin that remains inside the finite window. Runtime then
+redistributes aggregate integer counts through sequential conditional
+binomials; it does not draw a normal per PE, invoke Box-Muller for jitter, or
+materialize a jagged PE table.
+
+For a source bin `s`, target bins are sampled in increasing `t` order, which is
+also increasing signed offset `t - s`. The one combined out-of-window category
+is the exact final count remainder and consumes no draw. No arbitrary Gaussian
+tail cutoff may discard a destination that can still land in the window.
+`sigma == 0` is draw-free identity. Retained counts plus explicit dropped
+counts conserve the input exactly.
+
+The first implementation prepares a log-domain one-sided cumulative tail for
+`2**-52 <= sigma / T <= 64` and `2 <= sample_count <= 8192`, also requiring
+`S * N <= 2**63`. It derives exact-symmetric offset masses and stable success/
+later-category masses for each conditional binomial; it never repeatedly
+subtracts categories from one, clips, or renormalizes. Category/tail/identity
+error is bounded by `1e-12`, the complete represented source law by `1e-11`
+L1, and `_RngStream.CHARGE_TIMING_JITTER = 0x0000_0008` is the dedicated
+append-only stream. Full evaluator and validation details are normative in
+`rebuild.md`.
 
 This is a private Charge stage, not a transform that returns jittered
 `Photoelectrons`.
@@ -347,6 +367,10 @@ offspring laws for the next generation.
 
 - Direct and delayed crosstalk use distinct Poisson means and distinct draws;
   their rates are never silently combined.
+- Dark counts and retained/overflow crosstalk share one private hybrid Poisson
+  sampler: exact-zero no-draw, one-uniform CDF inversion below mean `10`, and
+  Hoermann PTRS from `10` through the accepted per-cell Poisson mean ceiling
+  `1e8`.
 - Direct/delayed crosstalk children are fresh unit-charge avalanches.
 - Afterpulse children are integer avalanches whose deposited charge may be
   weighted by the configured delay-dependent recovery response.
@@ -366,21 +390,29 @@ S2 = sum of squared individual deposited-charge weights
 
 `S2` is terminal smearing scratch, not branching state. It is the sum of
 individual squared weights, not the square of aggregate charge.
+Prepared probabilities, Poisson rate fields, and discrete sampler control use
+binary64 independently of the requested `Charge` dtype. `S1`, `S2`, AP charge
+diagnostics, and the returned product remain in that requested dtype. Thus one
+unchanged backend/mode produces the same integer avalanche history for float32
+and float64 requests even though their floating ledgers need not be bitwise
+equal.
 
-Crosstalk delay choices are exact fixed, exponential, or zero-clipped normal
-laws. The normal law is `max(Normal(location, sigma), 0)` and therefore has an
-atom at zero; it is not a truncated or folded normal. A shared causal guard
-rejects prepared negative-delay mass rather than silently clamping unrelated
-models. Afterpulse delay remains exponential.
+Crosstalk delay choices are exact fixed or exponential laws. A shared causal
+guard rejects prepared negative-delay mass rather than silently clamping an
+invalid model. The earlier `NormalDelayConfig` proposal is retired from the MVP
+rather than left as a dormant public option; the first Stage 6 slice removes
+the already-merged class, union memberships, exports, and tests without a
+compatibility shim. Afterpulse delay remains exponential.
 
 Physical delay plus independently marginalized uniform source-bin phase
 determines the integer destination offset for each parent-child edge. Full
 equations, overflow ledgers, and exact config ownership are normative in
 [`rebuild.md`](rebuild.md).
 
-`maximum_generations=1` expresses the bounded first-generation MVP. There is
-no second public first-generation API and no until-extinction, same-bin
-closure, generation-wave, or recovery-marked implementation alternative.
+`maximum_generations=1` expresses the first-generation case of the same
+caller-configured finite-`K` MVP. There is no second public first-generation
+API and no until-extinction, same-bin closure, generation-wave, or
+recovery-marked implementation alternative.
 
 ### Charge Smearing
 
@@ -389,11 +421,24 @@ configured cascade. If correlation was disabled, every root has unit weight,
 so the same converted charge tensor represents both `S1` and `S2`. Smearing
 does not feed back into branching.
 
-Exact Charge RNG streams, Poisson sampling, PMF numerical preparation,
-supported count/rate/generation bounds, checked overflow, and Charge parity
-tolerances remain gates before stochastic Charge implementation. Stage 5
-separately freezes only the two noise streams and noise-required random
-mechanics.
+The Poisson crossover, equations, binary64 control, five exact Poisson streams,
+positional schedule, 64-attempt exhaustion, no-fallback policy, and `1e8` mean
+ceiling are closed Design in `rebuild.md`. Aggregate multinomial factorization
+and its exact inversion/BTRS mappings, word schedules, comparisons, budgets,
+and exhaustion behavior are closed there as well. Timing jitter's log-tail
+evaluator, numerical domain, tolerances, conditional masses, and exact stream
+are also closed. Fixed/exponential phase-marginalized PMFs, analytic right
+tails, and stable exponential AP-recovery preparation are closed in
+`rebuild.md`: fixed delay has an exact two-point mapping with no PMF tolerance,
+while exponential delay/recovery own bounded binary64 domains and
+`1e-12`/`1e-11` tolerances. AP/smearing streams, the universal per-cell
+`2**53 - 1` count ceiling, relational generation/address and accumulator
+bounds, checked overflow/failure mechanics, smearing finiteness, and the frozen
+TensorDSLab-model statistical policy are also closed in `rebuild.md`. The
+remaining gate is explicit dispatch of the Design-complete Stage 6 work order,
+implementation, and fixed-commit evidence.
+Stage 5 remains the historical implementation boundary for only the two noise
+streams and noise-required random mechanics.
 
 ## Waveform Products
 
@@ -527,14 +572,24 @@ selected in `rebuild.md`. The central private enum begins with exactly:
 ```python
 NOISE_WHITE = 0x0000_0001
 NOISE_PSD_COEFFICIENT = 0x0000_0002
+CHARGE_DARK_COUNTS = 0x0000_0003
+CHARGE_DIRECT_CROSSTALK = 0x0000_0004
+CHARGE_DIRECT_CROSSTALK_OVERFLOW = 0x0000_0005
+CHARGE_DELAYED_CROSSTALK = 0x0000_0006
+CHARGE_DELAYED_CROSSTALK_OVERFLOW = 0x0000_0007
+CHARGE_TIMING_JITTER = 0x0000_0008
+CHARGE_AFTERPULSES = 0x0000_0009
+CHARGE_SMEARING = 0x0000_000A
 ```
 
-Stream zero is unassigned; zero noise owns no stream. Stage 5 is vectorized
-eager CPU plus conditional eager CUDA only. Raw words and fixed-point uniforms
-must agree exactly between accepted CPU/CUDA paths; completed Box-Muller and
-PSD values require exact same-backend repeatability and cross-backend
-statistical agreement. Exact Charge stream assignment and Poisson details
-remain later Charge gates.
+Stream zero is unassigned; zero noise owns no stream. The first two members are
+Merged / Closed Stage 5 production. The eight appended Charge members are
+selected Design and remain nonoperative until a later work order. Stage 5 is
+vectorized eager CPU plus
+conditional eager CUDA only. Raw words and fixed-point uniforms must agree
+exactly between accepted CPU/CUDA paths; completed Box-Muller, PSD, and later
+Charge values require exact same-backend/mode repeatability and cross-backend
+statistical agreement where transcendental arithmetic is used.
 
 ## Functional, Memory, And Exposure Contract
 
@@ -603,7 +658,7 @@ private-call misuse, direct tensor mutation, or exotic dispatch hardening.
 ## Product-Centered Module Ownership
 
 Shared axes and sampling live in `tensor_dslab.common`. Each product subpackage
-owns its field, configs, validation, and eventual `_product.py`. The
+owns its field, configs, validation, and eventual `_produce.py`. The
 Photoelectrons package owns only its field type.
 
 `readout/types.py` contains only `ReadoutConfig` and `ReadoutCollection`.
