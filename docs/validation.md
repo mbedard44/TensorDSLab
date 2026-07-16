@@ -47,10 +47,16 @@ stage.
 
 The focused
 [Stage 6 work order](implementation/stage_6_charge_simulation.md) is
-Design-complete / Undispatched at this documentation baseline. It activates
-the exact Charge sampler, delay, timing, cascade, ledger, smearing, and
-statistical gates below only after Design explicitly dispatches its committed
-authority. No Stage 6 production evidence exists yet.
+Merged / Closed through exact implementation candidate
+`fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58` and Review's evidence-only
+closeout `ea979862b05f4ef543f6971c86641df317232479`. Fixed-commit Validation,
+independent Review, and Design's post-merge audit found no unresolved issue in
+the aggregate samplers, dark counts, timing jitter, fixed-`K` cascade, S1/S2
+ledgers, overflow diagnostics, smearing, or complete private Charge producer.
+The full suite ran 174 tests: 164 passed and 10 conditional CUDA tests skipped;
+the focused Stage 6 run executed 65 tests: 60 passed and 5 CUDA tests skipped.
+Pyright `1.1.408` reported no findings. This is eager CPU-only evidence because
+CUDA was unavailable. It adds no public `simulate_readout(...)` surface.
 
 Documentation-only Design work remains in Design unless the user requests an
 independent documentation Validation or Review. At minimum, run:
@@ -112,7 +118,8 @@ public constructor/config values
   -> TensorCore constrained scalars and semantic roots
   -> TensorDSLab axes and product fields
   -> ReadoutCollection completed results
-  -> future product operations and simulate_readout(...)
+  -> implemented private product producers
+  -> future simulate_readout(...)
   -> future TensorG4DS, TensorML, and durable boundaries
 ```
 
@@ -282,7 +289,7 @@ placement-neutral and makes no GPU-kernel claim.
 `Photoelectrons` is an already-produced dense truth input. Stage 3 creates no
 `PhotoelectronsConfig`, source producer, PE-binning function, or TensorG4DS
 adapter. `DigitizedWaveform`, not `DigitalWaveform`, is the accepted product
-name; truncation is fixed by the future producer and no quantization enum or
+name; truncation is fixed by the Stage 4 producer and no quantization enum or
 sidecar exists.
 
 ## Configuration Checks
@@ -298,9 +305,9 @@ At minimum, cover:
   `ExponentialDelayConfig`, `DirectCrosstalkConfig`,
   `DelayedCrosstalkConfig`, `AfterpulseRecoveryConfig`, `AfterpulseConfig`,
   `CorrelatedAvalancheConfig`, `ChargeSmearingConfig`, and `ChargeConfig`;
-- after the first Stage 6 cleanup slice, exact two-member fixed/exponential
-  crosstalk unions and complete `NormalDelayConfig` absence from production,
-  package exports, and current package-contract expectations, without a shim;
+- after completed Stage 6, exact two-member fixed/exponential crosstalk unions
+  and complete `NormalDelayConfig` absence from production, package exports,
+  and current package-contract expectations, without a shim;
 - `TpcFebSnrPulseConfig`, `VetoPduPulseConfig`, and the exact two-model
   `PureWaveformConfig` union;
 - `ZeroNoiseConfig`, `WhiteNoiseConfig`, `PsdNoiseConfig`, and the exact
@@ -423,17 +430,18 @@ exact-zero, IID-white, and caller-supplied PSD noise. CUDA was unavailable, so
 that closeout is eager CPU-only evidence and makes no GPU execution or
 performance claim.
 
-The remaining acceptance matrix stays normative in
-[Rebuild Validation Strategy](architecture/rebuild.md#validation-strategy),
-including:
+Stage 6 subsequently validated and merged the aggregate multinomial and hybrid
+Poisson samplers, dark counts, analytic timing jitter, fixed-generation
+correlated avalanches, S1/S2 charge ledgers, recovery weighting, right
+overflow, smearing, operation-owned freshness, and stream ordering. The
+evidence is eager CPU-only; conditional CUDA checks were skipped and no GPU
+fusion or performance claim was made.
 
-- product-request closure and retention invariance;
-- dark counts, timing jitter, fixed-generation correlated avalanches, S1/S2
-  charge ledgers, recovery weighting, overflow, and smearing;
-- operation-owned freshness and stream ordering, with GPU fusion evidence
-  deferred to a later measured optimization stage;
-  and
-- future TensorG4DS, TensorML, Reconstruction, and durable boundaries.
+The remaining acceptance matrix in
+[Rebuild Validation Strategy](architecture/rebuild.md#validation-strategy)
+therefore covers product-request closure and retention invariance under future
+Stage 7, later CUDA and measured optimization evidence, and future TensorG4DS,
+TensorML, Reconstruction, and durable boundaries.
 
 Stage 5 does not activate Bernoulli, exponential, Poisson, categorical,
 multinomial, rejection, source-quantum, iterative-generation, Charge-stream,
@@ -444,10 +452,9 @@ checks use analytic estimator uncertainty for white/PSD moments and covariance.
 The PSD DC coefficient is exact zero; the sample-domain record mean is bounded
 by inverse-FFT roundoff rather than required to equal zero exactly.
 
-Later Design selected the aggregate multinomial and hybrid Poisson contracts
-for the Design-complete Stage 6 work order; this changes no Stage 5 evidence
-and is not yet production validation. When explicitly dispatched, that work
-order must activate at least:
+Stage 6 activated and cleared the aggregate multinomial and hybrid Poisson
+contracts below without changing Stage 5 evidence. Its frozen validation
+matrix included at least:
 
 - the frozen Stage 6 statistical policy: seeds `0`, `1`,
   `0x0123_4567_89ab_cdef`, and `0xffff_ffff_ffff_ffff`; `M=2**18` for scalar
@@ -621,12 +628,13 @@ order must activate at least:
   unexposed while writable, and absence of a returned semantic object on
   failure.
 
-Later checks activate only under focused production work orders. They must not
-be weakened merely because earlier stages establish related semantic types or
-private RNG machinery. The
-sole active correlated-avalanche baseline is the fixed-maximum-generation
-model in `rebuild.md`; deleted exploratory algorithm documents are not
-implementation sources.
+Stage 6 activated and cleared these private Charge checks on eager CPU.
+Conditional CUDA cases were skipped, so CUDA execution, CPU/CUDA agreement, GPU
+performance, and fusion remain later focused evidence. Public request
+planning/retention and integration checks likewise activate only under their
+own work orders. The sole active correlated-avalanche baseline is the fixed-
+maximum-generation model in `rebuild.md`; deleted exploratory algorithm
+documents are not implementation sources.
 
 ## Parity And Donor-Fixture Rules
 
@@ -648,10 +656,10 @@ parity.
 Validation and Review should reject accidental introduction of:
 
 - source Photoelectrons production, native G4DS parsing, TensorG4DS clustering,
-  a TensorG4DS adapter, or PE binning in Stage 3;
-- scientific product builders, RNG, request planning, `simulate_readout`,
-  workspace, output buffer, stream, lease, selection, movement, or lifecycle
-  behavior;
+  a TensorG4DS adapter, or PE binning outside a focused bridge work order;
+- request planning, `simulate_readout`, workspace, output buffer, stream,
+  lease, selection, movement, or lifecycle behavior outside its focused work
+  order;
 - durable cache, manifest, IO, scheduler, retry, campaign, or DAG surfaces;
 - TensorML model/training/evaluation or Reconstruction concepts;
 - global config, field, builder, validation, or registry dumping-ground

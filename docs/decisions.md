@@ -150,15 +150,14 @@ Private `_produce_*` functions construct semantic products. Private
 producer. There is no public sequential API through which callers can
 accidentally feed one private avalanche contribution into another.
 
-The `_produce_*` verb is the accepted target because these functions return a
-completed typed product; `_simulate_*` remains reserved for scientific work
-inside that production boundary. Product-owned `_produce.py` modules house
-that behavior, while `types.py` owns product identity and configuration. The
-merged Stage 4 and Stage 5 code still uses transitional `_product_*` callables
-in `_product.py` modules. A focused production work order must rename those
-callables, modules, imports, and tests without changing behavior before public
-readout orchestration closes. New product producers, beginning with Charge,
-use `_produce_*` in `_produce.py` from the outset.
+The `_produce_*` verb is accepted because these functions return a completed
+typed product; `_simulate_*` remains reserved for scientific work inside that
+production boundary. Product-owned `_produce.py` modules house that behavior,
+while `types.py` owns product identity and configuration. Stage 6
+behavior-neutrally renamed all four transitional Stage 4/5 waveform modules,
+callables, imports, and tests from `_product.py` / `_product_*` to
+`_produce.py` / `_produce_*`; Charge also uses that implemented convention.
+No retired producer name or compatibility shim remains.
 
 ### Scientific Configuration Is Immutable And Compositional
 
@@ -240,9 +239,9 @@ The Merged / Closed Stage 5 work order selects private
 enum. Its initial exact members are `NOISE_WHITE = 0x0000_0001` and
 `NOISE_PSD_COEFFICIENT = 0x0000_0002`; stream zero is unassigned, zero noise
 owns no stream, and Charge assignments were outside that historical work
-order. The later Charge decisions below append all eight Charge members through
-`CHARGE_SMEARING = 0x0000_000A` without changing either Stage 5 value. The root API
-remains one ordinary non-boolean 64-bit seed. No public RNG object,
+order. Merged Stage 6 appends and implements all eight Charge members through
+`CHARGE_SMEARING = 0x0000_000A` without changing either Stage 5 value. The root
+API remains one ordinary non-boolean 64-bit seed. No public RNG object,
 `torch.Generator`, semantic coordinate, timestamp, or loose stream constant is
 introduced.
 
@@ -433,13 +432,14 @@ sample-count boundaries, central and far tails, and natural binary64
 underflow. Direct `H` second differences and naive remaining-mass subtraction
 produced negative or materially corrupted tail values and are rejected. The
 study is finite-grid evidence, not a proof over real values outside the
-accepted domain. Production implementation and supported-mode evidence remain
-Stage 6 work. The correctness-first reference may perform quadratic sample-
+accepted domain. Stage 6 implemented and validated the correctness-first
+evaluator in eager CPU mode; CUDA was unavailable, so CPU/CUDA agreement
+remains an unobserved contract. The reference may perform quadratic sample-
 count work; a later optimization requires measured evidence and may not
 silently change the law. Completed jitter requires exact repeatability only on
 the same accepted backend, eager mode, dependency environment, inputs, axis
-order, config, and seed; CPU/CUDA completed values compare statistically unless
-later evidence supports a stronger claim.
+order, config, and seed; CPU/CUDA completed values compare statistically only
+after both paths have evidence.
 
 ### Public Validation Does Not Mean Adversarial Hardening
 
@@ -511,6 +511,23 @@ candidate without conditions. Package adoption is `Adopted`; conformance is
 `Not evaluated`; Coordination is `Deferred`; and Profile B is `Disabled`.
 This decision created no scientific, dependency, device, compatibility,
 production, routing, registry, cache, or deployment authority.
+
+### Stage 6 Private Charge Simulation Is Merged / Closed
+
+Stage 6 is Merged / Closed through exact implementation candidate
+`fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58` and Review's evidence-only
+closeout `ea979862b05f4ef543f6971c86641df317232479`. It implements the closed
+Charge scientific, numerical, stream, address, count, accumulator,
+failure-effect, and TensorDSLab-model statistical contracts. Fixed-commit
+Validation, independent Review, and Design's post-merge audit found no
+unresolved issue. CUDA was unavailable, so the accepted evidence is eager
+CPU-only and establishes no CUDA, GPU-performance, fusion, allocation-free, or
+cross-backend claim.
+
+This closeout establishes conformance to the selected TensorDSLab private
+Charge model, not an IV-DSLab equivalence margin. Intentional donor divergences
+still require an observable-specific collaborator or calibration margin under
+[`parity.md`](parity.md).
 
 ## Superseded
 
@@ -584,7 +601,7 @@ scientific decision and an explicit new config type.
 
 Stage 3 historically implemented and exported `NormalDelayConfig`. Because
 TensorDSLab is pre-deployment and makes no backward-compatibility claim, the
-first Stage 6 slice removes that class, its union memberships, all export
+completed Stage 6 slice removed that class, its union memberships, all export
 layers, and its tests completely, without a compatibility shim. The closed
 Stage 3 work order remains unmodified historical evidence.
 
@@ -616,16 +633,21 @@ changes the realized AP destination or count, or enters recursive state.
 
 ## Open
 
-### Stage 6 Implementation And Evidence
+### Stage 7 Public Readout Orchestration
 
-The Charge scientific, numerical, stream, address, count, accumulator,
-failure-effect, and TensorDSLab-model statistical contracts are closed. What
-remains is explicit dispatch of the Design-complete Stage 6 work order,
-implementation, fixed-commit Validation/Review, and supported-backend
-evidence. This does not
-establish an IV-DSLab equivalence margin for intentionally divergent
-mechanisms; such a claim still requires an observable-specific collaborator or
-calibration margin under `docs/parity.md`.
+The private product producers are implemented through Stage 6. The public
+request-aware `simulate_readout(...)` surface, complete request preflight,
+typed dependency closure, execute-once planning, and exact requested retention
+remain undispatched Stage 7 work. No focused Stage 7 production work order is
+accepted yet.
+
+### IV-DSLab Charge Equivalence Margins
+
+Stage 6 validates the selected TensorDSLab probability model. It does not
+establish IV-DSLab equivalence for intentionally divergent mechanisms or the
+future public requested-Charge composition. Each donor claim still requires a
+named observable and a collaborator- or calibration-owned acceptance margin
+under [`parity.md`](parity.md).
 
 ### Waveform-Tail Optimization Evidence
 

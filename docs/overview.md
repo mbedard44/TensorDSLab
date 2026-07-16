@@ -33,9 +33,10 @@ pre-deployment `0.6` representation without a compatibility layer.
 architecture. Stage 3 selected exact TensorCore `0.7.0` commit
 `b454d738f6385ce6489d85492a618a3dab139bb6` and implements its ordinary
 `TensorAxis`, `TensorField`, and `TensorCollection` ABC roots with direct final
-TensorDSLab semantic leaves. Further scientific producers and public readout
-orchestration remain Design targets only until their own focused work orders
-are written, dispatched, validated, reviewed, and merged.
+TensorDSLab semantic leaves. Private scientific producers are implemented
+through Stage 6. Public readout orchestration and later integration remain
+Design targets until their own focused work orders are written, dispatched,
+validated, reviewed, and merged.
 
 [Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
 Closed through exact implementation candidate
@@ -54,15 +55,18 @@ Review, and Design's post-merge audit found no unresolved issue. CUDA was
 unavailable, so the evidence is eager CPU-only; measured GPU fusion remains a
 later optimization stage.
 
-[Stage 6](implementation/stage_6_charge_simulation.md) is Design-complete /
-Undispatched at this documentation baseline. Its focused work order closes the
-production scope for the private aggregate samplers, dark counts, analytic
-timing jitter, fixed-generation DiCT/DeCT/AP cascade, S1/S2 ledgers,
-right-overflow diagnostics, charge smearing, and `_produce_charge(...)`. It
-also owns retirement of `NormalDelayConfig` and the behavior-neutral waveform
-producer rename. The committed work order remains documentation authority
-until Design explicitly dispatches its exact synchronized commit through the
-verified execution roles.
+[Stage 6](implementation/stage_6_charge_simulation.md) is Merged / Closed
+through exact implementation candidate
+`fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58` and Review closeout
+`ea979862b05f4ef543f6971c86641df317232479`. It implements the private
+aggregate samplers, dark counts, analytic timing jitter, fixed-generation
+DiCT/DeCT/AP cascade, S1/S2 ledgers, right-overflow diagnostics, charge
+smearing, and `_produce_charge(...)`. It also retired `NormalDelayConfig` and
+behavior-neutrally renamed the four waveform producer families. Fixed-commit
+Validation, independent Review, and Design's post-merge audit found no
+unresolved issue. CUDA was unavailable, so the evidence is eager CPU-only.
+Stage 7 public `simulate_readout(...)` orchestration remains undispatched and
+has no accepted focused production work order.
 
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`, bound to
 accepted candidate `d634401a853915edeb4f83df4a4943b3553deced`. Conformance is
@@ -179,9 +183,9 @@ tensor_dslab/
     sampling.py
   readout/
     types.py                  # ReadoutConfig and ReadoutCollection only
-    simulation.py             # later public orchestration
+    simulation.py             # future Stage 7 public orchestration
     _requirements.py
-    _random.py                # Stage 5 private RNG behavior
+    _random.py                # private Stage 5/6 RNG and count samplers
     photoelectrons/types.py
     charge/{types.py,_produce.py}
     pure_waveform/{types.py,_produce.py}
@@ -190,18 +194,18 @@ tensor_dslab/
     digitized_waveform/{types.py,_produce.py}
 ```
 
-Each product package owns its field, configs, validation, and eventual private
-`_produce_*` producer. `readout/types.py` owns only the two cross-product
-composition types. `readout/simulation.py` owns the one public orchestration
-function. `_requirements.py` and `_random.py` are private. No behavior module
-is created as an empty placeholder; the complete ownership and import rules
-are in `architecture/rebuild.md`.
+Every generated product package owns its field, configs, validation, and
+implemented private `_produce_*` producer. `Photoelectrons` remains the
+producer-less truth input. `readout/types.py` owns only the two cross-product
+composition types. Future Stage 7 `readout/simulation.py` will own the one
+public orchestration function. `_requirements.py` and `_random.py` are private.
+No behavior module is created as an empty placeholder; the complete ownership
+and import rules are in `architecture/rebuild.md`.
 
-The merged Stage 4 and Stage 5 production files still carry transitional
-`_product.py` module and `_product_*` callable names. The next authorized
-production slice touching them performs one behavior-neutral rename to
-`_produce.py` and `_produce_*`; the tree above is the accepted destination,
-not a claim that the rename has already occurred.
+Stage 6 behavior-neutrally renamed all four transitional Stage 4/5 waveform
+modules, callables, imports, and tests from `_product.py` / `_product_*` to
+`_produce.py` / `_produce_*`. The tree above is now implemented; no retired
+name or compatibility shim remains.
 
 ## Documentation Map
 
@@ -233,8 +237,8 @@ not a claim that the rename has already occurred.
   Merged / Closed private positional RNG and complete zero/white/PSD noise
   producer slice.
 - [Stage 6 Work Order](implementation/stage_6_charge_simulation.md):
-  Design-complete / Undispatched private Charge producer, aggregate sampler,
-  timing, fixed-generation cascade, ledger, and smearing slice.
+  Merged / Closed private Charge producer, aggregate sampler, timing,
+  fixed-generation cascade, ledger, and smearing slice.
 - [Package Governance](governance/index.md): adoption decision and declaration,
   TensorDSLab overlay, semantic rule map, state boundaries, and closeout.
 - [Stage 2 Work Order](implementation/stage_2_package_and_readout_collection_foundation.md):

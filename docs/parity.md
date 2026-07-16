@@ -1,10 +1,18 @@
 # IV-DSLab Parity And Intentional Divergences
 
 Status: active Design contract for evaluating IV-DSLab and DSLab donor
-behavior. Merged Stage 4 production tests provide bounded deterministic
-evidence for the TPC/Veto pure-waveform, analog-composition, and digitization
-boundaries described below. No stochastic parity implementation or
-comprehensive donor fixture corpus has been dispatched.
+behavior. Merged Stage 4 tests provide bounded deterministic waveform
+evidence, Stage 5 tests provide bounded TensorDSLab-model stochastic-noise
+evidence, and Stage 6 tests provide bounded private-Charge model-conformance
+evidence on eager CPU. This does not establish a comprehensive donor fixture
+corpus, public requested-`Charge` comparison, accepted IV equivalence margin,
+CUDA evidence, or broad stochastic donor parity.
+
+The bounded Stage 6 evidence is exact implementation candidate
+`fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58` and Review closeout
+`ea979862b05f4ef543f6971c86641df317232479`, against TensorCore `0.7.0`
+`b454d738f6385ce6489d85492a618a3dab139bb6`. Its conditional CUDA cases were
+skipped, and its public Stage 7 comparison boundary does not yet exist.
 
 ## Purpose
 
@@ -127,14 +135,15 @@ A sampled golden output cannot prove distributional parity. Conversely, two
 implementations may pass selected statistical checks without sharing the same
 law; such a result must remain classified as statistical parity.
 
-Stage 4 is the first scientific-transform implementation. Its reviewed tests
-establish only the named TPC/Veto pulse checkpoints, independent deterministic
-reference equations, conditional analog composition, and representation-mapped
-ADC behavior in that work order's accepted CPU evidence domain. They do not
-establish complete eventwise IV parity, stochastic parity, a comprehensive
-donor fixture corpus, or GPU evidence. Every other classification in this page
-remains a Design target or accepted divergence label until a focused work order
-supplies its required evidence.
+Stage 4's reviewed tests establish the named TPC/Veto pulse checkpoints,
+independent deterministic reference equations, conditional analog composition,
+and representation-mapped ADC behavior in that work order's accepted CPU
+evidence domain. Stage 5 and Stage 6 add bounded stochastic-noise and private-
+Charge conformance evidence for the selected TensorDSLab models. They do not
+establish complete eventwise IV parity, a comprehensive donor fixture corpus,
+public requested-`Charge` behavior, accepted donor-equivalence margins, or GPU
+evidence. Every stronger classification still requires its named focused
+evidence.
 
 ## Required Shape Of A Parity Claim
 
@@ -172,10 +181,11 @@ frontier/ledger boundary and observable and must not invent another product
 type. Every claim also names the exact axes, `SamplingConfig`, product config,
 dtype, comparison boundary, and observable.
 
-A returned collection contains exactly the nonempty product set requested by
-the caller. Privately computed prerequisites and avalanche diagnostics are not
-additional parity results. Unless a claim explicitly covers a composition, its
-acceptance criteria apply only to the named product.
+The planned Stage 7 builder returns exactly the nonempty product set requested
+by the caller. Privately computed prerequisites and avalanche diagnostics are
+not additional parity results. Unless a claim explicitly covers a composition,
+its acceptance criteria apply only to the named product.
+
 An analog-only or digitized-only requested result is therefore valid without
 retaining its prerequisites, but its presence alone records neither lineage
 nor parity evidence. A new analog-composition claim still requires both
@@ -184,7 +194,7 @@ nor parity evidence. A new analog-composition claim still requires both
 
 ## Execution And Scheduling Neutrality
 
-The selected rebuild begins with one functional `simulate_readout(...)`
+The selected rebuild plans one functional Stage 7 `simulate_readout(...)`
 surface. It does not carry the historical Stage 2 architecture's public `out`,
 `ReadoutWorkspace`, fixed-chain builder, lease, or allocation-free contracts
 forward by default. Those existing contracts remain historical evidence, not
@@ -255,8 +265,8 @@ different boundaries:
 1. a private timing-redistribution diagnostic from a common binned
    `Photoelectrons` input, without treating jitter as a replacement truth
    product;
-2. `simulate_readout(..., products=[Charge])` from common `Photoelectrons` for
-   end-to-end charge statistics; or
+2. future Stage 7 `simulate_readout(..., products=[Charge])` from common
+   `Photoelectrons` for end-to-end charge statistics; or
 3. a private ephemeral count-grid boundary used only to validate an internal
    dark-count, crosstalk, afterpulse, or smearing submodel.
 
@@ -276,8 +286,8 @@ mathematical binned transition kernel. Binary64 analytic preparation and the
 selected finite aggregate sampler still reduce the implemented timing-jitter
 claim to statistical parity. The assumption cannot reproduce eventwise IV
 behavior when the original PE phases were known or were not conditionally
-uniform. Nor does an isolated private-submodel result establish parity for the
-public requested-`Charge` composition.
+uniform. Nor does Stage 6's isolated private-submodel result establish parity
+for the future public requested-`Charge` composition.
 
 ## Full-Chain Order
 
@@ -320,9 +330,10 @@ retain exactly the caller-requested products
 
 Effect-order classification: **intentional divergence**.
 
-The public requested `Charge` result may target **statistical parity** for named
-charge observables over an accepted input/config ensemble. TensorDSLab must not
-claim distributional or eventwise parity for that composed stochastic flow.
+The future public requested `Charge` result may target **statistical parity**
+for named charge observables over an accepted input/config ensemble. TensorDSLab
+must not claim distributional or eventwise parity for that composed stochastic
+flow.
 Passing isolated internal-submodel checks is necessary evidence, but it does not
 prove the end-to-end target. Any campaign-level comparison likewise remains
 statistical validation of named observables, not evidence that the composed
@@ -726,13 +737,13 @@ aggregate PE-equivalent response rather than SI charge.
 
 ## End-To-End Requested `Charge`
 
-The public comparison boundary is:
+The planned Stage 7 public comparison boundary is:
 
 ```text
 Photoelectrons -> simulate_readout(..., products=[Charge]) -> Charge
 ```
 
-Classification: **statistical parity for named observables**.
+Target classification: **statistical parity for named observables**.
 
 This claim compares a common ensemble of binned photon-origin primary PE seeds
 to the aggregate PE-equivalent charge response. It does not expose or require
@@ -742,10 +753,13 @@ causal binned edge placement, recovery approximation, aggregate smearing,
 negative clipping, and RNG construction preclude an end-to-end distributional
 claim.
 
-Validation must exercise the public composition as well as the private
-submodels. At minimum it should compare per-channel and per-sample charge mean
-and variance, zero-cell probability, total response, occupancy, edge loss,
-selected tail quantiles, and any accepted time-profile statistic over named
+Stage 6 validated `_produce_charge(...)` and its private submodels on eager
+CPU; it did not validate public request planning, collection retention, or IV
+equivalence. A later parity stage must exercise the public composition as well
+as the private submodels. At minimum it should compare per-channel and
+per-sample charge mean and variance, zero-cell probability, total response,
+occupancy, edge loss, selected tail quantiles, and any accepted time-profile
+statistic over named
 input/config ensembles. Each internal dark-count, crosstalk, afterpulse, and
 smearing check must retain its own classification; passing them separately does
 not prove this end-to-end statistical target. Conversely, a passing
@@ -1015,6 +1029,11 @@ The rebuild RNG targets are:
 - no CPU/GPU bitwise guarantee for completed values involving transcendental
   functions or FFTs.
 
+CUDA was unavailable for the merged Stage 5 and Stage 6 evidence. Their eager
+CPU results therefore do not establish raw-word, completed-value, or Charge
+cross-backend agreement; those bullets remain explicit later validation
+targets.
+
 The parity classifications above apply to the comparison with IV-DSLab. The
 cross-backend requirement compares TensorDSLab implementations to one accepted
 TensorDSLab probability contract and is therefore called agreement, not donor
@@ -1125,8 +1144,8 @@ Suggested minimum parity observables are:
 Production work orders must replace qualitative phrases such as “close enough”
 with concrete tolerances and sample sizes before implementation is accepted.
 
-For Stage 6 conformance to the selected TensorDSLab model, the frozen
-statistical policy uses seeds `0`, `1`, `0x0123_4567_89ab_cdef`, and
+Stage 6 conformance to the selected TensorDSLab model used the frozen
+statistical policy with seeds `0`, `1`, `0x0123_4567_89ab_cdef`, and
 `0xffff_ffff_ffff_ffff`; `M=2**18` for scalar/one-parent laws and `M=2**16`
 for aggregate `Q=32`, small-grid `K<=3`, and completed-`Charge` fixtures. One
 example is one independent replicate. Each predeclared statistic must satisfy
@@ -1148,10 +1167,9 @@ equivalence claim rather than an open numerical implementation tolerance.
 
 ## Deferred Decisions
 
-- CPU/GPU Charge implementation and sampler evidence under the selected
-  aggregate algorithms; all Charge streams and the source/frontier/
-  accumulated-count, generation/address, ledger, and failure envelopes are
-  closed Design;
+- CUDA Charge execution, CPU/CUDA agreement, GPU performance/fusion, and
+  public Stage 7 orchestration evidence; eager CPU implementation and sampler
+  evidence under the selected aggregate algorithms is closed;
 - per-channel parameter representation;
 - whether any calibrated crosstalk approximation should match selected IV
   moments or remain a standalone TensorDSLab model;

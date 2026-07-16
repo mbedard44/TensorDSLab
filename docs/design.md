@@ -199,9 +199,9 @@ tensor_dslab/
   readout/
     __init__.py
     types.py                 # ReadoutConfig and ReadoutCollection only
-    simulation.py            # public simulate_readout()
+    simulation.py            # future Stage 7 public simulate_readout()
     _requirements.py         # shared private readout relationships
-    _random.py               # private Stage 5 readout RNG
+    _random.py               # private Stage 5/6 RNG and count samplers
 
     photoelectrons/
       __init__.py
@@ -241,11 +241,11 @@ producer. `_requirements.py` and `_random.py` remain unsupported private
 implementation modules. There are no global `configs`, `fields`, `builders`,
 or `validation` dumping grounds.
 
-The target producer module name is `_produce.py`, matching its `_produce_*`
-entry point. Merged Stage 4 and Stage 5 production remains temporarily in
-`_product.py` with `_product_*` callables; the next authorized slice touching
-that surface must rename modules, callables, imports, and tests together
-without changing behavior.
+The producer module name is `_produce.py`, matching its `_produce_*` entry
+point. Stage 6 behavior-neutrally renamed all four transitional Stage 4/5
+waveform modules, callables, imports, and tests. `_produce.py` / `_produce_*`
+is now the implemented convention; retired `_product.py` / `_product_*` names
+must not return.
 
 ## Functional, Storage, And Exposure Contract
 
@@ -333,9 +333,12 @@ and complete-noise
 [Stage 5 work order](implementation/stage_5_readout_rng_and_stochastic_noise.md)
 is also Merged / Closed through exact implementation candidate
 `538089910be0fcaceff363c43e41e92e87af2efd` and Review closeout
-`c6a506d3658b24197806b9e230480211a254a35a`. Measured GPU optimization and
-public orchestration remain later work. The complete private Charge slice now
-has a Design-complete / Undispatched
-[Stage 6 work order](implementation/stage_6_charge_simulation.md); it remains
-documentation authority until explicitly dispatched through the verified
-execution roles.
+`c6a506d3658b24197806b9e230480211a254a35a`. The complete private Charge
+[Stage 6 work order](implementation/stage_6_charge_simulation.md) is also
+Merged / Closed through exact candidate
+`fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58` and Review closeout
+`ea979862b05f4ef543f6971c86641df317232479`. Fixed-commit Validation,
+independent Review, and Design's post-merge audit found no unresolved issue;
+CUDA was unavailable, so its evidence is eager CPU-only. Measured GPU
+optimization remains later work. Stage 7 public orchestration is undispatched
+and has no accepted focused production work order.

@@ -1,10 +1,16 @@
 # TensorDSLab Rebuild Architecture
 
-Status: accepted Design architecture for the TensorCore `0.7.0` rebuild. It
-does not dispatch implementation, change the installed dependency, replace
-production bytes, or make a compatibility claim. Production replacement
-requires a focused work order, fixed dependency evidence, Validation,
-independent Review, and the ordinary merge gate.
+Status: accepted Design architecture for the TensorCore `0.7.0` rebuild.
+Stages 3 through 6 are Merged / Closed. Stage 6's exact implementation
+candidate is `fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58`, and Review's
+evidence-only closeout is
+`ea979862b05f4ef543f6971c86641df317232479`. The public
+`simulate_readout(...)` surface remains future Stage 7 and undispatched. This
+architecture page does not itself dispatch implementation, change the
+installed dependency, replace production bytes, or make a compatibility
+claim; every later production slice still requires a focused work order,
+fixed dependency evidence, Validation, independent Review, and the ordinary
+merge gate.
 
 Within this architecture, the fixed-`K` algorithm under
 [Fixed-Generation Correlated-Avalanche Baseline](#fixed-generation-correlated-avalanche-baseline)
@@ -18,9 +24,11 @@ The architecture pass was started from clean TensorDSLab `main` at
 for this design is clean TensorCore `0.7.0` `main` at
 `b454d738f6385ce6489d85492a618a3dab139bb6`. That exact commit contains the
 operative ordinary-ABC semantic roots and the Stage 13 operation-owned
-aliasing/freshness documentation contract. Selecting the exact package pin and
-passing TensorDSLab-owned consumer probes remain explicit implementation-work-
-order gates; this Design review is not a broad compatibility claim.
+aliasing/freshness documentation contract. Stage 3 selected that exact package
+pin and passed TensorDSLab-owned consumer probes; Stages 4 through 6 retained
+and reverified it. Later dependency changes remain explicit implementation-
+work-order gates. This exact-baseline evidence is not a broad compatibility
+claim.
 
 Stage 2 and Maintenance 1 remain valid historical evidence for the current
 package. This is a clean pre-deployment redesign, not a compatibility
@@ -211,13 +219,13 @@ generic movement, output buffer, workspace, persistence, or lifecycle API.
 Exact Python type identity is an in-process contract, not a durable artifact
 identifier.
 
-Before implementation, TensorDSLab must select and test an exact TensorCore
-dependency. That checkpoint includes runtime construction, package-root
-imports, static constructor typing, exact-leaf validation, and public
-relationship helpers. It must provide explicit evidence for ordinary-ABC
-inherited constructor signatures and concrete result inference with the
-selected static checker. A generic gap returns to TensorCore Design with a
-minimal reproducer rather than being patched through a downstream fork.
+Stage 3 selected and tested exact TensorCore `0.7.0` dependency
+`b454d738f6385ce6489d85492a618a3dab139bb6`, including runtime construction,
+package-root imports, static constructor typing, exact-leaf validation, public
+relationship helpers, ordinary-ABC inherited constructor signatures, and
+concrete result inference. Later stages have retained and reverified the same
+pin. Any newly discovered generic gap still returns to TensorCore Design with
+a minimal reproducer rather than being patched through a downstream fork.
 
 TensorCore establishes neither universal freshness nor universal storage
 sharing. Every TensorDSLab operation returning one or more fields must classify
@@ -261,9 +269,9 @@ tensor_dslab/
   readout/
     __init__.py
     types.py                 # ReadoutConfig and ReadoutCollection only
-    simulation.py            # public simulate_readout() orchestration
+    simulation.py            # future Stage 7 public orchestration
     _requirements.py         # shared private readout requirements
-    _random.py               # shared private Stage 5 readout RNG
+    _random.py               # shared private Stage 5/6 readout RNG
 
     photoelectrons/
       __init__.py
@@ -297,9 +305,10 @@ tensor_dslab/
 
 The tree is organized around semantic products rather than implementation
 layers. Each product's `types.py` owns its exact `TensorField` leaf and that
-product's public configuration types. Its `_produce.py`, once implemented,
-owns the private `_produce_*` builder and any `_simulate_*` scientific
-submodels needed by that product. Product-specific deep validation remains
+product's public configuration types. Every generated product now has an
+implemented `_produce.py` that owns the private `_produce_*` builder and any
+`_simulate_*` scientific submodels needed by that product. Product-specific
+deep validation remains
 with the product; `_requirements.py` contains only relationships genuinely
 shared across readout products.
 
@@ -317,9 +326,9 @@ not add source binning to the current readout package.
 
 `Photoelectrons` is an already-produced dense truth input. Its package has no
 `PhotoelectronsConfig` and no `_produce.py`; source construction and PE binning
-remain deferred to the future TensorG4DS bridge. `simulate_readout(...)`
-borrows the supplied field and validates its realized `SampleAxis` against the
-caller's `SamplingConfig`.
+remain deferred to the future TensorG4DS bridge. Future Stage 7
+`simulate_readout(...)` will borrow the supplied field and validate its
+realized `SampleAxis` against the caller's `SamplingConfig`.
 
 `_requirements.py` and `_random.py` are private modules. Privacy is an API and
 compatibility boundary, not a runtime access-control mechanism. The public RNG
@@ -348,15 +357,15 @@ when needed, and focused requirements. `readout.simulation` is the sole layer
 allowed to import the complete product graph and orchestrate it.
 
 The physical module path does not define public visibility. Package
-`__init__.py` files and `__all__` deliberately re-export the collaborator-
-facing classes, configs, and `simulate_readout(...)`; collaborators need not
-import from nested product modules. `simulation.py`, rather than a generic
-`api.py`, names the behavior it owns. Do not add global `configs/`,
+`__init__.py` files and `__all__` deliberately re-export the implemented
+collaborator-facing classes and configs; Stage 7 will add
+`simulate_readout(...)` deliberately. Collaborators need not import from
+nested product modules. `simulation.py`, rather than a generic `api.py`, names
+the future behavior it will own. Do not add global `configs/`,
 `fields.py`, `builders.py`, or `validation.py` dumping grounds.
 
-Create `_random.py`, any `_produce.py`, or another future module only when an
-accepted implementation stage gives it real behavior. Do not create empty
-files to reserve this tree.
+Create another future module only when an accepted implementation stage gives
+it real behavior. Do not create empty files to reserve this tree.
 
 ### Active MVP Symbol Inventory
 
@@ -386,34 +395,26 @@ remain private to their product under the consistently scoped
 That name is fixed for the foundation work order and tests but remains private,
 not a downstream compatibility surface.
 
-Stage 3 historically implemented and exported `NormalDelayConfig`. The active
-MVP supersedes that portion of the Stage 3 surface: the first Stage 6
-production slice removes the class, both crosstalk-union memberships, all three
-export layers, and its current tests without a compatibility shim. The closed
-Stage 3 work order remains unchanged as historical evidence. TensorDSLab is
-pre-deployment and makes no backward-compatibility claim.
+Stage 3 historically implemented and exported `NormalDelayConfig`. Stage 6
+removed the class, both crosstalk-union memberships, all three export layers,
+and its tests without a compatibility shim. The closed Stage 3 work order
+remains unchanged as historical evidence. TensorDSLab is pre-deployment and
+makes no backward-compatibility claim.
 
 Every product subpackage root re-exports only its public row above. The
 `common` and `readout` roots compose those deliberate exports, and the package
 root re-exports the collaborator-facing axes, sampling/config types, product
 field types, `ReadoutConfig`, and `ReadoutCollection`. Generic TensorCore names
-are never re-exported. Importing the public package must not import a future
-simulation, RNG, compiler, TensorG4DS, TensorML, or IO dependency.
+are never re-exported. Importing the public package must not transitively load
+private RNG mechanics or a future simulation, compiler, TensorG4DS, TensorML,
+or IO dependency.
 
-The following behavior symbols belong to later focused stages and are not
-created by the foundation stage:
-
-- `readout.simulation.simulate_readout`;
-- `_produce_charge`, `_produce_pure_waveform`, `_produce_noise_waveform`,
-  `_produce_analog_waveform`, and `_produce_digitized_waveform` in their
-  corresponding product `_produce.py` modules;
-- Charge's private `_simulate_*` scientific submodels; and
-- the still-private, gate-dependent contents of `readout._random`.
-
-This separation makes the Stage 3 exit testable: all accepted semantic leaves,
-configs, collection composition, imports, and constructor contracts exist,
-while no scientific simulation behavior or empty architectural scaffolding
-does.
+Stages 4 through 6 subsequently implemented every generated product's private
+`_produce_*` builder, Charge's private `_simulate_*` submodels, and the private
+RNG mechanics consumed by noise and Charge. The one remaining behavior symbol
+in this tree is future Stage 7
+`readout.simulation.simulate_readout`. This staged separation kept the Stage 3
+foundation testable without creating empty architectural scaffolding.
 
 The rebuild retires:
 
@@ -1728,9 +1729,9 @@ Do not add loose default constants or a scientifically unqualified `default()`.
 
 ## Private Product Builders
 
-Private product operations are exact and independently testable with valid
-fixtures, but they receive already-preflighted values from
-`simulate_readout(...)`. They do not repeat the public boundary or promise a
+Private product operations are exact and independently tested with valid
+fixtures. Future Stage 7 `simulate_readout(...)` will pass them already-
+preflighted values. They do not repeat the public boundary or promise a
 supported direct-call API:
 
 ```python
@@ -1784,17 +1785,16 @@ def _produce_digitized_waveform(
 
 The naming split is intentional: `_produce_*` constructs and returns one
 completed semantic product, while `_simulate_*` names a private scientific
-submodel used inside a product producer. Neither family is public;
-`simulate_readout(...)` remains the one ordinary collaborator-facing
-simulation API.
+submodel used inside a product producer. Neither family is public; future
+Stage 7 `simulate_readout(...)` remains the planned ordinary collaborator-
+facing simulation API.
 
-The merged Stage 4 and Stage 5 implementation still uses transitional
-`_product_*` callable names. The next authorized production work that touches
-this surface must rename those callables, their `_product.py` modules, imports,
-and tests without changing behavior. New producers use `_produce_*` in
-product-owned `_produce.py` modules from the outset. The module and callable
-therefore communicate the same action, while `types.py` remains the sole owner
-of product identity and configuration.
+Stage 6 behavior-neutrally completed the transitional `_product.py` and
+`_product_*` rename. Every generated product now uses `_produce.py` and an
+exactly corresponding `_produce_*` callable; no compatibility shim or old
+callable remains. The module and callable therefore communicate the same
+action, while `types.py` remains the sole owner of product identity and
+configuration.
 
 The two pointwise waveform-tail producers own their product arithmetic directly.
 Do not add `_apply_analog_saturation(...)`, `_digitize(...)`, or another
@@ -1937,9 +1937,9 @@ public preflight rejects `None` before any effective stochastic branch. Every
 stochastic leaf uses the same public root seed with its own globally unique
 fixed numeric operation stream; product producers never share a mutable
 sequential stream between leaves.
-`_produce_charge(...)` is the private typed product producer named by the
-scientific contract. The public way to request that result is
-`simulate_readout(..., products=[Charge], ...)`.
+`_produce_charge(...)` is the implemented private typed product producer named
+by the scientific contract. Stage 7 will add the public
+`simulate_readout(..., products=[Charge], ...)` request path.
 
 ## Public Builder
 
@@ -4529,27 +4529,27 @@ agreement for fixed-point uniform conversion, exact same-backend repeatability
 for Box-Muller and completed noise products, and cross-backend statistical
 agreement for completed Gaussian and PSD values. Bernoulli, exponential,
 Poisson, categorical, and rejection behavior are not Stage 5 implementation
-claims. The Poisson contract is now selected Design for a later Charge work
-order; it remains nonoperative until that work is dispatched and accepted.
+claims. Stage 6 subsequently implemented and validated the aggregate-binomial,
+multinomial, and hybrid Poisson contracts on eager CPU; CUDA was unavailable,
+so their cross-backend evidence remains unestablished.
 
 The implementation must not read or mutate PyTorch's global RNG state, create
 a `torch.Generator`, use `torch.poisson` as the normative sampler, or depend on
-private PyTorch RNG operations. The engine will belong privately to
-TensorDSLab when its focused stage is dispatched; selecting it here neither
-changes TensorCore nor creates a Random123 runtime dependency.
+private PyTorch RNG operations. The implemented engine belongs privately to
+TensorDSLab; this neither changes TensorCore nor creates a Random123 runtime
+dependency.
 
 ### Selected RNG Distribution Contracts
 
 Stage 5 implements the precision-matched uniform conversions and Box-Muller
-mapping used by white and PSD noise. The Poisson and aggregate-binomial
-contracts below are selected future Charge Design and remain nonoperative until
-a focused Charge work order activates them. The standalone Bernoulli threshold
-and continuous exponential inversion remain recorded generic candidates but
-have no accepted MVP Charge consumer: AP uses aggregate conditional binomials,
-and physical delay laws are integrated into prepared categories. Noise and
-continuous product-dtype transforms use the conventional precision-matched
-Random123 fixed-point conversions rather than a widened `float64` path for
-`float32` products. Discrete count probabilities, Poisson means, and Poisson
+mapping used by white and PSD noise. Stage 6 implements the Poisson and
+aggregate-binomial contracts below for Charge. The standalone Bernoulli
+threshold and continuous exponential inversion remain recorded generic
+candidates but have no accepted MVP consumer: AP uses aggregate conditional
+binomials, and physical delay laws are integrated into prepared categories.
+Noise and continuous product-dtype transforms use the conventional precision-
+matched Random123 fixed-point conversions rather than a widened `float64` path
+for `float32` products. Discrete count probabilities, Poisson means, and Poisson
 sampler control intentionally use binary64 so the integer avalanche history
 does not depend on the requested Charge dtype. The normative
 uniform-conversion reference is Random123 `1.14.0`
@@ -4979,8 +4979,8 @@ Threshold zero returns false without requesting a word; threshold `2**32`
 returns true without requesting a word. Every interior threshold consumes one
 assigned raw word. This avoids the systematic downward bias of a floored
 threshold and gives both `float32` and `float64` consumers the same represented
-Bernoulli law. Stage 6 must not implement this unused standalone path merely
-because it is documented; its aggregate binomial primitive owns AP outcomes.
+Bernoulli law. Stage 6 did not implement this unused standalone path; its
+aggregate binomial primitive owns AP outcomes.
 
 An ordinary exponential variate of configured mean `tau` is:
 
@@ -5040,15 +5040,16 @@ validation and in the synchronized `docs/parity.md` comparison; evidence that
 rare threshold observables are sensitive to it is the trigger for a separately
 versioned widened or tail-complete normal algorithm.
 
-Stage 5 proves that uniform conversions reproduce the same target-dtype values
-bit-for-bit on every accepted CPU/CUDA implementation. Box-Muller outputs
-retain the same-backend repeatability boundary because `log`, square root,
-sine, and cosine may differ across backends. Later Charge work must separately
-activate and prove the selected analytic timing preparation, aggregate-
-binomial and Poisson behavior, and smearing's Box-Muller use. It
-activates standalone Bernoulli or continuous exponential behavior only if a
-later accepted consumer actually uses it. None of these selections creates a
-CPU/CUDA bitwise guarantee for completed stochastic products.
+Stage 5 specifies bit-for-bit target-dtype uniform agreement across accepted
+CPU/CUDA implementations. Box-Muller outputs retain the same-backend
+repeatability boundary because `log`, square root, sine, and cosine may differ
+across backends. Stage 6 activated and proved analytic timing preparation,
+aggregate-binomial and Poisson behavior, and smearing's Box-Muller use on eager
+CPU. CUDA was unavailable, so cross-backend Charge evidence remains
+unestablished. Standalone Bernoulli or continuous-exponential behavior
+activates only if a later accepted consumer actually uses it. None of these
+selections creates a CPU/CUDA bitwise guarantee for completed stochastic
+products.
 
 An operation that genuinely expands source quanta would assign each one the
 deterministic address `(source_flat_position, quantum_ordinal,
@@ -5823,7 +5824,7 @@ The rebuild validation matrix includes:
 - explicit lane-three-to-next-block-lane-zero rollover, numerical low/high word
   order, the `0x54445331` domain tag, and deterministic rejection of seed,
   stream, position, quantum, and raw-word schema-bound violations without
-  narrowing casts; source-population validation remains later Charge scope;
+  narrowing casts; Stage 6 separately completed source-population validation;
 - exact `float32` and `float64` closed-open and open-open conversion oracles for
   zero, maximum, and representative raw words, including endpoint exclusion,
   numerical two-word order, discarded-bit behavior, adjacent midpoint cells
@@ -5831,7 +5832,7 @@ The rebuild validation matrix includes:
 - if a later work order accepts a standalone Bernoulli consumer, ties-to-even
   threshold construction, exact threshold-boundary word comparisons, quantized
   probability error no greater than `2**-33`, and draw-free threshold-zero and
-  threshold-`2**32` results; Stage 6 does not implement this unused primitive;
+  threshold-`2**32` results; Stage 6 did not implement this unused primitive;
 - Box-Muller raw-word schedule and ordered cosine/sine components at one exact
   positional address, scalar-consumer spare-result discard, two-component PSD
   use, native-dtype execution, same-backend repeatability, component moments
@@ -6030,8 +6031,8 @@ The rebuild validation matrix includes:
   division; and recovery changing neither realized AP count/destination nor
   descendant branching;
 - exact absence of `NormalDelayConfig` from the active class, union, export,
-  and package-contract surfaces after the first Stage 6 cleanup slice, while
-  the closed Stage 3 work order remains unchanged as historical evidence;
+  and package-contract surfaces after completed Stage 6, while the closed
+  Stage 3 work order remains unchanged as historical evidence;
 - AP's one-child multinomial law, shared realized categories for integer count
   and deposited charge, and separate stop, retained, and right-overflow
   accounting;
@@ -6098,21 +6099,24 @@ The completed production steps are:
 - implement the private positional RNG behavior consumed by exact-zero,
   IID-white, and caller-supplied PSD noise under the focused Stage 5 work
   order, then clear its fixed-commit Validation, independent Review, merge,
-  and Design closeout gates.
+  and Design closeout gates; and
+- implement the complete private Charge producer under the focused Stage 6
+  work order, including aggregate multinomial and hybrid Poisson samplers,
+  dark counts, analytic timing jitter, the fixed-`K` DiCT/DeCT/AP cascade,
+  S1/S2 ledgers, overflow diagnostics, smearing, and all eight Charge streams,
+  then clear fixed-commit Validation, independent Review, merge, and Design
+  closeout gates.
 
 The remaining production sequence is:
 
-1. Explicitly dispatch the Design-complete Stage 6 work order that implements
-   the closed aggregate multinomial, hybrid Poisson, fixed-`K` charge,
-   fixed/exponential delay/recovery, count/address/failure, RNG-stream, and
-   statistical-evidence contracts in bounded slices.
-2. Publish request-aware `simulate_readout(...)` only after every required
-   producer exists and its complete closure can be preflighted.
-3. Profile real GPU memory and execution before designing workspace/output
+1. Design and dispatch Stage 7 to publish request-aware
+   `simulate_readout(...)`, now that every required private product producer
+   exists and the complete requested closure can be preflighted.
+2. Profile real GPU memory and execution before designing workspace/output
    reuse.
-4. Design the exact TensorG4DS-to-truth-Photoelectrons bridge.
-5. Design explicit TensorML/reconstruction adapters.
-6. Design durable artifacts only after in-memory contracts stabilize.
+3. Design the exact TensorG4DS-to-truth-Photoelectrons bridge.
+4. Design explicit TensorML/reconstruction adapters.
+5. Design durable artifacts only after in-memory contracts stabilize.
 
 Each production slice uses the repository Implementation/Validation/Review
 loop and fixed-commit evidence. No compatibility alias preserves `0.6`.
@@ -6170,15 +6174,21 @@ no public API. The subsequent Stage 5 private-RNG and complete-noise work order
 is also Merged / Closed through exact implementation candidate
 `538089910be0fcaceff363c43e41e92e87af2efd` and Review closeout
 `c6a506d3658b24197806b9e230480211a254a35a`. It likewise added no public API.
-Measured GPU fusion remains a later optimization gate.
+Stage 6 is Merged / Closed through exact implementation candidate
+`fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58` and Review's evidence-only
+closeout `ea979862b05f4ef543f6971c86641df317232479`. It completed the private
+Charge producer and likewise added no public API. Its evidence is eager
+CPU-only because CUDA was unavailable. Measured GPU fusion and cross-backend
+Charge evidence remain later gates.
 
 ## Closed Decisions And Remaining Design Gates
 
 The rebuild package tree and import ownership are closed. Shared semantic axes
-and sampling live in `tensor_dslab.common`; each readout product owns its field,
-configs, validation, and eventual private product builder; `readout.types`
-contains only `ReadoutConfig` and `ReadoutCollection`; and
-`readout.simulation` owns the one public orchestration function. The private
+and sampling live in `tensor_dslab.common`; each generated readout product owns
+its field, configs, validation, and implemented private product builder;
+`Photoelectrons` remains the producer-free truth input; `readout.types`
+contains only `ReadoutConfig` and `ReadoutCollection`; and future
+`readout.simulation` will own the one public orchestration function. The private
 readout requirements and RNG modules are not public APIs. `Photoelectrons` is
 an already-produced input with neither a config nor a producer. Reopening this
 tree requires a concrete import-cycle, cohesion, or implementation-size finding
@@ -6223,14 +6233,15 @@ The private raw RNG core and positional address encoding are closed. RNG schema
 `Threefry4x32_R<20>` word algorithm, numeric seed/stream/domain-tag key packing,
 logical-position/quantum/raw-word-block counter packing, lane selection, and
 accepted bounds specified above. Stage 5 closed raw-bit generation for its two
-noise streams; later Design appended all eight Charge streams through
+noise streams; Stage 6 implemented all eight Charge streams through
 `CHARGE_SMEARING = 0x0000_000A` without changing that historical evidence.
 
 The noise-required distribution layer is closed for Stage 5:
 precision-matched Random123-style `float32` and `float64`
 closed-open/open-open conversions and address-local ordered Box-Muller pairs.
 Ties-to-even 32-bit Bernoulli thresholds and native-dtype exponential inversion
-remain selected future Charge Design rather than Stage 5 implementation scope.
+remain unused generic candidate mechanics rather than Stage 5 or Stage 6
+implementation scope.
 The documented finite Box-Muller tail is an accepted bounded-MVP approximation
 for actual variate consumers such as noise and charge smearing, not timing
 jitter and not a hidden claim of unbounded continuous support.
@@ -6241,15 +6252,16 @@ public-import, and fixed consumer-probe gate at exact commit
 
 The remaining gates are:
 
-1. Explicit dispatch, implementation, and supported-execution-mode evidence
-   under the Design-complete Stage 6 work order. The
-   scientific transition, delay/recovery preparation, stabilized aggregate
-   samplers, all eight Charge streams, positional schedules, per-cell count
-   ceiling, relational generation/address bounds, ledger/smearing envelope,
-   failure effects, and TensorDSLab-model statistical policy are no longer open
-   Design. Standalone Bernoulli and sampled continuous-exponential equations
-   remain recorded, but their implementation and evidence activate only if a
-   later accepted consumer actually uses them.
+1. A focused Stage 7 work order for request/config/seed preflight, prerequisite
+   planning, each producer at most once, requested-only retention, and the
+   public `simulate_readout(...)` surface. Stage 6 already closed the private
+   Charge scientific transition, delay/recovery preparation, stabilized
+   aggregate samplers, all eight Charge streams, positional schedules,
+   per-cell count ceiling, relational generation/address bounds,
+   ledger/smearing envelope, failure effects, and TensorDSLab-model
+   statistical policy on eager CPU. Standalone Bernoulli and sampled
+   continuous-exponential equations remain recorded, but their implementation
+   and evidence activate only if a later accepted consumer actually uses them.
 2. Waveform-tail optimization evidence after the functional producers are
    accepted: compiler/execution mode, equivalence to the frozen eager
    reference, one-kernel/no-target-sized-temporary instrumentation, and the
@@ -6262,17 +6274,17 @@ The remaining gates are:
    `overflow_hit_count` accounting.
 5. Whether typed collection convenience properties materially improve the API.
 
-The fixed-`K` correlated-avalanche model itself is closed at the scientific
-algorithm level: exact config ownership, independent per-edge phase closure,
+The fixed-`K` correlated-avalanche model is implemented and closed on eager
+CPU: exact config ownership, independent per-edge phase closure,
 ordinary separate DiCT/DeCT Poisson laws, AP's bounded categorical law,
 fixed/exponential CT delay families, optional composed exponential recovery
 response, unmarked cross-feeding, S1/S2 ledgers, terminal
 smearing rule, causal right-overflow policy, and private diagnostic vocabulary
-are selected above. The remaining Charge gate is execution: explicit dispatch
-of the Design-complete Stage 6 work order, implementation, and fixed-commit
-evidence for the closed design. No work order may substitute a same-bin closure,
-generation-wave plan, marked recovery process, Gamma-Poisson law, or separate
-public mechanism pipeline for this baseline.
+are implemented under the selected baseline. CUDA execution and CPU/CUDA
+agreement remain unestablished because CUDA was unavailable. No work order may
+substitute a same-bin closure, generation-wave plan, marked recovery process,
+Gamma-Poisson law, or separate public mechanism pipeline for this baseline
+without a new Design decision.
 
 `Config(ABC)`, product-level `persist` flags, jagged builder input, and public
 truth-replacing timing jitter are deliberately omitted. Persistence remains a

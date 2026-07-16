@@ -17,13 +17,12 @@ The current identity and maturity are:
 
 ```text
 Project/display name: TensorDSLab
-Python import: tensor_dslab (accepted on main through Stage 5)
+Python import: tensor_dslab (accepted on main through Stage 6)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
-Package maturity: Stage 5 readout RNG and stochastic noise Merged / Closed
-Next production gate: Stage 6 Charge Simulation is Design-complete /
-Undispatched; explicit dispatch must name its exact synchronized authority and
-verified execution routes
+Package maturity: Stage 6 Charge Simulation Merged / Closed
+Next production gate: Stage 7 public readout orchestration remains
+undispatched and has no accepted focused production work order
 ```
 
 Stage 1 is Design-complete, and Stage 2 is Merged / Closed on `main` at
@@ -65,9 +64,15 @@ Box-Muller pair, and complete exact-zero, IID-white, and caller-supplied PSD
 noise producer. Its fixed-commit Validation, independent Review, and Design
 post-merge audit found no unresolved issue. CUDA was unavailable, so the
 evidence is eager CPU-only and makes no GPU execution or performance claim.
-Stage 6 Charge production has a Design-complete work order but remains
-undispatched at this documentation baseline. GPU fusion, public readout
-orchestration, and integration remain later work.
+Stage 6 is Merged / Closed through exact implementation candidate
+`fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58` and Review's evidence-only
+closeout `ea979862b05f4ef543f6971c86641df317232479`. It implements the complete
+private Charge producer, aggregate samplers, and fixed-generation correlated-
+avalanche slice. Fixed-commit Validation, independent Review, and Design's
+post-merge audit found no unresolved issue. CUDA was unavailable, so its
+evidence is eager CPU-only and makes no GPU execution or performance claim.
+Stage 7 public orchestration, measured GPU fusion, and integration remain later
+work.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency
@@ -208,9 +213,9 @@ TensorDSLab/
       sampling.py             # SamplingConfig and canonical sample facts
     readout/
       types.py                # ReadoutConfig and ReadoutCollection only
-      simulation.py           # public simulate_readout() orchestration
+      simulation.py           # future Stage 7 public orchestration
       _requirements.py        # private shared readout relationships
-      _random.py              # private Stage 5 readout RNG
+      _random.py              # private Stage 5/6 RNG and count samplers
       photoelectrons/types.py
       charge/{types,_produce}.py
       pure_waveform/{types,_produce}.py
@@ -446,25 +451,23 @@ correlated avalanches, and smearing without mutating truth. Pure/noise produce
 zero-referenced components; analog composes them; digitization applies its ADC
 transfer.
 
-`_produce_*` and product-owned `_produce.py` modules are the target convention
-even though the merged Stage 4 and Stage 5 implementation still carries
-transitional `_product_*` callables in `_product.py` modules. A focused
-production change must rename those callables, modules, imports, and tests
-without changing behavior before public orchestration closes. New producers
-must not extend the transitional naming family.
+`_produce_*` and product-owned `_produce.py` modules are the implemented
+convention. Stage 6 behavior-neutrally renamed the four transitional Stage 4/5
+waveform modules, callables, imports, and tests. Do not restore an `_product_*`
+callable, `_product.py` module, alias, or compatibility shim.
 
 The builder does not load sources, perform IO, move or cast inputs, persist
 products, own DAG scheduling, or accept an ambient generator. Its public random
 input is one root integer seed. Private RNG addresses use operation streams and
 logical flat tensor positions, never semantic coordinate strings.
 
-The Merged / Closed Stage 5 work order fixes private
+The Merged / Closed Stage 5 work order fixed private
 `tensordslab.threefry4x32-20/v1` and one central `_RngStream(Enum)` with
 `NOISE_WHITE = 0x0000_0001` and
 `NOISE_PSD_COEFFICIENT = 0x0000_0002`. Do not use loose stream constants,
 `IntEnum`, `auto()`, hashes, declaration order, or mutable/global generators.
 Stage 5 implements only uniform and Box-Muller behavior consumed by noise;
-the later accepted Charge Design appends these exact Poisson roles:
+merged Stage 6 appends and implements these exact Charge roles:
 
 ```text
 CHARGE_DARK_COUNTS                  = 0x0000_0003
@@ -477,9 +480,9 @@ CHARGE_AFTERPULSES                  = 0x0000_0009
 CHARGE_SMEARING                     = 0x0000_000A
 ```
 
-These members and the selected Charge distributions remain nonoperative until
-a focused production work order. New streams append explicit values without
-renumbering an existing member.
+These members and their selected aggregate Charge distributions are implemented
+by Stage 6. New streams append explicit values without renumbering an existing
+member.
 
 Charge timing/AP redistribution uses aggregate multinomial factorization
 through conditional binomials: exact no-draw degeneracies, strict reflection,
@@ -528,9 +531,9 @@ silent clamp, or a guessed memory ceiling.
 
 The MVP accepts exactly `FixedDelayConfig | ExponentialDelayConfig` for each
 crosstalk mode. `NormalDelayConfig` is retired despite its historical Stage 3
-implementation; the first Stage 6 slice removes its class, union memberships,
-exports, and tests without a compatibility shim. Do not retain an unsupported
-public config. A later calibrated delay family requires a new explicit type and
+implementation; Stage 6 removed its class, union memberships, exports, and
+tests without a compatibility shim. Do not restore an unsupported public
+config. A later calibrated delay family requires a new explicit type and
 Design decision.
 
 Fixed and exponential phase-marginalized delay preparation is closed Design.

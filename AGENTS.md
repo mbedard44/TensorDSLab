@@ -208,10 +208,17 @@ caller-supplied PSD noise under
 Fixed-commit Validation, independent Review, and Design's post-merge audit
 found no unresolved issue. The evidence is eager CPU-only because CUDA was
 unavailable; it makes no GPU execution, performance, fusion, editable-install,
-or wheel-build claim. Stage 6 Charge Simulation is Design-complete /
-Undispatched under
-`docs/implementation/stage_6_charge_simulation.md`; no public orchestration or
-later integration production work is dispatched.
+or wheel-build claim. Stage 6 Charge Simulation is Merged / Closed through
+exact implementation candidate `fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58`
+and Review's evidence-only closeout
+`ea979862b05f4ef543f6971c86641df317232479` under
+`docs/implementation/stage_6_charge_simulation.md`. It implements the complete
+private Charge producer and aggregate count-sampler slice. Fixed-commit
+Validation, independent Review, and Design's post-merge audit found no
+unresolved issue. The evidence is eager CPU-only because CUDA was unavailable;
+it makes no GPU execution, performance, fusion, install, or wheel-build claim.
+Stage 7 public readout orchestration and later integration production remain
+undispatched.
 
 If implementation reveals a concrete contradiction in the accepted design, stop
 and send the issue back to Design. Do not silently widen architecture, create
@@ -264,13 +271,15 @@ tensor_dslab/
 ```
 
 This is an ownership target, not permission to create placeholders. Materialize
-only modules with real behavior accepted by the active work order. Each product
-owns its final `TensorField` leaf, public configs, product validation, and
-eventual private `_produce_*` builder. Private `_simulate_*` functions implement
-scientific submodels. `readout.types` contains only `ReadoutConfig` and
-`ReadoutCollection`; `readout.simulation` owns the one public
-`simulate_readout(...)` orchestration function. Shared axes and sampling belong
-in `common`. Readout-specific requirements and random mechanics remain private.
+only modules with real behavior accepted by the active work order. Every
+generated product owns its final `TensorField` leaf, public configs, product
+validation, and private `_produce_*` builder. `Photoelectrons` remains the
+already-produced truth input and owns no producer. Private `_simulate_*`
+functions implement scientific submodels. `readout.types` contains only
+`ReadoutConfig` and `ReadoutCollection`; future Stage 7 `readout.simulation`
+will own the one public `simulate_readout(...)` orchestration function. Shared
+axes and sampling belong in `common`. Readout-specific requirements and random
+mechanics remain private.
 
 Keep import direction acyclic: TensorCore, common, private shared requirements,
 product types, product producers plus explicit prerequisite product types,
@@ -279,17 +288,14 @@ exports. Product packages must not import `ReadoutConfig`, `ReadoutCollection`,
 or `simulate_readout(...)`. Do not promote `_random.py` to `common` until a
 second TensorDSLab domain needs the exact same accepted mechanics.
 
-The merged Stage 4 and Stage 5 code still uses transitional `_product_*`
-callable names. Do not add another callable in that family. The next authorized
-production work touching the producer surface must rename the existing
-callables and tests to `_produce_*` and rename the existing product-owned
-modules from `_product.py` to `_produce.py` without changing behavior. New
-product producers and modules use `_produce_*` and `_produce.py` from the
-outset.
+Stage 6 behavior-neutrally renamed all four transitional waveform modules,
+callables, imports, and tests from `_product.py` / `_product_*` to
+`_produce.py` / `_produce_*`. This is now the implemented producer convention.
+Do not restore a retired name, alias, or compatibility shim.
 
-Future Charge implementation must use the aggregate multinomial and hybrid
-Poisson contracts selected in `docs/architecture/rebuild.md`. The five Poisson
-roles, timing jitter, AP, and charge smearing have fixed append-only
+Merged Stage 6 implements the aggregate multinomial and hybrid Poisson
+contracts selected in `docs/architecture/rebuild.md`. The five Poisson roles,
+timing jitter, AP, and charge smearing have fixed append-only
 `_RngStream` values through `CHARGE_SMEARING = 0x0000_000A`; discrete
 probabilities, rates, and sampler control use binary64 independently of the
 requested Charge dtype.
@@ -305,17 +311,18 @@ role-address and requested-dtype accumulator-depth relations. Do not substitute 
 avalanche expansion, dependency distribution samplers, `torch.poisson`, a
 normal approximation, global RNG, clipping, residual assignment,
 renormalization, reseeding, or another exhaustion fallback. This is accepted
-Design only; the Stage 6 work order is Design-complete / Undispatched at this
-documentation baseline.
+and implemented eager-reference behavior through exact Stage 6 candidate
+`fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58`. CUDA was unavailable, so the
+accepted evidence makes no GPU execution or cross-backend claim.
 
 The active MVP crosstalk delay union is exactly
 `FixedDelayConfig | ExponentialDelayConfig`. Although Stage 3 historically
-implemented and exported `NormalDelayConfig`, the first Stage 6 production
-slice must remove that class, both union memberships, all three export layers,
-and its tests without a compatibility shim. Do not leave it dormant or revive
-its zero-clipped law. Any later normal, lognormal, tabulated, or other delay
-family requires a new calibrated scientific and API decision. Closed Stage 3
-records remain historical and are not rewritten.
+implemented and exported `NormalDelayConfig`, Stage 6 removed that class, both
+union memberships, all three export layers, and its tests without a
+compatibility shim. Do not restore it or revive its zero-clipped law. Any later
+normal, lognormal, tabulated, or other delay family requires a new calibrated
+scientific and API decision. Closed Stage 3 records remain historical and are
+not rewritten.
 
 Fixed and exponential phase-marginalized delay preparation is frozen in
 `docs/architecture/rebuild.md`. Fixed delay accepts every finite nonnegative

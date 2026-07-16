@@ -188,7 +188,7 @@ tooling was unavailable, so it makes no editable-install or wheel-build claim.
 
 ### [Stage 6: Charge Simulation](stage_6_charge_simulation.md)
 
-Status: **Merged / Design acceptance pending**. Exact implementation and
+Status: **Merged / Closed**. Exact implementation and
 Review-cleared candidate `fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58`
 is a linear descendant of committed Design/dispatch authority
 `21de93a239302a8c31edf3f7fec120ecb1eeea57`. Fixed-commit Validation cleared
@@ -220,8 +220,11 @@ skipped. Pyright `1.1.408` reported zero findings against both dependency
 forms, import isolation returned `False False False False`, and topology,
 allowlist, diff, forbidden-surface, and artifact gates passed. The exact
 archive SHA-256, statistical ledger, endpoint correction, environment, and
-residual qualifications are recorded in the work order. Final Design
-acceptance is still required for **Merged / Closed**.
+residual qualifications are recorded in the work order. Review's evidence-only
+closeout produced `main` at
+`ea979862b05f4ef543f6971c86641df317232479`; TensorDSLab Design accepted the
+exact merged bytes and synchronized live documentation on 2026-07-15. Stage 7
+remains undispatched.
 
 ## Candidate Future Stages
 

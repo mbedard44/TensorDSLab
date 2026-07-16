@@ -1,6 +1,6 @@
 # Stage 6 Charge Simulation Work Order
 
-Status: **Merged / Design acceptance pending**. The user authorized execution
+Status: **Merged / Closed**. The user authorized execution
 on 2026-07-15 from committed Design/dispatch authority
 `21de93a239302a8c31edf3f7fec120ecb1eeea57`. The exact linear candidate chain
 was:
@@ -66,12 +66,22 @@ and eager CPU execution. CUDA and MPS were unavailable. The `build` and
 `hatchling` modules were unavailable. The closeout therefore makes no CUDA,
 GPU-performance, compile/fusion, editable-install, or wheel-build claim.
 
+TensorDSLab Design accepted the exact merged implementation and Review
+closeout `ea979862b05f4ef543f6971c86641df317232479` on 2026-07-15 after
+independently repeating the source full suite, focused Stage 6 suite, exact
+Pyright check, import-isolation check, dependency pin/archive verification,
+artifact checks, and live-document audit. No production or test byte changed
+after independent Review clearance.
+
 The statistical evidence used frozen seeds `0`, `1`,
 `0x0123456789abcdef`, and `0xffffffffffffffff`. Every row below is
 `observed / target / standard error / deterministic accumulation delta /
-accepted bound`. A zero delta means that test's frozen gate is exactly eight
-standard errors. All tests used population moments and predeclared laws,
-sample sizes, and bounds.
+normative reconciled bound`, where the normative bound is `8*SE + delta`.
+Some early scalar Poisson and marginal-binomial assertions used the stricter
+`8*SE` gate, and the completed-Charge assertions used a stricter single-step
+accumulation delta. Every recorded observation also passes the normative
+reconciled bound shown here. All tests used population moments and predeclared
+laws, sample sizes, and bounds.
 
 Poisson and aggregate-binomial sampler evidence was:
 
@@ -219,6 +229,15 @@ equation:
   disp var  .399754 / .398849 / .001051 / 1.02e-13 / .008410
 ```
 
+The completed-Charge check used `M=2**16` independent examples and the same
+four frozen seeds:
+
+```text
+  mean              4.017104907088802 / 4.0249212050092185 / .010889198244378121 / 9.151611277523485e-13 / .08711358595594013
+  second moment     23.92476641707505 / 23.970898209067027 / .11959098010595064 / 5.450351229471159e-12 / .9567278408530554
+  zero probability  .0577392578125 / .057102939492073235 / .0009064031540966277 / 1.2983705230925178e-14 / .007251225232786005
+```
+
 Exact fixed-word inversion/PTRS/BTRS, 80-to-110-digit decision/law fixtures,
 all bypasses, count/address/allocation/ledger endpoints, all 16 Charge stage
 combinations, all eight mechanism combinations, conservation, overflow,
@@ -226,13 +245,13 @@ freshness, axis-order, noncontiguous-source, and stream-isolation checks also
 passed. Conditional CUDA Charge/sampler/statistical tests skipped because no
 CUDA device was available; they produced no GPU observation.
 
-This Review-owned closeout changes only this work order and the implementation
-index. Cleared production, tests, README, package metadata, architecture,
-parity, governance, and dependency bytes remain exactly those merged at
-Candidate 3. Final TensorDSLab Design acceptance remains required before the
-stage becomes **Merged / Closed**. This merge and closeout do not dispatch
-Stage 7, activate Coordination or Profile B, establish conformance or broad
-compatibility, or authorize a push.
+Review's evidence-only closeout changed only this work order and the
+implementation index. Cleared production, tests, README, package metadata,
+governance, and dependency bytes remain exactly those merged at Candidate 3;
+the later Design closeout synchronizes live architecture, parity, validation,
+and status documentation only. Stage 6 is **Merged / Closed**. This merge and
+closeout do not dispatch Stage 7, activate Coordination or Profile B,
+establish conformance or broad compatibility, or authorize a push.
 
 ## Objective
 

@@ -8,9 +8,16 @@ RNG encoding, numerical gates, and source citations live in
 [`rebuild.md`](rebuild.md). Donor comparison and intentional divergences live
 in [`../parity.md`](../parity.md).
 
-The architecture is a production target, not an implementation dispatch.
-Stage 2 and Maintenance 1 remain historical evidence for the superseded
-TensorCore `0.6` foundation.
+Architecture pages do not themselves dispatch production. Stages 3 through 6
+are Merged / Closed. Stage 6 implemented the complete private Charge slice at
+exact candidate `fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58`; Review's
+merge/closeout is `ea979862b05f4ef543f6971c86641df317232479`. It retained
+exact TensorCore `0.7.0` pin
+`b454d738f6385ce6489d85492a618a3dab139bb6`. Its evidence is eager CPU-only
+because all conditional CUDA tests were skipped. Public request-aware
+`simulate_readout(...)` remains future Stage 7 work and is not dispatched by
+this page. Stage 2 and Maintenance 1 remain historical evidence for the
+superseded TensorCore `0.6` foundation.
 
 ## Scope
 
@@ -50,7 +57,7 @@ could be a distinct `DigitalWaveform` product.
 
 ## Public Surface
 
-The normal collaborator call is:
+The planned Stage 7 collaborator call is:
 
 ```python
 def simulate_readout(
@@ -80,9 +87,10 @@ assert readout.field_types == frozenset(
 analog = readout.field(AnalogWaveform)
 ```
 
-`simulate_readout` is the one ordinary public simulation API. Private product
-producers and scientific submodels remain independently testable internal
-units, not alternate supported entry points.
+When Stage 7 is implemented, `simulate_readout` will be the one ordinary public
+simulation API. The already-implemented private product producers and
+scientific submodels remain independently testable internal units, not
+alternate supported entry points.
 
 ## Axes And Sampling
 
@@ -400,9 +408,9 @@ equal.
 Crosstalk delay choices are exact fixed or exponential laws. A shared causal
 guard rejects prepared negative-delay mass rather than silently clamping an
 invalid model. The earlier `NormalDelayConfig` proposal is retired from the MVP
-rather than left as a dormant public option; the first Stage 6 slice removes
-the already-merged class, union memberships, exports, and tests without a
-compatibility shim. Afterpulse delay remains exponential.
+rather than left as a dormant public option. Stage 6 removed the class, both
+union memberships, all export layers, and current tests without a compatibility
+shim. Afterpulse delay remains exponential.
 
 Physical delay plus independently marginalized uniform source-bin phase
 determines the integer destination offset for each parent-child edge. Full
@@ -434,11 +442,15 @@ while exponential delay/recovery own bounded binary64 domains and
 `1e-12`/`1e-11` tolerances. AP/smearing streams, the universal per-cell
 `2**53 - 1` count ceiling, relational generation/address and accumulator
 bounds, checked overflow/failure mechanics, smearing finiteness, and the frozen
-TensorDSLab-model statistical policy are also closed in `rebuild.md`. The
-remaining gate is explicit dispatch of the Design-complete Stage 6 work order,
-implementation, and fixed-commit evidence.
-Stage 5 remains the historical implementation boundary for only the two noise
-streams and noise-required random mechanics.
+TensorDSLab-model statistical policy are also closed in `rebuild.md`. Stage 6
+implemented and validated these private Charge contracts at the exact reviewed
+candidate above. Full source/archive runs each executed 174 tests: 164 passed
+and 10 conditional CUDA tests skipped. The focused Stage 6 run executed 65
+tests: 60 passed and 5 skipped. This is eager CPU evidence only and makes no
+CUDA, GPU-performance, compile/fusion, or allocation-free claim. Stage 5
+remains the historical implementation boundary for the two noise streams and
+noise-required mechanics; Stage 6 owns the eight Charge streams and Charge
+samplers.
 
 ## Waveform Products
 
@@ -583,13 +595,12 @@ CHARGE_SMEARING = 0x0000_000A
 ```
 
 Stream zero is unassigned; zero noise owns no stream. The first two members are
-Merged / Closed Stage 5 production. The eight appended Charge members are
-selected Design and remain nonoperative until a later work order. Stage 5 is
-vectorized eager CPU plus
-conditional eager CUDA only. Raw words and fixed-point uniforms must agree
-exactly between accepted CPU/CUDA paths; completed Box-Muller, PSD, and later
-Charge values require exact same-backend/mode repeatability and cross-backend
-statistical agreement where transcendental arithmetic is used.
+Merged / Closed Stage 5 production, and the eight appended Charge members are
+Merged / Closed Stage 6 production. Both closeouts provide eager CPU evidence
+only because conditional CUDA tests were skipped. Exact raw-word and fixed-point
+agreement remains the contract for a later accepted CUDA path; completed
+transcendental values require same-backend repeatability and cross-backend
+statistical agreement once both paths have evidence.
 
 ## Functional, Memory, And Exposure Contract
 
@@ -620,7 +631,7 @@ dependency.
 Validation separates universal structure, intrinsic semantics, trust-boundary
 value domains, and operation behavior.
 
-Public preflight covers at least:
+The future Stage 7 public preflight must cover at least:
 
 - exact source type and deep nonnegative truth domain;
 - exactly three readout axes, source shape, dtype, Torch layout, and device;
@@ -633,7 +644,7 @@ Public preflight covers at least:
 - causal delay and window/overflow policies; and
 - every failure before the first draw or write.
 
-Behavioral validation includes:
+Cross-stage behavioral validation includes:
 
 - all request subsets and prerequisite retention rules;
 - common-product invariance under unrelated retention changes;
@@ -657,15 +668,14 @@ private-call misuse, direct tensor mutation, or exotic dispatch hardening.
 
 ## Product-Centered Module Ownership
 
-Shared axes and sampling live in `tensor_dslab.common`. Each product subpackage
-owns its field, configs, validation, and eventual `_produce.py`. The
-Photoelectrons package owns only its field type.
+Shared axes and sampling live in `tensor_dslab.common`. Every generated product
+subpackage now owns its field, configs, validation, and implemented
+`_produce.py`; Photoelectrons owns only its already-produced truth field.
 
 `readout/types.py` contains only `ReadoutConfig` and `ReadoutCollection`.
-`readout/simulation.py` owns public orchestration. `_requirements.py` and
-`_random.py` are private readout support and appear only when real behavior is
-implemented. Product packages never import the cross-product orchestration
-layer.
+`_requirements.py` and `_random.py` are implemented private readout support.
+`readout/simulation.py` remains absent until Stage 7. Product packages never
+import the cross-product orchestration layer.
 
 The exact tree and import direction are normative in
 [`rebuild.md`](rebuild.md). Do not add empty placeholders or global
@@ -694,11 +704,12 @@ no empty simulation, RNG, or product-builder module.
 Stage 4 is Merged / Closed and implements exactly the private pure, analog, and
 digitized waveform producers under the functionality-first contract. Stage 5
 is Merged / Closed and implements the private positional RNG behavior consumed
-by complete exact-zero, IID-white, and caller-supplied PSD noise. Later focused
-stages close stochastic Charge RNG and finally expose complete request-aware
-`simulate_readout`. A partial public simulation API must not imply unsupported
-product closures. Measured GPU fusion remains a separate optimization stage
-after functional producers exist.
+by complete exact-zero, IID-white, and caller-supplied PSD noise. Stage 6 is
+Merged / Closed and implements the complete private Charge producer, all eight
+Charge RNG streams, aggregate samplers, and delay/jitter/cascade/ledger/smearing
+mechanics. Stage 7 remains responsible for complete request-aware
+`simulate_readout(...)`; no partial public API should imply unsupported product
+closure. Measured GPU fusion remains a separate later optimization stage.
 
 ## Return To Design Before
 
