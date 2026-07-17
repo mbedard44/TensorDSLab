@@ -1,8 +1,11 @@
 # Maintenance 2 RNG And Product-Module Ownership Migration Work Order
 
-Status: **Design-complete / Undispatched**.
+Status: **topology-dependent: Implementation candidate while these exact bytes
+are absent from `main`; Merged / Design acceptance pending if present unchanged
+on `main`; Merged / Closed only when this work order and the implementation
+index record Design's evidence-only closeout**.
 
-Dependency state: **TensorCore dependency selected**.
+Dependency state: **TensorCore `0.9.0` exact pin installed**.
 
 Stable work-order key:
 `TensorDSLab/maintenance-2-rng-and-product-module-ownership-migration`.
@@ -10,11 +13,15 @@ Stable work-order key:
 This is the package-authoritative TensorDSLab Design work order. TensorCore has
 published the required RNG and `require_same_dtype()` surface, and this
 document freezes the TensorDSLab-local commands, exact allowlist, continuity
-fixtures, ownership boundary, lifecycle, and stop conditions. It remains
-undispatched until its containing Design authority is committed, topology and
-persistent execution routes are reverified, and the user separately authorizes
-production execution. No implementation, validation, review, dependency
-movement, merge, or push is authorized by its existence.
+fixtures, ownership boundary, lifecycle, and stop conditions. Its containing
+Design authority was committed at
+`daa046405f62ee324bc495867e796213bf6657a6`, the persistent routes were
+reverified, and the user separately authorized production execution. While
+these exact bytes are absent from `main`, they remain the fixed-commit
+Validation/Review candidate. If present unchanged on `main`, Review's clean
+fast-forward has completed and Design acceptance remains pending. Final
+acceptance is complete only when this work order and the implementation index
+record `Merged / Closed`. No push is authorized.
 
 ## Objective
 
@@ -119,7 +126,9 @@ conformance_finding: Not evaluated
 coordination_status: Deferred
 registry_storage_profile: Disabled
 stage_6: Merged / Closed
-maintenance_2: Design-complete / Undispatched
+maintenance_2: topology-dependent (candidate off main; Merged / Design
+               acceptance pending on main; Merged / Closed only in the
+               two-document Design closeout)
 stage_7: Undispatched
 ```
 
@@ -554,7 +563,8 @@ This migration preserves:
   the frozen migration fixtures;
 - every accepted scientific distribution, equation, category order, delay
   kernel, recovery law, count ceiling, overflow rule, S1/S2 mapping, and
-  smearing envelope;
+  ordinary smearing behavior, with only the contextual extreme representation
+  domain intersected as recorded below;
 - source immutability, generated-product freshness and pairwise independence,
   axes/device/dtype behavior, no silent movement/casting/detachment/host
   materialization, and no global RNG effect;
@@ -569,6 +579,79 @@ floating tensors may be used for exact eager-CPU bit-pattern continuity.
 Cross-backend completed transcendental results remain statistical where the
 accepted contract is statistical. This work order does not manufacture a CUDA
 claim when CUDA is unavailable.
+
+## Design-Return Charge-Smearing Envelope Resolution
+
+Design returned this correction before candidate 1 was committed or dispatched
+to Validation, then reauthorized the existing Implementation candidate. At
+that resolution point, the candidate ordinal remained 1 and no
+Implementation-to-Validation or Validation-to-Implementation budget had been
+consumed.
+
+Candidate execution correctly stopped when TensorCore `0.9.0` rejected a
+float32 maximum-ledger Gaussian law before word generation. TensorCore was
+enforcing its published conservative affine-law envelope correctly. The
+apparent `K=0` conflict came from representing the binary64 expression for the
+Stage 6 ledger bound to nearest in float32, which rounded above the real bound
+and therefore constructed a value the Stage 6 proof did not cover.
+
+Maintenance 2 resolves that mismatch without changing TensorCore. Let
+
+```text
+B_real = C_max*(1 + gamma_L) + L*eta_d
+```
+
+be the existing outward Stage 6 bound returned by `_ledger_envelope(...)`.
+Same-device compatibility preflight and any defensive represented-ledger
+comparison derive the greatest finite value `B_d` representable in the
+requested floating dtype such that `B_d <= B_real`. Every realized ledger is
+itself target-dtype representable and no target-dtype value lies between `B_d`
+and `B_real`, so `B_d` still bounds every represented ledger. A nearest
+target-dtype representation of the Python `B_real` value is not used as an
+accepted ledger bound when it lies above `B_real`. The existing upward-rounded
+Stage 6 mathematical ledger bound and smearing-envelope check over `B_real`
+remain unchanged.
+
+For positive smearing, `_prepare_smearing_sigma(...)` keeps that Stage 6
+worst-ledger check and additionally evaluates the same-device target-dtype
+operations `sqrt(B_d)` then `represented_sigma * sqrt(B_d)`. It requires that
+actual prepared scale, combined with TensorCore's exact documented radius for
+the dtype, satisfy TensorCore's represented Gaussian finite-output
+envelope. This model-specific compatibility preflight completes before any
+Charge effect, RNG request, or write. Runtime retains the exact direct call:
+
+```python
+rng.gaussian(
+    mean=S1,
+    standard_deviation=represented_sigma * torch.sqrt(S2),
+    key=config.rng_key,
+    positions=positions,
+    dtype=S1.dtype,
+    quantum=0,
+    ordinal=0,
+    count=1,
+)
+```
+
+There is no local standard-normal affine path, wrapper, fallback, conditional
+sampler branch, TensorCore edit, or clipping change.
+
+The correction preserves the frozen `K=0`, `L=1` adjacent boundaries. The
+maximum valid represented float32 ledger is `0x1.0000000000000p+53`; float32
+relative sigma accepts `0x1.f61fea0000000p+98` and rejects its immediate
+neighbor `0x1.f61fec0000000p+98`. Float64 remains accepted
+`0x1.51e4a059b7cf4p+994` and rejected
+`0x1.51e4a059b7cf5p+994`. Only a contextual extreme can narrow when the public
+Gaussian prepared-scale envelope is stricter: the verified `L=24` float32
+pair accepts `0x1.f61fd20000000p+98` and rejects its immediate neighbor
+`0x1.f61fd40000000p+98`.
+
+The ordinary frozen Charge fixture at relative sigma `0.1`, every other
+completed-value fixture, all scientific distributions and equations, default
+keys and addresses, variate ordinals, category and accumulation order, and
+physical operation order remain unchanged. The contextual extreme values have
+no calibrated detector interpretation and this correction creates no broader
+science, compatibility, or execution claim.
 
 ## Frozen Eager-CPU Continuity Fixtures
 
@@ -691,6 +774,13 @@ Required TensorDSLab evidence includes:
 - all existing Charge delay, timing-jitter, cascade, ledger, overflow,
   smearing, scientific/statistical, failure, source/global-RNG immutability,
   axes, dtype, device, and freshness evidence;
+- exact proof that `B_d` is the greatest target-dtype ledger not exceeding
+  `B_real`; preserved `K=0` float32/float64 adjacent endpoints; the contextual
+  `L=24` float32 adjacent pair; and maximum positive/negative radius outcomes
+  through public `gaussian(...)`, with the negative outcome clipped to zero;
+- proof that rejection at the contextual neighbor occurs before the local
+  concrete `CounterRng` test double's protected `_generate_block(...)` hook and
+  before any earlier enabled Charge effect can consume words;
 - all existing pure/noise/analog/digitized product evidence;
 - focused `_require_representable_float()` type, dtype, finite, rounding,
   endpoint, and caller-owned stronger-policy regressions;
@@ -1013,12 +1103,14 @@ history to pretend TensorCore owned the original Stage 5/6 implementation.
 
 ## Dispatch And Role Loop
 
-No dispatch is currently authorized.
-
-After this complete Design overlay is committed, TensorDSLab Design must name
-the exact containing authority commit, reverify clean topology and the
-persistent logical routes, and obtain a separate user dispatch. The only
-permitted Maintenance 2 execution states are:
+Production execution was dispatched from exact Design authority
+`daa046405f62ee324bc495867e796213bf6657a6` after clean-topology and persistent-
+route reverification plus separate user authorization. Lifecycle is determined
+by repository topology: absence of these exact bytes from `main` means they
+remain a candidate in the fixed-commit loop; presence unchanged on `main`
+means Review's clean fast-forward completed and Design acceptance remains
+pending; only the two-document `Merged / Closed` closeout completes final
+acceptance. The only permitted Maintenance 2 execution states are:
 
 ```text
 Design-complete / Undispatched

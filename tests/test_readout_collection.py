@@ -2,9 +2,10 @@ from __future__ import annotations
 
 from itertools import combinations
 import unittest
+from unittest.mock import patch
 
 import torch
-from tensor_core import TensorField
+from tensor_core import TensorField, require_same_dtype
 
 from tensor_dslab import (
     AnalogWaveform,
@@ -137,6 +138,34 @@ class ReadoutCollectionTest(unittest.TestCase):
         self.assertEqual(mixed_roles.tensor(Photoelectrons).dtype, torch.int64)
         self.assertEqual(mixed_roles.tensor(Charge).dtype, torch.float64)
         self.assertEqual(mixed_roles.tensor(DigitizedWaveform).dtype, torch.int32)
+
+    def test_delegates_dtype_check_for_only_present_floating_fields(self) -> None:
+        axes = make_axes()
+        photoelectrons = make_product(Photoelectrons, axes=axes)
+        charge = make_product(Charge, axes=axes, dtype=torch.float64)
+        digitized = make_product(DigitizedWaveform, axes=axes)
+        pure = make_product(PureWaveform, axes=axes, dtype=torch.float64)
+        noise = make_product(NoiseWaveform, axes=axes, dtype=torch.float64)
+        analog = make_product(AnalogWaveform, axes=axes, dtype=torch.float64)
+
+        with patch(
+            "tensor_dslab.readout.collection.require_same_dtype",
+            wraps=require_same_dtype,
+        ) as delegated:
+            collection = ReadoutCollection(
+                fields=(
+                    photoelectrons,
+                    charge,
+                    digitized,
+                    pure,
+                    noise,
+                    analog,
+                )
+            )
+
+        delegated.assert_called_once_with(charge, pure, noise, analog)
+        self.assertIs(collection.field(Photoelectrons), photoelectrons)
+        self.assertIs(collection.field(DigitizedWaveform), digitized)
 
     def test_retains_exact_field_and_tensor_references(self) -> None:
         axes = make_axes()

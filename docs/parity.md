@@ -13,6 +13,15 @@ The bounded Stage 6 evidence is exact implementation candidate
 `ea979862b05f4ef543f6971c86641df317232479`, against TensorCore `0.7.0`
 `b454d738f6385ce6489d85492a618a3dab139bb6`. Its conditional CUDA cases were
 skipped, and its public Stage 7 comparison boundary does not yet exist.
+Maintenance 2 uses exact TensorCore `0.9.0` commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`; it preserves the accepted
+scientific/address mappings while changing their module and generic-RNG owner.
+While these exact bytes are absent from `main`, they remain the fixed-commit
+Validation/Review candidate; if present unchanged on `main`, Review's clean
+fast-forward has completed and Design acceptance remains pending. Final
+acceptance is complete only when the work order and implementation index
+record `Merged / Closed`. CUDA was unavailable, so it adds no GPU or completed-
+value cross-backend evidence. Stage 7 remains undispatched.
 
 ## Purpose
 
@@ -433,9 +442,9 @@ when:
 
 TensorDSLab's analytically prepared binary64 kernel and aggregate multinomial
 orchestration do not reproduce IV's per-PE finite digital normal or draw
-sequence exactly. Current Stage 6 executes the frozen binomial mapping through
-private `readout/_random.py`; the accepted post-Maintenance 2 target calls the
-same promoted mapping through TensorCore's positional `binomial(...)`.
+sequence exactly. Closed Stage 6 executed the frozen binomial mapping through
+private `readout/_random.py`; the Maintenance 2 candidate calls the same
+promoted mapping through TensorCore's positional `binomial(...)`.
 Validation therefore measures the analytic transition/drop probabilities,
 multinomial moments and covariance, and named tails rather than upgrading the
 implemented comparison to distributional parity.
@@ -474,9 +483,9 @@ count ~ Poisson(rate_hz * sample_period_ns * 1e-9)
 The rebuild uses one global rate. Typed per-channel rates are deferred. The
 resulting grid is an ephemeral submodel observable, not a recognized
 `ReadoutCollection` field.
-TensorDSLab prepares each cell's binary64 mean. Current Stage 6 executes the
-selected hybrid mapping through private `readout/_random.py`; the accepted
-post-Maintenance 2 target calls TensorCore's `poisson(...)`: one-uniform
+TensorDSLab prepares each cell's binary64 mean. Closed Stage 6 executed the
+selected hybrid mapping through private `readout/_random.py`; the Maintenance
+2 candidate calls TensorCore's `poisson(...)`: one-uniform
 inverse-CDF sampling below mean `10` and Hoermann PTRS from `10` through its
 accepted execution ceiling `1e8`. This is an implementation of the named
 Poisson target law, not donor RNG or same-seed parity.
@@ -543,10 +552,10 @@ A_direct[g + 1, u]  ~ Poisson(R_direct[g + 1, u])
 A_delayed[g + 1, u] ~ Poisson(R_delayed[g + 1, u])
 ```
 
-The accepted post-Maintenance 2 target gives the two retained modes and their
-two overflow roles separate config-owned `RngKey` values and calls
-TensorCore's public hybrid `poisson(...)`; current Stage 6 uses the
-corresponding private streams and the same frozen sampler mapping. Every actual
+The Maintenance 2 candidate gives the two retained modes and their two
+overflow roles separate config-owned `RngKey` values and calls TensorCore's
+public hybrid `poisson(...)`; closed Stage 6 used the corresponding private
+streams and the same frozen sampler mapping. Every actual
 aggregate cell rate
 must be binary64, finite, nonnegative, and no greater than `1e8`. The sampler
 choice changes neither the declared Poisson law nor the intentional donor
@@ -719,6 +728,18 @@ field with guaranteed fresh storage independent of the source
 Avalanche count and `S1` alone do not determine that variance. `S2` is always
 accumulated as private numerical scratch; it is not branching state or a
 collection product.
+
+Maintenance 2 does not change that scientific law. It retains the
+upward-rounded Stage 6 analytic check over the real ledger bound, derives the
+greatest target-dtype ledger that bound covers for represented-ledger checks,
+and intersects the scientific check with TensorCore's public Gaussian
+prepared-scale finite-output envelope. The frozen `K=0` float32 and float64
+endpoints remain unchanged. Only contextual extreme float32 acceptance can
+narrow (the verified `L=24` adjacent pair), while the ordinary relative-sigma
+`0.1` fixture, RNG keys and addresses, equations, clipping, and operation and
+accumulation order remain bitwise or semantically unchanged as applicable.
+This numerical-domain intersection has no calibrated donor meaning and does
+not alter the parity classification below.
 
 ### Charge-Smearing Parity Claim
 
@@ -1005,9 +1026,9 @@ device-resident streams.
 
 The selected aggregate multinomial implementation uses TensorDSLab-owned
 sequential category planning with stable prepared current/later-category
-masses. Current Stage 6 executes the frozen forward-CDF/BTRS mapping through
-private `readout/_random.py`; the accepted post-Maintenance 2 target calls that
-promoted mapping through TensorCore's `binomial(...)`. It does not repeatedly
+masses. Closed Stage 6 executed the frozen forward-CDF/BTRS mapping through
+private `readout/_random.py`; the Maintenance 2 candidate calls that promoted
+mapping through TensorCore's `binomial(...)`. It does not repeatedly
 subtract represented categories from one; that implementation detail was
 rejected after the timing-jitter numerical study corrupted small residual
 tails. Promotion to TensorCore is an accepted target, not a claim that IV or
@@ -1058,13 +1079,13 @@ restart for each builder invocation. Product-request changes preserve a common
 product because config-owned role keys are fixed, but chunk stability would
 require explicit global positional offsets and a later Design contract.
 
-The accepted next public surface uses immutable TensorCore `CounterRng`
-instances and config-owned `RngKey` values. Reusing one RNG intentionally
-replays the same realization; changing algorithms intentionally need not.
-Stage 5/6's central `_RngStream` and bare seed remain closed implementation
-evidence until the gated Maintenance 2 migration. Default keys preserve the
-same stream values, so the migration may prove internal continuity without
-claiming donor RNG parity.
+The Maintenance 2 implementation uses immutable TensorCore `CounterRng` instances
+and config-owned `RngKey` values. Reusing one RNG intentionally replays the
+same realization; changing algorithms intentionally need not. Stage 5/6's
+central `_RngStream` and bare seed remain closed historical implementation
+evidence. Its default keys preserve the same stream values and internal
+continuity without claiming donor RNG parity. CUDA was unavailable, so this
+migration adds no completed-value cross-backend claim.
 
 ## Condition-Database Variation
 

@@ -3,44 +3,26 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import final
 
-import torch
 from tensor_core import (
     NonnegativeFloat,
     NonnegativeInteger,
     PositiveFloat,
     Probability,
-    TensorField,
+    RngKey,
 )
 
 from tensor_dslab.readout._requirements import (
     _require_exact,
-    _require_floating_dtype,
     _require_one_of_exact,
     _require_optional_exact,
-    _require_readout_structure,
 )
-
-
-@final
-class Charge(TensorField):
-    __slots__ = ()
-
-    def _require(self) -> None:
-        _require_readout_structure(self)
-        _require_floating_dtype(self)
-
-
-def _require_valid_values(field: Charge) -> None:
-    if not bool(torch.all(torch.isfinite(field.tensor)).item()):
-        raise ValueError("Charge values must be finite")
-    if bool(torch.any(field.tensor < 0).item()):
-        raise ValueError("Charge values must be nonnegative")
 
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class TimingJitterConfig:
     sigma_ns: NonnegativeFloat
+    rng_key: RngKey = RngKey(namespace=0x54445331, stream=0x0000_0008)
 
     def __post_init__(self) -> None:
         _require_exact(
@@ -48,15 +30,18 @@ class TimingJitterConfig:
             NonnegativeFloat,
             "TimingJitterConfig.sigma_ns",
         )
+        _require_exact(self.rng_key, RngKey, "TimingJitterConfig.rng_key")
 
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DarkCountConfig:
     rate_hz: NonnegativeFloat
+    rng_key: RngKey = RngKey(namespace=0x54445331, stream=0x0000_0003)
 
     def __post_init__(self) -> None:
         _require_exact(self.rate_hz, NonnegativeFloat, "DarkCountConfig.rate_hz")
+        _require_exact(self.rng_key, RngKey, "DarkCountConfig.rng_key")
 
 
 @final
@@ -90,6 +75,14 @@ class ExponentialDelayConfig:
 class DirectCrosstalkConfig:
     mean_offspring_per_parent: NonnegativeFloat
     delay: FixedDelayConfig | ExponentialDelayConfig
+    retained_rng_key: RngKey = RngKey(
+        namespace=0x54445331,
+        stream=0x0000_0004,
+    )
+    overflow_rng_key: RngKey = RngKey(
+        namespace=0x54445331,
+        stream=0x0000_0005,
+    )
 
     def __post_init__(self) -> None:
         _require_exact(
@@ -102,6 +95,20 @@ class DirectCrosstalkConfig:
             (FixedDelayConfig, ExponentialDelayConfig),
             "DirectCrosstalkConfig.delay",
         )
+        _require_exact(
+            self.retained_rng_key,
+            RngKey,
+            "DirectCrosstalkConfig.retained_rng_key",
+        )
+        _require_exact(
+            self.overflow_rng_key,
+            RngKey,
+            "DirectCrosstalkConfig.overflow_rng_key",
+        )
+        if self.retained_rng_key == self.overflow_rng_key:
+            raise ValueError(
+                "DirectCrosstalkConfig retained and overflow RNG keys must differ"
+            )
 
 
 @final
@@ -109,6 +116,14 @@ class DirectCrosstalkConfig:
 class DelayedCrosstalkConfig:
     mean_offspring_per_parent: NonnegativeFloat
     delay: FixedDelayConfig | ExponentialDelayConfig
+    retained_rng_key: RngKey = RngKey(
+        namespace=0x54445331,
+        stream=0x0000_0006,
+    )
+    overflow_rng_key: RngKey = RngKey(
+        namespace=0x54445331,
+        stream=0x0000_0007,
+    )
 
     def __post_init__(self) -> None:
         _require_exact(
@@ -121,6 +136,20 @@ class DelayedCrosstalkConfig:
             (FixedDelayConfig, ExponentialDelayConfig),
             "DelayedCrosstalkConfig.delay",
         )
+        _require_exact(
+            self.retained_rng_key,
+            RngKey,
+            "DelayedCrosstalkConfig.retained_rng_key",
+        )
+        _require_exact(
+            self.overflow_rng_key,
+            RngKey,
+            "DelayedCrosstalkConfig.overflow_rng_key",
+        )
+        if self.retained_rng_key == self.overflow_rng_key:
+            raise ValueError(
+                "DelayedCrosstalkConfig retained and overflow RNG keys must differ"
+            )
 
 
 @final
@@ -142,6 +171,7 @@ class AfterpulseConfig:
     probability: Probability
     mean_delay_ns: PositiveFloat
     recovery: AfterpulseRecoveryConfig | None = None
+    rng_key: RngKey = RngKey(namespace=0x54445331, stream=0x0000_0009)
 
     def __post_init__(self) -> None:
         _require_exact(
@@ -159,6 +189,7 @@ class AfterpulseConfig:
             AfterpulseRecoveryConfig,
             "AfterpulseConfig.recovery",
         )
+        _require_exact(self.rng_key, RngKey, "AfterpulseConfig.rng_key")
 
 
 @final
@@ -196,6 +227,7 @@ class CorrelatedAvalancheConfig:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ChargeSmearingConfig:
     relative_sigma: NonnegativeFloat
+    rng_key: RngKey = RngKey(namespace=0x54445331, stream=0x0000_000A)
 
     def __post_init__(self) -> None:
         _require_exact(
@@ -203,6 +235,7 @@ class ChargeSmearingConfig:
             NonnegativeFloat,
             "ChargeSmearingConfig.relative_sigma",
         )
+        _require_exact(self.rng_key, RngKey, "ChargeSmearingConfig.rng_key")
 
 
 @final

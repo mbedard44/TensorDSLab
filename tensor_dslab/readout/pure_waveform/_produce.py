@@ -6,14 +6,17 @@ import torch
 from torch.nn import functional
 
 from tensor_dslab.common import SampleAxis, SamplingConfig
-from tensor_dslab.readout._requirements import _require_sampling
-from tensor_dslab.readout.charge import Charge
-from tensor_dslab.readout.pure_waveform.types import (
-    PureWaveform,
+from tensor_dslab.readout._requirements import (
+    _require_representable_float,
+    _require_sampling,
+)
+from tensor_dslab.readout.charge.field import Charge
+from tensor_dslab.readout.pure_waveform.config import (
     PureWaveformConfig,
     TpcFebSnrPulseConfig,
     VetoPduPulseConfig,
 )
+from tensor_dslab.readout.pure_waveform.field import PureWaveform
 
 
 def _template_sample_count(
@@ -69,18 +72,6 @@ def _veto_raw(t_ns: float, config: VetoPduPulseConfig) -> float:
     return gaussian * first_edge * second_edge
 
 
-def _round_finite_scalar(
-    value: float,
-    *,
-    dtype: torch.dtype,
-    field: str,
-) -> float:
-    rounded = float(torch.tensor(value, dtype=dtype, device="cpu"))
-    if not math.isfinite(rounded):
-        raise ValueError(f"{field} is not finite in the Charge dtype")
-    return rounded
-
-
 def _produce_pure_waveform(
     charge: Charge,
     *,
@@ -125,7 +116,7 @@ def _produce_pure_waveform(
         raise ValueError("pulse template sampled extremum must be finite and nonzero")
 
     peak_voltage_mv_per_pe = model.peak_voltage_mv_per_pe.value
-    rounded_peak = _round_finite_scalar(
+    rounded_peak = _require_representable_float(
         peak_voltage_mv_per_pe,
         dtype=charge.tensor.dtype,
         field="pulse normalized extremum",
@@ -135,7 +126,7 @@ def _produce_pure_waveform(
 
     coefficient_count = min(template_sample_count, sampling.sample_count.value)
     rounded_coefficients = [
-        _round_finite_scalar(
+        _require_representable_float(
             value / normalization * peak_voltage_mv_per_pe,
             dtype=charge.tensor.dtype,
             field=f"pulse coefficient[{index}]",

@@ -5,8 +5,10 @@ from typing import assert_type
 import torch
 from tensor_core import (
     NonnegativeFloat,
-    NonnegativeInteger,
+    PositiveFloat,
     PositiveInteger,
+    RngKey,
+    Threefry4x32,
 )
 
 from tensor_dslab import (
@@ -14,14 +16,17 @@ from tensor_dslab import (
     ChargeConfig,
     ChargeSmearingConfig,
     ChannelAxis,
-    CorrelatedAvalancheConfig,
-    DirectCrosstalkConfig,
     ExampleAxis,
-    FixedDelayConfig,
+    NoiseWaveform,
+    NoiseWaveformConfig,
     Photoelectrons,
     SamplingConfig,
+    WhiteNoiseConfig,
 )
 from tensor_dslab.readout.charge._produce import _produce_charge
+from tensor_dslab.readout.noise_waveform._produce import (
+    _produce_noise_waveform,
+)
 
 
 sampling = SamplingConfig(
@@ -33,34 +38,39 @@ axes = (
     ChannelAxis(coordinates=("channel-0",)),
     sampling.build_axis(),
 )
-photoelectrons = Photoelectrons(
+source = Photoelectrons(
     tensor=torch.ones((1, 1, 4), dtype=torch.int64),
     axes=axes,
 )
+rng = Threefry4x32(seed=17)
+key = RngKey(namespace=0x54445331, stream=101)
 
-deterministic = _produce_charge(
-    photoelectrons,
+noise = _produce_noise_waveform(
+    source,
     sampling=sampling,
-    config=ChargeConfig(),
-    seed=None,
+    config=NoiseWaveformConfig(
+        model=WhiteNoiseConfig(
+            rms_mv=PositiveFloat(1.0),
+            rng_key=key,
+        )
+    ),
+    rng=rng,
     floating_dtype=torch.float32,
 )
-assert_type(deterministic, Charge)
+assert_type(noise, NoiseWaveform)
+assert_type(noise.tensor, torch.Tensor)
 
-stochastic = _produce_charge(
-    photoelectrons,
+charge = _produce_charge(
+    source,
     sampling=sampling,
     config=ChargeConfig(
-        correlated_avalanches=CorrelatedAvalancheConfig(
-            maximum_generations=NonnegativeInteger(2),
-            direct_crosstalk=DirectCrosstalkConfig(
-                mean_offspring_per_parent=NonnegativeFloat(0.3),
-                delay=FixedDelayConfig(delay_ns=NonnegativeFloat(0.0)),
-            ),
-        ),
-        smearing=ChargeSmearingConfig(relative_sigma=NonnegativeFloat(0.1)),
+        smearing=ChargeSmearingConfig(
+            relative_sigma=NonnegativeFloat(0.1),
+            rng_key=key,
+        )
     ),
-    seed=0,
+    rng=rng,
     floating_dtype=torch.float64,
 )
-assert_type(stochastic, Charge)
+assert_type(charge, Charge)
+assert_type(charge.tensor, torch.Tensor)

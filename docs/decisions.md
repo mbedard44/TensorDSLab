@@ -344,12 +344,16 @@ products. TensorDSLab retains raw-tensor requirements and one private
 `_require_representable_float(...)` helper for repeated scalar conversion into
 an accepted floating dtype.
 
-Before Stage 7, TensorDSLab Maintenance 2 must install the selected exact
-TensorCore commit, split module
-ownership, migrate stochastic functions, preserve default-key output
-continuity, and remove `_RngStream` plus `readout/_random.py` without a shim.
-Stage 7 then rejects duplicate keys assigned to distinct roles in the
-requested transitive closure before any RNG call or write.
+The Maintenance 2 implementation installs the selected exact
+TensorCore commit, splits module ownership, migrates stochastic functions,
+preserves default-key output continuity, and removes `_RngStream` plus
+`readout/_random.py` without a shim. While these exact bytes are absent from
+`main`, they remain the fixed-commit Validation/Review candidate; if present
+unchanged on `main`, Review's clean fast-forward has completed and Design
+acceptance remains pending. Final acceptance is complete only when the work
+order and implementation index record `Merged / Closed`. A separately
+dispatched Stage 7 would reject duplicate keys assigned to distinct roles in
+the requested transitive closure before any RNG call or write.
 
 ### Charge Uses Aggregate Multinomial And Hybrid Poisson Sampling
 
@@ -455,12 +459,18 @@ There is no magic maximum-generation constant. Checked role addresses require
 requires `L < 2**p_d`, where `p_d` is 24 or 53 and
 `L = E*K + 1`, or `E*K + S + 3` when recovered AP charge is retained. Its
 forward-error bound is `gamma_L*T + L*eta_d`, with
-`gamma_L = L/(2**p_d-L)`. Smearing uses the resulting worst-case ledger bound
-plus the exact finite Box-Muller radius to reject only a contextual dtype
-overflow risk. The eager reference fixes generation, direct-CT/delayed-CT/AP
-mechanism, source-bin, and AP-offset accumulation order and forbids an
-unspecified repeated-index atomic reduction. Details and failure effects are
-normative in
+`gamma_L = L/(2**p_d-L)`. Because this real bound constrains represented
+ledgers, Maintenance 2 floors it to the greatest target-dtype ledger not above
+the real bound; rounding it upward would create a value the proof does not
+cover. Smearing retains the Stage 6 worst-ledger check and intersects it with
+TensorCore's public Gaussian prepared-scale finite-output envelope. The
+`K=0` float32/float64 adjacent endpoints remain frozen; only a contextual
+extreme may narrow, as proved by the `L=24` float32 pair. This is a
+representation-domain correction, not a change to scientific equations, RNG
+addresses, clipping, or accumulation/operation order. The eager reference
+fixes generation, direct-CT/delayed-CT/AP mechanism, source-bin, and AP-offset
+accumulation order and forbids an unspecified repeated-index atomic reduction.
+Details and failure effects are normative in
 [`architecture/rebuild.md`](architecture/rebuild.md#stage-6-count-address-and-numeric-envelope).
 
 ### Stage 6 Separates Model Conformance From Donor Equivalence
@@ -674,12 +684,13 @@ kernels and RNG.
 ### Bare `seed=`, Central `_RngStream`, And TensorDSLab-Owned Generic RNG
 
 Stage 5/6 correctly implemented the then-accepted private design and remains
-closed implementation evidence. For the next architecture, its bare private
-producer/invocation seed, central stream enum, and generic `readout/_random.py` ownership are
-superseded by required invocation `CounterRng`, config-owned `RngKey`, and
-TensorCore-owned generic counter/distribution mechanics. Maintenance 2 must
-preserve default-key output continuity and remove the retired local surfaces
-without aliases.
+closed implementation evidence. The Maintenance 2 implementation
+supersedes its bare private producer/invocation seed, central stream enum, and
+generic `readout/_random.py` ownership with required `CounterRng`, config-owned
+`RngKey`, and TensorCore-owned generic counter/distribution mechanics. It
+preserves default-key output continuity and removes the retired local surfaces
+without aliases; lifecycle is determined by its presence on `main` as recorded
+above.
 
 ### Separate Avalanche Architecture Attempts
 
@@ -738,8 +749,10 @@ The private product producers are implemented through Stage 6. The public
 request-aware `simulate_readout(...)` surface, complete request preflight,
 typed dependency closure, execute-once planning, and exact requested retention
 remain undispatched Stage 7 work. No focused Stage 7 production work order is
-accepted yet. TensorCore's generic RNG stage and TensorDSLab Maintenance 2 are
-explicit prerequisites; Stage 7 uses required `rng: CounterRng` and
+accepted yet. TensorCore's generic RNG stage is published and the TensorDSLab
+Maintenance 2 implementation is present; its exact two-document Design
+closeout is the prerequisite for Stage 7. Stage 7 uses required
+`rng: CounterRng` and
 closure-wide role-key collision preflight rather than bare-seed validation.
 
 ### IV-DSLab Charge Equivalence Margins

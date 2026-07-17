@@ -1,28 +1,17 @@
 from __future__ import annotations
 
-import math
-
 import torch
-from tensor_core import require_same_axes, require_same_device
-
-from tensor_dslab.readout.analog_waveform.types import (
-    AnalogWaveform,
-    AnalogWaveformConfig,
+from tensor_core import (
+    require_same_axes,
+    require_same_device,
+    require_same_dtype,
 )
-from tensor_dslab.readout.noise_waveform import NoiseWaveform
-from tensor_dslab.readout.pure_waveform import PureWaveform
 
-
-def _round_finite_bound(
-    value: float,
-    *,
-    dtype: torch.dtype,
-    field: str,
-) -> float:
-    rounded = float(torch.tensor(value, dtype=dtype, device="cpu"))
-    if not math.isfinite(rounded):
-        raise ValueError(f"{field} is not finite in the waveform dtype")
-    return rounded
+from tensor_dslab.readout._requirements import _require_representable_float
+from tensor_dslab.readout.analog_waveform.config import AnalogWaveformConfig
+from tensor_dslab.readout.analog_waveform.field import AnalogWaveform
+from tensor_dslab.readout.noise_waveform.field import NoiseWaveform
+from tensor_dslab.readout.pure_waveform.field import PureWaveform
 
 
 def _produce_analog_waveform(
@@ -35,20 +24,19 @@ def _produce_analog_waveform(
     if pure.shape != noise.shape:
         raise ValueError("pure and noise waveforms must have the same shape")
     require_same_device(pure, noise)
-    if pure.tensor.dtype is not noise.tensor.dtype:
-        raise ValueError("pure and noise waveforms must have the same dtype")
+    require_same_dtype(pure, noise)
 
     minimum: float | None = None
     maximum: float | None = None
     if config.saturation is not None:
         if config.saturation.minimum_mv is not None:
-            minimum = _round_finite_bound(
+            minimum = _require_representable_float(
                 config.saturation.minimum_mv.value,
                 dtype=pure.tensor.dtype,
                 field="analog saturation minimum",
             )
         if config.saturation.maximum_mv is not None:
-            maximum = _round_finite_bound(
+            maximum = _require_representable_float(
                 config.saturation.maximum_mv.value,
                 dtype=pure.tensor.dtype,
                 field="analog saturation maximum",

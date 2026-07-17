@@ -17,6 +17,8 @@ from tensor_dslab.readout.charge import (
     FixedDelayConfig,
     TimingJitterConfig,
 )
+from tensor_dslab.readout.collection import ReadoutCollection
+from tensor_dslab.readout.config import ReadoutConfig
 from tensor_dslab.readout.digitized_waveform import (
     DigitizedWaveform,
     DigitizedWaveformConfig,
@@ -35,7 +37,6 @@ from tensor_dslab.readout.pure_waveform import (
     TpcFebSnrPulseConfig,
     VetoPduPulseConfig,
 )
-from tensor_dslab.readout.types import ReadoutCollection, ReadoutConfig
 
 __all__ = (
     "AfterpulseConfig",

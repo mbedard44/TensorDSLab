@@ -1,8 +1,8 @@
-from tensor_dslab.readout.analog_waveform.types import (
+from tensor_dslab.readout.analog_waveform.config import (
     AnalogSaturationConfig,
-    AnalogWaveform,
     AnalogWaveformConfig,
 )
+from tensor_dslab.readout.analog_waveform.field import AnalogWaveform
 
 __all__ = (
     "AnalogSaturationConfig",

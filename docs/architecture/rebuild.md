@@ -8,9 +8,13 @@ evidence-only closeout is
 `simulate_readout(...)` surface remains future Stage 7 and undispatched. This
 architecture page does not itself dispatch implementation, change the
 installed dependency, replace production bytes, or make a compatibility
-claim; every later production slice still requires a focused work order,
-fixed dependency evidence, Validation, independent Review, and the ordinary
-merge gate.
+claim. Maintenance 2 was separately dispatched, and its implementation bytes
+are present. Its lifecycle is topology-
+dependent: while these exact bytes are absent from `main`, they are the
+candidate under fixed-commit Validation and independent Review; if present
+unchanged on `main`, Review's clean fast-forward has completed and Design
+acceptance remains pending. Final acceptance is complete only when the work
+order and implementation index record `Merged / Closed`.
 
 TensorDSLab Design has accepted a simpler next RNG and module-ownership target:
 one caller-constructed TensorCore `CounterRng` per simulation invocation,
@@ -21,10 +25,11 @@ Gaussian, Poisson, and binomial distributions on that RNG, product
 consumer decision. TensorCore now implements the generic surface in published
 version `0.9.0` at exact commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, which TensorDSLab Design selected
-for the Design-complete, undispatched Maintenance 2 migration after exact consumer probes. Current
-TensorDSLab production still uses the Stage 5/6 private implementation until
-Maintenance 2 is separately dispatched and accepted. Stage 7 remains separate
-and undispatched.
+for Maintenance 2 after exact consumer probes. The implementation pins that
+commit, uses the public RNG/distribution surface, and realizes the accepted
+module ownership without compatibility shims. The Stage 5/6 private
+implementation remains closed historical evidence. Stage 7
+remains separate and undispatched.
 
 Within this architecture, the fixed-`K` algorithm under
 [Fixed-Generation Correlated-Avalanche Baseline](#fixed-generation-correlated-avalanche-baseline)
@@ -47,13 +52,12 @@ claim.
 The selected Maintenance 2 dependency adds public `RngKey`, `CounterRng`,
 `Threefry4x32`, `logical_positions`, `uniform`, `gaussian`, `poisson`, and
 `binomial` surfaces at exact TensorCore `0.9.0` commit
-`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. Current Stage 6 production commit
-`b454d738...` does not provide them. TensorCore independently owns
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The closed Stage 6 TensorCore
+commit `b454d738...` does not provide them. TensorCore independently owns
 their exact implementation and
 generic validation contract; TensorDSLab owns only the required consumer
-behavior recorded below. No TensorDSLab production change may assume that
-surface until the selected commit is installed through accepted Maintenance 2
-production bytes.
+behavior recorded below. The Maintenance 2 implementation installs that
+selected surface under the topology-dependent lifecycle above.
 
 Stage 2 and Maintenance 1 remain valid historical evidence for the current
 package. This is a clean pre-deployment redesign, not a compatibility
@@ -415,11 +419,11 @@ it real behavior. Do not create empty files to reserve this tree.
 
 ### Accepted Post-Maintenance Symbol Inventory
 
-This is the accepted ownership inventory after the gated Maintenance 2
-migration. The current Stage 6 tree still uses `types.py` and
+This is the accepted ownership inventory realized by the Maintenance 2
+implementation. The closed Stage 5/6 tree used `types.py` and
 `readout/_random.py`; the closed work orders remain exact historical evidence
-for those bytes. Maintenance 2 may move symbols without aliases only after the
-TensorCore RNG dependency gate is closed. Future slices may add private
+for those bytes. The migration moves symbols without aliases after the
+TensorCore RNG dependency gate. Future slices may add private
 details needed to express accepted contracts, but must not introduce a second
 registry or create a later behavior module as a placeholder.
 
@@ -4731,7 +4735,9 @@ law against the maximum Box-Muller radius of the selected fixed-point lattice:
 every element must satisfy a conservative finite-output envelope such as
 `abs(mean) + standard_deviation * maximum_radius <= finfo(dtype).max`.
 Accepted Gaussian output is therefore finite. TensorDSLab retains its stricter
-model-specific representation and smearing-envelope preflight.
+model-specific ledger check and additionally preflights the prepared
+target-dtype Charge-smearing scale against this public TensorCore envelope.
+The supported contextual domain is the intersection of those two contracts.
 
 For `poisson(...)`, `positions` fixes shape and device. A scalar mean fills
 that exact shape; a tensor mean is exact-shaped/device-matched
@@ -4919,11 +4925,11 @@ retain the Stage 5/6 stream values `1` through `10`, and never derive from
 declaration order, requested-product order, execution order, `Enum.auto()`, or
 Python `hash()`.
 
-The current Stage 6 production bytes still represent those values through the
-private `readout._random._RngStream` enum. Maintenance 2 removes that enum and
-module without a compatibility shim after selecting the required TensorCore
-commit. Default config keys must reproduce the existing Stage 5/6 raw-word
-addresses exactly. Numeric stream order records append-only identity, not
+Closed Stage 6 production represented those values through the private
+`readout._random._RngStream` enum. The Maintenance 2 candidate removes that
+enum and module without a compatibility shim after selecting the required
+TensorCore commit. Candidate default config keys reproduce the existing Stage
+5/6 raw-word addresses exactly. Numeric stream order records append-only identity, not
 physical execution order: timing jitter uses stream `8` while still executing
 before the correlated-avalanche roles. One AP key owns its complete coupled
 categorical realization; separate AP keys would incorrectly break that
@@ -4951,8 +4957,8 @@ accepts one vectorized eager CPU implementation and conditionally accepts its
 vectorized eager CUDA path when CUDA evidence is available; an independent
 scalar implementation is a validation oracle rather than a production
 execution mode. Compiled, Triton, MPS, and custom-kernel paths are not accepted
-Stage 5 execution modes. TensorCore must own the authoritative known-answer
-and cross-implementation tests after migration. The initial fixed Random123
+Stage 5 execution modes. TensorCore owns the authoritative known-answer and
+cross-implementation tests consumed by the Maintenance 2 candidate. The initial fixed Random123
 oracles include:
 
 ```text
@@ -4991,8 +4997,8 @@ count accumulation, mechanism bookkeeping, and physical ledgers.
 Stage 5 implements the precision-matched uniform conversions and Box-Muller
 mapping used by white and PSD noise. Stage 6 implements the Poisson and
 aggregate-binomial contracts below inside TensorDSLab. Those closed stages
-remain exact historical production evidence. The accepted post-Maintenance 2
-target promotes the same generic Gaussian, Poisson, and binomial mappings to
+remain exact historical production evidence. The Maintenance 2 candidate uses
+the same generic Gaussian, Poisson, and binomial mappings promoted to
 TensorCore without changing their default-key results; TensorDSLab retains
 only their scientific use and complete multinomial orchestration. The
 standalone Bernoulli threshold and continuous exponential inversion remain
@@ -5710,10 +5716,19 @@ abs(represented_ledger - real_sum)
     <= gamma_L * T + L * eta_d
 ```
 
-A conservative finite magnitude bound for either represented ledger is
-`B = C_max*(1 + gamma_L) + L*eta_d`. Exact zero remains exact. Any later compiled,
-fused, widened, or reassociated accumulator must prove and document its own
-rounding depth and result mapping; it cannot silently inherit this eager bound.
+A conservative real-arithmetic finite magnitude bound for either represented
+ledger is
+`B_real = C_max*(1 + gamma_L) + L*eta_d`. Because a realized ledger is itself
+a value in the requested floating dtype, same-device compatibility preflight
+and any defensive represented-ledger comparison derive the greatest finite
+target-dtype value `B_d` such that `B_d <= B_real`. This downward
+representation remains a bound on every represented ledger: no target-dtype
+value exists strictly between `B_d` and `B_real`. It also prevents an ordinary
+nearest representation of the binary64 expression from inventing an
+out-of-bound ledger above `B_real`. Exact zero remains exact. Any later
+compiled, fused, widened, or reassociated accumulator must prove and document
+its own rounding depth and result mapping; it cannot silently inherit this
+eager bound.
 
 An exact-zero smearing width skips the stage. Otherwise `relative_sigma` is
 rounded exactly once to the requested Charge dtype and must remain finite and
@@ -5726,18 +5741,38 @@ Z_float64 = sqrt(-2 * log(2**-53))
 
 with each bound rounded upward. These are the maximum absolute `z0` magnitudes
 on the accepted dtype-specific Box-Muller lattices. With target maximum finite
-value `F_d`, scalar preflight uses upward-rounded arithmetic to prove:
+value `F_d`, the Stage 6 model check uses upward-rounded arithmetic to prove:
 
 ```text
-B + Z_d * relative_sigma_d * sqrt(B) <= F_d
+B_real + Z_d * relative_sigma_d * sqrt(B_real) <= F_d
 ```
 
-and the prepared target-dtype sequence is rechecked before RNG use. This
-guarantees finite scale, excursion, pre-clipped draw, and returned Charge for
-every raw-word outcome. It is a derived contextual representation bound, not
-a physics calibration cap. Enabled smearing still visits `S2 == 0` cells under
-its frozen full-grid schedule; the represented zero scale makes their draw
-inert.
+That upward-rounded analytic check over `B_real` is unchanged. Maintenance 2
+adds a separate same-device compatibility check at `B_d`: it evaluates the
+actual target-dtype `sqrt(B_d)` followed by multiplication by
+`relative_sigma_d`, then applies TensorCore's documented represented-law radius
+to that prepared scale. Any defensive represented-ledger check also compares
+to `B_d`, so representing the Python `B_real` value to nearest cannot admit a
+target-dtype value above the proved real bound. Both checks complete before
+any Charge effect can request words or write. The runtime still calls public
+`rng.gaussian(...)` directly with exact `mean=S1`,
+`standard_deviation=relative_sigma_d*sqrt(S2)`, `ordinal=0`, and `count=1`;
+there is no local standard-normal affine path, fallback, or clipping change.
+
+This intersection preserves the frozen `K=0`, `L=1` boundaries: the maximum
+valid represented `float32` ledger is `0x1.0000000000000p+53`, relative sigma
+`0x1.f61fea0000000p+98` is accepted, and its immediate neighbor
+`0x1.f61fec0000000p+98` is rejected. The `float64` accepted/rejected pair
+remains `0x1.51e4a059b7cf4p+994` /
+`0x1.51e4a059b7cf5p+994`. A contextual extreme can be narrower when the public
+Gaussian prepared-scale envelope dominates; the verified `L=24` `float32`
+pair is accepted `0x1.f61fd20000000p+98` and rejected
+`0x1.f61fd40000000p+98`. These endpoints are a derived representation domain,
+not a physics calibration cap. Ordinary scientific configurations, the
+Gaussian law and clipping policy, RNG keys and addresses, equations, and
+accumulation and operation order are unchanged. Enabled smearing still visits
+`S2 == 0` cells under its frozen full-grid schedule; the represented zero scale
+makes their draw inert.
 
 Public semantic/config/address/source-count validation completes before any
 RNG request or producer write. After that boundary, the functionality-first
@@ -6173,7 +6208,7 @@ The rebuild validation matrix includes:
   equality/`repr` participation, explicit exact-key overrides, crosstalk
   retained/overflow inequality, and absence of keys from deterministic,
   delay, recovery, and composite configs;
-- complete removal after Maintenance 2 of `_RngStream`,
+- complete removal in the Maintenance 2 candidate of `_RngStream`,
   `readout/_random.py`, and any replacement `readout/_rng.py`, while Charge
   multinomial/category orchestration, checked count helpers, and bookkeeping
   remain in `charge/effects/_counts.py`;
@@ -6418,10 +6453,14 @@ The rebuild validation matrix includes:
   float32/float64 unit and recovered-AP ledgers against
   `gamma_L*T + L*eta_d`, scientific `S2 <= S1 <= T`, exact-zero behavior, and
   rejection of an unproved reassociated mapping;
-- smearing-envelope fixtures at the derived target-dtype sigma boundary and
-  its next representable neighbor, positive sigma that rounds to zero or
-  infinity, maximum-radius raw words, and zero-S2 cells, proving finite scale,
-  excursion, pre-clipped draw, and returned Charge on every accepted path;
+- smearing-envelope fixtures proving the unchanged upward-rounded analytic
+  check over `B_real`, the downward target-dtype ledger bound `B_d`, the
+  preserved `K=0` float32/float64 adjacent sigma pairs, the contextual `L=24`
+  float32 accepted/rejected pair, positive sigma that rounds to zero or
+  infinity, maximum-radius raw words through public TensorCore `gaussian(...)`,
+  and zero-S2 cells; rejection completes before any earlier enabled Charge
+  effect requests words, and every accepted scale, excursion, pre-clipped
+  draw, and returned Charge remains finite;
 - TensorCore prerequisite Poisson scalar-oracle fixtures for `lambda = 0`,
   representative small rates,
   values immediately below and at the exact crossover `10`, representative
@@ -6621,18 +6660,22 @@ The completed production steps are:
   then clear fixed-commit Validation, independent Review, merge, and Design
   closeout gates.
 
-The remaining production sequence is:
+The Maintenance 2 lifecycle sequence is topology-dependent:
 
-1. TensorDSLab separately dispatches the Design-complete Maintenance 2 work order against
-   selected TensorCore `0.9.0` commit
-   `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59` and seeks a separate dispatch to split
-   config/field/collection ownership, create the
-   focused Charge effects package, migrate generic RNG and count-distribution
-   use to TensorCore, retain multinomial/category orchestration and checked
-   count bookkeeping in `_counts.py`, add config-owned keys, remove
-   `_RngStream` and `readout/_random.py`, consolidate the private
-   scalar-to-dtype requirement, and prove default-key continuity.
-2. Design and dispatch Stage 7 to publish request-aware
+1. While these exact bytes are absent from `main`, clear them against selected
+   TensorCore `0.9.0` commit
+   `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59` through fixed-commit Validation,
+   independent Review, and the Review-owned clean fast-forward. If they are
+   present unchanged on `main`, that fast-forward has completed and Design
+   acceptance remains pending. Final acceptance is complete only when the work
+   order and implementation index record `Merged / Closed`. The implementation
+   splits config/field/collection ownership, creates the focused
+   Charge effects package, migrates generic RNG and count-distribution use to
+   TensorCore, retains multinomial/category orchestration and checked count
+   bookkeeping in `_counts.py`, adds config-owned keys, removes `_RngStream`
+   and `readout/_random.py`, consolidates the private scalar-to-dtype
+   requirement, and preserves default-key continuity.
+2. Separately design and dispatch Stage 7 to publish request-aware
    `simulate_readout(...)` with required `rng: CounterRng` and closure-wide
    duplicate-key preflight.
 3. Profile real GPU memory and execution before designing workspace/output
@@ -6672,11 +6715,10 @@ the historical `0.6` contracts in the first table.
 | field-ID parity boundaries | product-request/builder parity boundaries |
 | semantic-coordinate RNG identity | config-owned `RngKey` plus logical flat tensor positions |
 
-The post-Stage 6 RNG redesign additionally supersedes these current
-implementation choices once its TensorCore prerequisite and TensorDSLab
-Maintenance 2 are accepted, dispatched, and merged:
+The Maintenance 2 implementation supersedes these closed Stage 5/6 choices;
+its lifecycle follows the branch-versus-`main` rule above:
 
-| Current Stage 5/6 implementation | Accepted post-Maintenance 2 target |
+| Closed Stage 5/6 implementation | Maintenance 2 implementation |
 | --- | --- |
 | bare producer/invocation `seed=` plus central `_RngStream` | required invocation `CounterRng` plus leaf-config-owned `RngKey` |
 | TensorDSLab-owned generic RNG engine in `readout/_random.py` | TensorCore generic RNG/distribution surface plus TensorDSLab-owned scientific keys, lattices, multinomial orchestration, and bookkeeping |
@@ -6724,9 +6766,9 @@ contains only `ReadoutConfig`, `readout.collection` contains only
 `readout.simulation` will own the one public orchestration function. The private
 readout requirements and Charge effect modules are not public APIs.
 `Photoelectrons` is an already-produced input with neither a config nor a
-producer. The current Stage 6 `types.py` and `_random.py` layout remains closed
-Stage 5/6 implementation evidence until Maintenance 2. Reopening the accepted
-target tree
+producer. The former Stage 6 `types.py` and `_random.py` layout remains closed
+Stage 5/6 implementation evidence; the Maintenance 2 candidate realizes the
+accepted target tree without aliases. Reopening that tree
 requires a concrete import-cycle, cohesion, or implementation-size finding
 rather than a preference for layer-oriented grouping.
 
@@ -6787,13 +6829,17 @@ Stage 3 completed the TensorCore selection, inherited-constructor typing,
 public-import, and fixed consumer-probe gate at exact commit
 `b454d738f6385ce6489d85492a618a3dab139bb6`.
 
-The remaining gates are:
+The Maintenance 2 gate is topology-dependent:
 
-1. Separate dispatch of the focused Design-complete Maintenance 2 work order for
-   the module split and public-only TensorCore RNG migration. It must preserve
-   default-key Stage 5/6 output continuity, keep Charge
-   multinomial/category orchestration and checked count bookkeeping local,
-   consolidate `_require_representable_float`, and remove `_RngStream`,
+1. While these exact bytes are absent from `main`, fixed-commit Validation,
+   independent Review, and the clean fast-forward govern the module split and
+   public-only TensorCore RNG migration. If they are present unchanged on
+   `main`, Review's fast-forward has completed and Design acceptance remains
+   pending. Final acceptance is complete only when the work order and
+   implementation index record `Merged / Closed`. The implementation preserves
+   Stage 5/6 output continuity, keeps Charge multinomial/category orchestration
+   and checked count bookkeeping local, consolidates
+   `_require_representable_float`, and removes `_RngStream`,
    `readout/_random.py`, and any replacement `readout/_rng.py` without shims.
 2. A focused Stage 7 work order for request/config/RNG/key-collision preflight,
    prerequisite planning, each producer at most once, requested-only

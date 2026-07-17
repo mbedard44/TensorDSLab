@@ -5,11 +5,11 @@ import unittest
 from unittest.mock import patch
 
 import torch
-from tensor_core import NonnegativeFloat, PositiveInteger
+from tensor_core import NonnegativeFloat, PositiveInteger, Threefry4x32
 
 from tensor_dslab import SamplingConfig, TimingJitterConfig
-from tensor_dslab.readout.charge import _produce as charge_produce
-from tensor_dslab.readout.charge._produce import (
+from tensor_dslab.readout.charge.effects import _timing_jitter as timing_jitter
+from tensor_dslab.readout.charge.effects._timing_jitter import (
     _prepare_timing_jitter,
     _simulate_timing_jitter,
 )
@@ -236,11 +236,11 @@ class TimingJitterPreparationTest(unittest.TestCase):
         )
         for value, expected in expected_logs:
             self.assertLessEqual(
-                abs(charge_produce._log_jitter_g(value) - expected),
+                abs(timing_jitter._log_jitter_g(value) - expected),
                 1.0e-12,
             )
         around_split = tuple(
-            charge_produce._log_jitter_g(value)
+            timing_jitter._log_jitter_g(value)
             for value in (
                 math.nextafter(8.0, 0.0),
                 8.0,
@@ -259,7 +259,7 @@ class TimingJitterSimulationTest(unittest.TestCase):
             sample_dimension=2,
             sampling=sampling,
             config=TimingJitterConfig(sigma_ns=NonnegativeFloat(0.0)),
-            seed=None,
+            rng=Threefry4x32(seed=0),
         )
         self.assertIs(identity, counts)
         jittered = _simulate_timing_jitter(
@@ -267,7 +267,7 @@ class TimingJitterSimulationTest(unittest.TestCase):
             sample_dimension=2,
             sampling=sampling,
             config=TimingJitterConfig(sigma_ns=NonnegativeFloat(1.0)),
-            seed=1234,
+            rng=Threefry4x32(seed=1234),
         )
         self.assertTrue(bool(torch.all(jittered >= 0).item()))
         self.assertLessEqual(int(jittered.sum()), int(counts.sum()))
@@ -277,21 +277,25 @@ class TimingJitterSimulationTest(unittest.TestCase):
         sampling = _sampling()
         counts = torch.ones((1, 1, 4), dtype=torch.int64)
         calls: list[torch.Tensor] = []
-        original = charge_produce._sample_conditional_binomial
+        original = timing_jitter._draw_ordered_categories
 
         def record(*args: object, **kwargs: object) -> torch.Tensor:
-            positions = kwargs["logical_positions"]
-            assert type(positions) is torch.Tensor
-            calls.append(positions.clone())
+            positions = kwargs["positions"]
+            assert type(positions) is tuple and len(positions) == 1
+            calls.append(positions[0].clone())
             return original(*args, **kwargs)  # type: ignore[arg-type]
 
-        with patch.object(charge_produce, "_sample_conditional_binomial", side_effect=record):
+        with patch.object(
+            timing_jitter,
+            "_draw_ordered_categories",
+            side_effect=record,
+        ):
             _simulate_timing_jitter(
                 counts,
                 sample_dimension=2,
                 sampling=sampling,
                 config=TimingJitterConfig(sigma_ns=NonnegativeFloat(1.0)),
-                seed=9,
+                rng=Threefry4x32(seed=9),
             )
         self.assertEqual(len(calls), 16)
         self.assertEqual(
@@ -318,7 +322,7 @@ class TimingJitterSimulationTest(unittest.TestCase):
                     sample_dimension=2,
                     sampling=sampling,
                     config=config,
-                    seed=seed,
+                    rng=Threefry4x32(seed=seed),
                 )[:, 0, :]
             )
         values = torch.cat(retained, dim=0).to(torch.float64)

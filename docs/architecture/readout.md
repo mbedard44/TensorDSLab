@@ -614,13 +614,17 @@ builder invocation starts logical positions at zero. Callers use different RNG
 seeds for independent invocations. A future chunk-stable API requires explicit
 global offsets.
 
-Current Stage 5/6 production still uses a private `_RngStream` and
-`readout/_random.py`. The accepted Maintenance 2 migration removes both after
-selecting TensorCore `0.9.0` exact commit
+Closed Stage 5/6 production used a private `_RngStream` and
+`readout/_random.py`. The Maintenance 2 implementation removes both
+and pins TensorCore `0.9.0` exact commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, which supplies the required
 public RNG API and focused `require_same_dtype` relationship. The historical
-consumer proposal is fulfilled; TensorDSLab Maintenance 2 is Design-complete
-and undispatched. The closed Stage 5/6 CPU-only evidence remains historical.
+consumer proposal is fulfilled. While these exact bytes are absent from
+`main`, they remain the fixed-commit Validation/Review candidate; if present
+unchanged on `main`, Review's clean fast-forward has completed and Design
+acceptance remains pending. Final acceptance is complete only when the work
+order and implementation index record `Merged / Closed`. The closed Stage 5/6
+and recorded Maintenance 2 evidence are CPU-only because CUDA was unavailable.
 
 ## Functional, Memory, And Exposure Contract
 
@@ -695,14 +699,14 @@ Shared axes and sampling live in `tensor_dslab.common`. Every generated product
 subpackage now owns its field, configs, validation, and implemented
 `_produce.py`; Photoelectrons owns only its already-produced truth field.
 
-After Maintenance 2, `readout/config.py` contains only `ReadoutConfig` and
-`readout/collection.py` contains only `ReadoutCollection`.
+In the Maintenance 2 implementation, `readout/config.py` contains only
+`ReadoutConfig` and `readout/collection.py` contains only `ReadoutCollection`.
 `_requirements.py` and `charge/effects/_*.py` are private support.
 `readout/_random.py` and `_RngStream` are removed rather than renamed.
 `readout/simulation.py` remains absent until Stage 7. Product packages never
-import the cross-product orchestration layer. Current Stage 6 paths remain
-closed Stage 5/6 implementation evidence until that gated maintenance stage
-lands.
+import the cross-product orchestration layer. Former Stage 6 paths remain
+closed historical evidence; Maintenance 2 lifecycle follows the three-state
+branch-versus-`main` rule above.
 
 The exact tree and import direction are normative in
 [`rebuild.md`](rebuild.md). Do not add empty placeholders or global
@@ -734,12 +738,13 @@ is Merged / Closed and implements the private positional RNG behavior consumed
 by complete exact-zero, IID-white, and caller-supplied PSD noise. Stage 6 is
 Merged / Closed and implements the complete private Charge producer, all eight
 Charge RNG streams, aggregate samplers, and delay/jitter/cascade/ledger/smearing
-mechanics. Before Stage 7, TensorDSLab Maintenance 2 must be separately
-dispatched against selected TensorCore `0.9.0` commit
-`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, split module ownership, migrate to
-config-owned keys, and preserve default-key outputs. Stage 7 remains responsible for complete request-aware
-`simulate_readout(...)`; no partial public API should imply unsupported product
-closure. Measured GPU fusion remains a separate later optimization stage.
+mechanics. The Maintenance 2 implementation pins selected TensorCore
+`0.9.0` commit `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, splits module
+ownership, migrates to config-owned keys, and preserves default-key outputs;
+its lifecycle follows the branch-versus-`main` rule above. Stage 7 remains
+responsible for complete request-aware `simulate_readout(...)`; no partial
+public API should imply unsupported product closure. Measured GPU fusion
+remains a separate later optimization stage.
 
 ## Return To Design Before
 

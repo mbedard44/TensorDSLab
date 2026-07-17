@@ -1,7 +1,6 @@
-from tensor_dslab.readout.charge.types import (
+from tensor_dslab.readout.charge.config import (
     AfterpulseConfig,
     AfterpulseRecoveryConfig,
-    Charge,
     ChargeConfig,
     ChargeSmearingConfig,
     CorrelatedAvalancheConfig,
@@ -12,6 +11,7 @@ from tensor_dslab.readout.charge.types import (
     FixedDelayConfig,
     TimingJitterConfig,
 )
+from tensor_dslab.readout.charge.field import Charge
 
 __all__ = (
     "AfterpulseConfig",

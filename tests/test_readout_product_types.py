@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from unittest.mock import patch
 
 import torch
 from tensor_core import TensorAxis, TensorField
@@ -21,23 +22,24 @@ from tensor_dslab.readout._requirements import (
     _require_floating_dtype,
     _require_one_of_exact,
     _require_optional_exact,
+    _require_representable_float,
 )
-from tensor_dslab.readout.analog_waveform.types import (
+from tensor_dslab.readout.analog_waveform.field import (
     _require_valid_values as require_valid_analog,
 )
-from tensor_dslab.readout.charge.types import (
+from tensor_dslab.readout.charge.field import (
     _require_valid_values as require_valid_charge,
 )
-from tensor_dslab.readout.digitized_waveform.types import (
+from tensor_dslab.readout.digitized_waveform.field import (
     _require_valid_values as require_valid_digitized,
 )
-from tensor_dslab.readout.noise_waveform.types import (
+from tensor_dslab.readout.noise_waveform.field import (
     _require_valid_values as require_valid_noise,
 )
-from tensor_dslab.readout.photoelectrons.types import (
+from tensor_dslab.readout.photoelectrons.field import (
     _require_valid_values as require_valid_photoelectrons,
 )
-from tensor_dslab.readout.pure_waveform.types import (
+from tensor_dslab.readout.pure_waveform.field import (
     _require_valid_values as require_valid_pure,
 )
 from tensor_core import FiniteFloat, NonnegativeFloat, PositiveInteger
@@ -255,6 +257,99 @@ class ReadoutProductTypesTest(unittest.TestCase):
         _require_one_of_exact(charge, (Charge, PureWaveform), "field")
         with self.assertRaises(TypeError):
             _require_one_of_exact(photoelectrons, (Charge, PureWaveform), "field")
+
+        real_tensor = torch.tensor
+        with patch(
+            "tensor_dslab.readout._requirements.torch.tensor",
+            wraps=real_tensor,
+        ) as tensor_call:
+            represented = _require_representable_float(
+                0.1,
+                dtype=torch.float32,
+                field="scalar",
+            )
+        tensor_call.assert_called_once_with(
+            0.1,
+            dtype=torch.float32,
+            device="cpu",
+        )
+        self.assertEqual(
+            represented,
+            float(torch.tensor(0.1, dtype=torch.float32)),
+        )
+        self.assertEqual(
+            _require_representable_float(
+                7,
+                dtype=torch.float64,
+                field="scalar",
+            ),
+            7.0,
+        )
+        self.assertEqual(
+            _require_representable_float(
+                16_777_217,
+                dtype=torch.float32,
+                field="scalar",
+            ),
+            16_777_216.0,
+        )
+        for dtype in (torch.float32, torch.float64):
+            maximum = float(torch.finfo(dtype).max)
+            with self.subTest(dtype=dtype, boundary="maximum"):
+                self.assertEqual(
+                    _require_representable_float(
+                        maximum,
+                        dtype=dtype,
+                        field="scalar",
+                    ),
+                    maximum,
+                )
+                self.assertEqual(
+                    _require_representable_float(
+                        -maximum,
+                        dtype=dtype,
+                        field="scalar",
+                    ),
+                    -maximum,
+                )
+        for value in (-1.0, 0.0):
+            with self.subTest(value=value, policy="caller-owned"):
+                self.assertEqual(
+                    _require_representable_float(
+                        value,
+                        dtype=torch.float64,
+                        field="scalar",
+                    ),
+                    value,
+                )
+        for malformed in (True, "1.0", None):
+            with self.subTest(malformed=malformed):
+                with self.assertRaises(TypeError):
+                    _require_representable_float(
+                        malformed,  # pyright: ignore[reportArgumentType]
+                        dtype=torch.float32,
+                        field="scalar",
+                    )
+        for dtype in (torch.float16, torch.int64, "torch.float32"):
+            with self.subTest(dtype=dtype):
+                with self.assertRaises(TypeError):
+                    _require_representable_float(
+                        1.0,
+                        dtype=dtype,  # type: ignore[arg-type]
+                        field="scalar",
+                    )
+        for value, dtype in (
+            (float("inf"), torch.float64),
+            (1.0e40, torch.float32),
+            (10**1000, torch.float64),
+        ):
+            with self.subTest(value=value, dtype=dtype):
+                with self.assertRaises(ValueError):
+                    _require_representable_float(
+                        value,
+                        dtype=dtype,
+                        field="scalar",
+                    )
 
     @unittest.skipUnless(torch.cuda.is_available(), "CUDA unavailable")
     def test_products_construct_on_cuda_without_movement(self) -> None:

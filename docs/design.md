@@ -109,8 +109,9 @@ the package-private `_require_representable_float(...)` scalar conversion
 remain TensorDSLab-owned. TensorDSLab owns config placement of stochastic keys, scientific
 position/category lattices, direct-uniform/Gaussian ordinals, draw-free
 scientific policy, multinomial ordering and final remainders, count
-accumulation, and ledgers. Current Stage 6 production remains on the `0.7.0`
-pin until the undispatched Maintenance 2 migration is accepted.
+accumulation, and ledgers. The Maintenance 2 implementation pins the
+exact `0.9.0` dependency; closed Stage 3 through 6 evidence remains scoped to
+the `0.7.0` pin.
 
 ## Semantic Axes And Sampling
 
@@ -257,13 +258,19 @@ tensor_dslab/
       _produce.py
 ```
 
-This is the accepted post-Maintenance target. Current Stage 6 production still
-uses `types.py`, `_RngStream`, and `readout/_random.py`. TensorCore has
+This is the accepted Maintenance 2 target, realized by its implementation.
+Closed Stage 5/6 production used `types.py`,
+`_RngStream`, and `readout/_random.py`. TensorCore has
 published its package-authoritative generic RNG plus independently testable
 same-dtype sub-slice as version `0.9.0` at exact commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. TensorDSLab Maintenance 2 has
-selected that dependency and is Design-complete but undispatched pending a
-separate production dispatch before Stage 7.
+pinned that dependency, split the owned modules, and removed the retired local
+RNG surfaces without shims. While these exact bytes are absent from `main`,
+they remain the fixed-commit Validation/Review candidate; if present unchanged
+on `main`, Review's clean fast-forward has completed and Design acceptance
+remains pending. Final acceptance is complete only when the work order and
+implementation index record `Merged / Closed`. Stage 7 remains separately
+undispatched.
 
 Files are created only when an accepted implementation slice gives them real
 behavior. Product packages do not import `ReadoutConfig`,
@@ -381,7 +388,8 @@ independent Review, and Design's post-merge audit found no unresolved issue;
 CUDA was unavailable, so its evidence is eager CPU-only. Measured GPU
 optimization remains later work. TensorCore RNG/same-dtype acceptance and
 exact pin selection are complete at `0.9.0` commit
-`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`; separate dispatch of the
-Design-complete TensorDSLab Maintenance 2 work order precedes Stage 7.
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`; TensorDSLab Maintenance 2 uses
+that exact dependency under the topology-dependent lifecycle above and
+precedes Stage 7.
 Stage 7 public orchestration is undispatched and has no accepted focused
 production work order.

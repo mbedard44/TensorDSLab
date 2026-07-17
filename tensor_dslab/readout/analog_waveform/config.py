@@ -3,28 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import final
 
-import torch
-from tensor_core import FiniteFloat, TensorField
+from tensor_core import FiniteFloat
 
-from tensor_dslab.readout._requirements import (
-    _require_floating_dtype,
-    _require_optional_exact,
-    _require_readout_structure,
-)
-
-
-@final
-class AnalogWaveform(TensorField):
-    __slots__ = ()
-
-    def _require(self) -> None:
-        _require_readout_structure(self)
-        _require_floating_dtype(self)
-
-
-def _require_valid_values(field: AnalogWaveform) -> None:
-    if not bool(torch.all(torch.isfinite(field.tensor)).item()):
-        raise ValueError("AnalogWaveform values must be finite")
+from tensor_dslab.readout._requirements import _require_optional_exact
 
 
 @final

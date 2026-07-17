@@ -3,39 +3,34 @@ from __future__ import annotations
 import math
 
 import torch
+from tensor_core import CounterRng, RngKey, logical_positions
 
 from tensor_dslab.common import SampleAxis, SamplingConfig
-from tensor_dslab.readout._random import (
-    _RngStream,
-    _logical_positions,
-    _require_seed,
-    _standard_normal_pair,
+from tensor_dslab.readout._requirements import (
+    _require_representable_float,
+    _require_sampling,
 )
-from tensor_dslab.readout._requirements import _require_sampling
-from tensor_dslab.readout.noise_waveform.types import (
-    NoiseWaveform,
+from tensor_dslab.readout.noise_waveform.config import (
     NoiseWaveformConfig,
     PsdNoiseConfig,
     WhiteNoiseConfig,
     ZeroNoiseConfig,
 )
+from tensor_dslab.readout.noise_waveform.field import NoiseWaveform
 from tensor_dslab.readout.photoelectrons import Photoelectrons
 
 
-def _round_to_dtype(value: float, *, dtype: torch.dtype, field: str) -> float:
-    rounded = float(torch.tensor(value, dtype=dtype, device="cpu"))
-    if not math.isfinite(rounded):
-        raise ValueError(f"{field} is not finite in the requested dtype")
-    return rounded
-
-
 def _require_position_count(count: int, *, field: str) -> None:
-    if count < 0 or count > 1 << 63:
+    if count < 0 or count >= 1 << 63:
         raise ValueError(f"{field} exceeds the accepted logical-position range")
 
 
 def _prepare_white_rms(value: float, *, dtype: torch.dtype) -> float:
-    represented = _round_to_dtype(value, dtype=dtype, field="white-noise RMS")
+    represented = _require_representable_float(
+        value,
+        dtype=dtype,
+        field="white-noise RMS",
+    )
     finfo = torch.finfo(dtype)
     guard = 8.0 if dtype is torch.float32 else 16.0
     bound = guard * represented
@@ -99,7 +94,7 @@ def _prepare_psd_powers(
         integrated.append(power)
 
     represented = (0.0,) + tuple(
-        _round_to_dtype(
+        _require_representable_float(
             power,
             dtype=dtype,
             field=f"PSD power[{index}]",
@@ -123,19 +118,21 @@ def _white_noise(
     shape: tuple[int, ...],
     device: torch.device,
     dtype: torch.dtype,
-    seed: int,
+    rng: CounterRng,
+    rng_key: RngKey,
     represented_rms: float,
 ) -> torch.Tensor:
-    positions = _logical_positions(shape, device=device)
-    standard, _ = _standard_normal_pair(
-        seed=seed,
-        stream=_RngStream.NOISE_WHITE,
-        logical_positions=positions,
+    positions = logical_positions(shape, device=device)
+    return rng.gaussian(
+        mean=0.0,
+        standard_deviation=represented_rms,
+        key=rng_key,
+        positions=positions,
         dtype=dtype,
+        quantum=0,
+        ordinal=0,
+        count=1,
     )
-    rms = torch.tensor(represented_rms, dtype=dtype, device=device)
-    with torch.autocast(device_type=device.type, enabled=False):
-        return standard * rms
 
 
 def _psd_noise(
@@ -144,7 +141,8 @@ def _psd_noise(
     sample_dimension: int,
     device: torch.device,
     dtype: torch.dtype,
-    seed: int,
+    rng: CounterRng,
+    rng_key: RngKey,
     represented_powers: tuple[float, ...],
 ) -> torch.Tensor:
     sample_count = shape[sample_dimension]
@@ -152,20 +150,22 @@ def _psd_noise(
     non_sample_shape = shape[:sample_dimension] + shape[sample_dimension + 1 :]
     row_count = math.prod(non_sample_shape)
 
-    rows = torch.arange(row_count, dtype=torch.int64, device=device).reshape(-1, 1)
-    frequencies = torch.arange(
-        1,
-        frequency_count,
-        dtype=torch.int64,
+    positions = logical_positions(
+        (row_count, frequency_count),
         device=device,
-    ).reshape(1, -1)
-    positions = rows * frequency_count + frequencies
-    normal_real, normal_imaginary = _standard_normal_pair(
-        seed=seed,
-        stream=_RngStream.NOISE_PSD_COEFFICIENT,
-        logical_positions=positions,
+    )[:, 1:]
+    normals = rng.gaussian(
+        mean=0.0,
+        standard_deviation=1.0,
+        key=rng_key,
+        positions=positions,
         dtype=dtype,
+        quantum=0,
+        ordinal=0,
+        count=2,
     )
+    normal_real = normals[..., 0]
+    normal_imaginary = normals[..., 1]
 
     powers = torch.tensor(represented_powers, dtype=dtype, device=device)
     complex_dtype = torch.complex64 if dtype is torch.float32 else torch.complex128
@@ -209,7 +209,7 @@ def _produce_noise_waveform(
     *,
     sampling: SamplingConfig,
     config: NoiseWaveformConfig,
-    seed: int | None,
+    rng: CounterRng,
     floating_dtype: torch.dtype,
 ) -> NoiseWaveform:
     if type(photoelectrons) is not Photoelectrons:
@@ -223,10 +223,8 @@ def _produce_noise_waveform(
     device = photoelectrons.tensor.device
     if device.type not in ("cpu", "cuda"):
         raise ValueError("noise production supports only CPU and CUDA")
-    if seed is not None:
-        checked_seed: int | None = _require_seed(seed)
-    else:
-        checked_seed = None
+    if not isinstance(rng, CounterRng):
+        raise TypeError("rng must be a CounterRng")
 
     shape = photoelectrons.shape
     output_count = math.prod(shape)
@@ -236,8 +234,6 @@ def _produce_noise_waveform(
     if type(model) is ZeroNoiseConfig:
         values = torch.zeros(shape, dtype=floating_dtype, device=device)
     elif type(model) is WhiteNoiseConfig:
-        if checked_seed is None:
-            raise ValueError("white noise requires a seed")
         represented_rms = _prepare_white_rms(
             model.rms_mv.value,
             dtype=floating_dtype,
@@ -246,12 +242,11 @@ def _produce_noise_waveform(
             shape=shape,
             device=device,
             dtype=floating_dtype,
-            seed=checked_seed,
+            rng=rng,
+            rng_key=model.rng_key,
             represented_rms=represented_rms,
         )
     elif type(model) is PsdNoiseConfig:
-        if checked_seed is None:
-            raise ValueError("PSD noise requires a seed")
         represented_powers = _prepare_psd_powers(
             model,
             sampling=sampling,
@@ -269,7 +264,8 @@ def _produce_noise_waveform(
             sample_dimension=sample_dimension,
             device=device,
             dtype=floating_dtype,
-            seed=checked_seed,
+            rng=rng,
+            rng_key=model.rng_key,
             represented_powers=represented_powers,
         )
     else:

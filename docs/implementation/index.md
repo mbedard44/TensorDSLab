@@ -254,16 +254,23 @@ that authority and remains historical consumer evidence.
 
 ### [Maintenance 2: RNG And Product-Module Ownership Migration](maintenance_2_rng_and_product_module_ownership_migration.md)
 
-Status: **Design-complete / Undispatched**. Dependency state: **TensorCore
-dependency selected**.
+Status: **topology-dependent: candidate while these exact bytes are absent
+from `main`; Merged / Design acceptance pending if present unchanged on
+`main`; Merged / Closed only when this index and the work order record Design's
+evidence-only closeout**. Dependency state: **TensorCore `0.9.0` exact pin
+installed**.
 
 Dependency: TensorDSLab Design selected published TensorCore `0.9.0` exact
 commit `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59` after package-root and
-consumer continuity probes. Remaining gates are the containing committed
-Design authority, clean topology, route verification, and separate user
-dispatch.
+consumer continuity probes. The dispatched Implementation candidate pins that
+exact commit and uses only its public package-root surface. While these exact
+bytes are absent from `main`, they remain in the fixed-commit Validation/Review
+loop. If present unchanged on `main`, Review's clean fast-forward has completed
+and Design acceptance remains pending; only the two-document `Merged / Closed`
+closeout completes final acceptance. CUDA was unavailable, so the recorded
+evidence is eager CPU-only.
 
-Goal: split `types.py` ownership into product `config.py`/`field.py`
+Implementation scope: split `types.py` ownership into product `config.py`/`field.py`
 and readout `config.py`/`collection.py`; create private
 `charge/effects` modules; retain Charge multinomial/category orchestration,
 checked count helpers, and bookkeeping in `_counts.py`; add the ten
@@ -275,8 +282,8 @@ replacement `_rng.py` without compatibility shims. It also consolidates one
 private scalar-to-dtype requirement helper and uses TensorCore
 `require_same_dtype()` only for semantic field relationships. The work order
 freezes the exact dependency, commands, allowlist, fixtures, lifecycle, and
-stop conditions; dispatch still requires committed authority and verified
-routes.
+stop conditions. Stage 7 remains undispatched and is not part of this
+migration.
 
 ### Stage 7: Public Readout Orchestration
 

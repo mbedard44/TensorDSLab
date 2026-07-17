@@ -217,11 +217,17 @@ private Charge producer and aggregate count-sampler slice. Fixed-commit
 Validation, independent Review, and Design's post-merge audit found no
 unresolved issue. The evidence is eager CPU-only because CUDA was unavailable;
 it makes no GPU execution, performance, fusion, install, or wheel-build claim.
-Maintenance 2 RNG and product-module ownership migration is Design-complete /
-Undispatched against selected TensorCore `0.9.0` commit
-`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. It is the
-next production gate. Stage 7 public readout orchestration and later integration
-production remain undispatched.
+Maintenance 2 RNG and product-module ownership migration installs the
+product-owned module split, public TensorCore RNG/distribution use, exact
+config-owned role keys, and exact TensorCore `0.9.0` commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. Its lifecycle is topology-
+dependent: while these exact bytes are absent from `main`, they are the
+Implementation candidate under fixed-commit Validation and Review; if present
+unchanged on `main`, Review's clean fast-forward has completed and Design
+acceptance remains pending. Final acceptance is complete only when the work
+order and implementation index record `Merged / Closed`. The recorded
+evidence is eager CPU-only because CUDA was unavailable. Stage 7 public
+readout orchestration and later integration production remain undispatched.
 
 If implementation reveals a concrete contradiction in the accepted design, stop
 and send the issue back to Design. Do not silently widen architecture, create
@@ -285,14 +291,14 @@ tensor_dslab/
       _produce.py
 ```
 
-This is the accepted post-Maintenance 2 ownership target, not permission to
-create placeholders. Current Stage 6 production still uses `types.py`,
-`_RngStream`, and `readout/_random.py`; closed work orders remain historical
-evidence for those bytes. TensorCore has published the accepted generic RNG
-and `require_same_dtype` surface as version `0.9.0` at exact commit
-`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, and TensorDSLab Design has
-selected that commit for the Design-complete, undispatched Maintenance 2 migration.
-This selection does not move the current dependency or authorize dispatch.
+This is the accepted Maintenance 2 ownership tree, not permission to create
+placeholders. The Maintenance 2 implementation realizes it without
+compatibility shims; closed Stage 5/6 work orders remain historical evidence
+for the former `types.py`, `_RngStream`, and `readout/_random.py` bytes. It pins
+TensorCore's published generic RNG and `require_same_dtype` surface at exact
+version `0.9.0` commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. Its topology-dependent lifecycle
+is governed by the branch-versus-`main` rule above.
 
 Materialize only modules with real behavior accepted by the active work order.
 Every generated product owns its final `TensorField` leaf, public configs,
@@ -341,13 +347,11 @@ and implemented eager-reference behavior through exact Stage 6 candidate
 `fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58`. CUDA was unavailable, so the
 accepted evidence makes no GPU execution or cross-backend claim.
 
-That enum/module arrangement is the current Stage 6 implementation, retained
-as closed Stage 5/6 evidence rather than the accepted next ownership target.
-Maintenance 2 will preserve the same default
-addresses as exact config-owned TensorCore `RngKey` values, move generic RNG
-and count-distribution mechanics to TensorCore, keep Charge multinomial
-orchestration and count bookkeeping in `readout/charge/effects/_counts.py`,
-and remove `_RngStream`,
+That enum/module arrangement is retained only as closed Stage 5/6 evidence.
+The Maintenance 2 candidate preserves the same default addresses as exact
+config-owned TensorCore `RngKey` values, uses TensorCore for generic RNG and
+count-distribution mechanics, keeps Charge multinomial orchestration and count
+bookkeeping in `readout/charge/effects/_counts.py`, and removes `_RngStream`,
 `readout/_random.py`, and any replacement `_rng.py` without shims.
 
 The active MVP crosstalk delay union is exactly
@@ -490,9 +494,9 @@ stochastic-role key placement in leaf configs, scientific position/category
 lattices, direct-uniform/Gaussian ordinals, multinomial ordering and final
 remainders, draw-free scientific policy, count accumulation, and ledgers.
 Import only public TensorCore package-root names; do not copy or import
-protected RNG or promoted distribution mechanics. Current Stage 6 production
-still pins TensorCore `0.7.0`; the `0.9.0` selection takes effect only through
-an accepted Maintenance 2 implementation. TensorDSLab uses
+protected RNG or promoted distribution mechanics. The Maintenance 2 candidate
+pins exact TensorCore `0.9.0`; closed Stage 3 through 6 evidence remains scoped
+to `0.7.0`. TensorDSLab uses
 `require_same_dtype` only for semantic-field relationships and retains raw
 tensor checks plus its private scalar-to-dtype representation helper.
 

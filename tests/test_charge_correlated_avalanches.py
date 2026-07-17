@@ -3,16 +3,20 @@ from __future__ import annotations
 from decimal import Decimal, localcontext
 import itertools
 import math
+from typing import ClassVar
 import unittest
 from unittest.mock import patch
 
 import torch
 from tensor_core import (
+    CounterRng,
     NonnegativeFloat,
     NonnegativeInteger,
     PositiveFloat,
     PositiveInteger,
     Probability,
+    RngKey,
+    Threefry4x32,
 )
 
 from tensor_dslab import (
@@ -25,12 +29,53 @@ from tensor_dslab import (
     FixedDelayConfig,
     SamplingConfig,
 )
-from tensor_dslab.readout._random import _RngStream
-from tensor_dslab.readout.charge import _produce as charge_produce
-from tensor_dslab.readout.charge._produce import _simulate_correlated_avalanches
+from tensor_dslab.readout.charge.effects import (
+    _correlated_avalanches as correlated_effect,
+)
+from tensor_dslab.readout.charge.effects import _counts as count_effect
+from tensor_dslab.readout.charge.effects._correlated_avalanches import (
+    _simulate_correlated_avalanches,
+)
 
 
 _STATISTICAL_SEEDS = (0, 1, 0x0123456789ABCDEF, 0xFFFFFFFFFFFFFFFF)
+
+
+class _FailingRng(CounterRng):
+    __slots__ = ()
+
+    def _generate_block(
+        self,
+        *,
+        key: RngKey,
+        positions: torch.Tensor,
+        quantum: int,
+        block: int,
+    ) -> torch.Tensor:
+        raise AssertionError(
+            f"unexpected RNG request: {key=}, {quantum=}, {block=}"
+        )
+
+
+class _RecordingRng(CounterRng):
+    __slots__ = ()
+
+    calls: ClassVar[list[tuple[RngKey, torch.Tensor, int, int]]] = []
+
+    def _generate_block(
+        self,
+        *,
+        key: RngKey,
+        positions: torch.Tensor,
+        quantum: int,
+        block: int,
+    ) -> torch.Tensor:
+        type(self).calls.append((key, positions.clone(), quantum, block))
+        return torch.zeros(
+            positions.shape + (4,),
+            dtype=torch.int64,
+            device=positions.device,
+        )
 
 
 def _assert_statistic(
@@ -388,15 +433,15 @@ def _simulate(
     config: CorrelatedAvalancheConfig,
     *,
     dtype: torch.dtype = torch.float64,
-    seed: int | None = 1234,
-) -> charge_produce._CorrelatedAvalancheResult:
+    rng: CounterRng | None = None,
+) -> correlated_effect._CorrelatedAvalancheResult:
     return _simulate_correlated_avalanches(
         roots,
         sample_dimension=roots.ndim - 1,
         sampling=_sampling(count=roots.shape[-1]),
         floating_dtype=dtype,
         config=config,
-        seed=seed,
+        rng=Threefry4x32(seed=1234) if rng is None else rng,
     )
 
 
@@ -409,14 +454,7 @@ class CorrelatedAvalancheIdentityTest(unittest.TestCase):
             delayed_crosstalk=_delayed(mean=1.0, delay_ns=1.0e100),
             afterpulse=_afterpulse(probability=1.0, recovery=True),
         )
-        with patch(
-            "tensor_dslab.readout.charge._produce._sample_poisson",
-            side_effect=AssertionError("K=0 must not sample"),
-        ), patch(
-            "tensor_dslab.readout.charge._produce._sample_conditional_binomial",
-            side_effect=AssertionError("K=0 must not sample"),
-        ):
-            result = _simulate(roots, configured, seed=None)
+        result = _simulate(roots, configured, rng=_FailingRng(seed=0))
         self.assertTrue(torch.equal(result.final_frontier, roots))
         self.assertTrue(torch.equal(result.total_count, roots))
         self.assertTrue(torch.equal(result.S1, roots.to(torch.float64)))
@@ -431,7 +469,7 @@ class CorrelatedAvalancheIdentityTest(unittest.TestCase):
             delayed_crosstalk=_delayed(mean=0.0, delay_ns=1.0e100),
             afterpulse=_afterpulse(probability=0.0, recovery=True),
         )
-        result = _simulate(roots, ineffective, seed=None)
+        result = _simulate(roots, ineffective, rng=_FailingRng(seed=0))
         self.assertTrue(torch.equal(result.final_frontier, torch.zeros_like(roots)))
         self.assertTrue(torch.equal(result.total_count, roots))
 
@@ -463,21 +501,13 @@ class CorrelatedAvalancheIdentityTest(unittest.TestCase):
         roots = torch.zeros((1, 1, 8193), dtype=torch.int64)
         roots[0, 0, 0] = 1
         with patch.object(
-            charge_produce,
+            correlated_effect,
             "_prepare_delay",
             side_effect=AssertionError("K=0 must not prepare crosstalk"),
         ), patch.object(
-            charge_produce,
+            correlated_effect,
             "_prepare_exponential_delay",
             side_effect=AssertionError("K=0 must not prepare afterpulsing"),
-        ), patch.object(
-            charge_produce,
-            "_sample_poisson",
-            side_effect=AssertionError("K=0 must not sample"),
-        ), patch.object(
-            charge_produce,
-            "_sample_conditional_binomial",
-            side_effect=AssertionError("K=0 must not sample"),
         ):
             result = _simulate_correlated_avalanches(
                 roots,
@@ -485,7 +515,7 @@ class CorrelatedAvalancheIdentityTest(unittest.TestCase):
                 sampling=_sampling(count=8193),
                 floating_dtype=torch.float32,
                 config=k_zero,
-                seed=None,
+                rng=_FailingRng(seed=0),
             )
         self.assertTrue(torch.equal(result.total_count, roots))
 
@@ -507,25 +537,17 @@ class CorrelatedAvalancheIdentityTest(unittest.TestCase):
         )
         small_roots = torch.tensor((1, 0), dtype=torch.int64).reshape(1, 1, 2)
         with patch.object(
-            charge_produce,
+            correlated_effect,
             "_prepare_delay",
             side_effect=AssertionError("zero crosstalk must not prepare delay"),
         ), patch.object(
-            charge_produce,
+            correlated_effect,
             "_prepare_exponential_delay",
             side_effect=AssertionError("zero afterpulsing must not prepare delay"),
         ), patch.object(
-            charge_produce,
+            correlated_effect,
             "_prepare_afterpulse_recovery",
             side_effect=AssertionError("zero afterpulsing must not prepare recovery"),
-        ), patch.object(
-            charge_produce,
-            "_sample_poisson",
-            side_effect=AssertionError("zero effects must not sample"),
-        ), patch.object(
-            charge_produce,
-            "_sample_conditional_binomial",
-            side_effect=AssertionError("zero effects must not sample"),
         ):
             result = _simulate_correlated_avalanches(
                 small_roots,
@@ -533,7 +555,7 @@ class CorrelatedAvalancheIdentityTest(unittest.TestCase):
                 sampling=_sampling(count=2),
                 floating_dtype=torch.float64,
                 config=zero_effect,
-                seed=None,
+                rng=_FailingRng(seed=0),
             )
         self.assertTrue(torch.equal(result.total_count, small_roots))
 
@@ -554,7 +576,11 @@ class CorrelatedAvalancheIdentityTest(unittest.TestCase):
                 result = _simulate(
                     roots,
                     config,
-                    seed=1234 if any((direct_on, delayed_on, afterpulse_on)) else None,
+                    rng=(
+                        Threefry4x32(seed=1234)
+                        if any((direct_on, delayed_on, afterpulse_on))
+                        else _FailingRng(seed=0)
+                    ),
                 )
                 contributions = roots.clone()
                 for value in (
@@ -572,38 +598,45 @@ class CorrelatedAvalancheIdentityTest(unittest.TestCase):
 
 class CorrelatedAvalancheMechanismTest(unittest.TestCase):
     def test_mechanism_order_streams_and_separate_ct_draws(self) -> None:
-        roots = torch.tensor((1000, 0, 0, 0), dtype=torch.int64).reshape(1, 1, 4)
+        roots = torch.tensor((1, 0, 0, 0), dtype=torch.int64).reshape(1, 1, 4)
         config = CorrelatedAvalancheConfig(
             maximum_generations=NonnegativeInteger(1),
-            direct_crosstalk=_direct(mean=0.5),
-            delayed_crosstalk=_delayed(mean=0.5, delay_ns=0.0),
+            direct_crosstalk=DirectCrosstalkConfig(
+                mean_offspring_per_parent=NonnegativeFloat(0.5),
+                delay=ExponentialDelayConfig(
+                    mean_delay_ns=PositiveFloat(2.0)
+                ),
+            ),
+            delayed_crosstalk=DelayedCrosstalkConfig(
+                mean_offspring_per_parent=NonnegativeFloat(0.5),
+                delay=ExponentialDelayConfig(
+                    mean_delay_ns=PositiveFloat(2.0)
+                ),
+            ),
             afterpulse=_afterpulse(probability=0.5),
         )
-        streams: list[_RngStream] = []
-        original = charge_produce._sample_poisson
-
-        def record(*args: object, **kwargs: object) -> torch.Tensor:
-            stream = kwargs["stream"]
-            assert type(stream) is _RngStream
-            streams.append(stream)
-            return original(*args, **kwargs)  # type: ignore[arg-type]
-
-        with patch.object(charge_produce, "_sample_poisson", side_effect=record):
-            result = _simulate(roots, config)
+        _RecordingRng.calls = []
+        result = _simulate_correlated_avalanches(
+            roots,
+            sample_dimension=2,
+            sampling=_sampling(),
+            floating_dtype=torch.float64,
+            config=config,
+            rng=_RecordingRng(seed=0),
+        )
+        streams: list[int] = []
+        for key, _, quantum, block in _RecordingRng.calls:
+            self.assertEqual(key.namespace, 0x54445331)
+            self.assertEqual(quantum, 0)
+            self.assertEqual(block, 0)
+            if not streams or streams[-1] != key.stream:
+                streams.append(key.stream)
         self.assertEqual(
             streams,
-            [
-                _RngStream.CHARGE_DIRECT_CROSSTALK,
-                _RngStream.CHARGE_DIRECT_CROSSTALK_OVERFLOW,
-                _RngStream.CHARGE_DELAYED_CROSSTALK,
-                _RngStream.CHARGE_DELAYED_CROSSTALK_OVERFLOW,
-            ],
+            [4, 5, 6, 7, 9],
         )
         assert result.direct_crosstalk_count is not None
         assert result.delayed_crosstalk_count is not None
-        self.assertFalse(
-            torch.equal(result.direct_crosstalk_count, result.delayed_crosstalk_count)
-        )
 
     def test_absorbing_overflow_never_enters_ledgers_or_frontier(self) -> None:
         roots = torch.tensor((1000, 0, 0, 0), dtype=torch.int64).reshape(1, 1, 4)
@@ -627,8 +660,18 @@ class CorrelatedAvalancheMechanismTest(unittest.TestCase):
             direct_crosstalk=_direct(),
             afterpulse=_afterpulse(probability=0.5, recovery=True),
         )
-        single = _simulate(roots, config, dtype=torch.float32, seed=77)
-        double = _simulate(roots, config, dtype=torch.float64, seed=77)
+        single = _simulate(
+            roots,
+            config,
+            dtype=torch.float32,
+            rng=Threefry4x32(seed=77),
+        )
+        double = _simulate(
+            roots,
+            config,
+            dtype=torch.float64,
+            rng=Threefry4x32(seed=77),
+        )
         for name in (
             "final_frontier",
             "total_count",
@@ -654,16 +697,25 @@ class CorrelatedAvalancheMechanismTest(unittest.TestCase):
     def test_unit_response_aggregates_counts_before_float32_ledger_conversion(self) -> None:
         large = (1 << 24) + 1
         roots = torch.tensor((large, 1, 1, 1), dtype=torch.int64).reshape(1, 1, 4)
-        scheduled = [torch.zeros((1, 1), dtype=torch.int64) for _ in range(14)]
-        scheduled[3] = torch.full((1, 1), large, dtype=torch.int64)
-        scheduled[7] = torch.ones((1, 1), dtype=torch.int64)
-        scheduled[10] = torch.ones((1, 1), dtype=torch.int64)
-        scheduled[12] = torch.ones((1, 1), dtype=torch.int64)
+        call_index = 0
+
+        def schedule_to_last_sample(
+            counts: torch.Tensor,
+            **kwargs: object,
+        ) -> tuple[torch.Tensor, ...]:
+            nonlocal call_index
+            success_masses = kwargs["success_masses"]
+            assert type(success_masses) is tuple
+            categories = [torch.zeros_like(counts) for _ in success_masses]
+            destination_offset = 3 - call_index
+            categories[destination_offset] = counts.clone()
+            call_index += 1
+            return (*categories, torch.zeros_like(counts))
 
         with patch.object(
-            charge_produce,
-            "_sample_conditional_binomial",
-            side_effect=scheduled,
+            correlated_effect,
+            "_draw_ordered_categories",
+            side_effect=schedule_to_last_sample,
         ):
             result = _simulate(
                 roots,
@@ -707,23 +759,26 @@ class CorrelatedAvalancheMechanismTest(unittest.TestCase):
                     (count, 0, 0, 0),
                     dtype=torch.int64,
                 ).reshape(1, 1, 4)
-                scheduled = [
-                    torch.zeros((1, 1), dtype=torch.int64)
-                    for _ in range(14)
-                ]
-                scheduled[0] = torch.full(
-                    (1, 1),
-                    count,
-                    dtype=torch.int64,
-                )
+                def retain_first_category(
+                    counts: torch.Tensor,
+                    **kwargs: object,
+                ) -> tuple[torch.Tensor, ...]:
+                    success_masses = kwargs["success_masses"]
+                    assert type(success_masses) is tuple
+                    categories = [
+                        torch.zeros_like(counts) for _ in success_masses
+                    ]
+                    categories[0] = counts.clone()
+                    return (*categories, torch.zeros_like(counts))
+
                 with patch.object(
-                    charge_produce,
-                    "_sample_conditional_binomial",
-                    side_effect=scheduled,
+                    correlated_effect,
+                    "_draw_ordered_categories",
+                    side_effect=retain_first_category,
                 ):
                     result = _simulate(roots, config, dtype=dtype)
 
-                plan = charge_produce._prepare_correlated_plan(
+                plan = correlated_effect._prepare_correlated_plan(
                     config,
                     sampling=_sampling(),
                     floating_dtype=dtype,
@@ -751,7 +806,7 @@ class CorrelatedAvalancheMechanismTest(unittest.TestCase):
 
     def test_exact_integer_count_identity_is_checked_before_return(self) -> None:
         roots = torch.tensor((1, 0, 0, 0), dtype=torch.int64).reshape(1, 1, 4)
-        original = charge_produce._checked_add
+        original = correlated_effect._checked_add
 
         def corrupt_total(
             left: torch.Tensor,
@@ -764,7 +819,7 @@ class CorrelatedAvalancheMechanismTest(unittest.TestCase):
                 return result + 1
             return result
 
-        with patch.object(charge_produce, "_checked_add", side_effect=corrupt_total):
+        with patch.object(correlated_effect, "_checked_add", side_effect=corrupt_total):
             with self.assertRaisesRegex(RuntimeError, "integer count identity"):
                 _simulate(
                     roots,
@@ -776,6 +831,41 @@ class CorrelatedAvalancheMechanismTest(unittest.TestCase):
 
 
 class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
+    def test_proved_bound_uses_greatest_represented_ledger_at_most_real_bound(
+        self,
+    ) -> None:
+        _, bound = correlated_effect._ledger_envelope(
+            floating_dtype=torch.float32,
+            maximum_generations=0,
+            retained_mechanisms=0,
+            recovered_afterpulse=False,
+            sample_count=4,
+        )
+        bound_d = torch.tensor(
+            float.fromhex("0x1.0000000000000p+53"),
+            dtype=torch.float32,
+        )
+        above = torch.nextafter(
+            bound_d,
+            torch.tensor(math.inf, dtype=torch.float32),
+        )
+        self.assertLessEqual(float(bound_d), bound)
+        self.assertGreater(float(above), bound)
+        accepted = correlated_effect._checked_ledger_add(
+            bound_d.reshape(1),
+            torch.zeros(1, dtype=torch.float32),
+            bound=bound,
+            field="test ledger",
+        )
+        self.assertTrue(torch.equal(accepted, bound_d.reshape(1)))
+        with self.assertRaisesRegex(RuntimeError, "proved ledger bound"):
+            correlated_effect._checked_ledger_add(
+                above.reshape(1),
+                torch.zeros(1, dtype=torch.float32),
+                bound=bound,
+                field="test ledger",
+            )
+
     def test_exact_address_product_boundaries_without_lattice_materialization(
         self,
     ) -> None:
@@ -783,7 +873,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
             maximum_generations=NonnegativeInteger(2),
             direct_crosstalk=_direct(mean=0.1),
         )
-        accepted = charge_produce._prepare_correlated_plan(
+        accepted = correlated_effect._prepare_correlated_plan(
             crosstalk,
             sampling=_sampling(count=2),
             floating_dtype=torch.float64,
@@ -791,7 +881,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
         )
         self.assertIsNotNone(accepted.direct_crosstalk)
         with self.assertRaisesRegex(ValueError, "crosstalk address lattice"):
-            charge_produce._prepare_correlated_plan(
+            correlated_effect._prepare_correlated_plan(
                 crosstalk,
                 sampling=_sampling(count=2),
                 floating_dtype=torch.float64,
@@ -802,7 +892,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
             maximum_generations=NonnegativeInteger(2),
             afterpulse=_afterpulse(probability=0.25),
         )
-        accepted = charge_produce._prepare_correlated_plan(
+        accepted = correlated_effect._prepare_correlated_plan(
             afterpulse,
             sampling=_sampling(count=3),
             floating_dtype=torch.float64,
@@ -810,7 +900,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
         )
         self.assertIsNotNone(accepted.afterpulse)
         with self.assertRaisesRegex(ValueError, "afterpulse address lattice"):
-            charge_produce._prepare_correlated_plan(
+            correlated_effect._prepare_correlated_plan(
                 afterpulse,
                 sampling=_sampling(count=3),
                 floating_dtype=torch.float64,
@@ -819,7 +909,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
 
     def test_allocation_byte_and_element_products_have_exact_boundaries(self) -> None:
         self.assertEqual(
-            charge_produce._require_tensor_allocation(
+            count_effect._require_tensor_allocation(
                 ((1 << 63) - 1,),
                 element_size=1,
                 field="test",
@@ -827,13 +917,13 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
             (1 << 63) - 1,
         )
         with self.assertRaises(ValueError):
-            charge_produce._require_tensor_allocation(
+            count_effect._require_tensor_allocation(
                 (1 << 63,),
                 element_size=1,
                 field="test",
             )
         self.assertEqual(
-            charge_produce._require_tensor_allocation(
+            count_effect._require_tensor_allocation(
                 ((1 << 60) - 1,),
                 element_size=8,
                 field="test",
@@ -841,7 +931,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
             (1 << 60) - 1,
         )
         with self.assertRaises(ValueError):
-            charge_produce._require_tensor_allocation(
+            count_effect._require_tensor_allocation(
                 (1 << 60,),
                 element_size=8,
                 field="test",
@@ -851,7 +941,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
         for dtype, precision in ((torch.float32, 24), (torch.float64, 53)):
             with self.subTest(dtype=dtype, recovered=False):
                 maximum_generations = (1 << precision) - 2
-                depth, bound = charge_produce._ledger_envelope(
+                depth, bound = correlated_effect._ledger_envelope(
                     floating_dtype=dtype,
                     maximum_generations=maximum_generations,
                     retained_mechanisms=1,
@@ -866,7 +956,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
                 expected = ((1 << 53) - 1) * (1.0 + gamma) + depth * subnormal
                 self.assertEqual(bound, expected)
                 with self.assertRaisesRegex(ValueError, "ledger depth"):
-                    charge_produce._ledger_envelope(
+                    correlated_effect._ledger_envelope(
                         floating_dtype=dtype,
                         maximum_generations=maximum_generations + 1,
                         retained_mechanisms=1,
@@ -876,7 +966,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
 
             with self.subTest(dtype=dtype, recovered=True):
                 maximum_generations = (1 << precision) - 6
-                depth, _ = charge_produce._ledger_envelope(
+                depth, _ = correlated_effect._ledger_envelope(
                     floating_dtype=dtype,
                     maximum_generations=maximum_generations,
                     retained_mechanisms=1,
@@ -885,7 +975,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
                 )
                 self.assertEqual(depth, (1 << precision) - 1)
                 with self.assertRaisesRegex(ValueError, "ledger depth"):
-                    charge_produce._ledger_envelope(
+                    correlated_effect._ledger_envelope(
                         floating_dtype=dtype,
                         maximum_generations=maximum_generations + 1,
                         retained_mechanisms=1,
@@ -912,7 +1002,7 @@ class CorrelatedAvalancheStatisticalTest(unittest.TestCase):
                         maximum_generations=NonnegativeInteger(generation),
                         direct_crosstalk=_direct(mean=mean),
                     ),
-                    seed=seed,
+                    rng=Threefry4x32(seed=seed),
                 )
                 assert result.direct_crosstalk_count is not None
                 assert result.direct_crosstalk_overflow_count is not None
@@ -960,7 +1050,7 @@ class CorrelatedAvalancheStatisticalTest(unittest.TestCase):
                     maximum_generations=NonnegativeInteger(3),
                     delayed_crosstalk=_delayed(mean=mean, delay_ns=2.0),
                 ),
-                seed=seed,
+                rng=Threefry4x32(seed=seed),
             )
             assert result.delayed_crosstalk_count is not None
             assert result.delayed_crosstalk_overflow_count is not None
@@ -1045,7 +1135,7 @@ class CorrelatedAvalancheStatisticalTest(unittest.TestCase):
             maximum_generations=NonnegativeInteger(1),
             afterpulse=recovered_afterpulse,
         )
-        prepared = charge_produce._prepare_correlated_plan(
+        prepared = correlated_effect._prepare_correlated_plan(
             recovered_config,
             sampling=_sampling(),
             floating_dtype=torch.float64,
@@ -1108,12 +1198,12 @@ class CorrelatedAvalancheStatisticalTest(unittest.TestCase):
                     maximum_generations=NonnegativeInteger(1),
                     afterpulse=unit_afterpulse,
                 ),
-                seed=seed,
+                rng=Threefry4x32(seed=seed),
             )
             recovered = _simulate(
                 roots,
                 recovered_config,
-                seed=seed,
+                rng=Threefry4x32(seed=seed),
             )
             for field in (
                 "final_frontier",
@@ -1330,9 +1420,24 @@ class CudaCorrelatedAvalancheTest(unittest.TestCase):
             afterpulse=_afterpulse(probability=0.35, recovery=True),
         )
 
-        single = _simulate(roots, config, dtype=torch.float32, seed=0x12345678)
-        repeated = _simulate(roots, config, dtype=torch.float32, seed=0x12345678)
-        double = _simulate(roots, config, dtype=torch.float64, seed=0x12345678)
+        single = _simulate(
+            roots,
+            config,
+            dtype=torch.float32,
+            rng=Threefry4x32(seed=0x12345678),
+        )
+        repeated = _simulate(
+            roots,
+            config,
+            dtype=torch.float32,
+            rng=Threefry4x32(seed=0x12345678),
+        )
+        double = _simulate(
+            roots,
+            config,
+            dtype=torch.float64,
+            rng=Threefry4x32(seed=0x12345678),
+        )
         result_fields = (
             "S1",
             "S2",

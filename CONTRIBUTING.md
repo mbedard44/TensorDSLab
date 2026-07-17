@@ -21,8 +21,11 @@ Python import: tensor_dslab (accepted on main through Stage 6)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
 Package maturity: Stage 6 Charge Simulation Merged / Closed
-Next production gate: Maintenance 2 RNG and product-module ownership migration
-is Design-complete / Undispatched; Stage 7 remains later and undispatched
+Active production gate: Maintenance 2 RNG and product-module ownership
+migration bytes are present; candidate while absent from `main`, Merged /
+Design acceptance pending when present unchanged on `main`, and Merged /
+Closed only when the work order and implementation index record closeout;
+Stage 7 remains later and undispatched
 ```
 
 Stage 1 is Design-complete, and Stage 2 is Merged / Closed on `main` at
@@ -243,14 +246,18 @@ as `TensorDSLab`; keep semantic subpackages directly below the import root.
 Do not create placeholder modules to reserve architecture. Add a module only
 when there is a real concept, behavior, or contract to house.
 
-This product-centered tree is the accepted post-Maintenance 2 ownership
-target, not a request to materialize every path at once. Current Stage 6
-production still uses `types.py`, `_RngStream`, and `readout/_random.py`.
+This product-centered tree is the accepted Maintenance 2 ownership target,
+not a request to materialize every path at once. The Maintenance 2
+implementation realizes the accepted paths and removes the former Stage 5/6
+`types.py`, `_RngStream`, and `readout/_random.py` surfaces without shims.
 TensorCore fulfilled the historical consumer proposal in published version
 `0.9.0` at exact commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. TensorDSLab's Maintenance 2
-work order selects that dependency and is Design-complete but
-undispatched; it creates no implementation authority until separately dispatched.
+implementation pins that dependency. While these exact bytes are absent from
+`main`, they remain the fixed-commit Validation/Review candidate; if present
+unchanged on `main`, Review's clean fast-forward has completed and Design
+acceptance remains pending. Final acceptance is complete only when the work
+order and implementation index record `Merged / Closed`.
 Product `field.py` modules own final field leaves and validation; product
 `config.py` modules own configs. Product `_produce.py` modules own private
 `_produce_*` construction. Charge's scientific submodels, multinomial/category
@@ -297,9 +304,9 @@ stochastic roles, scientific position/category lattices, direct
 uniform/Gaussian ordinals, draw-free scientific policy, multinomial
 orchestration, final remainders, count accumulation, and ledgers. Use only
 public TensorCore package-root RNG surfaces; do not copy or import protected
-raw-word or promoted distribution mechanics. TensorDSLab's currently selected
-production dependency remains TensorCore `0.7.0` until Maintenance 2 is
-implemented and accepted. TensorDSLab uses
+raw-word or promoted distribution mechanics. The Maintenance 2 candidate pins
+exact TensorCore `0.9.0`; closed Stage 3 through 6 evidence remains scoped to
+`0.7.0`. TensorDSLab uses
 `require_same_dtype` only for semantic-field relationships and retains raw
 tensor requirements plus its private scalar-to-dtype representation helper.
 
@@ -527,11 +534,10 @@ requested-product order, or mutable/global generators. Stage 7 rejects one key
 assigned to different stochastic roles in the requested closure before any
 RNG call or write.
 
-Stage 5/6 currently implement the same default addresses through private
-`_RngStream` and `readout/_random.py`. That remains historical evidence until
-TensorDSLab Maintenance 2 migrates the code against selected TensorCore `0.9.0`,
-preserves default-key outputs, and removes the old module and enum without
-shims.
+Stage 5/6 implemented the same default addresses through private `_RngStream`
+and `readout/_random.py`; those bytes remain historical evidence. The
+Maintenance 2 candidate preserves their default-key outputs against selected
+TensorCore `0.9.0` and removes the old module and enum without shims.
 
 Charge timing/AP redistribution uses TensorDSLab-owned aggregate multinomial
 factorization through calls to TensorCore's public `rng.binomial(...)`.

@@ -11,6 +11,7 @@ from tensor_core import (
     PositiveFloat,
     PositiveInteger,
     TensorAxis,
+    require_same_dtype,
 )
 
 from tensor_dslab import (
@@ -33,19 +34,19 @@ from tensor_dslab import (
 from tensor_dslab.readout.analog_waveform._produce import (
     _produce_analog_waveform,
 )
-from tensor_dslab.readout.analog_waveform.types import (
+from tensor_dslab.readout.analog_waveform.field import (
     _require_valid_values as require_valid_analog,
 )
 from tensor_dslab.readout.digitized_waveform._produce import (
     _produce_digitized_waveform,
 )
-from tensor_dslab.readout.digitized_waveform.types import (
+from tensor_dslab.readout.digitized_waveform.field import (
     _require_valid_values as require_valid_digitized,
 )
 from tensor_dslab.readout.pure_waveform._produce import (
     _produce_pure_waveform,
 )
-from tensor_dslab.readout.pure_waveform.types import (
+from tensor_dslab.readout.pure_waveform.field import (
     _require_valid_values as require_valid_pure,
 )
 
@@ -874,6 +875,29 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         self.assertEqual(maximum.ndim, 0)
         self.assertIs(maximum.dtype, torch.float32)
         self.assertEqual(maximum.device, pure.tensor.device)
+
+    def test_analog_waveform_delegates_exact_semantic_dtype_relationship(
+        self,
+    ) -> None:
+        sampling = _sampling(count=4)
+        pure = _pure([1.0, 2.0, 3.0, 4.0], sampling, dtype=torch.float64)
+        noise = _noise([0.5, 0.25, 0.0, -0.25], sampling, dtype=torch.float64)
+        with patch(
+            "tensor_dslab.readout.analog_waveform._produce.require_same_dtype",
+            wraps=require_same_dtype,
+        ) as delegated:
+            result = _produce_analog_waveform(
+                pure,
+                noise,
+                config=AnalogWaveformConfig(),
+            )
+        delegated.assert_called_once_with(pure, noise)
+        torch.testing.assert_close(
+            result.tensor,
+            pure.tensor + noise.tensor,
+            rtol=0.0,
+            atol=0.0,
+        )
 
     def test_analog_waveform_rejects_axis_device_or_dtype_disagreement(self) -> None:
         sampling = _sampling(count=4)

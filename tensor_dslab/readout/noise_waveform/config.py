@@ -3,29 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import final
 
-import torch
-from tensor_core import NonnegativeFloat, PositiveFloat, TensorField
+from tensor_core import NonnegativeFloat, PositiveFloat, RngKey
 
 from tensor_dslab.readout._requirements import (
     _require_exact,
-    _require_floating_dtype,
     _require_one_of_exact,
-    _require_readout_structure,
 )
 
 
-@final
-class NoiseWaveform(TensorField):
-    __slots__ = ()
-
-    def _require(self) -> None:
-        _require_readout_structure(self)
-        _require_floating_dtype(self)
-
-
-def _require_valid_values(field: NoiseWaveform) -> None:
-    if not bool(torch.all(torch.isfinite(field.tensor)).item()):
-        raise ValueError("NoiseWaveform values must be finite")
+_RNG_NAMESPACE = 0x54445331
 
 
 @final
@@ -38,9 +24,11 @@ class ZeroNoiseConfig:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class WhiteNoiseConfig:
     rms_mv: PositiveFloat
+    rng_key: RngKey = RngKey(namespace=_RNG_NAMESPACE, stream=0x0000_0001)
 
     def __post_init__(self) -> None:
         _require_exact(self.rms_mv, PositiveFloat, "WhiteNoiseConfig.rms_mv")
+        _require_exact(self.rng_key, RngKey, "WhiteNoiseConfig.rng_key")
 
 
 @final
@@ -49,6 +37,7 @@ class PsdNoiseConfig:
     frequency_left_edges_hz: tuple[NonnegativeFloat, ...]
     frequency_stop_hz: PositiveFloat
     power_density_mv2_per_hz: tuple[NonnegativeFloat, ...]
+    rng_key: RngKey = RngKey(namespace=_RNG_NAMESPACE, stream=0x0000_0002)
 
     def __post_init__(self) -> None:
         if type(self.frequency_left_edges_hz) is not tuple:
@@ -101,6 +90,7 @@ class PsdNoiseConfig:
             density.value > 0.0 for density in self.power_density_mv2_per_hz
         ):
             raise ValueError("use ZeroNoiseConfig for an all-zero PSD")
+        _require_exact(self.rng_key, RngKey, "PsdNoiseConfig.rng_key")
 
 
 @final

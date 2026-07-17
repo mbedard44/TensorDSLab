@@ -11,7 +11,7 @@ from tensor_dslab import (
     AfterpulseRecoveryConfig,
     SamplingConfig,
 )
-from tensor_dslab.readout.charge._produce import (
+from tensor_dslab.readout.charge.effects._delays import (
     _prepare_afterpulse_recovery,
     _prepare_exponential_delay,
     _prepare_fixed_delay,

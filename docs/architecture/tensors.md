@@ -6,19 +6,24 @@ This page defines how the TensorDSLab rebuild uses TensorCore. Scientific
 readout behavior belongs in [`readout.md`](readout.md) and the complete rebuild
 contract in [`rebuild.md`](rebuild.md).
 
-The reviewed TensorCore target is version `0.7.0` at exact clean commit
-`b454d738f6385ce6489d85492a618a3dab139bb6`. A production work order must
-select the exact dependency pin and run TensorDSLab-owned consumer probes; this
+The closed Stage 3 through 6 TensorCore target was version `0.7.0` at exact
+clean commit `b454d738f6385ce6489d85492a618a3dab139bb6`. Every dependency
+change requires an exact pin and TensorDSLab-owned consumer probes; this
 document alone makes no compatibility claim.
 
-TensorDSLab has selected published TensorCore `0.9.0` commit
-`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59` for the Design-complete, undispatched Maintenance 2
-migration. It provides public `RngKey`, `CounterRng`, `Threefry4x32`,
+TensorDSLab has pinned published TensorCore `0.9.0` commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59` in the Maintenance 2
+implementation. It provides public `RngKey`,
+`CounterRng`, `Threefry4x32`,
 `logical_positions`, and `require_same_dtype`. TensorCore's Stage 15 work
 order and random architecture at that exact commit are authoritative; the
-TensorDSLab-hosted consumer proposal is historical evidence only. Current
-Stage 6 production remains pinned to `0.7.0` until Maintenance 2 is separately
-dispatched, implemented, validated, reviewed, and accepted.
+TensorDSLab-hosted consumer proposal is historical evidence only. Closed Stage
+3 through 6 evidence remains pinned to `0.7.0`. While the Maintenance 2 bytes
+are absent from `main`, they remain the fixed-commit Validation/Review
+candidate; if present unchanged on `main`, Review's clean fast-forward has
+completed and Design acceptance remains pending. Final acceptance is complete
+only when the work order and implementation index record `Merged / Closed`.
+No broad compatibility result follows in any state.
 
 The previous TensorCore `0.6` ID/layout/sidecar architecture is historical and
 is intentionally not preserved through aliases.

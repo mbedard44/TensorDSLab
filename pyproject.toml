@@ -14,7 +14,7 @@ authors = [
 ]
 dependencies = [
     "torch",
-    "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@b454d738f6385ce6489d85492a618a3dab139bb6",
+    "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@4708bf2ca063a1bcd37a30a342733b9e3dbe9f59",
 ]
 
 [tool.hatch.metadata]

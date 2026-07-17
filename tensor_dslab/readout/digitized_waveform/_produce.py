@@ -4,23 +4,12 @@ import math
 
 import torch
 
-from tensor_dslab.readout.analog_waveform import AnalogWaveform
-from tensor_dslab.readout.digitized_waveform.types import (
-    DigitizedWaveform,
+from tensor_dslab.readout._requirements import _require_representable_float
+from tensor_dslab.readout.analog_waveform.field import AnalogWaveform
+from tensor_dslab.readout.digitized_waveform.config import (
     DigitizedWaveformConfig,
 )
-
-
-def _round_finite_scalar(
-    value: float | int,
-    *,
-    dtype: torch.dtype,
-    field: str,
-) -> float:
-    rounded = float(torch.tensor(value, dtype=dtype, device="cpu"))
-    if not math.isfinite(rounded):
-        raise ValueError(f"{field} is not finite in the waveform dtype")
-    return rounded
+from tensor_dslab.readout.digitized_waveform.field import DigitizedWaveform
 
 
 def _produce_digitized_waveform(
@@ -53,25 +42,37 @@ def _produce_digitized_waveform(
         raise ValueError("ADC span and slope must be positive in binary64")
 
     dtype = analog.tensor.dtype
-    rounded_maximum_code = _round_finite_scalar(
+    rounded_maximum_code = _require_representable_float(
         maximum_code,
         dtype=dtype,
         field="ADC maximum code",
     )
-    rounded_gain = _round_finite_scalar(gain, dtype=dtype, field="ADC gain")
-    rounded_span = _round_finite_scalar(span, dtype=dtype, field="ADC span")
-    rounded_slope = _round_finite_scalar(slope, dtype=dtype, field="ADC slope")
-    rounded_intercept = _round_finite_scalar(
+    rounded_gain = _require_representable_float(
+        gain,
+        dtype=dtype,
+        field="ADC gain",
+    )
+    rounded_span = _require_representable_float(
+        span,
+        dtype=dtype,
+        field="ADC span",
+    )
+    rounded_slope = _require_representable_float(
+        slope,
+        dtype=dtype,
+        field="ADC slope",
+    )
+    rounded_intercept = _require_representable_float(
         intercept,
         dtype=dtype,
         field="ADC intercept",
     )
-    rounded_lower_input = _round_finite_scalar(
+    rounded_lower_input = _require_representable_float(
         lower_input_mv,
         dtype=dtype,
         field="ADC lower input threshold",
     )
-    rounded_upper_input = _round_finite_scalar(
+    rounded_upper_input = _require_representable_float(
         upper_input_mv,
         dtype=dtype,
         field="ADC upper input threshold",

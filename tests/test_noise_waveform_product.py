@@ -8,10 +8,14 @@ from unittest.mock import patch
 
 import torch
 from tensor_core import (
+    CounterRng,
     NonnegativeFloat,
     PositiveFloat,
     PositiveInteger,
+    RngKey,
     TensorAxis,
+    Threefry4x32,
+    logical_positions,
 )
 
 from tensor_dslab import (
@@ -26,11 +30,6 @@ from tensor_dslab import (
     WhiteNoiseConfig,
     ZeroNoiseConfig,
 )
-from tensor_dslab.readout._random import (
-    _RngStream,
-    _logical_positions,
-    _standard_normal_pair,
-)
 from tensor_dslab.readout.noise_waveform._produce import (
     _prepare_psd_powers,
     _produce_noise_waveform,
@@ -41,6 +40,22 @@ SEEDS = (0, 1, 0x0123456789ABCDEF, 0xFFFFFFFFFFFFFFFF)
 AXIS_ORDERS = tuple(
     permutations((ExampleAxis, ChannelAxis, SampleAxis))
 )
+
+
+class _FailingRng(CounterRng):
+    __slots__ = ()
+
+    def _generate_block(
+        self,
+        *,
+        key: RngKey,
+        positions: torch.Tensor,
+        quantum: int,
+        block: int,
+    ) -> torch.Tensor:
+        raise AssertionError(
+            f"unexpected RNG request: {key=}, {quantum=}, {block=}"
+        )
 
 
 def _sampling(*, count: int, period_ps: int = 1_000) -> SamplingConfig:
@@ -139,6 +154,31 @@ def _sample_last(field: NoiseWaveform) -> torch.Tensor:
     return field.tensor.movedim(field.dimension_of(SampleAxis), -1)
 
 
+def _psd_normals(
+    model: PsdNoiseConfig,
+    *,
+    seed: int,
+    row_count: int,
+    frequency_count: int,
+    dtype: torch.dtype,
+    device: torch.device | str = "cpu",
+) -> torch.Tensor:
+    positions = logical_positions(
+        (row_count, frequency_count),
+        device=device,
+    )[:, 1:]
+    return Threefry4x32(seed=seed).gaussian(
+        mean=0.0,
+        standard_deviation=1.0,
+        key=model.rng_key,
+        positions=positions,
+        dtype=dtype,
+        quantum=0,
+        ordinal=0,
+        count=2,
+    )
+
+
 def _independent_storage(left: torch.Tensor, right: torch.Tensor) -> bool:
     return left.untyped_storage().data_ptr() != right.untyped_storage().data_ptr()
 
@@ -214,7 +254,7 @@ class NoiseProductBranchTest(unittest.TestCase):
                             source,
                             sampling=sampling,
                             config=config,
-                            seed=None if type(config.model) is ZeroNoiseConfig else 17,
+                            rng=Threefry4x32(seed=17),
                             floating_dtype=dtype,
                         )
                         self.assertIs(type(result), NoiseWaveform)
@@ -231,77 +271,68 @@ class NoiseProductBranchTest(unittest.TestCase):
                         self.assertTrue(_independent_storage(result.tensor, source.tensor))
                 self.assertTrue(torch.equal(source.tensor, source_values))
 
-    def test_zero_is_fresh_exact_seed_inert_and_never_calls_rng(self) -> None:
+    def test_zero_is_fresh_exact_rng_inert_and_never_calls_rng(self) -> None:
         sampling = _sampling(count=8)
         source = _photoelectrons(sampling)
         state = torch.random.get_rng_state().clone()
         with patch(
-            "tensor_dslab.readout.noise_waveform._produce._logical_positions"
-        ) as positions, patch(
-            "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair"
-        ) as normal:
-            without_seed = _produce_noise_waveform(
+            "tensor_dslab.readout.noise_waveform._produce.logical_positions",
+            side_effect=AssertionError("zero noise must not build positions"),
+        ) as positions:
+            first = _produce_noise_waveform(
                 source,
                 sampling=sampling,
                 config=_zero_config(),
-                seed=None,
+                rng=_FailingRng(seed=0),
                 floating_dtype=torch.float32,
             )
-            with_seed = _produce_noise_waveform(
+            second = _produce_noise_waveform(
                 source,
                 sampling=sampling,
                 config=_zero_config(),
-                seed=(1 << 64) - 1,
+                rng=_FailingRng(seed=(1 << 64) - 1),
                 floating_dtype=torch.float32,
             )
         positions.assert_not_called()
-        normal.assert_not_called()
-        self.assertTrue(torch.equal(without_seed.tensor, torch.zeros_like(without_seed.tensor)))
-        self.assertTrue(torch.equal(without_seed.tensor, with_seed.tensor))
-        self.assertTrue(_independent_storage(without_seed.tensor, with_seed.tensor))
+        self.assertTrue(torch.equal(first.tensor, torch.zeros_like(first.tensor)))
+        self.assertTrue(torch.equal(first.tensor, second.tensor))
+        self.assertTrue(_independent_storage(first.tensor, second.tensor))
         self.assertTrue(torch.equal(torch.random.get_rng_state(), state))
 
-    def test_seed_rules_dtype_sampling_and_device_fail_before_rng(self) -> None:
+    def test_rng_dtype_sampling_and_device_fail_before_rng(self) -> None:
         sampling = _sampling(count=8)
         source = _photoelectrons(sampling)
-        with patch(
-            "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair"
-        ) as normal:
-            for config in (_white_config(), _flat_psd_config()):
-                with self.assertRaises(ValueError):
-                    _produce_noise_waveform(
-                        source,
-                        sampling=sampling,
-                        config=config,
-                        seed=None,
-                        floating_dtype=torch.float32,
-                    )
-            for invalid_seed in (True, -1, 1 << 64):
-                with self.assertRaises((TypeError, ValueError)):
-                    _produce_noise_waveform(
-                        source,
-                        sampling=sampling,
-                        config=_zero_config(),
-                        seed=invalid_seed,
-                        floating_dtype=torch.float32,
-                    )
-            with self.assertRaises(TypeError):
-                _produce_noise_waveform(
-                    source,
-                    sampling=sampling,
-                    config=_white_config(),
-                    seed=0,
-                    floating_dtype=torch.float16,
-                )
-            with self.assertRaises(ValueError):
-                _produce_noise_waveform(
-                    source,
-                    sampling=_sampling(count=8, period_ps=2_000),
-                    config=_white_config(),
-                    seed=0,
-                    floating_dtype=torch.float32,
-                )
-        normal.assert_not_called()
+        for config in (_zero_config(), _white_config(), _flat_psd_config()):
+            for invalid_rng in (None, object(), True):
+                with self.subTest(
+                    model=type(config.model),
+                    invalid_rng=invalid_rng,
+                ):
+                    with self.assertRaises(TypeError):
+                        _produce_noise_waveform(
+                            source,
+                            sampling=sampling,
+                            config=config,
+                            rng=invalid_rng,  # type: ignore[arg-type]
+                            floating_dtype=torch.float32,
+                        )
+        failing_rng = _FailingRng(seed=0)
+        with self.assertRaises(TypeError):
+            _produce_noise_waveform(
+                source,
+                sampling=sampling,
+                config=_white_config(),
+                rng=failing_rng,
+                floating_dtype=torch.float16,
+            )
+        with self.assertRaises(ValueError):
+            _produce_noise_waveform(
+                source,
+                sampling=_sampling(count=8, period_ps=2_000),
+                config=_white_config(),
+                rng=failing_rng,
+                floating_dtype=torch.float32,
+            )
 
         meta_source = _photoelectrons(sampling, device="meta")
         with self.assertRaises(ValueError):
@@ -309,7 +340,7 @@ class NoiseProductBranchTest(unittest.TestCase):
                 meta_source,
                 sampling=sampling,
                 config=_zero_config(),
-                seed=None,
+                rng=failing_rng,
                 floating_dtype=torch.float32,
             )
 
@@ -324,17 +355,27 @@ class NoiseProductBranchTest(unittest.TestCase):
                     source,
                     sampling=sampling,
                     config=_white_config(rms_input),
-                    seed=0x0123456789ABCDEF,
+                    rng=Threefry4x32(seed=0x0123456789ABCDEF),
                     floating_dtype=dtype,
                 )
-                positions = _logical_positions(source.shape, device=source.tensor.device)
-                standard, _ = _standard_normal_pair(
-                    seed=0x0123456789ABCDEF,
-                    stream=_RngStream.NOISE_WHITE,
-                    logical_positions=positions,
-                    dtype=dtype,
+                model = _white_config(rms_input).model
+                assert type(model) is WhiteNoiseConfig
+                positions = logical_positions(
+                    source.shape,
+                    device=source.tensor.device,
                 )
-                expected = standard * torch.tensor(represented_rms, dtype=dtype)
+                expected = Threefry4x32(
+                    seed=0x0123456789ABCDEF
+                ).gaussian(
+                    mean=0.0,
+                    standard_deviation=represented_rms,
+                    key=model.rng_key,
+                    positions=positions,
+                    dtype=dtype,
+                    quantum=0,
+                    ordinal=0,
+                    count=1,
+                )
                 self.assertTrue(torch.equal(result.tensor, expected))
                 self.assertNotEqual(float(torch.mean(result.tensor)), 0.0)
 
@@ -350,31 +391,37 @@ class NoiseProductBranchTest(unittest.TestCase):
             first_source,
             sampling=sampling,
             config=_white_config(),
-            seed=99,
+            rng=Threefry4x32(seed=99),
             floating_dtype=torch.float64,
         )
         repeated = _produce_noise_waveform(
             first_source,
             sampling=sampling,
             config=_white_config(),
-            seed=99,
+            rng=Threefry4x32(seed=99),
             floating_dtype=torch.float64,
         )
         relabeled = _produce_noise_waveform(
             second_source,
             sampling=sampling,
             config=_white_config(),
-            seed=99,
+            rng=Threefry4x32(seed=99),
             floating_dtype=torch.float64,
         )
         self.assertTrue(torch.equal(first.tensor, repeated.tensor))
         self.assertTrue(torch.equal(first.tensor, relabeled.tensor))
-        positions = _logical_positions(first_source.shape, device="cpu")
-        other_stream, _ = _standard_normal_pair(
-            seed=99,
-            stream=_RngStream.NOISE_PSD_COEFFICIENT,
-            logical_positions=positions,
+        positions = logical_positions(first_source.shape, device="cpu")
+        psd_model = _flat_psd_config().model
+        assert type(psd_model) is PsdNoiseConfig
+        other_stream = Threefry4x32(seed=99).gaussian(
+            mean=0.0,
+            standard_deviation=1.0,
+            key=psd_model.rng_key,
+            positions=positions,
             dtype=torch.float64,
+            quantum=0,
+            ordinal=0,
+            count=1,
         )
         self.assertFalse(torch.equal(first.tensor, other_stream))
 
@@ -386,7 +433,7 @@ class NoiseProductBranchTest(unittest.TestCase):
                 source,
                 sampling=sampling,
                 config=config,
-                seed=71,
+                rng=Threefry4x32(seed=71),
                 floating_dtype=torch.float32,
             )
             with torch.autocast(device_type="cpu", dtype=torch.bfloat16):
@@ -394,7 +441,7 @@ class NoiseProductBranchTest(unittest.TestCase):
                     source,
                     sampling=sampling,
                     config=config,
-                    seed=71,
+                    rng=Threefry4x32(seed=71),
                     floating_dtype=torch.float32,
                 )
             self.assertIs(actual.tensor.dtype, torch.float32)
@@ -410,30 +457,26 @@ class NoiseProductBranchTest(unittest.TestCase):
                     source,
                     sampling=sampling,
                     config=_white_config(finfo.tiny),
-                    seed=0,
+                    rng=Threefry4x32(seed=0),
                     floating_dtype=dtype,
                 )
                 self.assertTrue(bool(torch.all(torch.isfinite(accepted.tensor))))
             with self.subTest(dtype=dtype, boundary="subnormal"):
-                with patch(
-                    "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair"
-                ) as normal:
-                    with self.assertRaises(ValueError):
-                        _produce_noise_waveform(
-                            source,
-                            sampling=sampling,
-                            config=_white_config(finfo.tiny / 2.0),
-                            seed=0,
-                            floating_dtype=dtype,
-                        )
-                    normal.assert_not_called()
+                with self.assertRaises(ValueError):
+                    _produce_noise_waveform(
+                        source,
+                        sampling=sampling,
+                        config=_white_config(finfo.tiny / 2.0),
+                        rng=_FailingRng(seed=0),
+                        floating_dtype=dtype,
+                    )
             maximum_rms = float(torch.tensor(finfo.max / guard, dtype=dtype))
             with self.subTest(dtype=dtype, boundary="maximum"):
                 accepted = _produce_noise_waveform(
                     source,
                     sampling=sampling,
                     config=_white_config(maximum_rms),
-                    seed=0,
+                    rng=Threefry4x32(seed=0),
                     floating_dtype=dtype,
                 )
                 self.assertTrue(bool(torch.all(torch.isfinite(accepted.tensor))))
@@ -444,18 +487,14 @@ class NoiseProductBranchTest(unittest.TestCase):
                 )
             )
             with self.subTest(dtype=dtype, boundary="above maximum"):
-                with patch(
-                    "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair"
-                ) as normal:
-                    with self.assertRaises(ValueError):
-                        _produce_noise_waveform(
-                            source,
-                            sampling=sampling,
-                            config=_white_config(rejected_rms),
-                            seed=0,
-                            floating_dtype=dtype,
-                        )
-                    normal.assert_not_called()
+                with self.assertRaises(ValueError):
+                    _produce_noise_waveform(
+                        source,
+                        sampling=sampling,
+                        config=_white_config(rejected_rms),
+                        rng=_FailingRng(seed=0),
+                        floating_dtype=dtype,
+                    )
 
 
 class PsdPreparationTest(unittest.TestCase):
@@ -539,20 +578,16 @@ class PsdPreparationTest(unittest.TestCase):
                 power_density_mv2_per_hz=(NonnegativeFloat(4.0e-59),),
             ),
         )
-        with patch(
-            "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair"
-        ) as normal:
-            for model in invalid_models:
-                with self.subTest(model=model):
-                    with self.assertRaises(ValueError):
-                        _produce_noise_waveform(
-                            source,
-                            sampling=sampling,
-                            config=NoiseWaveformConfig(model=model),
-                            seed=0,
-                            floating_dtype=torch.float32,
-                        )
-            normal.assert_not_called()
+        for model in invalid_models:
+            with self.subTest(model=model):
+                with self.assertRaises(ValueError):
+                    _produce_noise_waveform(
+                        source,
+                        sampling=sampling,
+                        config=NoiseWaveformConfig(model=model),
+                        rng=_FailingRng(seed=0),
+                        floating_dtype=torch.float32,
+                    )
 
     def test_nonfinite_accumulation_guard_rejects_before_rng(self) -> None:
         sampling = _sampling(count=4)
@@ -572,18 +607,15 @@ class PsdPreparationTest(unittest.TestCase):
         with patch(
             "tensor_dslab.readout.noise_waveform._produce.math.fsum",
             side_effect=fail_final_fsum,
-        ), patch(
-            "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair"
-        ) as normal:
+        ):
             with self.assertRaises(ValueError):
                 _produce_noise_waveform(
                     source,
                     sampling=sampling,
                     config=config,
-                    seed=0,
+                    rng=_FailingRng(seed=0),
                     floating_dtype=torch.float32,
                 )
-            normal.assert_not_called()
 
     def test_finite_accumulation_guard_accepts_limit_and_rejects_nextafter_before_rng(
         self,
@@ -629,7 +661,7 @@ class PsdPreparationTest(unittest.TestCase):
                         source,
                         sampling=sampling,
                         config=config,
-                        seed=0,
+                        rng=Threefry4x32(seed=0),
                         floating_dtype=dtype,
                     )
                 self.assertTrue(bool(torch.all(torch.isfinite(accepted.tensor))))
@@ -648,18 +680,15 @@ class PsdPreparationTest(unittest.TestCase):
                 with patch(
                     "tensor_dslab.readout.noise_waveform._produce.math.fsum",
                     side_effect=fsum_above_limit,
-                ), patch(
-                    "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair"
-                ) as normal:
+                ):
                     with self.assertRaises(ValueError):
                         _produce_noise_waveform(
                             source,
                             sampling=sampling,
                             config=config,
-                            seed=0,
+                            rng=_FailingRng(seed=0),
                             floating_dtype=dtype,
                         )
-                    normal.assert_not_called()
                 self.assertEqual(rejected_call_count, final_call)
 
 
@@ -689,31 +718,23 @@ class PsdSynthesisTest(unittest.TestCase):
             )
             for dtype in (torch.float32, torch.float64):
                 powers = _prepare_psd_powers(model, sampling=sampling, dtype=dtype)
-                real = torch.arange(2, 2 + frequency_count - 1, dtype=dtype).reshape(1, -1)
-                imaginary = torch.arange(5, 5 + frequency_count - 1, dtype=dtype).reshape(1, -1)
+                normals = _psd_normals(
+                    model,
+                    seed=3,
+                    row_count=1,
+                    frequency_count=frequency_count,
+                    dtype=dtype,
+                )
+                real = normals[..., 0]
+                imaginary = normals[..., 1]
                 captured_coefficients: list[torch.Tensor] = []
                 original_irfft = torch.fft.irfft
-
-                def fake_pair(
-                    *,
-                    seed: int,
-                    stream: _RngStream,
-                    logical_positions: torch.Tensor,
-                    dtype: torch.dtype,
-                ) -> tuple[torch.Tensor, torch.Tensor]:
-                    self.assertEqual(seed, 3)
-                    self.assertIs(stream, _RngStream.NOISE_PSD_COEFFICIENT)
-                    self.assertEqual(logical_positions.shape, real.shape)
-                    return real, imaginary
 
                 def capture_irfft(input: torch.Tensor, **kwargs: object) -> torch.Tensor:
                     captured_coefficients.append(input.clone())
                     return original_irfft(input, **kwargs)
 
                 with patch(
-                    "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair",
-                    side_effect=fake_pair,
-                ), patch(
                     "tensor_dslab.readout.noise_waveform._produce.torch.fft.irfft",
                     side_effect=capture_irfft,
                 ):
@@ -721,7 +742,7 @@ class PsdSynthesisTest(unittest.TestCase):
                         source,
                         sampling=sampling,
                         config=NoiseWaveformConfig(model=model),
-                        seed=3,
+                        rng=Threefry4x32(seed=3),
                         floating_dtype=dtype,
                     )
                 self.assertEqual(len(captured_coefficients), 1)
@@ -802,69 +823,68 @@ class PsdSynthesisTest(unittest.TestCase):
                     sampling=sampling,
                     dtype=requested_dtype,
                 )
+                normals = _psd_normals(
+                    model,
+                    seed=19,
+                    row_count=1,
+                    frequency_count=sample_count // 2 + 1,
+                    dtype=requested_dtype,
+                )[0]
+                real = normals[:, 0]
+                imaginary = normals[:, 1]
+                result = _produce_noise_waveform(
+                    source,
+                    sampling=sampling,
+                    config=config,
+                    rng=Threefry4x32(seed=19),
+                    floating_dtype=requested_dtype,
+                )
 
-                def synthesize(
-                    real_values: tuple[float, float],
-                    imaginary_values: tuple[float, float],
-                ) -> torch.Tensor:
-                    real = torch.tensor(
-                        (real_values,),
-                        dtype=requested_dtype,
-                    )
-                    imaginary = torch.tensor(
-                        (imaginary_values,),
-                        dtype=requested_dtype,
-                    )
-
-                    def fake_pair(
-                        *,
-                        seed: int,
-                        stream: _RngStream,
-                        logical_positions: torch.Tensor,
-                        dtype: torch.dtype,
-                    ) -> tuple[torch.Tensor, torch.Tensor]:
-                        self.assertEqual(seed, 19)
-                        self.assertIs(stream, _RngStream.NOISE_PSD_COEFFICIENT)
-                        self.assertEqual(logical_positions.shape, (1, 2))
-                        self.assertIs(dtype, requested_dtype)
-                        return real, imaginary
-
-                    with patch(
-                        "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair",
-                        side_effect=fake_pair,
-                    ):
-                        result = _produce_noise_waveform(
-                            source,
-                            sampling=sampling,
-                            config=config,
-                            seed=19,
-                            floating_dtype=requested_dtype,
-                        )
-                    return _sample_last(result).reshape(sample_count)
-
-                zero = synthesize((0.0, 0.0), (0.0, 0.0))
-                cosine = synthesize((1.0, 0.0), (0.0, 0.0))
-                terminal_sine = synthesize((0.0, 0.0), (0.0, 1.0))
-
-                expected_cosine = torch.tensor(
+                cosine = torch.tensor(
                     tuple(
-                        math.sqrt(powers[1])
-                        * math.cos(math.tau * index / sample_count)
+                        math.fsum(
+                            math.sqrt(powers[frequency])
+                            * float(real[frequency - 1])
+                            * math.cos(
+                                math.tau * frequency * index / sample_count
+                            )
+                            for frequency in range(1, len(powers))
+                        )
                         for index in range(sample_count)
                     ),
                     dtype=requested_dtype,
                 )
-                expected_terminal_sine = torch.tensor(
+                sine = torch.tensor(
                     tuple(
-                        -math.sqrt(powers[2])
-                        * math.sin(2.0 * math.tau * index / sample_count)
+                        math.fsum(
+                            -math.sqrt(powers[frequency])
+                            * float(imaginary[frequency - 1])
+                            * math.sin(
+                                math.tau * frequency * index / sample_count
+                            )
+                            for frequency in range(1, len(powers))
+                        )
+                        for index in range(sample_count)
+                    ),
+                    dtype=requested_dtype,
+                )
+                expected = cosine + sine
+                terminal_sine = torch.tensor(
+                    tuple(
+                        -math.sqrt(powers[-1])
+                        * float(imaginary[-1])
+                        * math.sin(
+                            math.tau
+                            * (len(powers) - 1)
+                            * index
+                            / sample_count
+                        )
                         for index in range(sample_count)
                     ),
                     dtype=requested_dtype,
                 )
                 reference_scale = max(
-                    float(torch.max(torch.abs(expected_cosine))),
-                    float(torch.max(torch.abs(expected_terminal_sine))),
+                    float(torch.max(torch.abs(expected))),
                     torch.finfo(requested_dtype).tiny,
                 )
                 tolerance = (
@@ -873,24 +893,15 @@ class PsdSynthesisTest(unittest.TestCase):
                     * max(1, math.ceil(math.log2(sample_count)))
                     * reference_scale
                 )
-                self.assertTrue(torch.equal(zero, torch.zeros_like(zero)))
                 self.assertTrue(
                     torch.allclose(
-                        cosine,
-                        expected_cosine,
+                        _sample_last(result).reshape(sample_count),
+                        expected,
                         rtol=0.0,
                         atol=tolerance,
                     )
                 )
-                self.assertTrue(
-                    torch.allclose(
-                        terminal_sine,
-                        expected_terminal_sine,
-                        rtol=0.0,
-                        atol=tolerance,
-                    )
-                )
-                self.assertFalse(torch.equal(terminal_sine, zero))
+                self.assertTrue(torch.equal(expected, cosine + sine))
                 self.assertGreater(float(torch.max(torch.abs(terminal_sine))), 0.0)
 
     def test_two_sample_psd_is_real_nyquist_only(self) -> None:
@@ -900,7 +911,6 @@ class PsdSynthesisTest(unittest.TestCase):
         config = _flat_psd_config()
         model = config.model
         assert type(model) is PsdNoiseConfig
-        normal_real_value = 1.25
 
         for requested_dtype in (torch.float32, torch.float64):
             with self.subTest(dtype=requested_dtype):
@@ -909,23 +919,18 @@ class PsdSynthesisTest(unittest.TestCase):
                     sampling=sampling,
                     dtype=requested_dtype,
                 )
-                real = torch.tensor(((normal_real_value,),), dtype=requested_dtype)
-                imaginary = torch.tensor(((7.0,),), dtype=requested_dtype)
+                normals = _psd_normals(
+                    model,
+                    seed=29,
+                    row_count=1,
+                    frequency_count=2,
+                    dtype=requested_dtype,
+                )
+                normal_real_value = float(normals[0, 0, 0])
+                normal_imaginary_value = float(normals[0, 0, 1])
+                self.assertNotEqual(normal_imaginary_value, 0.0)
                 captured_coefficients: list[torch.Tensor] = []
                 original_irfft = torch.fft.irfft
-
-                def fake_pair(
-                    *,
-                    seed: int,
-                    stream: _RngStream,
-                    logical_positions: torch.Tensor,
-                    dtype: torch.dtype,
-                ) -> tuple[torch.Tensor, torch.Tensor]:
-                    self.assertEqual(seed, 29)
-                    self.assertIs(stream, _RngStream.NOISE_PSD_COEFFICIENT)
-                    self.assertEqual(logical_positions.shape, (1, 1))
-                    self.assertIs(dtype, requested_dtype)
-                    return real, imaginary
 
                 def capture_irfft(
                     input: torch.Tensor,
@@ -935,9 +940,6 @@ class PsdSynthesisTest(unittest.TestCase):
                     return original_irfft(input, **kwargs)
 
                 with patch(
-                    "tensor_dslab.readout.noise_waveform._produce._standard_normal_pair",
-                    side_effect=fake_pair,
-                ), patch(
                     "tensor_dslab.readout.noise_waveform._produce.torch.fft.irfft",
                     side_effect=capture_irfft,
                 ):
@@ -945,7 +947,7 @@ class PsdSynthesisTest(unittest.TestCase):
                         source,
                         sampling=sampling,
                         config=config,
-                        seed=29,
+                        rng=Threefry4x32(seed=29),
                         floating_dtype=requested_dtype,
                     )
 
@@ -1000,14 +1002,14 @@ class PsdSynthesisTest(unittest.TestCase):
             source,
             sampling=sampling,
             config=_flat_psd_config(),
-            seed=5,
+            rng=Threefry4x32(seed=5),
             floating_dtype=torch.float64,
         )
         second = _produce_noise_waveform(
             source,
             sampling=sampling,
             config=_flat_psd_config(),
-            seed=5,
+            rng=Threefry4x32(seed=5),
             floating_dtype=torch.float64,
         )
         rows = _sample_last(first).reshape(-1, 8)
@@ -1032,7 +1034,7 @@ class NoiseStatisticalContractTest(unittest.TestCase):
                     source,
                     sampling=sampling,
                     config=_white_config(1.0),
-                    seed=seed,
+                    rng=Threefry4x32(seed=seed),
                     floating_dtype=dtype,
                 ).tensor.reshape(-1).to(dtype=torch.float64)
                 for seed in SEEDS
@@ -1080,7 +1082,7 @@ class NoiseStatisticalContractTest(unittest.TestCase):
                             source,
                             sampling=sampling,
                             config=NoiseWaveformConfig(model=model),
-                            seed=seed,
+                            rng=Threefry4x32(seed=seed),
                             floating_dtype=dtype,
                         )
                     ).reshape(-1, count).to(dtype=torch.float64)
@@ -1206,19 +1208,18 @@ class NoiseStatisticalContractTest(unittest.TestCase):
         )
         for config in (_zero_config(), _white_config(), _flat_psd_config()):
             for dtype in (torch.float32, torch.float64):
-                seed = None if type(config.model) is ZeroNoiseConfig else 11
                 first = _produce_noise_waveform(
                     source,
                     sampling=sampling,
                     config=config,
-                    seed=seed,
+                    rng=Threefry4x32(seed=11),
                     floating_dtype=dtype,
                 )
                 second = _produce_noise_waveform(
                     source,
                     sampling=sampling,
                     config=config,
-                    seed=seed,
+                    rng=Threefry4x32(seed=11),
                     floating_dtype=dtype,
                 )
                 self.assertTrue(torch.equal(first.tensor, second.tensor))

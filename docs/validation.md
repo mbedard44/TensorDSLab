@@ -60,15 +60,20 @@ CUDA was unavailable. It adds no public `simulate_readout(...)` surface.
 
 ## Accepted Maintenance 2 RNG And Module-Migration Gates
 
-Maintenance 2 is not yet dispatched. Its TensorCore dependency gate is closed
-by published version `0.9.0` at exact commit
+Maintenance 2 implementation bytes are present. Their TensorCore dependency
+gate is closed by published version `0.9.0` at exact commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, which provides generic `RngKey`,
 `CounterRng`, `Threefry4x32`, `logical_positions`, public `uniform`,
 `gaussian`, `poisson`, and `binomial`, plus the focused
 `require_same_dtype` relationship. TensorDSLab independently selected and
-probed that exact commit. The historical consumer proposal is fulfilled;
-TensorDSLab's Maintenance 2 work order is Design-complete but remains
-undispatched.
+probed that exact commit, and the implementation pins it through public
+package-root imports. The historical consumer proposal is fulfilled. While
+these exact bytes are absent from `main`, they remain the fixed-commit
+Validation/Review candidate; if present unchanged on `main`, Review's clean
+fast-forward has completed and Design acceptance remains pending. Final
+acceptance is complete only when the work order and implementation index
+record `Merged / Closed`. CUDA was unavailable, so the recorded evidence is
+eager CPU-only and makes no GPU or cross-backend claim.
 
 The focused TensorDSLab migration must prove:
 
@@ -86,6 +91,21 @@ The focused TensorDSLab migration must prove:
   finite-output envelope, fresh result storage, and public
   `poisson(...)`/`binomial(...)` value domains, deterministic branches,
   mappings, word schedules, and exhaustion;
+- Charge retains the unchanged upward-rounded Stage 6 analytic smearing check
+  over the real ledger bound; separately, that bound is floored to the
+  greatest target-dtype ledger it covers and the resulting same-device scale
+  is checked against TensorCore's public Gaussian prepared-scale finite-output
+  envelope before any Charge effect, RNG request, or write;
+- the frozen `K=0` adjacent boundaries remain exact (`float32` accepted
+  `0x1.f61fea0000000p+98`, rejected `0x1.f61fec0000000p+98`; `float64`
+  accepted `0x1.51e4a059b7cf4p+994`, rejected
+  `0x1.51e4a059b7cf5p+994`), while the contextual `L=24` float32 pair accepts
+  `0x1.f61fd20000000p+98` and rejects `0x1.f61fd40000000p+98`;
+- exact positive/negative maximum-radius results are forced through a local
+  concrete `CounterRng` test double's protected `_generate_block(...)` hook
+  without overriding a public method; the negative result clips to zero, and
+  the rejected contextual neighbor fails before the hook or an earlier enabled
+  Charge effect can consume words;
 - exact `RngKey` fields on the eight stochastic leaf config classes, including
   two fields on each crosstalk config, namespace `0x54445331`, and default
   streams `1` through `10` in the accepted append-only mapping;
@@ -441,11 +461,12 @@ scalars, private requirements, private validators, retired `0.6` names, or a
 placeholder simulation function. Stage 7 will replace the last prohibition
 with a deliberate export check for the implemented `simulate_readout`.
 
-Current Stage 6 regression checks continue to prove every product package,
-`readout.types`, the readout root, and the package root are acyclic.
-Maintenance 2 must instead prove fresh-process imports of every product
-`config`/`field` module, `readout.config`, `readout.collection`, the readout
-root, and the package root, plus absence of the retired `types.py` modules.
+Closed Stage 6 regression checks proved every former product package,
+`readout.types`, the readout root, and the package root were acyclic. The
+Maintenance 2 candidate must instead prove fresh-process imports of every
+product `config`/`field` module, `readout.config`, `readout.collection`, the
+readout root, and the package root, plus absence of the retired `types.py`
+modules.
 Product packages must not import `ReadoutConfig`, `ReadoutCollection`, or
 future orchestration. The complete product graph may be imported only by the
 cross-product composition layer and deliberate export layers.

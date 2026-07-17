@@ -66,19 +66,24 @@ Private implementation seams now produce complete `Charge`, `PureWaveform`,
 `NoiseWaveform`, `AnalogWaveform`, and `DigitizedWaveform` values. Charge
 production includes its configured dark-count, timing-jitter, fixed-generation
 correlated-avalanche, recovery-ledger, and smearing submodels; noise supports
-zero, white, and caller-supplied PSD models. These seams and their positional
-RNG mechanics remain private in current Stage 5/6 production. The accepted
-next architecture moves generic RNG and distribution mechanics to TensorCore
-and uses config-owned stochastic keys, but that migration and public
-orchestration are not yet implemented. Ordinary users should continue to
-import only the documented package-root types and configs.
+zero, white, and caller-supplied PSD models. These seams remain private. The
+Maintenance 2 moves generic RNG and distribution mechanics to exact TensorCore
+`0.9.0` and uses config-owned stochastic keys. While these exact bytes are
+absent from `main`, they remain the fixed-commit Validation/Review candidate;
+if present unchanged on `main`, Review's clean fast-forward has completed and
+Design acceptance remains pending. Final acceptance is complete only when the
+work order and implementation index record `Merged / Closed`. Public
+orchestration is not implemented. Ordinary users should continue to import
+only the documented package-root types and configs.
 
 The historical [TensorCore consumer proposal](docs/implementation/proposed_tensorcore_counter_rng_and_distributions.md)
 is now fulfilled by published TensorCore `0.9.0` commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The
 [TensorDSLab Maintenance 2 work order](docs/implementation/maintenance_2_rng_and_product_module_ownership_migration.md)
-selects that exact dependency and is Design-complete but undispatched. The
-current dependency and production surface remain unchanged.
+selects that exact dependency. The implementation pins it and completes the
+ownership migration under the topology-dependent lifecycle above. CUDA was
+unavailable, so the recorded evidence is eager CPU-only and makes no GPU or
+cross-backend claim.
 
 ## Explicit Exclusions
 

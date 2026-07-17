@@ -10,6 +10,7 @@ import tomllib
 import unittest
 
 import torch
+import tensor_core
 from tensor_core import TensorAxis, TensorCollection, TensorField
 
 import tensor_dslab
@@ -41,7 +42,7 @@ class PackageContractTest(unittest.TestCase):
             project["dependencies"],
             [
                 "torch",
-                "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@b454d738f6385ce6489d85492a618a3dab139bb6",
+                "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@4708bf2ca063a1bcd37a30a342733b9e3dbe9f59",
             ],
         )
         self.assertEqual(
@@ -169,6 +170,14 @@ class PackageContractTest(unittest.TestCase):
                 "DigitizedWaveformConfig",
             ),
         }
+        field_names = {
+            "AnalogWaveform",
+            "Charge",
+            "DigitizedWaveform",
+            "NoiseWaveform",
+            "Photoelectrons",
+            "PureWaveform",
+        }
         for module_name, exports in expected.items():
             with self.subTest(module=module_name):
                 module = __import__(module_name, fromlist=("__all__",))
@@ -176,7 +185,8 @@ class PackageContractTest(unittest.TestCase):
                 for name in exports:
                     value = getattr(module, name)
                     self.assertIs(value, getattr(tensor_dslab, name))
-                    self.assertEqual(value.__module__, f"{module_name}.types")
+                    owner = "field" if name in field_names else "config"
+                    self.assertEqual(value.__module__, f"{module_name}.{owner}")
 
         self.assertEqual(ChannelAxis.__module__, "tensor_dslab.common.axes")
         self.assertEqual(ExampleAxis.__module__, "tensor_dslab.common.axes")
@@ -187,11 +197,11 @@ class PackageContractTest(unittest.TestCase):
         )
         self.assertEqual(
             ReadoutCollection.__module__,
-            "tensor_dslab.readout.types",
+            "tensor_dslab.readout.collection",
         )
         self.assertEqual(
             tensor_dslab.ReadoutConfig.__module__,
-            "tensor_dslab.readout.types",
+            "tensor_dslab.readout.config",
         )
 
     def test_semantic_leaves_are_direct_final_fieldless_roots(self) -> None:
@@ -255,6 +265,11 @@ class PackageContractTest(unittest.TestCase):
             "TensorFieldId",
             "TensorLayout",
             "PositiveInteger",
+            "CounterRng",
+            "RngKey",
+            "Threefry4x32",
+            "logical_positions",
+            "require_same_dtype",
         )
         for module in (tensor_dslab, common, readout):
             for name in retired_or_generic:
@@ -268,6 +283,15 @@ class PackageContractTest(unittest.TestCase):
             "tensor_dslab/readout/ids.py",
             "tensor_dslab/readout/tensors.py",
             "tensor_dslab/readout/validation.py",
+            "tensor_dslab/readout/types.py",
+            "tensor_dslab/readout/_random.py",
+            "tensor_dslab/readout/_rng.py",
+            "tensor_dslab/readout/photoelectrons/types.py",
+            "tensor_dslab/readout/charge/types.py",
+            "tensor_dslab/readout/pure_waveform/types.py",
+            "tensor_dslab/readout/noise_waveform/types.py",
+            "tensor_dslab/readout/analog_waveform/types.py",
+            "tensor_dslab/readout/digitized_waveform/types.py",
             "tensor_dslab/readout/simulation.py",
             "tensor_dslab/readout/photoelectrons/_product.py",
             "tensor_dslab/readout/charge/_product.py",
@@ -284,6 +308,7 @@ class PackageContractTest(unittest.TestCase):
     ) -> None:
         private_names = (
             "_RngStream",
+            "_require_representable_float",
             "_require_sampling",
             "_produce_charge",
             "_produce_pure_waveform",
@@ -318,12 +343,16 @@ class PackageContractTest(unittest.TestCase):
                     self.assertFalse(hasattr(module, name))
 
     def test_production_uses_only_public_tensorcore_imports(self) -> None:
+        public_names = frozenset(tensor_core.__all__)
         for path in Path("tensor_dslab").rglob("*.py"):
             tree = ast.parse(path.read_text(), filename=str(path))
             for node in ast.walk(tree):
                 if isinstance(node, ast.ImportFrom) and node.module is not None:
                     if node.module.startswith("tensor_core"):
                         self.assertEqual(node.module, "tensor_core", str(path))
+                        for alias in node.names:
+                            self.assertNotEqual(alias.name, "*", str(path))
+                            self.assertIn(alias.name, public_names, str(path))
                 elif isinstance(node, ast.Import):
                     for alias in node.names:
                         self.assertFalse(
@@ -331,15 +360,25 @@ class PackageContractTest(unittest.TestCase):
                             str(path),
                         )
 
-    def test_product_types_do_not_import_composition_layer(self) -> None:
-        for path in Path("tensor_dslab/readout").glob("*/types.py"):
+    def test_product_modules_do_not_import_composition_layer(self) -> None:
+        paths = tuple(Path("tensor_dslab/readout").glob("*/config.py")) + tuple(
+            Path("tensor_dslab/readout").glob("*/field.py")
+        )
+        self.assertEqual(len(paths), 11)
+        for path in paths:
             tree = ast.parse(path.read_text(), filename=str(path))
             imported = {
                 node.module
                 for node in ast.walk(tree)
                 if isinstance(node, ast.ImportFrom) and node.module is not None
             }
-            self.assertNotIn("tensor_dslab.readout.types", imported, str(path))
+            for composition_module in (
+                "tensor_dslab.readout.config",
+                "tensor_dslab.readout.collection",
+                "tensor_dslab.readout.simulation",
+                "tensor_dslab.readout.types",
+            ):
+                self.assertNotIn(composition_module, imported, str(path))
 
     def test_product_producer_imports_are_private_and_acyclic(self) -> None:
         producer_paths = (
@@ -352,32 +391,42 @@ class PackageContractTest(unittest.TestCase):
         accepted_tensor_dslab_imports = {
             producer_paths[0]: {
                 "tensor_dslab.common",
-                "tensor_dslab.readout._random",
                 "tensor_dslab.readout._requirements",
-                "tensor_dslab.readout.charge.types",
+                "tensor_dslab.readout.charge.config",
+                "tensor_dslab.readout.charge.effects._correlated_avalanches",
+                "tensor_dslab.readout.charge.effects._counts",
+                "tensor_dslab.readout.charge.effects._dark_counts",
+                "tensor_dslab.readout.charge.effects._smearing",
+                "tensor_dslab.readout.charge.effects._timing_jitter",
+                "tensor_dslab.readout.charge.field",
                 "tensor_dslab.readout.photoelectrons",
             },
             producer_paths[1]: {
                 "tensor_dslab.common",
                 "tensor_dslab.readout._requirements",
-                "tensor_dslab.readout.charge",
-                "tensor_dslab.readout.pure_waveform.types",
+                "tensor_dslab.readout.charge.field",
+                "tensor_dslab.readout.pure_waveform.config",
+                "tensor_dslab.readout.pure_waveform.field",
             },
             producer_paths[2]: {
                 "tensor_dslab.common",
-                "tensor_dslab.readout._random",
                 "tensor_dslab.readout._requirements",
-                "tensor_dslab.readout.noise_waveform.types",
+                "tensor_dslab.readout.noise_waveform.config",
+                "tensor_dslab.readout.noise_waveform.field",
                 "tensor_dslab.readout.photoelectrons",
             },
             producer_paths[3]: {
-                "tensor_dslab.readout.analog_waveform.types",
-                "tensor_dslab.readout.noise_waveform",
-                "tensor_dslab.readout.pure_waveform",
+                "tensor_dslab.readout._requirements",
+                "tensor_dslab.readout.analog_waveform.config",
+                "tensor_dslab.readout.analog_waveform.field",
+                "tensor_dslab.readout.noise_waveform.field",
+                "tensor_dslab.readout.pure_waveform.field",
             },
             producer_paths[4]: {
-                "tensor_dslab.readout.analog_waveform",
-                "tensor_dslab.readout.digitized_waveform.types",
+                "tensor_dslab.readout._requirements",
+                "tensor_dslab.readout.analog_waveform.field",
+                "tensor_dslab.readout.digitized_waveform.config",
+                "tensor_dslab.readout.digitized_waveform.field",
             },
         }
         forbidden_prefixes = (
@@ -399,6 +448,8 @@ class PackageContractTest(unittest.TestCase):
         forbidden_tensor_dslab_modules = {
             "tensor_dslab",
             "tensor_dslab.readout.simulation",
+            "tensor_dslab.readout.config",
+            "tensor_dslab.readout.collection",
             "tensor_dslab.readout.types",
         }
         for path in producer_paths:
@@ -429,18 +480,31 @@ class PackageContractTest(unittest.TestCase):
                 accepted_tensor_dslab_imports[path],
             )
 
-    def test_private_random_module_has_no_domain_or_tensorcore_dependency(
-        self,
-    ) -> None:
-        path = Path("tensor_dslab/readout/_random.py")
-        tree = ast.parse(path.read_text(), filename=str(path))
-        imports: set[str] = set()
-        for node in ast.walk(tree):
-            if isinstance(node, ast.ImportFrom) and node.module is not None:
-                imports.add(node.module)
-            elif isinstance(node, ast.Import):
-                imports.update(alias.name for alias in node.names)
-        self.assertEqual(imports, {"__future__", "enum", "math", "torch"})
+    def test_charge_effects_are_empty_export_and_do_not_import_producer(self) -> None:
+        effects = __import__(
+            "tensor_dslab.readout.charge.effects",
+            fromlist=("__all__",),
+        )
+        self.assertEqual(effects.__all__, ())
+        self.assertEqual(
+            {name for name in vars(effects) if not name.startswith("_")},
+            set(),
+        )
+
+        effect_paths = tuple(
+            sorted(Path("tensor_dslab/readout/charge/effects").glob("_*.py"))
+        )
+        self.assertEqual(len(effect_paths), 7)
+        for path in effect_paths:
+            tree = ast.parse(path.read_text(), filename=str(path))
+            imported = {
+                node.module
+                for node in ast.walk(tree)
+                if isinstance(node, ast.ImportFrom) and node.module is not None
+            }
+            self.assertNotIn("tensor_dslab.readout.charge._produce", imported)
+            self.assertNotIn("tensor_dslab.readout.config", imported)
+            self.assertNotIn("tensor_dslab.readout.collection", imported)
 
     def test_fresh_process_imports_are_acyclic_and_isolated(self) -> None:
         environment = os.environ.copy()
@@ -448,18 +512,36 @@ class PackageContractTest(unittest.TestCase):
         modules = (
             "tensor_dslab.common",
             "tensor_dslab.readout.photoelectrons",
+            "tensor_dslab.readout.photoelectrons.field",
             "tensor_dslab.readout.charge",
+            "tensor_dslab.readout.charge.config",
+            "tensor_dslab.readout.charge.field",
+            "tensor_dslab.readout.charge.effects",
+            "tensor_dslab.readout.charge.effects._counts",
+            "tensor_dslab.readout.charge.effects._delays",
+            "tensor_dslab.readout.charge.effects._dark_counts",
+            "tensor_dslab.readout.charge.effects._timing_jitter",
+            "tensor_dslab.readout.charge.effects._correlated_avalanches",
+            "tensor_dslab.readout.charge.effects._smearing",
             "tensor_dslab.readout.pure_waveform",
+            "tensor_dslab.readout.pure_waveform.config",
+            "tensor_dslab.readout.pure_waveform.field",
             "tensor_dslab.readout.noise_waveform",
+            "tensor_dslab.readout.noise_waveform.config",
+            "tensor_dslab.readout.noise_waveform.field",
             "tensor_dslab.readout.analog_waveform",
+            "tensor_dslab.readout.analog_waveform.config",
+            "tensor_dslab.readout.analog_waveform.field",
             "tensor_dslab.readout.digitized_waveform",
+            "tensor_dslab.readout.digitized_waveform.config",
+            "tensor_dslab.readout.digitized_waveform.field",
             "tensor_dslab.readout.charge._produce",
             "tensor_dslab.readout.pure_waveform._produce",
-            "tensor_dslab.readout._random",
             "tensor_dslab.readout.noise_waveform._produce",
             "tensor_dslab.readout.analog_waveform._produce",
             "tensor_dslab.readout.digitized_waveform._produce",
-            "tensor_dslab.readout.types",
+            "tensor_dslab.readout.config",
+            "tensor_dslab.readout.collection",
             "tensor_dslab.readout",
             "tensor_dslab",
         )
@@ -469,6 +551,36 @@ class PackageContractTest(unittest.TestCase):
                 code = (
                     f"import {module_name}, sys; "
                     f"assert not any(name in sys.modules for name in {deferred!r})"
+                )
+                completed = subprocess.run(
+                    [sys.executable, "-c", code],
+                    check=False,
+                    capture_output=True,
+                    env=environment,
+                    text=True,
+                )
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+
+        retired_modules = (
+            "tensor_dslab.readout._random",
+            "tensor_dslab.readout._rng",
+            "tensor_dslab.readout.types",
+            "tensor_dslab.readout.photoelectrons.types",
+            "tensor_dslab.readout.charge.types",
+            "tensor_dslab.readout.pure_waveform.types",
+            "tensor_dslab.readout.noise_waveform.types",
+            "tensor_dslab.readout.analog_waveform.types",
+            "tensor_dslab.readout.digitized_waveform.types",
+        )
+        for module_name in retired_modules:
+            with self.subTest(retired=module_name):
+                code = (
+                    "import importlib; "
+                    f"name={module_name!r}; "
+                    "\ntry: importlib.import_module(name)"
+                    "\nexcept ModuleNotFoundError as error: "
+                    "assert error.name == name, (name, error.name)"
+                    "\nelse: raise AssertionError(name)"
                 )
                 completed = subprocess.run(
                     [sys.executable, "-c", code],

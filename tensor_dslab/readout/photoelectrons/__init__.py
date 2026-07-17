@@ -1,3 +1,3 @@
-from tensor_dslab.readout.photoelectrons.types import Photoelectrons
+from tensor_dslab.readout.photoelectrons.field import Photoelectrons
 
 __all__ = ("Photoelectrons",)

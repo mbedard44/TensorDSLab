@@ -76,10 +76,13 @@ counter/distribution surface—`uniform`, `gaussian`, `poisson`, and
 in published version `0.9.0` at exact commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. TensorDSLab's
 [Maintenance 2](implementation/maintenance_2_rng_and_product_module_ownership_migration.md)
-selects that dependency and is Design-complete but undispatched. The future public call
-requires `rng: CounterRng`; exact stochastic leaf configs own default `RngKey`
-role identities. No current dependency pin or production byte is changed by
-this Design decision.
+implementation pins that exact dependency. Its stochastic producers require
+`CounterRng`; exact stochastic leaf configs own default `RngKey` role
+identities. While these exact bytes are absent from `main`, they remain the
+fixed-commit Validation/Review candidate; if present unchanged on `main`,
+Review's clean fast-forward has completed and Design acceptance remains
+pending. Final acceptance is complete only when the work order and
+implementation index record `Merged / Closed`.
 
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`, bound to
 accepted candidate `d634401a853915edeb4f83df4a4943b3553deced`. Conformance is
@@ -195,8 +198,8 @@ tensor_dslab/
     axes.py
     sampling.py
   readout/
-    config.py                 # accepted Maintenance 2 target
-    collection.py             # accepted Maintenance 2 target
+    config.py                 # Maintenance 2 candidate ownership
+    collection.py             # Maintenance 2 candidate ownership
     simulation.py             # future Stage 7 public orchestration
     _requirements.py
     photoelectrons/field.py
@@ -227,15 +230,14 @@ stochastic roles.
 No behavior module is created as an empty placeholder; the complete ownership
 and import rules are in `architecture/rebuild.md`.
 
-The tree above is the accepted post-Maintenance target, not current production.
-TensorCore RNG/distribution/same-dtype acceptance, publication, and exact
-TensorDSLab dependency selection are complete at `0.9.0` commit
-`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The remaining sequence is
-separate dispatch of the focused Design-complete Maintenance 2 migration with
-default-key continuity, then Stage 7.
-Current Stage 5/6 `types.py`, `_RngStream`, and
-`readout/_random.py` bytes remain closed implementation evidence until that
-maintenance stage is dispatched and cleared.
+The tree above is realized by the Maintenance 2 implementation.
+TensorCore RNG/distribution/same-dtype acceptance, publication, and the exact
+TensorDSLab dependency pin are complete at `0.9.0` commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The implementation preserves
+default-key continuity and removes `types.py`, `_RngStream`, and
+`readout/_random.py` without shims; their Stage 5/6 bytes remain closed
+historical evidence. Its lifecycle follows the branch-versus-`main` rule
+above, and Stage 7 remains separately undispatched.
 
 Stage 6 behavior-neutrally renamed all four transitional Stage 4/5 waveform
 modules, callables, imports, and tests from `_product.py` / `_product_*` to
@@ -266,8 +268,11 @@ no retired producer name or compatibility shim remains.
   TensorDSLab consumer requirements fulfilled by TensorCore Stage 15 at exact
   published `0.9.0` commit `4708bf2...`; never TensorCore authority.
 - [Maintenance 2 Work Order](implementation/maintenance_2_rng_and_product_module_ownership_migration.md):
-  Design-complete TensorDSLab ownership migration against the selected exact
-  TensorCore dependency; separately undispatched.
+  topology-dependent TensorDSLab ownership migration against the selected exact
+  TensorCore dependency; candidate while absent from `main`, Merged / Design
+  acceptance pending when present unchanged on `main`, and Merged / Closed
+  only when the work order and implementation index record Design's
+  evidence-only closeout.
 - [Stage 3 Work Order](implementation/stage_3_tensorcore_0_7_product_foundation.md):
   Merged / Closed TensorCore `0.7` semantic product/config foundation and
   clean replacement scope.
