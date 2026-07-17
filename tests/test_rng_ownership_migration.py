@@ -1,10 +1,12 @@
 from __future__ import annotations
 
-from dataclasses import fields
+from collections.abc import Callable
+from dataclasses import fields, replace
 import importlib.util
 from inspect import Parameter, signature
 from typing import ClassVar
 import unittest
+from unittest import mock
 
 import torch
 from tensor_core import (
@@ -19,15 +21,19 @@ from tensor_core import (
     logical_positions,
 )
 
+import tensor_dslab
 from tensor_dslab import (
     AfterpulseConfig,
     AfterpulseRecoveryConfig,
+    AnalogSaturationConfig,
+    AnalogWaveformConfig,
     ChannelAxis,
     ChargeConfig,
     ChargeSmearingConfig,
     CorrelatedAvalancheConfig,
     DarkCountConfig,
     DelayedCrosstalkConfig,
+    DigitizedWaveformConfig,
     DirectCrosstalkConfig,
     ExampleAxis,
     ExponentialDelayConfig,
@@ -35,9 +41,13 @@ from tensor_dslab import (
     NoiseWaveformConfig,
     Photoelectrons,
     PsdNoiseConfig,
+    PureWaveformConfig,
+    ReadoutConfig,
     SampleAxis,
     SamplingConfig,
     TimingJitterConfig,
+    TpcFebSnrPulseConfig,
+    VetoPduPulseConfig,
     WhiteNoiseConfig,
     ZeroNoiseConfig,
 )
@@ -138,71 +148,397 @@ class RngOwnershipMigrationTest(unittest.TestCase):
             delay=fixed,
         )
         keyed = (
-            (WhiteNoiseConfig(rms_mv=PositiveFloat(1.0)).rng_key, 1),
+            (
+                WhiteNoiseConfig(rms_mv=PositiveFloat(1.0)),
+                "rng_key",
+                1,
+            ),
             (
                 PsdNoiseConfig(
                     frequency_left_edges_hz=(NonnegativeFloat(0.0),),
                     frequency_stop_hz=PositiveFloat(1.0),
                     power_density_mv2_per_hz=(NonnegativeFloat(1.0),),
-                ).rng_key,
+                ),
+                "rng_key",
                 2,
             ),
-            (DarkCountConfig(rate_hz=NonnegativeFloat(0.0)).rng_key, 3),
-            (direct.retained_rng_key, 4),
-            (direct.overflow_rng_key, 5),
-            (delayed.retained_rng_key, 6),
-            (delayed.overflow_rng_key, 7),
-            (TimingJitterConfig(sigma_ns=NonnegativeFloat(0.0)).rng_key, 8),
+            (
+                DarkCountConfig(rate_hz=NonnegativeFloat(0.0)),
+                "rng_key",
+                3,
+            ),
+            (direct, "retained_rng_key", 4),
+            (direct, "overflow_rng_key", 5),
+            (delayed, "retained_rng_key", 6),
+            (delayed, "overflow_rng_key", 7),
+            (
+                TimingJitterConfig(sigma_ns=NonnegativeFloat(0.0)),
+                "rng_key",
+                8,
+            ),
             (
                 AfterpulseConfig(
                     probability=Probability(0.0),
                     mean_delay_ns=PositiveFloat(1.0),
-                ).rng_key,
+                ),
+                "rng_key",
                 9,
             ),
             (
                 ChargeSmearingConfig(
                     relative_sigma=NonnegativeFloat(0.0)
-                ).rng_key,
+                ),
+                "rng_key",
                 10,
             ),
         )
-        self.assertEqual(
-            tuple((key.namespace, key.stream) for key, _ in keyed),
-            tuple((_NAMESPACE, stream) for _, stream in keyed),
+        for index, (baseline, field_name, stream) in enumerate(keyed):
+            with self.subTest(config=type(baseline).__name__, field=field_name):
+                default = getattr(baseline, field_name)
+                self.assertEqual(
+                    (default.namespace, default.stream),
+                    (_NAMESPACE, stream),
+                )
+
+                override = RngKey(namespace=0x1357_2468, stream=101 + index)
+                other = RngKey(namespace=0x1357_2468, stream=201 + index)
+                first = replace(baseline, **{field_name: override})
+                second = replace(baseline, **{field_name: override})
+                changed = replace(baseline, **{field_name: other})
+                self.assertIs(getattr(first, field_name), override)
+                self.assertEqual(first, second)
+                self.assertNotEqual(first, changed)
+                self.assertIn(f"{field_name}={override!r}", repr(first))
+                with self.assertRaises(TypeError):
+                    replace(baseline, **{field_name: 1})
+
+        for config in (direct, delayed):
+            with self.subTest(config=type(config).__name__):
+                shared = RngKey(namespace=7, stream=11)
+                with self.assertRaises(ValueError):
+                    replace(
+                        config,
+                        retained_rng_key=shared,
+                        overflow_rng_key=shared,
+                    )
+
+    def test_all_config_owned_keys_reach_the_exact_public_distribution(self) -> None:
+        keys = tuple(
+            RngKey(namespace=0x2468_1357, stream=101 + index)
+            for index in range(10)
         )
-        self.assertNotEqual(direct.retained_rng_key, direct.overflow_rng_key)
-        self.assertNotEqual(delayed.retained_rng_key, delayed.overflow_rng_key)
+        (
+            white_key,
+            psd_key,
+            dark_key,
+            direct_retained_key,
+            direct_overflow_key,
+            delayed_retained_key,
+            delayed_overflow_key,
+            jitter_key,
+            afterpulse_key,
+            smearing_key,
+        ) = keys
+        source = _source()
+        sampling = _sampling()
 
-        override = RngKey(namespace=7, stream=11)
-        first = WhiteNoiseConfig(rms_mv=PositiveFloat(1.0), rng_key=override)
-        second = WhiteNoiseConfig(rms_mv=PositiveFloat(1.0), rng_key=override)
-        self.assertEqual(first, second)
-        self.assertIn("rng_key=RngKey(namespace=7, stream=11)", repr(first))
-        self.assertIs(first.rng_key, override)
-        with self.assertRaises(TypeError):
-            WhiteNoiseConfig(rms_mv=PositiveFloat(1.0), rng_key=1)  # type: ignore[arg-type]
-        with self.assertRaises(ValueError):
-            DirectCrosstalkConfig(
-                mean_offspring_per_parent=NonnegativeFloat(0.1),
-                delay=fixed,
-                retained_rng_key=override,
-                overflow_rng_key=override,
+        def noise(config: NoiseWaveformConfig) -> Callable[[CounterRng], object]:
+            return lambda rng: _produce_noise_waveform(
+                source,
+                sampling=sampling,
+                config=config,
+                rng=rng,
+                floating_dtype=torch.float32,
             )
 
-        for config_type in (
-            FixedDelayConfig,
-            ExponentialDelayConfig,
-            AfterpulseRecoveryConfig,
-            CorrelatedAvalancheConfig,
-            ChargeConfig,
-            NoiseWaveformConfig,
-            ZeroNoiseConfig,
+        def charge(config: ChargeConfig) -> Callable[[CounterRng], object]:
+            return lambda rng: _produce_charge(
+                source,
+                sampling=sampling,
+                config=config,
+                rng=rng,
+                floating_dtype=torch.float32,
+            )
+
+        cases: tuple[
+            tuple[
+                str,
+                str,
+                tuple[RngKey, ...],
+                Callable[[CounterRng], object],
+            ],
+            ...,
+        ] = (
+            (
+                "white noise",
+                "gaussian",
+                (white_key,),
+                noise(
+                    NoiseWaveformConfig(
+                        model=WhiteNoiseConfig(
+                            rms_mv=PositiveFloat(1.0),
+                            rng_key=white_key,
+                        )
+                    )
+                ),
+            ),
+            (
+                "PSD noise",
+                "gaussian",
+                (psd_key,),
+                noise(
+                    NoiseWaveformConfig(
+                        model=PsdNoiseConfig(
+                            frequency_left_edges_hz=(
+                                NonnegativeFloat(0.0),
+                                NonnegativeFloat(100_000_000.0),
+                            ),
+                            frequency_stop_hz=PositiveFloat(250_000_000.0),
+                            power_density_mv2_per_hz=(
+                                NonnegativeFloat(1.0e-8),
+                                NonnegativeFloat(2.0e-8),
+                            ),
+                            rng_key=psd_key,
+                        )
+                    )
+                ),
+            ),
+            (
+                "dark counts",
+                "poisson",
+                (dark_key,),
+                charge(
+                    ChargeConfig(
+                        dark_count=DarkCountConfig(
+                            rate_hz=NonnegativeFloat(5.0e8),
+                            rng_key=dark_key,
+                        )
+                    )
+                ),
+            ),
+            (
+                "direct crosstalk",
+                "poisson",
+                (direct_retained_key, direct_overflow_key),
+                charge(
+                    ChargeConfig(
+                        correlated_avalanches=CorrelatedAvalancheConfig(
+                            maximum_generations=NonnegativeInteger(1),
+                            direct_crosstalk=DirectCrosstalkConfig(
+                                mean_offspring_per_parent=NonnegativeFloat(0.1),
+                                delay=FixedDelayConfig(
+                                    delay_ns=NonnegativeFloat(0.0)
+                                ),
+                                retained_rng_key=direct_retained_key,
+                                overflow_rng_key=direct_overflow_key,
+                            ),
+                        )
+                    )
+                ),
+            ),
+            (
+                "delayed crosstalk",
+                "poisson",
+                (delayed_retained_key, delayed_overflow_key),
+                charge(
+                    ChargeConfig(
+                        correlated_avalanches=CorrelatedAvalancheConfig(
+                            maximum_generations=NonnegativeInteger(1),
+                            delayed_crosstalk=DelayedCrosstalkConfig(
+                                mean_offspring_per_parent=NonnegativeFloat(0.1),
+                                delay=FixedDelayConfig(
+                                    delay_ns=NonnegativeFloat(0.0)
+                                ),
+                                retained_rng_key=delayed_retained_key,
+                                overflow_rng_key=delayed_overflow_key,
+                            ),
+                        )
+                    )
+                ),
+            ),
+            (
+                "timing jitter",
+                "binomial",
+                (jitter_key,),
+                charge(
+                    ChargeConfig(
+                        timing_jitter=TimingJitterConfig(
+                            sigma_ns=NonnegativeFloat(1.0),
+                            rng_key=jitter_key,
+                        )
+                    )
+                ),
+            ),
+            (
+                "afterpulse",
+                "binomial",
+                (afterpulse_key,),
+                charge(
+                    ChargeConfig(
+                        correlated_avalanches=CorrelatedAvalancheConfig(
+                            maximum_generations=NonnegativeInteger(1),
+                            afterpulse=AfterpulseConfig(
+                                probability=Probability(0.5),
+                                mean_delay_ns=PositiveFloat(1.0),
+                                rng_key=afterpulse_key,
+                            ),
+                        )
+                    )
+                ),
+            ),
+            (
+                "charge smearing",
+                "gaussian",
+                (smearing_key,),
+                charge(
+                    ChargeConfig(
+                        smearing=ChargeSmearingConfig(
+                            relative_sigma=NonnegativeFloat(0.1),
+                            rng_key=smearing_key,
+                        )
+                    )
+                ),
+            ),
+        )
+
+        for name, distribution_name, expected_keys, invoke in cases:
+            with self.subTest(role=name):
+                rng = Threefry4x32(seed=_SEED)
+                original = getattr(CounterRng, distribution_name)
+                with mock.patch.object(
+                    CounterRng,
+                    distribution_name,
+                    autospec=True,
+                    side_effect=original,
+                ) as distribution:
+                    invoke(rng)
+                calls = distribution.call_args_list
+                self.assertTrue(calls)
+                self.assertTrue(all(call.args[0] is rng for call in calls))
+                observed_keys = tuple(call.kwargs["key"] for call in calls)
+                if len(expected_keys) == 1:
+                    self.assertTrue(
+                        all(key is expected_keys[0] for key in observed_keys)
+                    )
+                else:
+                    self.assertEqual(len(observed_keys), len(expected_keys))
+                    self.assertTrue(
+                        all(
+                            actual is expected
+                            for actual, expected in zip(
+                                observed_keys,
+                                expected_keys,
+                                strict=True,
+                            )
+                        )
+                    )
+
+    def test_complete_public_config_inventory_has_exact_key_ownership(self) -> None:
+        no_key_fields = {
+            SamplingConfig: ("sample_period_ps", "sample_count"),
+            ReadoutConfig: (
+                "sampling",
+                "charge",
+                "pure_waveform",
+                "noise_waveform",
+                "analog_waveform",
+                "digitized_waveform",
+            ),
+            FixedDelayConfig: ("delay_ns",),
+            ExponentialDelayConfig: ("mean_delay_ns",),
+            AfterpulseRecoveryConfig: ("time_constant_ns",),
+            CorrelatedAvalancheConfig: (
+                "maximum_generations",
+                "direct_crosstalk",
+                "delayed_crosstalk",
+                "afterpulse",
+            ),
+            ChargeConfig: (
+                "dark_count",
+                "timing_jitter",
+                "correlated_avalanches",
+                "smearing",
+            ),
+            ZeroNoiseConfig: (),
+            NoiseWaveformConfig: ("model",),
+            TpcFebSnrPulseConfig: (
+                "fast_time_constant_ns",
+                "slow_time_constant_ns",
+                "support_time_ns",
+                "peak_voltage_mv_per_pe",
+            ),
+            VetoPduPulseConfig: (
+                "gaussian_center_ns",
+                "gaussian_width_ns",
+                "edge_offset_1_ns",
+                "edge_width_1_ns",
+                "edge_offset_2_ns",
+                "edge_width_2_ns",
+                "support_time_ns",
+                "peak_voltage_mv_per_pe",
+            ),
+            PureWaveformConfig: ("model",),
+            AnalogSaturationConfig: ("minimum_mv", "maximum_mv"),
+            AnalogWaveformConfig: ("saturation",),
+            DigitizedWaveformConfig: (
+                "bit_depth",
+                "input_min_mv",
+                "input_max_mv",
+                "analog_gain_db",
+            ),
+        }
+        keyed_fields = {
+            WhiteNoiseConfig: ("rms_mv", "rng_key"),
+            PsdNoiseConfig: (
+                "frequency_left_edges_hz",
+                "frequency_stop_hz",
+                "power_density_mv2_per_hz",
+                "rng_key",
+            ),
+            TimingJitterConfig: ("sigma_ns", "rng_key"),
+            DarkCountConfig: ("rate_hz", "rng_key"),
+            DirectCrosstalkConfig: (
+                "mean_offspring_per_parent",
+                "delay",
+                "retained_rng_key",
+                "overflow_rng_key",
+            ),
+            DelayedCrosstalkConfig: (
+                "mean_offspring_per_parent",
+                "delay",
+                "retained_rng_key",
+                "overflow_rng_key",
+            ),
+            AfterpulseConfig: (
+                "probability",
+                "mean_delay_ns",
+                "recovery",
+                "rng_key",
+            ),
+            ChargeSmearingConfig: ("relative_sigma", "rng_key"),
+        }
+        expected_public_names = {
+            config_type.__name__
+            for config_type in (*no_key_fields, *keyed_fields)
+        }
+        actual_public_names = {
+            name
+            for name in tensor_dslab.__all__
+            if name.endswith("Config")
+        }
+        self.assertTrue(set(keyed_fields).isdisjoint(no_key_fields))
+        self.assertEqual(actual_public_names, expected_public_names)
+        for name in actual_public_names:
+            self.assertEqual(getattr(tensor_dslab, name).__name__, name)
+        for config_type, expected_fields in (
+            *no_key_fields.items(),
+            *keyed_fields.items(),
         ):
-            self.assertFalse(
-                any("rng_key" in field.name for field in fields(config_type)),
-                config_type.__name__,
-            )
+            with self.subTest(config=config_type.__name__):
+                self.assertEqual(
+                    tuple(field.name for field in fields(config_type)),
+                    expected_fields,
+                )
 
     def test_public_tensorcore_distribution_continuity(self) -> None:
         rng = Threefry4x32(seed=_SEED)
