@@ -11,6 +11,15 @@ The reviewed TensorCore target is version `0.7.0` at exact clean commit
 select the exact dependency pin and run TensorDSLab-owned consumer probes; this
 document alone makes no compatibility claim.
 
+TensorDSLab has selected published TensorCore `0.9.0` commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59` for the Design-complete, undispatched Maintenance 2
+migration. It provides public `RngKey`, `CounterRng`, `Threefry4x32`,
+`logical_positions`, and `require_same_dtype`. TensorCore's Stage 15 work
+order and random architecture at that exact commit are authoritative; the
+TensorDSLab-hosted consumer proposal is historical evidence only. Current
+Stage 6 production remains pinned to `0.7.0` until Maintenance 2 is separately
+dispatched, implemented, validated, reviewed, and accepted.
+
 The previous TensorCore `0.6` ID/layout/sidecar architecture is historical and
 is intentionally not preserved through aliases.
 
@@ -41,6 +50,17 @@ TensorCore owns:
 - `require_axis_signature`, `require_same_axes`, `require_same_device`, and
   `require_field_types`.
 
+At the selected `0.9.0` Maintenance 2 dependency, TensorCore additionally owns generic immutable
+counter-RNG mechanics: exact key/seed/address validation, logical row-major
+positions, Threefry raw-word continuity, fixed-point uniforms, parameterized
+Gaussian draws, Poisson inversion/PTRS, binomial inversion/BTRS, sampler
+numerical domains and exhaustion, and those count distributions' internal
+word schedules. TensorDSLab consumes only the public package-root surface and
+never imports or duplicates protected raw-word or promoted distribution
+mechanics. The same accepted dependency target adds
+`require_same_dtype(*fields)` as a focused semantic-field relationship; it
+does not cast, add a dtype allowlist, or validate raw scratch tensors.
+
 TensorDSLab owns:
 
 - final semantic readout axes, fields, and collection;
@@ -48,6 +68,12 @@ TensorDSLab owns:
 - collection membership and cross-field coherence;
 - deep value-domain checks at explicit trust boundaries;
 - product dependencies, scientific configs, operations, and orchestration;
+- placement of exact `RngKey` role identities on stochastic leaf configs,
+  scientific position/category lattices, direct-uniform/Gaussian ordinals,
+  draw-free scientific policy, multinomial ordering and final remainders,
+  count accumulation, and ledgers;
+- one private scalar-to-floating-dtype representation requirement and all raw
+  tensor dtype/shape/device policy;
 - result aliasing/freshness, device/dtype/layout, autograd, synchronization,
   failure, and multi-output relationships; and
 - any future persistence or execution optimization.
@@ -211,12 +237,16 @@ returned merely because it was computed.
 
 Product packages do not receive a whole collection as a service locator. Each
 producer receives explicit prerequisite fields, its exact config, shared
-sampling facts when numerically relevant, and private RNG inputs when needed.
+sampling facts when numerically relevant, and one public TensorCore
+`CounterRng` when that producer is stochastic-capable. Deterministic producers
+and helpers receive no RNG. The stochastic effect selects the exact `RngKey`
+owned by its leaf config.
 
 The package tree and dependency direction are fixed in
 [`rebuild.md`](rebuild.md): common axes/sampling, private shared readout
-requirements, product types, product producers, cross-product types, then
-public simulation. There is no generic field/config/builder/validation layer.
+requirements, product config/field modules, product producers, readout
+config/collection, then public simulation. There is no generic
+field/config/builder/validation layer.
 
 ## Functional Result Contract
 
@@ -293,8 +323,12 @@ modes that replace ordinary aliasing or operation semantics.
 Public `simulate_readout(...)` preflights the complete effective request before
 its first random draw or tensor write. It validates recognized unique product
 classes, required configs, source sampling agreement, axes, shape, dtype,
-device, selected floating dtype, seed requirements, representability, and all
-operation relationships needed by the closure.
+device, selected floating dtype, a required `CounterRng` instance, exact
+config keys, closure-wide duplicate-key rejection, representability, and all
+operation relationships needed by the closure. Concrete RNG
+device/dtype/distribution support is checked only for an effective stochastic
+closure; deterministic closures validate nominal membership and request no
+values.
 
 Private product and scientific functions are internal independently testable
 units. They may trust values that passed public preflight and do not need to

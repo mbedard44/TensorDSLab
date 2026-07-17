@@ -68,6 +68,19 @@ unresolved issue. CUDA was unavailable, so the evidence is eager CPU-only.
 Stage 7 public `simulate_readout(...)` orchestration remains undispatched and
 has no accepted focused production work order.
 
+Before Stage 7, the accepted architecture requires TensorCore's generic
+counter/distribution surface—`uniform`, `gaussian`, `poisson`, and
+`binomial`—plus `require_same_dtype`, followed by one TensorDSLab Maintenance
+2 migration. TensorCore fulfilled the historical
+[consumer proposal](implementation/proposed_tensorcore_counter_rng_and_distributions.md)
+in published version `0.9.0` at exact commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. TensorDSLab's
+[Maintenance 2](implementation/maintenance_2_rng_and_product_module_ownership_migration.md)
+selects that dependency and is Design-complete but undispatched. The future public call
+requires `rng: CounterRng`; exact stochastic leaf configs own default `RngKey`
+role identities. No current dependency pin or production byte is changed by
+this Design decision.
+
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`, bound to
 accepted candidate `d634401a853915edeb4f83df4a4943b3553deced`. Conformance is
 `Not evaluated`, Coordination is `Deferred`, and Profile B is `Disabled`.
@@ -127,7 +140,7 @@ readout = simulate_readout(
     photoelectrons,
     products=[AnalogWaveform, DigitizedWaveform],
     config=config,
-    seed=1234,
+    rng=Threefry4x32(seed=1234),
 )
 
 analog = readout.field(AnalogWaveform)
@@ -182,30 +195,52 @@ tensor_dslab/
     axes.py
     sampling.py
   readout/
-    types.py                  # ReadoutConfig and ReadoutCollection only
+    config.py                 # accepted Maintenance 2 target
+    collection.py             # accepted Maintenance 2 target
     simulation.py             # future Stage 7 public orchestration
     _requirements.py
-    _random.py                # private Stage 5/6 RNG and count samplers
-    photoelectrons/types.py
-    charge/{types.py,_produce.py}
-    pure_waveform/{types.py,_produce.py}
-    noise_waveform/{types.py,_produce.py}
-    analog_waveform/{types.py,_produce.py}
-    digitized_waveform/{types.py,_produce.py}
+    photoelectrons/field.py
+    charge/
+      config.py
+      field.py
+      _produce.py
+      effects/
+        _counts.py
+        _delays.py
+        _dark_counts.py
+        _timing_jitter.py
+        _correlated_avalanches.py
+        _smearing.py
+    pure_waveform/{config.py,field.py,_produce.py}
+    noise_waveform/{config.py,field.py,_produce.py}
+    analog_waveform/{config.py,field.py,_produce.py}
+    digitized_waveform/{config.py,field.py,_produce.py}
 ```
 
 Every generated product package owns its field, configs, validation, and
 implemented private `_produce_*` producer. `Photoelectrons` remains the
-producer-less truth input. `readout/types.py` owns only the two cross-product
-composition types. Future Stage 7 `readout/simulation.py` will own the one
-public orchestration function. `_requirements.py` and `_random.py` are private.
+producer-less truth input. Future Stage 7 `readout/simulation.py` will own the
+one public orchestration function. `_requirements.py` and Charge effect
+modules are private. Generic RNG and distribution mechanics belong to the
+selected TensorCore `0.9.0` Maintenance 2 dependency; config-owned `RngKey` values select
+stochastic roles.
 No behavior module is created as an empty placeholder; the complete ownership
 and import rules are in `architecture/rebuild.md`.
 
+The tree above is the accepted post-Maintenance target, not current production.
+TensorCore RNG/distribution/same-dtype acceptance, publication, and exact
+TensorDSLab dependency selection are complete at `0.9.0` commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The remaining sequence is
+separate dispatch of the focused Design-complete Maintenance 2 migration with
+default-key continuity, then Stage 7.
+Current Stage 5/6 `types.py`, `_RngStream`, and
+`readout/_random.py` bytes remain closed implementation evidence until that
+maintenance stage is dispatched and cleared.
+
 Stage 6 behavior-neutrally renamed all four transitional Stage 4/5 waveform
 modules, callables, imports, and tests from `_product.py` / `_product_*` to
-`_produce.py` / `_produce_*`. The tree above is now implemented; no retired
-name or compatibility shim remains.
+`_produce.py` / `_produce_*`. That producer naming convention is implemented;
+no retired producer name or compatibility shim remains.
 
 ## Documentation Map
 
@@ -227,6 +262,12 @@ name or compatibility shim remains.
 - [Validation](validation.md): validation philosophy and stage expectations.
 - [Implementation Stages](implementation/index.md): staged work orders and
   dispatch state.
+- [Historical TensorCore RNG Consumer Proposal](implementation/proposed_tensorcore_counter_rng_and_distributions.md):
+  TensorDSLab consumer requirements fulfilled by TensorCore Stage 15 at exact
+  published `0.9.0` commit `4708bf2...`; never TensorCore authority.
+- [Maintenance 2 Work Order](implementation/maintenance_2_rng_and_product_module_ownership_migration.md):
+  Design-complete TensorDSLab ownership migration against the selected exact
+  TensorCore dependency; separately undispatched.
 - [Stage 3 Work Order](implementation/stage_3_tensorcore_0_7_product_foundation.md):
   Merged / Closed TensorCore `0.7` semantic product/config foundation and
   clean replacement scope.

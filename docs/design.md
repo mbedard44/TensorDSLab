@@ -23,19 +23,20 @@ The accepted rebuild target is specified in
 [`architecture/rebuild.md`](architecture/rebuild.md). Stage 3 replaced the
 historical pre-deployment TensorCore `0.6` representation without a
 compatibility layer. Stage 2 and Maintenance 1 remain historical evidence and
-do not constrain the current TensorCore `0.7` package to the retired
-representation.
+do not constrain TensorDSLab's currently selected TensorCore `0.7` dependency
+to the retired representation.
 
-## Collaborator Surface
+## Target Collaborator Surface
 
-The normal workflow is one public function plus named product classes:
+Once Stage 7 is implemented, the normal workflow is one public function plus
+named product classes:
 
 ```python
 readout = simulate_readout(
     photoelectrons,
     products=[AnalogWaveform, DigitizedWaveform],
     config=config,
-    seed=1234,
+    rng=Threefry4x32(seed=1234),
 )
 
 analog = readout.field(AnalogWaveform)
@@ -53,7 +54,8 @@ The public concepts are therefore:
 Photoelectrons   already-produced dense truth input
 products         final in-memory retention request
 ReadoutConfig    immutable scientific configuration
-seed             root for positional stochastic fields
+CounterRng       algorithm plus invocation seed
+RngKey           config-owned stochastic role identity
 simulate_readout dependency planning and execution
 ReadoutCollection immutable completed requested result
 ```
@@ -88,6 +90,27 @@ TensorCore does not provide generic selection, movement, reconstruction,
 output buffers, workspaces, persistence, or lifecycle management in this
 version. TensorDSLab adds domain behavior only where a real readout operation
 requires it.
+
+The exact TensorCore `0.9.0` dependency selected for Maintenance 2 at
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59` adds public `RngKey`,
+`CounterRng`, `Threefry4x32`, `logical_positions`, and
+`require_same_dtype` surfaces. TensorCore owns generic counter generation and
+exactly the public distribution methods `uniform(...)`, `gaussian(...)`,
+`poisson(...)`, and `binomial(...)`.
+`gaussian(...)` is parameterized by mean and standard deviation; there is no
+public standard-normal method. TensorCore owns fixed-point conversion,
+Box-Muller and affine mapping, Poisson inversion/PTRS, binomial inversion/BTRS,
+sampler numerical domains and exhaustion, and the count distributions'
+internal word schedules.
+TensorCore's `require_same_dtype(...)` compares semantic field dtypes without
+casting or adding a dtype allowlist. TensorDSLab uses it for Analog inputs and
+only the floating subset of `ReadoutCollection`; raw tensor requirements and
+the package-private `_require_representable_float(...)` scalar conversion
+remain TensorDSLab-owned. TensorDSLab owns config placement of stochastic keys, scientific
+position/category lattices, direct-uniform/Gaussian ordinals, draw-free
+scientific policy, multinomial ordering and final remainders, count
+accumulation, and ledgers. Current Stage 6 production remains on the `0.7.0`
+pin until the undispatched Maintenance 2 migration is accepted.
 
 ## Semantic Axes And Sampling
 
@@ -174,7 +197,7 @@ The accepted binary64 preparation uses a log-domain one-sided tail over
 `2**-52 <= sigma / T <= 64` and `2 <= sample_count <= 8192`, with stable
 success/later-category conditional masses, `1e-12` local probability
 tolerance, `1e-11` source-law L1 tolerance, and the dedicated append-only
-stream `CHARGE_TIMING_JITTER = 0x0000_0008`. Unsupported values fail before
+`TimingJitterConfig.rng_key` whose default stream is `8`. Unsupported values fail before
 RNG use rather than being clipped or normalized.
 
 The fixed-generation charge algorithm, pulse equations, PSD construction,
@@ -198,35 +221,49 @@ tensor_dslab/
 
   readout/
     __init__.py
-    types.py                 # ReadoutConfig and ReadoutCollection only
+    config.py                # ReadoutConfig
+    collection.py            # ReadoutCollection
     simulation.py            # future Stage 7 public simulate_readout()
     _requirements.py         # shared private readout relationships
-    _random.py               # private Stage 5/6 RNG and count samplers
 
     photoelectrons/
       __init__.py
-      types.py               # Photoelectrons; no config or producer
+      field.py               # Photoelectrons; no config or producer
     charge/
       __init__.py
-      types.py               # Charge and charge configs
-      _produce.py            # _produce_charge() and _simulate_* submodels
+      config.py              # charge configs and default RngKeys
+      field.py               # Charge
+      _produce.py            # _produce_charge()
+      effects/               # private scientific submodels and _counts.py
     pure_waveform/
       __init__.py
-      types.py               # field and TPC/Veto pulse configs
+      config.py
+      field.py
       _produce.py
     noise_waveform/
       __init__.py
-      types.py               # field and zero/white/PSD configs
+      config.py
+      field.py
       _produce.py
     analog_waveform/
       __init__.py
-      types.py               # field and saturation config
+      config.py
+      field.py
       _produce.py
     digitized_waveform/
       __init__.py
-      types.py               # field and digitization config
+      config.py
+      field.py
       _produce.py
 ```
+
+This is the accepted post-Maintenance target. Current Stage 6 production still
+uses `types.py`, `_RngStream`, and `readout/_random.py`. TensorCore has
+published its package-authoritative generic RNG plus independently testable
+same-dtype sub-slice as version `0.9.0` at exact commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. TensorDSLab Maintenance 2 has
+selected that dependency and is Design-complete but undispatched pending a
+separate production dispatch before Stage 7.
 
 Files are created only when an accepted implementation slice gives them real
 behavior. Product packages do not import `ReadoutConfig`,
@@ -237,9 +274,10 @@ do not define public visibility.
 
 Private `_produce_*` functions construct semantic products. Private
 `_simulate_*` functions implement scientific submodels inside a product
-producer. `_requirements.py` and `_random.py` remain unsupported private
-implementation modules. There are no global `configs`, `fields`, `builders`,
-or `validation` dumping grounds.
+producer. `_requirements.py` and `charge/effects/_*.py` remain unsupported
+private implementation modules. The accepted target removes `_random.py`;
+generic RNG mechanics come from TensorCore. There are no global `configs`,
+`fields`, `builders`, or `validation` dumping grounds.
 
 The producer module name is `_produce.py`, matching its `_produce_*` entry
 point. Stage 6 behavior-neutrally renamed all four transitional Stage 4/5
@@ -278,9 +316,10 @@ cross-stream consumers establish their own dependency.
 
 Public boundaries validate legitimate public inputs, including exact product
 requests, config relationships, axes, shape, dtype, device, sampling
-agreement, value domains at untrusted ingress, seed requirements, and
-representable numerical bounds. Request failures occur before stochastic draws
-or tensor writes.
+agreement, value domains at untrusted ingress, an accepted `CounterRng`
+instance, exact config-owned `RngKey` values, closure-wide key uniqueness, and
+representable numerical bounds. Request failures occur before RNG calls or
+tensor writes.
 
 Cheap intrinsic leaf checks belong in `_require()`. Full-device value scans
 belong at explicit trust boundaries and builder postconditions rather than in
@@ -340,5 +379,9 @@ Merged / Closed through exact candidate
 `ea979862b05f4ef543f6971c86641df317232479`. Fixed-commit Validation,
 independent Review, and Design's post-merge audit found no unresolved issue;
 CUDA was unavailable, so its evidence is eager CPU-only. Measured GPU
-optimization remains later work. Stage 7 public orchestration is undispatched
-and has no accepted focused production work order.
+optimization remains later work. TensorCore RNG/same-dtype acceptance and
+exact pin selection are complete at `0.9.0` commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`; separate dispatch of the
+Design-complete TensorDSLab Maintenance 2 work order precedes Stage 7.
+Stage 7 public orchestration is undispatched and has no accepted focused
+production work order.

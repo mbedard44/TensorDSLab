@@ -204,7 +204,8 @@ The broader parity rule is independent of either execution design. Product
 planning, scratch storage, buffer reuse, fusion, stream placement, and target
 publication do not create a donor comparison boundary, strengthen or weaken a
 parity classification, or justify different scientific values for the same
-accepted input/config/seed/backend contract. A later rebuild optimization must
+accepted input/config/RNG-algorithm-and-seed/key/backend contract. A later
+rebuild optimization must
 preserve the documented scientific order, position-addressed random field,
 causal edge policies, frozen per-generation frontier, and S1/S2 ledgers. If it
 changes a named observable, that is an architecture change requiring Design
@@ -430,11 +431,14 @@ when:
 - out-of-window targets are dropped in both comparisons;
 - the comparison ignores the different position of jitter in the full chain.
 
-TensorDSLab's analytically prepared binary64 kernel, aggregate binomial sampler,
-and positional RNG do not reproduce IV's per-PE finite digital normal or draw
-sequence exactly. Validation therefore measures the analytic transition/drop
-probabilities, multinomial moments and covariance, and named tails rather than
-upgrading the implemented comparison to distributional parity.
+TensorDSLab's analytically prepared binary64 kernel and aggregate multinomial
+orchestration do not reproduce IV's per-PE finite digital normal or draw
+sequence exactly. Current Stage 6 executes the frozen binomial mapping through
+private `readout/_random.py`; the accepted post-Maintenance 2 target calls the
+same promoted mapping through TensorCore's positional `binomial(...)`.
+Validation therefore measures the analytic transition/drop probabilities,
+multinomial moments and covariance, and named tails rather than upgrading the
+implemented comparison to distributional parity.
 
 If IV source phases are known and nonuniform, TensorDSLab's result is a
 statistical approximation to the marginalized binned behavior, not
@@ -470,10 +474,12 @@ count ~ Poisson(rate_hz * sample_period_ns * 1e-9)
 The rebuild uses one global rate. Typed per-channel rates are deferred. The
 resulting grid is an ephemeral submodel observable, not a recognized
 `ReadoutCollection` field.
-TensorDSLab realizes each cell law with its selected binary64 hybrid sampler:
-one-uniform inverse-CDF sampling below mean `10` and Hoermann PTRS from `10`
-through its accepted execution ceiling `1e8`. This is an implementation of the
-named Poisson target law, not donor RNG or same-seed parity.
+TensorDSLab prepares each cell's binary64 mean. Current Stage 6 executes the
+selected hybrid mapping through private `readout/_random.py`; the accepted
+post-Maintenance 2 target calls TensorCore's `poisson(...)`: one-uniform
+inverse-CDF sampling below mean `10` and Hoermann PTRS from `10` through its
+accepted execution ceiling `1e8`. This is an implementation of the named
+Poisson target law, not donor RNG or same-seed parity.
 
 ### Dark-Count Parity Claim
 
@@ -537,8 +543,11 @@ A_direct[g + 1, u]  ~ Poisson(R_direct[g + 1, u])
 A_delayed[g + 1, u] ~ Poisson(R_delayed[g + 1, u])
 ```
 
-The two retained modes and their two overflow roles use separate fixed streams
-and the same private hybrid Poisson sampler. Every actual aggregate cell rate
+The accepted post-Maintenance 2 target gives the two retained modes and their
+two overflow roles separate config-owned `RngKey` values and calls
+TensorCore's public hybrid `poisson(...)`; current Stage 6 uses the
+corresponding private streams and the same frozen sampler mapping. Every actual
+aggregate cell rate
 must be binary64, finite, nonnegative, and no greater than `1e8`. The sampler
 choice changes neither the declared Poisson law nor the intentional donor
 divergences below; its raw-word sequence has no IV-parity claim.
@@ -994,15 +1003,18 @@ IV-DSLab. The algorithms consume different representations, group draws
 differently, use different operation order, and require position-addressed
 device-resident streams.
 
-The selected aggregate multinomial implementation uses sequential conditional
-binomials with stable prepared current/later-category masses and the frozen
-forward-CDF/BTRS mapping. It does not repeatedly subtract represented
-categories from one; that implementation detail was rejected after the timing-
-jitter numerical study corrupted small residual tails. BTRS is an internal
-TensorDSLab execution choice, not a claim that IV or its NumPy dependency uses
-the same binomial algorithm or consumes uniforms in the same order. Parity is
-therefore assessed against the named binomial/multinomial probability laws and
-their moments, covariance, boundaries, and tails rather than returned samples.
+The selected aggregate multinomial implementation uses TensorDSLab-owned
+sequential category planning with stable prepared current/later-category
+masses. Current Stage 6 executes the frozen forward-CDF/BTRS mapping through
+private `readout/_random.py`; the accepted post-Maintenance 2 target calls that
+promoted mapping through TensorCore's `binomial(...)`. It does not repeatedly
+subtract represented categories from one; that implementation detail was
+rejected after the timing-jitter numerical study corrupted small residual
+tails. Promotion to TensorCore is an accepted target, not a claim that IV or
+its NumPy dependency uses the same binomial algorithm or consumes uniforms in
+the same order. Parity is therefore assessed against the named
+binomial/multinomial probability laws and their moments, covariance,
+boundaries, and tails rather than returned samples.
 The frozen BTRS acceptance calculation uses a finite binary64 Stirling-tail
 approximation and therefore does not claim ideal bitwise Binomial sampling.
 Its accepted cancellation-resistant grouping is algebraically identical to the
@@ -1015,10 +1027,10 @@ statistical-law policy separately validates the resulting Binomial law.
 The rebuild RNG targets are:
 
 - exact repeatability for identical TensorDSLab input values, shape, dimension
-  order, coordinate order, config, dtype, algorithm/version, and root seed on
-  the same supported backend and eager execution mode;
-- exact Threefry raw-word and fixed-point-uniform agreement between accepted
-  eager CPU/CUDA implementations;
+  order, coordinate order, config-owned keys, dtype, RNG algorithm/version,
+  and invocation seed on the same supported backend and execution mode;
+- TensorCore-owned exact Threefry raw-word and fixed-point-uniform agreement
+  between accepted implementations;
 - exact same-backend/mode integer avalanche history across float32 and float64
   Charge requests because discrete sampler control is always binary64;
 - cross-backend statistical agreement for completed Box-Muller, PSD, Poisson,
@@ -1043,8 +1055,16 @@ Coordinate strings are not RNG identities. Reordering axes or coordinates,
 reindexing payloads, selecting, or invoking arbitrary chunks generally changes
 logical flat positions and therefore sampled values. Positional addresses
 restart for each builder invocation. Product-request changes preserve a common
-product because operation streams are fixed, but chunk stability would require
-explicit global positional offsets and a later Design contract.
+product because config-owned role keys are fixed, but chunk stability would
+require explicit global positional offsets and a later Design contract.
+
+The accepted next public surface uses immutable TensorCore `CounterRng`
+instances and config-owned `RngKey` values. Reusing one RNG intentionally
+replays the same realization; changing algorithms intentionally need not.
+Stage 5/6's central `_RngStream` and bare seed remain closed implementation
+evidence until the gated Maintenance 2 migration. Default keys preserve the
+same stream values, so the migration may prove internal continuity without
+claiming donor RNG parity.
 
 ## Condition-Database Variation
 
@@ -1113,8 +1133,9 @@ Every parity fixture must state:
   and configuration;
 - parity classification;
 - assumptions and accepted intentional divergences;
-- RNG algorithm/version, root seed, numeric operation stream, logical position,
-  source-quantum ordinal, and raw-word schedule when sampled;
+- RNG algorithm/version, invocation seed, exact `RngKey`, logical position,
+  source-quantum ordinal, distribution ordinal/count, and raw-word schedule
+  when sampled;
 - execution mode and backend when needed for reproducibility, while treating
   scheduling, scratch, device-stream placement, fusion, and allocation choices
   as nonsemantic;

@@ -67,14 +67,24 @@ Private implementation seams now produce complete `Charge`, `PureWaveform`,
 production includes its configured dark-count, timing-jitter, fixed-generation
 correlated-avalanche, recovery-ledger, and smearing submodels; noise supports
 zero, white, and caller-supplied PSD models. These seams and their positional
-RNG mechanics remain private. Ordinary users should continue to import only
-the documented package-root types and configs until public orchestration is
-implemented.
+RNG mechanics remain private in current Stage 5/6 production. The accepted
+next architecture moves generic RNG and distribution mechanics to TensorCore
+and uses config-owned stochastic keys, but that migration and public
+orchestration are not yet implemented. Ordinary users should continue to
+import only the documented package-root types and configs.
+
+The historical [TensorCore consumer proposal](docs/implementation/proposed_tensorcore_counter_rng_and_distributions.md)
+is now fulfilled by published TensorCore `0.9.0` commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The
+[TensorDSLab Maintenance 2 work order](docs/implementation/maintenance_2_rng_and_product_module_ownership_migration.md)
+selects that exact dependency and is Design-complete but undispatched. The
+current dependency and production surface remain unchanged.
 
 ## Explicit Exclusions
 
 This foundation does not yet implement `simulate_readout(...)`, public atomic
-product transforms, public RNG, PE binning, TensorG4DS or TensorML adapters, IO,
+product transforms, the accepted `CounterRng`-based simulation boundary, PE
+binning, TensorG4DS or TensorML adapters, IO,
 caches, `out=`, workspaces, movement/selection helpers, or an allocation-free
 execution path. It makes no GPU-execution, release, deployment,
 backward-compatibility, conformance, or broad cross-package compatibility

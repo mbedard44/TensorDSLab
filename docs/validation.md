@@ -58,6 +58,74 @@ the focused Stage 6 run executed 65 tests: 60 passed and 5 CUDA tests skipped.
 Pyright `1.1.408` reported no findings. This is eager CPU-only evidence because
 CUDA was unavailable. It adds no public `simulate_readout(...)` surface.
 
+## Accepted Maintenance 2 RNG And Module-Migration Gates
+
+Maintenance 2 is not yet dispatched. Its TensorCore dependency gate is closed
+by published version `0.9.0` at exact commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, which provides generic `RngKey`,
+`CounterRng`, `Threefry4x32`, `logical_positions`, public `uniform`,
+`gaussian`, `poisson`, and `binomial`, plus the focused
+`require_same_dtype` relationship. TensorDSLab independently selected and
+probed that exact commit. The historical consumer proposal is fulfilled;
+TensorDSLab's Maintenance 2 work order is Design-complete but remains
+undispatched.
+
+The focused TensorDSLab migration must prove:
+
+- exact dependency pin and public package-root imports only;
+- TensorCore owns Random123 known-answer vectors, raw-word generation,
+  logical positions, fixed-point uniforms, internal Box-Muller, parameterized
+  Gaussian draws, Poisson inversion/PTRS, binomial inversion/BTRS, their
+  generic numerical domains and exhaustion behavior, and generic
+  seed/key/address validation;
+- TensorDSLab imports no protected TensorCore RNG mechanics and duplicates no
+  generic engine or promoted distribution implementation;
+- TensorCore evidence covers public `uniform(...)`/`gaussian(...)`
+  ordinal-plus-count bounds, Gaussian exact zero-scale/identity/affine
+  branches, no arbitrary broadcasting, gradient-bearing-law rejection,
+  finite-output envelope, fresh result storage, and public
+  `poisson(...)`/`binomial(...)` value domains, deterministic branches,
+  mappings, word schedules, and exhaustion;
+- exact `RngKey` fields on the eight stochastic leaf config classes, including
+  two fields on each crosstalk config, namespace `0x54445331`, and default
+  streams `1` through `10` in the accepted append-only mapping;
+- keys participate in config equality and `repr`, exact-key overrides work,
+  and no integer/string/`None` coercion is introduced;
+- retained and overflow keys differ inside each crosstalk config;
+- deterministic, delay, recovery, and composite configs own no key;
+- stochastic-capable Charge/noise producers and effects accept
+  `CounterRng`, while deterministic producers and preparation helpers omit it;
+- exact-zero and disabled paths make no RNG request;
+- Charge's scientific Poisson means, current/later-category masses, fixed
+  category/address order, final no-draw remainder, complete multinomial
+  orchestration, checked count accumulation, and bookkeeping remain
+  TensorDSLab-owned; `charge/effects/_counts.py` contains those local concerns
+  but no Poisson, inversion, PTRS, binomial, or BTRS implementation;
+- the accepted `config.py`, `field.py`, `collection.py`, and private
+  `charge/effects` ownership split is complete without compatibility shims;
+- TensorCore `require_same_dtype(...)` is used only for Analog inputs and the
+  present floating `ReadoutCollection` subset, while raw tensors retain
+  operation-specific checks;
+- one private `_require_representable_float(...)` helper replaces duplicated
+  scalar-to-dtype conversions without absorbing product-specific range,
+  ordering, or envelope policy;
+- `_RngStream`, `readout/_random.py`, and any replacement `readout/_rng.py`
+  are absent; and
+- TensorCore independently proves the public distribution mappings, while
+  TensorDSLab migration probes prove `uniform`, `gaussian`, `poisson`, and
+  `binomial` address/output continuity and completed `NoiseWaveform` and
+  `Charge` default-key continuity on the exact accepted backend/mode evidence
+  boundary.
+
+Stage 7 separately validates the required public `rng: CounterRng`, no
+simultaneous `seed=`, deterministic closures requesting no values, and
+closure-wide rejection of one key assigned to distinct stochastic roles
+before the first RNG call or producer write. The collision set includes
+structurally present key-bearing configs even when numeric parameters make
+them no-ops, and excludes absent configs, `ZeroNoiseConfig`, and unrequested
+branches. Concrete RNG device/dtype/distribution support is required only when
+the effective closure is stochastic.
+
 Documentation-only Design work remains in Design unless the user requests an
 independent documentation Validation or Review. At minimum, run:
 
@@ -370,13 +438,17 @@ The top-level package should expose the three axes, `SamplingConfig`, six
 products, all public product configs, `ReadoutConfig`, and
 `ReadoutCollection`. It must not re-export TensorCore generic classes or
 scalars, private requirements, private validators, retired `0.6` names, or a
-placeholder simulation function.
+placeholder simulation function. Stage 7 will replace the last prohibition
+with a deliberate export check for the implemented `simulate_readout`.
 
-Fresh-process imports should prove every product package, `readout.types`, the
-readout root, and the package root are acyclic. Product packages must not
-import `ReadoutConfig`, `ReadoutCollection`, or future orchestration. The
-complete product graph may be imported only by the cross-product composition
-layer and deliberate export layers.
+Current Stage 6 regression checks continue to prove every product package,
+`readout.types`, the readout root, and the package root are acyclic.
+Maintenance 2 must instead prove fresh-process imports of every product
+`config`/`field` module, `readout.config`, `readout.collection`, the readout
+root, and the package root, plus absence of the retired `types.py` modules.
+Product packages must not import `ReadoutConfig`, `ReadoutCollection`, or
+future orchestration. The complete product graph may be imported only by the
+cross-product composition layer and deliberate export layers.
 
 ## Static Typing Checks
 

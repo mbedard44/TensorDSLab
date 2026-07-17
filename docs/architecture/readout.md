@@ -65,7 +65,7 @@ def simulate_readout(
     *,
     products: Iterable[type[TensorField]],
     config: ReadoutConfig,
-    seed: int | None = None,
+    rng: CounterRng,
     floating_dtype: torch.dtype = torch.float32,
 ) -> ReadoutCollection:
     ...
@@ -78,7 +78,7 @@ readout = simulate_readout(
     photoelectrons,
     products=[AnalogWaveform, DigitizedWaveform],
     config=config,
-    seed=1234,
+    rng=Threefry4x32(seed=1234),
 )
 
 assert readout.field_types == frozenset(
@@ -174,12 +174,12 @@ as `Charge` may be computed privately for a digitized request without becoming
 a collection member.
 
 Request order has no semantic meaning. Changing only the retained product set
-must not change a product common to two requests. Product-local random streams
-and deterministic planning enforce that independence.
+must not change a product common to two requests. Config-owned stochastic-role
+keys and deterministic planning enforce that independence.
 
 Unknown products, duplicates, missing required config, invalid sampling,
-invalid seed, or another request-level problem fails before an RNG draw or
-tensor write.
+an invalid `CounterRng`, duplicate role keys, or another request-level problem
+fails before an RNG call or tensor write.
 
 The planner is ordinary typed code, not a public dependency registry or
 workflow graph.
@@ -217,6 +217,14 @@ There is no `PhotoelectronsConfig`: the field already exists. There is no
 generic `Config` ABC, string model selector, product-level persistence flag,
 or runtime workspace policy in scientific config.
 
+Exact stochastic leaf configs own defaulted TensorCore `RngKey` values:
+white/PSD noise use streams `1`/`2`; dark count uses `3`; retained/overflow
+direct crosstalk use `4`/`5`; retained/overflow delayed crosstalk use `6`/`7`;
+timing jitter uses `8`; afterpulse uses `9`; and charge smearing uses `10`.
+All use namespace `0x54445331` (`TDS1`). Keys identify stochastic roles and
+participate in config equality and `repr`; they do not contain a seed,
+algorithm, mutable state, device stream, or execution policy.
+
 Each producer receives only its exact product config and shared sampling facts
 when relevant. Private submodels receive their exact nested config rather than
 the complete `ReadoutConfig`.
@@ -236,7 +244,7 @@ def _produce_charge(
     *,
     sampling: SamplingConfig,
     config: ChargeConfig,
-    seed: int | None,
+    rng: CounterRng,
     floating_dtype: torch.dtype,
 ) -> Charge:
     ...
@@ -256,7 +264,7 @@ def _produce_noise_waveform(
     *,
     sampling: SamplingConfig,
     config: NoiseWaveformConfig,
-    seed: int | None,
+    rng: CounterRng,
     floating_dtype: torch.dtype,
 ) -> NoiseWaveform:
     ...
@@ -284,6 +292,10 @@ prerequisites rather than a complete collection as a service locator.
 
 Private functions may trust complete public preflight. They do not reproduce
 the supported public boundary or defend direct unsupported calls.
+Only stochastic-capable `Charge` and `NoiseWaveform` producers receive
+`CounterRng`. Deterministic pure, analog, and digitized producers and
+deterministic preparation helpers do not. An exact-zero or disabled stochastic
+path simply makes no RNG request.
 
 ## Charge Production
 
@@ -341,9 +353,10 @@ within-bin phase with a zero-mean ideal-normal displacement. The phase and
 displacement are independent within each avalanche and IID across avalanches.
 Preflight analytically integrates that law into binary64 probabilities for
 every target bin that remains inside the finite window. Runtime then
-redistributes aggregate integer counts through sequential conditional
-binomials; it does not draw a normal per PE, invoke Box-Muller for jitter, or
-materialize a jagged PE table.
+redistributes aggregate integer counts through TensorDSLab's sequential
+multinomial orchestration, whose nontrivial category steps call TensorCore's
+public `rng.binomial(...)`; it does not draw a Gaussian per PE, invoke
+Box-Muller for jitter, or materialize a jagged PE table.
 
 For a source bin `s`, target bins are sampled in increasing `t` order, which is
 also increasing signed offset `t - s`. The one combined out-of-window category
@@ -358,8 +371,8 @@ The first implementation prepares a log-domain one-sided cumulative tail for
 later-category masses for each conditional binomial; it never repeatedly
 subtracts categories from one, clips, or renormalizes. Category/tail/identity
 error is bounded by `1e-12`, the complete represented source law by `1e-11`
-L1, and `_RngStream.CHARGE_TIMING_JITTER = 0x0000_0008` is the dedicated
-append-only stream. Full evaluator and validation details are normative in
+L1, and `TimingJitterConfig.rng_key` owns the dedicated role whose default
+stream is `8`. Full evaluator and validation details are normative in
 `rebuild.md`.
 
 This is a private Charge stage, not a transform that returns jittered
@@ -375,10 +388,10 @@ offspring laws for the next generation.
 
 - Direct and delayed crosstalk use distinct Poisson means and distinct draws;
   their rates are never silently combined.
-- Dark counts and retained/overflow crosstalk share one private hybrid Poisson
-  sampler: exact-zero no-draw, one-uniform CDF inversion below mean `10`, and
-  Hoermann PTRS from `10` through the accepted per-cell Poisson mean ceiling
-  `1e8`.
+- Dark counts and retained/overflow crosstalk call TensorCore's public
+  `rng.poisson(...)`: exact-zero no-draw, one-uniform CDF inversion below mean
+  `10`, and Hoermann PTRS from `10` through the accepted per-cell Poisson mean
+  ceiling `1e8`.
 - Direct/delayed crosstalk children are fresh unit-charge avalanches.
 - Afterpulse children are integer avalanches whose deposited charge may be
   weighted by the configured delay-dependent recovery response.
@@ -429,11 +442,14 @@ configured cascade. If correlation was disabled, every root has unit weight,
 so the same converted charge tensor represents both `S1` and `S2`. Smearing
 does not feed back into branching.
 
-The Poisson crossover, equations, binary64 control, five exact Poisson streams,
-positional schedule, 64-attempt exhaustion, no-fallback policy, and `1e8` mean
-ceiling are closed Design in `rebuild.md`. Aggregate multinomial factorization
-and its exact inversion/BTRS mappings, word schedules, comparisons, budgets,
-and exhaustion behavior are closed there as well. Timing jitter's log-tail
+The Poisson crossover, equations, binary64 control, 64-attempt exhaustion,
+no-fallback policy, and `1e8` mean ceiling are closed promoted TensorCore
+requirements in `rebuild.md`; TensorDSLab owns the five exact scientific keys,
+rate fields, and positional schedules. Aggregate multinomial factorization,
+category order, prepared masses, and the final no-draw remainder remain
+TensorDSLab contracts, while the exact binomial inversion/BTRS mappings, word
+schedules, comparisons, budgets, and exhaustion behavior are promoted
+TensorCore requirements. Timing jitter's log-tail
 evaluator, numerical domain, tolerances, conditional masses, and exact stream
 are also closed. Fixed/exponential phase-marginalized PMFs, analytic right
 tails, and stable exponential AP-recovery preparation are closed in
@@ -562,45 +578,49 @@ Design change proves product and retention invariance.
 
 ## Random Fields
 
-The public RNG input is one exact non-boolean Python `int` seed in
-`[0, 2**64)`, or `None` when the entire effective request is deterministic.
-Users do not pass a TensorDSLab RNG object or `torch.Generator`.
+The public RNG input is one required immutable TensorCore `CounterRng`. A
+caller ordinarily writes:
 
-Private stochastic leaves use fixed numeric operation streams and logical flat
-tensor positions. The address is rank-agnostic and depends on indices, not
-`ExampleAxis`, `ChannelAxis`, or timestamp strings. A tensor-dimension or
-coordinate reordering is a different positional interpretation and carries no
-permutation-invariance promise.
+```python
+rng = Threefry4x32(seed=1234)
+```
 
-Unrelated requested branches do not perturb a common product's random field.
+The RNG contains the algorithm and invocation seed. Reusing it intentionally
+replays the same positional realization; it never advances mutable state.
+Deterministic requests still receive the RNG but request no values. There is
+no simultaneous `seed=`, TensorDSLab RNG wrapper, `torch.Generator`, or global
+RNG.
+
+Each stochastic leaf config owns an exact `RngKey` identifying its role.
+Default keys use namespace `TDS1` and streams `1` through `10` in the
+historical Stage 5/6 order. Afterpulse uses one coupled key; direct and delayed
+crosstalk each use distinct retained/overflow keys. The public builder rejects
+one key assigned to different roles in the requested closure before any RNG
+call or write.
+
+TensorCore owns counter generation, logical positions, uniforms, parameterized
+Gaussian draws, Poisson sampling, binomial sampling, and the two count
+distributions' internal word schedules. TensorDSLab owns product-specific key
+placement, scientific position/category lattices, direct-uniform/Gaussian
+ordinals, draw-free scientific policy, multinomial ordering and final
+remainders, count accumulation, and ledgers. Positions depend on actual
+tensor-dimension indices, not
+`ExampleAxis`, `ChannelAxis`, timestamp strings, strides, or storage addresses.
+A dimension or coordinate reordering is therefore a different positional
+interpretation and carries no permutation-invariance promise.
+
 Selection and arbitrary chunking are not automatically stable because each
-builder invocation starts its logical positions at zero; callers use distinct
+builder invocation starts logical positions at zero. Callers use different RNG
 seeds for independent invocations. A future chunk-stable API requires explicit
 global offsets.
 
-The fixed Threefry word engine and noise-required distribution transforms are
-selected in `rebuild.md`. The central private enum begins with exactly:
-
-```python
-NOISE_WHITE = 0x0000_0001
-NOISE_PSD_COEFFICIENT = 0x0000_0002
-CHARGE_DARK_COUNTS = 0x0000_0003
-CHARGE_DIRECT_CROSSTALK = 0x0000_0004
-CHARGE_DIRECT_CROSSTALK_OVERFLOW = 0x0000_0005
-CHARGE_DELAYED_CROSSTALK = 0x0000_0006
-CHARGE_DELAYED_CROSSTALK_OVERFLOW = 0x0000_0007
-CHARGE_TIMING_JITTER = 0x0000_0008
-CHARGE_AFTERPULSES = 0x0000_0009
-CHARGE_SMEARING = 0x0000_000A
-```
-
-Stream zero is unassigned; zero noise owns no stream. The first two members are
-Merged / Closed Stage 5 production, and the eight appended Charge members are
-Merged / Closed Stage 6 production. Both closeouts provide eager CPU evidence
-only because conditional CUDA tests were skipped. Exact raw-word and fixed-point
-agreement remains the contract for a later accepted CUDA path; completed
-transcendental values require same-backend repeatability and cross-backend
-statistical agreement once both paths have evidence.
+Current Stage 5/6 production still uses a private `_RngStream` and
+`readout/_random.py`. The accepted Maintenance 2 migration removes both after
+selecting TensorCore `0.9.0` exact commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, which supplies the required
+public RNG API and focused `require_same_dtype` relationship. The historical
+consumer proposal is fulfilled; TensorDSLab Maintenance 2 is Design-complete
+and undispatched. The closed Stage 5/6 CPU-only evidence remains historical.
 
 ## Functional, Memory, And Exposure Contract
 
@@ -639,7 +659,10 @@ The future Stage 7 public preflight must cover at least:
 - one nonempty unique recognized product request;
 - exact required config closure and no irrelevant influence;
 - selected floating dtype and representable scalar constants;
-- seed presence/type/range for every effective stochastic branch;
+- a required `CounterRng` instance, exact config-owned `RngKey` values, and no
+  duplicate key assigned to different roles in the requested closure;
+- concrete RNG device/dtype/distribution support only when that closure is
+  stochastic; a deterministic closure does not query the RNG;
 - scientific parameter and prepared-kernel normalization;
 - causal delay and window/overflow policies; and
 - every failure before the first draw or write.
@@ -672,10 +695,14 @@ Shared axes and sampling live in `tensor_dslab.common`. Every generated product
 subpackage now owns its field, configs, validation, and implemented
 `_produce.py`; Photoelectrons owns only its already-produced truth field.
 
-`readout/types.py` contains only `ReadoutConfig` and `ReadoutCollection`.
-`_requirements.py` and `_random.py` are implemented private readout support.
+After Maintenance 2, `readout/config.py` contains only `ReadoutConfig` and
+`readout/collection.py` contains only `ReadoutCollection`.
+`_requirements.py` and `charge/effects/_*.py` are private support.
+`readout/_random.py` and `_RngStream` are removed rather than renamed.
 `readout/simulation.py` remains absent until Stage 7. Product packages never
-import the cross-product orchestration layer.
+import the cross-product orchestration layer. Current Stage 6 paths remain
+closed Stage 5/6 implementation evidence until that gated maintenance stage
+lands.
 
 The exact tree and import direction are normative in
 [`rebuild.md`](rebuild.md). Do not add empty placeholders or global
@@ -707,7 +734,10 @@ is Merged / Closed and implements the private positional RNG behavior consumed
 by complete exact-zero, IID-white, and caller-supplied PSD noise. Stage 6 is
 Merged / Closed and implements the complete private Charge producer, all eight
 Charge RNG streams, aggregate samplers, and delay/jitter/cascade/ledger/smearing
-mechanics. Stage 7 remains responsible for complete request-aware
+mechanics. Before Stage 7, TensorDSLab Maintenance 2 must be separately
+dispatched against selected TensorCore `0.9.0` commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, split module ownership, migrate to
+config-owned keys, and preserve default-key outputs. Stage 7 remains responsible for complete request-aware
 `simulate_readout(...)`; no partial public API should imply unsupported product
 closure. Measured GPU fusion remains a separate later optimization stage.
 
@@ -721,7 +751,8 @@ Return to Design before:
 - changing sampling coordinates or bin conventions;
 - changing the fixed-generation cascade or one of its mechanism laws;
 - replacing the selected pulse, PSD, analog, ADC, or RNG contract;
-- exposing private RNG, producers, scratch, destinations, or workspace;
+- exposing protected/raw RNG mechanics, private producers, scratch,
+  destinations, or workspace;
 - adding persistence, TensorG4DS, TensorML, Reconstruction, or DAG scope;
 - relaxing exact-request, fresh-result, no-post-exposure-write, or source-
   immutability guarantees; or

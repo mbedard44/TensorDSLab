@@ -226,21 +226,69 @@ closeout produced `main` at
 exact merged bytes and synchronized live documentation on 2026-07-15. Stage 7
 remains undispatched.
 
-## Candidate Future Stages
+## Dependency Evidence And Candidate Future Stages
 
-These are planning labels, not accepted work orders. Design must write a
-focused stage document before Implementation starts any of them. When donor
-behavior is in scope, the work order must name the comparison boundary, parity
-classification, acceptance criteria, and intentional divergences defined in
+These records include historical dependency evidence and nonoperative future
+planning material. A linked draft is not a dispatch or cross-package
+authority; only an explicitly recorded exact selection fixes a dependency.
+Before Implementation starts, the owning package Design must close every
+stated prerequisite, commit an exact work-order baseline, verify its package
+routes, and obtain separate user authorization. When donor behavior is in
+scope, the work order must name the comparison boundary, parity classification,
+acceptance criteria, and intentional divergences defined in
 [Parity](../parity.md).
+
+### [Historical TensorCore Counter RNG And Distributions Consumer Proposal](proposed_tensorcore_counter_rng_and_distributions.md)
+
+Status: **Fulfilled by TensorCore Stage 15 / Historical consumer proposal /
+Never TensorCore authority**.
+
+TensorDSLab records the demonstrated generic requirements for `RngKey`,
+`CounterRng`, exact `Threefry4x32_R<20>`, `logical_positions`, public uniform,
+Gaussian, Poisson, and binomial methods, plus the independently testable
+`require_same_dtype()` relationship sub-slice. TensorCore independently
+implemented and published that package-owned surface as version `0.9.0` at
+exact commit `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. Its Stage 15 work
+order and random architecture are authoritative. This proposal created none of
+that authority and remains historical consumer evidence.
+
+### [Maintenance 2: RNG And Product-Module Ownership Migration](maintenance_2_rng_and_product_module_ownership_migration.md)
+
+Status: **Design-complete / Undispatched**. Dependency state: **TensorCore
+dependency selected**.
+
+Dependency: TensorDSLab Design selected published TensorCore `0.9.0` exact
+commit `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59` after package-root and
+consumer continuity probes. Remaining gates are the containing committed
+Design authority, clean topology, route verification, and separate user
+dispatch.
+
+Goal: split `types.py` ownership into product `config.py`/`field.py`
+and readout `config.py`/`collection.py`; create private
+`charge/effects` modules; retain Charge multinomial/category orchestration,
+checked count helpers, and bookkeeping in `_counts.py`; add the ten
+config-owned default keys; migrate stochastic functions from bare seeds and
+private samplers to public TensorCore `CounterRng`
+`gaussian(...)`, `poisson(...)`, and `binomial(...)`; preserve default-key
+Stage 5/6 outputs; and remove `_RngStream`, `readout/_random.py`, and any
+replacement `_rng.py` without compatibility shims. It also consolidates one
+private scalar-to-dtype requirement helper and uses TensorCore
+`require_same_dtype()` only for semantic field relationships. The work order
+freezes the exact dependency, commands, allowlist, fixtures, lifecycle, and
+stop conditions; dispatch still requires committed authority and verified
+routes.
 
 ### Stage 7: Public Readout Orchestration
 
-Possible goal: implement request/config/seed preflight, exact prerequisite
-planning, each prerequisite at most once, requested-only retention, and the
-complete public `simulate_readout(...)` surface after every required product
-producer exists. Do not add IO or persistence policy. Profile real GPU memory
-and execution before proposing workspace or output-reuse architecture.
+Prerequisite: Maintenance 2 must be Merged / Closed against an exact accepted
+TensorCore RNG pin.
+
+Possible goal: implement request/config/RNG/key-collision preflight, exact
+prerequisite planning, each prerequisite at most once, requested-only
+retention, and the complete public `simulate_readout(..., rng=...)` surface
+after every required product producer exists. Do not add IO or persistence
+policy. Profile real GPU memory and execution before proposing workspace or
+output-reuse architecture.
 
 ### Later Integration And Artifact Stages
 

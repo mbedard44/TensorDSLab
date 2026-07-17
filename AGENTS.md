@@ -217,8 +217,11 @@ private Charge producer and aggregate count-sampler slice. Fixed-commit
 Validation, independent Review, and Design's post-merge audit found no
 unresolved issue. The evidence is eager CPU-only because CUDA was unavailable;
 it makes no GPU execution, performance, fusion, install, or wheel-build claim.
-Stage 7 public readout orchestration and later integration production remain
-undispatched.
+Maintenance 2 RNG and product-module ownership migration is Design-complete /
+Undispatched against selected TensorCore `0.9.0` commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. It is the
+next production gate. Stage 7 public readout orchestration and later integration
+production remain undispatched.
 
 If implementation reveals a concrete contradiction in the accepted design, stop
 and send the issue back to Design. Do not silently widen architecture, create
@@ -247,46 +250,69 @@ tensor_dslab/
     axes.py
     sampling.py
   readout/
-    types.py
+    config.py
+    collection.py
     simulation.py
     _requirements.py
-    _random.py
     photoelectrons/
-      types.py
+      field.py
     charge/
-      types.py
+      config.py
+      field.py
       _produce.py
+      effects/
+        _counts.py
+        _delays.py
+        _dark_counts.py
+        _timing_jitter.py
+        _correlated_avalanches.py
+        _smearing.py
     pure_waveform/
-      types.py
+      config.py
+      field.py
       _produce.py
     noise_waveform/
-      types.py
+      config.py
+      field.py
       _produce.py
     analog_waveform/
-      types.py
+      config.py
+      field.py
       _produce.py
     digitized_waveform/
-      types.py
+      config.py
+      field.py
       _produce.py
 ```
 
-This is an ownership target, not permission to create placeholders. Materialize
-only modules with real behavior accepted by the active work order. Every
-generated product owns its final `TensorField` leaf, public configs, product
-validation, and private `_produce_*` builder. `Photoelectrons` remains the
-already-produced truth input and owns no producer. Private `_simulate_*`
-functions implement scientific submodels. `readout.types` contains only
-`ReadoutConfig` and `ReadoutCollection`; future Stage 7 `readout.simulation`
-will own the one public `simulate_readout(...)` orchestration function. Shared
-axes and sampling belong in `common`. Readout-specific requirements and random
-mechanics remain private.
+This is the accepted post-Maintenance 2 ownership target, not permission to
+create placeholders. Current Stage 6 production still uses `types.py`,
+`_RngStream`, and `readout/_random.py`; closed work orders remain historical
+evidence for those bytes. TensorCore has published the accepted generic RNG
+and `require_same_dtype` surface as version `0.9.0` at exact commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, and TensorDSLab Design has
+selected that commit for the Design-complete, undispatched Maintenance 2 migration.
+This selection does not move the current dependency or authorize dispatch.
+
+Materialize only modules with real behavior accepted by the active work order.
+Every generated product owns its final `TensorField` leaf, public configs,
+product validation, and private `_produce_*` builder. `Photoelectrons` remains
+the already-produced truth input and owns no producer. Private `_simulate_*`
+functions implement scientific submodels. `readout.config` contains only
+`ReadoutConfig`; `readout.collection` contains only `ReadoutCollection`;
+future Stage 7 `readout.simulation` will own the one public
+`simulate_readout(...)` orchestration function. Shared axes and sampling belong
+in `common`. Charge-specific multinomial/category orchestration, count-domain
+helpers, and scientific effects remain private.
 
 Keep import direction acyclic: TensorCore, common, private shared requirements,
-product types, product producers plus explicit prerequisite product types,
-readout composition types, readout simulation, then deliberate package-root
-exports. Product packages must not import `ReadoutConfig`, `ReadoutCollection`,
-or `simulate_readout(...)`. Do not promote `_random.py` to `common` until a
-second TensorDSLab domain needs the exact same accepted mechanics.
+product configs/fields, product producers plus explicit prerequisite fields,
+readout config/collection, readout simulation, then deliberate package-root
+exports. Product packages must not import `ReadoutConfig`,
+`ReadoutCollection`, or `simulate_readout(...)`. Generic counter generation,
+logical positions, uniforms, parameterized Gaussian draws, Poisson sampling,
+and binomial sampling belong to TensorCore; TensorDSLab must not retain or
+rename `_random.py`.
 
 Stage 6 behavior-neutrally renamed all four transitional waveform modules,
 callables, imports, and tests from `_product.py` / `_product_*` to
@@ -314,6 +340,15 @@ renormalization, reseeding, or another exhaustion fallback. This is accepted
 and implemented eager-reference behavior through exact Stage 6 candidate
 `fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58`. CUDA was unavailable, so the
 accepted evidence makes no GPU execution or cross-backend claim.
+
+That enum/module arrangement is the current Stage 6 implementation, retained
+as closed Stage 5/6 evidence rather than the accepted next ownership target.
+Maintenance 2 will preserve the same default
+addresses as exact config-owned TensorCore `RngKey` values, move generic RNG
+and count-distribution mechanics to TensorCore, keep Charge multinomial
+orchestration and count bookkeeping in `readout/charge/effects/_counts.py`,
+and remove `_RngStream`,
+`readout/_random.py`, and any replacement `_rng.py` without shims.
 
 The active MVP crosstalk delay union is exactly
 `FixedDelayConfig | ExponentialDelayConfig`. Although Stage 3 historically
@@ -443,6 +478,24 @@ until writes have been enqueued and the semantic field is constructed exactly
 once. TensorCore contract changes still require TensorCore Design acceptance;
 TensorDSLab does not fork it.
 
+The selected Maintenance 2 dependency exposes public `RngKey`, `CounterRng`,
+`Threefry4x32`, `logical_positions`, and `require_same_dtype` at exact
+TensorCore `0.9.0` commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. TensorCore owns generic
+counter/address validation, Threefry word continuity, fixed-point uniforms,
+parameterized Gaussian draws, Poisson inversion/PTRS, binomial
+inversion/BTRS, sampler numerical domains, exhaustion, and those
+distributions' internal word schedules. TensorDSLab owns exact
+stochastic-role key placement in leaf configs, scientific position/category
+lattices, direct-uniform/Gaussian ordinals, multinomial ordering and final
+remainders, draw-free scientific policy, count accumulation, and ledgers.
+Import only public TensorCore package-root names; do not copy or import
+protected RNG or promoted distribution mechanics. Current Stage 6 production
+still pins TensorCore `0.7.0`; the `0.9.0` selection takes effect only through
+an accepted Maintenance 2 implementation. TensorDSLab uses
+`require_same_dtype` only for semantic-field relationships and retains raw
+tensor checks plus its private scalar-to-dtype representation helper.
+
 ## Product Relationships And Boundaries
 
 TensorDSLab should preserve this data-flow and ownership rule unless Design
@@ -505,7 +558,7 @@ already-produced dense truth field:
 
 ```text
 Photoelectrons
-  -> simulate_readout(products=..., config=..., seed=...)
+  -> simulate_readout(products=..., config=..., rng=...)
   -> ReadoutCollection containing exactly the requested products
 ```
 
@@ -531,6 +584,12 @@ and source relationship before RNG use, executes each producer at most once,
 and retains exactly the requested fields. Request order has no collection
 semantics. Unrequested prerequisites remain private local values.
 
+The accepted Stage 7 signature requires keyword-only `rng: CounterRng`, even
+for deterministic closures; there is no simultaneous `seed=` parameter.
+Deterministic closures request no values. Preflight rejects one `RngKey`
+assigned to distinct stochastic roles in the requested closure before any RNG
+call or producer write.
+
 The computational graph is:
 
 ```text
@@ -542,9 +601,10 @@ PureWaveform + NoiseWaveform -> AnalogWaveform -> DigitizedWaveform
 `ReadoutConfig` composes `SamplingConfig` with optional product configs. Config
 absence is structural. A requested product requires the configs in its
 transitive closure; an unrequested branch does not. Product configs describe
-science, not persistence, device movement, allocation, mutation, streams, or
-campaign policy. `products` controls only final in-memory retention. IO is
-deferred.
+science, not persistence, device movement, allocation, mutation, accelerator
+streams, invocation seeds, or campaign policy. Exact stochastic leaf configs
+may own immutable `RngKey` role identities. `products` controls only final
+in-memory retention. IO is deferred.
 
 When implemented, the initial builder is functional. It borrows
 `Photoelectrons` read-only,
