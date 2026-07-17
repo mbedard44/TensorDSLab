@@ -214,12 +214,15 @@ class RngOwnershipMigrationTest(unittest.TestCase):
 
         for config in (direct, delayed):
             with self.subTest(config=type(config).__name__):
-                shared = RngKey(namespace=7, stream=11)
+                retained = RngKey(namespace=7, stream=11)
+                overflow = RngKey(namespace=7, stream=11)
+                self.assertIsNot(retained, overflow)
+                self.assertEqual(retained, overflow)
                 with self.assertRaises(ValueError):
                     replace(
                         config,
-                        retained_rng_key=shared,
-                        overflow_rng_key=shared,
+                        retained_rng_key=retained,
+                        overflow_rng_key=overflow,
                     )
 
     def test_all_config_owned_keys_reach_the_exact_public_distribution(self) -> None:
