@@ -1,9 +1,6 @@
 # Maintenance 2 RNG And Product-Module Ownership Migration Work Order
 
-Status: **topology-dependent: Implementation candidate while these exact bytes
-are absent from `main`; Merged / Design acceptance pending if present unchanged
-on `main`; Merged / Closed only when this work order and the implementation
-index record Design's evidence-only closeout**.
+Status: **Merged / Closed**.
 
 Dependency state: **TensorCore `0.9.0` exact pin installed**.
 
@@ -16,12 +13,92 @@ document freezes the TensorDSLab-local commands, exact allowlist, continuity
 fixtures, ownership boundary, lifecycle, and stop conditions. Its containing
 Design authority was committed at
 `daa046405f62ee324bc495867e796213bf6657a6`, the persistent routes were
-reverified, and the user separately authorized production execution. While
-these exact bytes are absent from `main`, they remain the fixed-commit
-Validation/Review candidate. If present unchanged on `main`, Review's clean
-fast-forward has completed and Design acceptance remains pending. Final
-acceptance is complete only when this work order and the implementation index
-record `Merged / Closed`. No push is authorized.
+reverified, and the user separately authorized production execution. No push
+was authorized or performed.
+
+## Final Design Closeout
+
+TensorDSLab Design accepted Maintenance 2 on 2026-07-17. The exact linear
+candidate chain was:
+
+```text
+daa046405f62ee324bc495867e796213bf6657a6
+  -> f6e1fc8c3d08152cf7ba603404a4d642628adfae
+  -> 5f6a8d56f0fefcd5606a8406da3a250c0f841b82
+  -> f4e8eec9befaa107ceeb30c05ba1657eb7210bca
+  -> 89a188abe330c06aa0b54c27cd61ac32a4fe9f63
+```
+
+Candidate 1 implemented the complete ownership migration. Candidate 2 added
+the complete config-owned-key and public-distribution proof after Validation
+returned a test-evidence gap. Candidate 3 proved that the retained and
+overflow crosstalk keys must differ by value rather than object identity.
+Independent Review found no production defect, but did not clear Candidate 3
+because two explicit work-order proofs were still absent: configured
+exact-zero dark-count, timing-jitter, and smearing branches had not been
+observably proven draw-free, and TensorCore's zero-dimension address-span rule
+had no downstream consumer probe.
+
+The original finite loop had reached its three Implementation-to-Validation
+dispatches, so Design accepted the findings and authorized one supplemental,
+tests-only Review-correction loop. The final candidate is the exact direct
+child of Candidate 3 and changes only
+`tests/test_rng_ownership_migration.py` by 83 insertions. It proves all six
+exact-zero Charge cases across `torch.float32` and `torch.float64` with
+distinct failing RNGs, exact type/dtype/value, fresh storage, and source
+immutability. It also proves the public `logical_positions(...)` and public
+Gaussian result-shape span checks at the exact `2**63` boundary, including
+rejection before any RNG word request. The unpublished intermediate
+`69b01e7a169b8e308b3cbf82ccda4d4a1f7a17d8` is not in the accepted ancestry.
+
+Validation and independent Review cleared exact final candidate
+`89a188abe330c06aa0b54c27cd61ac32a4fe9f63`. Review cleanly fast-forwarded
+unchanged `main` from `245e8155f66f51d061c680b8b220356689b24b60` to that
+same commit and repeated the post-merge gates. The feature branch and
+pre-closeout `main` both resolved to the final candidate. The cumulative
+Design-authority-to-candidate diff is 64 rename-aware files, 5,052 insertions,
+and 5,908 deletions, entirely within the frozen allowlist; protected history
+and governance bytes are unchanged.
+
+The selected dependency is TensorCore `0.9.0` at exact commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, direct parent
+`0e72f0e69cf9140b692d408e49a504cbdcb101b7`. Independent source clones and
+archives reproduced SHA-256
+`f793ef3645ab44175e445feb94444a90e01ccc34d01fc467db36bd81ad0606bd`.
+The final evidence was:
+
+```text
+supplemental proof module:  9 run,   9 passed,   0 skipped
+focused source suite:     148 run, 139 passed,   9 CUDA skips
+full source suite:        157 run, 148 passed,   9 CUDA skips
+full archive suite:       157 run, 148 passed,   9 CUDA skips
+Pyright source/archive:     0 errors, 0 warnings, 0 informations
+import isolation:          False False False False
+```
+
+Review recorded the same full-suite and Pyright results before and after the
+fast-forward; the merge changed no candidate byte.
+
+The evidence environment was Python `3.13.11`, PyTorch `2.12.1`, macOS
+`15.7.4` on arm64, and eager CPU. `torch.version.cuda` was `None`, CUDA
+availability was `False`, and the device count was zero. Design independently
+recreated the exact source and archive, repeated the focused and both full
+suites, repeated both Pyright configurations, and rechecked the exact 23-name
+TensorCore root export, dependency identity, imports, retired surfaces,
+forbidden calls, topology, scope, diff, and artifact cleanliness before this
+closeout.
+
+The containing evidence-only commit, identified externally by `HEAD`, is the
+final closeout authority. It has the merged candidate as its exact parent and
+changes only this work order and the implementation index. No cleared
+production, test, package metadata,
+README, architecture, parity, validation, governance, dependency, or
+scientific or API byte changes after Review clearance. Package adoption
+remains Adopted, conformance remains Not evaluated, Coordination remains
+Deferred, Profile B remains Disabled, and Stage 7 remains Undispatched. This
+closeout makes no CUDA, GPU-performance, allocation, release, deployment,
+compatibility, conformance, or backward-compatibility claim and authorizes no
+push.
 
 ## Objective
 
@@ -126,9 +203,7 @@ conformance_finding: Not evaluated
 coordination_status: Deferred
 registry_storage_profile: Disabled
 stage_6: Merged / Closed
-maintenance_2: topology-dependent (candidate off main; Merged / Design
-               acceptance pending on main; Merged / Closed only in the
-               two-document Design closeout)
+maintenance_2: Merged / Closed
 stage_7: Undispatched
 ```
 

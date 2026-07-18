@@ -254,23 +254,19 @@ that authority and remains historical consumer evidence.
 
 ### [Maintenance 2: RNG And Product-Module Ownership Migration](maintenance_2_rng_and_product_module_ownership_migration.md)
 
-Status: **topology-dependent: candidate while these exact bytes are absent
-from `main`; Merged / Design acceptance pending if present unchanged on
-`main`; Merged / Closed only when this index and the work order record Design's
-evidence-only closeout**. Dependency state: **TensorCore `0.9.0` exact pin
-installed**.
+Status: **Merged / Closed**. Exact final candidate and identical pre-closeout
+merged `main`:
+`89a188abe330c06aa0b54c27cd61ac32a4fe9f63`. Dependency state:
+**TensorCore `0.9.0` exact pin installed**.
 
 Dependency: TensorDSLab Design selected published TensorCore `0.9.0` exact
-commit `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59` after package-root and
-consumer continuity probes. The dispatched Implementation candidate pins that
-exact commit and uses only its public package-root surface. While these exact
-bytes are absent from `main`, they remain in the fixed-commit Validation/Review
-loop. If present unchanged on `main`, Review's clean fast-forward has completed
-and Design acceptance remains pending; only the two-document `Merged / Closed`
-closeout completes final acceptance. CUDA was unavailable, so the recorded
-evidence is eager CPU-only.
+commit `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, direct parent
+`0e72f0e69cf9140b692d408e49a504cbdcb101b7`, after package-root and consumer
+continuity probes. Independent source clones and archives reproduced exact
+SHA-256 `f793ef3645ab44175e445feb94444a90e01ccc34d01fc467db36bd81ad0606bd`.
+The accepted implementation uses only the public package-root surface.
 
-Implementation scope: split `types.py` ownership into product `config.py`/`field.py`
+Implemented scope: split `types.py` ownership into product `config.py`/`field.py`
 and readout `config.py`/`collection.py`; create private
 `charge/effects` modules; retain Charge multinomial/category orchestration,
 checked count helpers, and bookkeeping in `_counts.py`; add the ten
@@ -284,6 +280,31 @@ private scalar-to-dtype requirement helper and uses TensorCore
 freezes the exact dependency, commands, allowlist, fixtures, lifecycle, and
 stop conditions. Stage 7 remains undispatched and is not part of this
 migration.
+
+The exact candidate chain is Design authority
+`daa046405f62ee324bc495867e796213bf6657a6` through implementation
+`f6e1fc8c3d08152cf7ba603404a4d642628adfae`, two bounded test corrections
+`5f6a8d56f0fefcd5606a8406da3a250c0f841b82` and
+`f4e8eec9befaa107ceeb30c05ba1657eb7210bca`, and the Design-authorized
+tests-only Review correction at the final candidate above. Fixed-commit
+Validation and independent Review cleared the final bytes. Review
+fast-forwarded clean `main` without a merge commit or push and repeated the
+post-merge gates. The cumulative diff is 64 rename-aware files, 5,052
+insertions, and 5,908 deletions, all within the frozen allowlist.
+
+Final source and archive suites each ran 157 tests: 148 passed and 9
+conditional CUDA tests skipped. The focused suite ran 148 tests: 139 passed
+and 9 skipped; the supplemental proof module passed 9 of 9. Pyright `1.1.411`
+reported zero diagnostics against both dependency forms, import isolation was
+`False False False False`, and dependency, retired-surface, forbidden-call,
+scope, protected-byte, diff, and artifact gates passed. The evidence
+environment was Python `3.13.11`, PyTorch `2.12.1`, macOS `15.7.4` on arm64,
+and eager CPU. CUDA was unavailable, so this closeout makes no GPU execution
+or performance claim.
+No production or test byte changed after Review clearance. Stage 7 remains
+undispatched, Coordination remains Deferred, Profile B remains Disabled, and
+conformance remains Not evaluated. This closeout establishes no broad
+compatibility and authorizes no push.
 
 ### Stage 7: Public Readout Orchestration
 
