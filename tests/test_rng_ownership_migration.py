@@ -28,6 +28,7 @@ from tensor_dslab import (
     AnalogSaturationConfig,
     AnalogWaveformConfig,
     ChannelAxis,
+    Charge,
     ChargeConfig,
     ChargeSmearingConfig,
     CorrelatedAvalancheConfig,
@@ -692,6 +693,31 @@ class RngOwnershipMigrationTest(unittest.TestCase):
             )
             self.assertEqual(_hex_bits(actual), expected)
 
+    def test_public_tensorcore_zero_dimension_address_span(self) -> None:
+        with self.assertRaisesRegex(
+            ValueError,
+            "logical_positions shape span must be less than 2\\*\\*63",
+        ):
+            logical_positions((0, 1 << 62, 2), device="cpu")
+
+        positions = logical_positions((0, 1 << 62), device="cpu")
+        self.assertEqual(tuple(positions.shape), (0, 1 << 62))
+        self.assertEqual(positions.numel(), 0)
+        with self.assertRaisesRegex(
+            ValueError,
+            "result shape span must be less than 2\\*\\*63",
+        ):
+            _FailingRng(seed=_SEED).gaussian(
+                mean=0.0,
+                standard_deviation=1.0,
+                key=RngKey(namespace=_NAMESPACE, stream=1),
+                positions=positions,
+                dtype=torch.float32,
+                quantum=0,
+                ordinal=0,
+                count=2,
+            )
+
     def test_public_producer_signatures_and_draw_free_branches(self) -> None:
         for producer in (_produce_noise_waveform, _produce_charge):
             parameters = signature(producer).parameters
@@ -728,6 +754,63 @@ class RngOwnershipMigrationTest(unittest.TestCase):
         self.assertTrue(
             torch.equal(charge.tensor, source.tensor.to(dtype=torch.float32))
         )
+
+    def test_exact_zero_charge_branches_are_fresh_and_draw_free(self) -> None:
+        source = _source()
+        original = source.tensor.clone()
+        configs = (
+            (
+                "dark_count",
+                ChargeConfig(
+                    dark_count=DarkCountConfig(
+                        rate_hz=NonnegativeFloat(0.0)
+                    )
+                ),
+            ),
+            (
+                "timing_jitter",
+                ChargeConfig(
+                    timing_jitter=TimingJitterConfig(
+                        sigma_ns=NonnegativeFloat(0.0)
+                    )
+                ),
+            ),
+            (
+                "smearing",
+                ChargeConfig(
+                    smearing=ChargeSmearingConfig(
+                        relative_sigma=NonnegativeFloat(0.0)
+                    )
+                ),
+            ),
+        )
+        for branch, config in configs:
+            for floating_dtype in (torch.float32, torch.float64):
+                with self.subTest(
+                    branch=branch,
+                    floating_dtype=floating_dtype,
+                ):
+                    result = _produce_charge(
+                        source,
+                        sampling=_sampling(),
+                        config=config,
+                        rng=_FailingRng(seed=_SEED),
+                        floating_dtype=floating_dtype,
+                    )
+                    self.assertIs(type(result), Charge)
+                    self.assertIs(result.tensor.dtype, floating_dtype)
+                    self.assertTrue(
+                        torch.equal(
+                            result.tensor,
+                            source.tensor.to(dtype=floating_dtype),
+                        )
+                    )
+                    self.assertIsNot(result.tensor, source.tensor)
+                    self.assertNotEqual(
+                        result.tensor.untyped_storage().data_ptr(),
+                        source.tensor.untyped_storage().data_ptr(),
+                    )
+                    self.assertTrue(torch.equal(source.tensor, original))
 
     def test_completed_noise_and_charge_eager_cpu_continuity(self) -> None:
         source = _source()
