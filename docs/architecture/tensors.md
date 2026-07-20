@@ -17,13 +17,12 @@ implementation. It provides public `RngKey`,
 `CounterRng`, `Threefry4x32`,
 `logical_positions`, and `require_same_dtype`. TensorCore's Stage 15 work
 order and random architecture at that exact commit are authoritative; the
-TensorDSLab-hosted consumer proposal is historical evidence only. Closed Stage
-3 through 6 evidence remains pinned to `0.7.0`. While the Maintenance 2 bytes
-are absent from `main`, they remain the fixed-commit Validation/Review
-candidate; if present unchanged on `main`, Review's clean fast-forward has
-completed and Design acceptance remains pending. Final acceptance is complete
-only when the work order and implementation index record `Merged / Closed`.
-No broad compatibility result follows in any state.
+TensorDSLab-hosted consumer proposal is historical evidence only. Maintenance
+2 is Merged / Closed through exact candidate
+`89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
+`9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`; `0.9.0` is the installed pin.
+Closed Stage 3 through 6 evidence remains pinned to `0.7.0`. No broad
+compatibility result follows from either exact baseline.
 
 The previous TensorCore `0.6` ID/layout/sidecar architecture is historical and
 is intentionally not preserved through aliases.
@@ -222,30 +221,42 @@ collection class and replaces loose field registries and canonical sequences.
 
 ## Construction And Dependency Ownership
 
-Product relationships appear in private function signatures, not in collection
-membership or TensorCore:
+Product relationships appear in private producer signatures, not in collection
+membership or TensorCore. Product configuration enters the corresponding typed
+private preparer:
 
 ```python
+def _prepare_analog_waveform(
+    *,
+    config: AnalogWaveformConfig,
+    floating_dtype: torch.dtype,
+) -> _AnalogWaveformPlan:
+    ...
+
+
 def _produce_analog_waveform(
     pure: PureWaveform,
     noise: NoiseWaveform,
     *,
-    config: AnalogWaveformConfig,
+    plan: _AnalogWaveformPlan,
 ) -> AnalogWaveform:
     ...
 ```
 
 `simulate_readout(...)` owns the complete request and dependency plan. It uses
-private mutable local assembly state, retains exactly the requested products,
-then constructs `ReadoutCollection` once. A prerequisite does not need to be
-returned merely because it was computed.
+one private immutable readout plan composed from product-owned preparation
+records, retains exactly the requested products, then constructs
+`ReadoutCollection` once. Complete preparation precedes every product-producer
+invocation. A prerequisite does not need to be returned merely because it was
+computed.
 
 Product packages do not receive a whole collection as a service locator. Each
-producer receives explicit prerequisite fields, its exact config, shared
-sampling facts when numerically relevant, and one public TensorCore
+preparer receives its exact config plus the source, sampling, device, shape, or
+floating-dtype facts it needs. Each producer receives explicit prerequisite
+fields and its product-owned typed plan, plus one public TensorCore
 `CounterRng` when that producer is stochastic-capable. Deterministic producers
-and helpers receive no RNG. The stochastic effect selects the exact `RngKey`
-owned by its leaf config.
+and helpers receive no RNG. The stochastic effect uses the exact `RngKey`
+captured from its leaf config during preparation.
 
 The package tree and dependency direction are fixed in
 [`rebuild.md`](rebuild.md): common axes/sampling, private shared readout
@@ -285,10 +296,13 @@ writes before constructing and exposing the corresponding field and initiates
 no later write through an alias. Private writable scratch remains exclusive
 and unexposed and never enters a returned collection.
 
-Constructing or returning a field is not a device synchronization point.
-Ordinary current-stream PyTorch ordering applies; a cross-stream consumer
-establishes its own event or stream dependency. Strong references preserve
-lifetime, not write safety or stream ordering.
+Constructing or returning a field is not itself an additional device
+synchronization point. Accepted deep-value validation and producer
+postconditions use scalar reductions that may synchronize CUDA. Outside those
+documented correctness checks, ordinary current-stream PyTorch ordering
+applies; a cross-stream consumer establishes its own event or stream
+dependency. Strong references preserve lifetime, not write safety or stream
+ordering.
 
 ## No Initial Output-Buffer Layer
 
@@ -305,7 +319,8 @@ and must not leak subsequently reusable scratch into a returned product.
 ## Device, Dtype, And Autograd
 
 All present fields in a `ReadoutCollection` use one exact device. The public
-builder never silently moves, casts, detaches, calls `.cpu()` or `.numpy()`,
+builder accepts source tensors only on CPU or CUDA, even for a truth-only
+request. It never silently moves, casts, detaches, calls `.cpu()` or `.numpy()`,
 converts through Python lists, or serializes/reloads an existing source.
 Generated products use their declared output dtypes.
 
@@ -325,21 +340,32 @@ modes that replace ordinary aliasing or operation semantics.
 
 ## Public Validation Boundary
 
-Public `simulate_readout(...)` preflights the complete effective request before
-its first random draw or tensor write. It validates recognized unique product
-classes, required configs, source sampling agreement, axes, shape, dtype,
-device, selected floating dtype, a required `CounterRng` instance, exact
-config keys, closure-wide duplicate-key rejection, representability, and all
-operation relationships needed by the closure. Concrete RNG
-device/dtype/distribution support is checked only for an effective stochastic
-closure; deterministic closures validate nominal membership and request no
-values.
+Public `simulate_readout(...)` prepares the complete effective request before
+its first RNG request, product-producer invocation, or semantic-output write.
+It validates recognized unique product classes, required configs, source
+sampling agreement, axes, shape, dtype, CPU/CUDA device, selected floating
+dtype, a required `CounterRng` instance, exact config keys, closure-wide
+duplicate-key rejection, representability, and all statically preparable
+operation relationships needed by the closure.
+
+TensorCore exposes no non-consuming concrete-algorithm capability query.
+Deterministic closures validate nominal `CounterRng` membership and request no
+values; stochastic closures perform no dummy probe. A real custom RNG backend
+failure at the first genuine distribution request is an execution failure and
+has no rollback guarantee.
 
 Private product and scientific functions are internal independently testable
 units. They may trust values that passed public preflight and do not need to
 repeat the whole boundary or defend direct unsupported calls. Cheap
 correctness-critical local assertions remain acceptable when they protect the
 function's own valid-result contract.
+
+Every generated producer does own one explicit result-boundary scan: after it
+constructs its local field, it invokes that product's existing private
+`_require_valid_values(...)` before returning the field for downstream use or
+retention. This is not an intrinsic TensorCore constructor invariant. It is the
+Stage 7 public-operation postcondition and may synchronize CUDA through scalar
+extraction.
 
 Malformed supported operands use TensorCore's documented `TypeError` boundary;
 unsatisfied well-formed relationships use `ValueError` where applicable.

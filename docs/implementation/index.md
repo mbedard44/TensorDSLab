@@ -306,17 +306,22 @@ undispatched, Coordination remains Deferred, Profile B remains Disabled, and
 conformance remains Not evaluated. This closeout establishes no broad
 compatibility and authorizes no push.
 
-### Stage 7: Public Readout Orchestration
+### [Stage 7: Public Readout Orchestration](stage_7_public_readout_orchestration.md)
 
-Prerequisite: Maintenance 2 must be Merged / Closed against an exact accepted
-TensorCore RNG pin.
+Status: **Design-complete / Undispatched**.
 
-Possible goal: implement request/config/RNG/key-collision preflight, exact
-prerequisite planning, each prerequisite at most once, requested-only
-retention, and the complete public `simulate_readout(..., rng=...)` surface
-after every required product producer exists. Do not add IO or persistence
-policy. Profile real GPU memory and execution before proposing workspace or
-output-reuse architecture.
+The Maintenance 2 prerequisite is satisfied at exact implementation candidate
+`89a188abe330c06aa0b54c27cd61ac32a4fe9f63`, Design closeout
+`9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`, and TensorCore `0.9.0` pin
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`.
+
+The work order freezes complete request/config/key preparation before product
+execution, private product-owned prepared plans, exact typed prerequisite
+planning, every producer at most once, requested-only retention, the complete
+public `simulate_readout(..., rng=...)` surface, and focused composition/
+storage/import/typing evidence. It adds no IO, persistence, workspace,
+output-reuse, integration, or performance policy. Production requires a
+separate user dispatch after route and baseline reverification.
 
 ### Later Integration And Artifact Stages
 

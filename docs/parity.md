@@ -13,15 +13,15 @@ The bounded Stage 6 evidence is exact implementation candidate
 `ea979862b05f4ef543f6971c86641df317232479`, against TensorCore `0.7.0`
 `b454d738f6385ce6489d85492a618a3dab139bb6`. Its conditional CUDA cases were
 skipped, and its public Stage 7 comparison boundary does not yet exist.
-Maintenance 2 uses exact TensorCore `0.9.0` commit
-`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`; it preserves the accepted
-scientific/address mappings while changing their module and generic-RNG owner.
-While these exact bytes are absent from `main`, they remain the fixed-commit
-Validation/Review candidate; if present unchanged on `main`, Review's clean
-fast-forward has completed and Design acceptance remains pending. Final
-acceptance is complete only when the work order and implementation index
-record `Merged / Closed`. CUDA was unavailable, so it adds no GPU or completed-
-value cross-backend evidence. Stage 7 remains undispatched.
+Maintenance 2 is Merged / Closed through exact implementation candidate
+`89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
+`9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. It uses exact TensorCore commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59` (version `0.9.0`) and preserves
+the accepted scientific/address mappings while changing their module and
+generic-RNG owner.
+CUDA was unavailable, so it adds no GPU or completed-value cross-backend
+evidence. Stage 7 is Design-complete / Undispatched; the public executable
+comparison boundary remains absent until separate implementation and closure.
 
 ## Purpose
 
@@ -35,8 +35,9 @@ not mean that TensorDSLab should reproduce IV-DSLab package structure, global
 state, RNG streams, sparse PE-row growth, condition-database loading, fixed
 array rank, or incidental implementation defects.
 
-The selected TensorCore `0.7` target is governed by
-[Rebuild Architecture](architecture/rebuild.md),
+The semantic-root architecture was introduced against TensorCore `0.7` and is
+now installed against the selected exact TensorCore `0.9.0` dependency. It is
+governed by [Rebuild Architecture](architecture/rebuild.md),
 [Post-Binned Readout Architecture](architecture/readout.md), and
 [TensorCore Integration](architecture/tensors.md). The fixed-`K` section of
 the rebuild architecture is the sole active correlated-avalanche baseline.
@@ -275,7 +276,8 @@ different boundaries:
 1. a private timing-redistribution diagnostic from a common binned
    `Photoelectrons` input, without treating jitter as a replacement truth
    product;
-2. future Stage 7 `simulate_readout(..., products=[Charge])` from common
+2. the Design-complete but unimplemented Stage 7
+   `simulate_readout(..., products=[Charge])` from common
    `Photoelectrons` for end-to-end charge statistics; or
 3. a private ephemeral count-grid boundary used only to validate an internal
    dark-count, crosstalk, afterpulse, or smearing submodel.
@@ -443,8 +445,8 @@ when:
 TensorDSLab's analytically prepared binary64 kernel and aggregate multinomial
 orchestration do not reproduce IV's per-PE finite digital normal or draw
 sequence exactly. Closed Stage 6 executed the frozen binomial mapping through
-private `readout/_random.py`; the Maintenance 2 candidate calls the same
-promoted mapping through TensorCore's positional `binomial(...)`.
+private `readout/_random.py`; the closed Maintenance 2 implementation calls the
+same promoted mapping through TensorCore's positional `binomial(...)`.
 Validation therefore measures the analytic transition/drop probabilities,
 multinomial moments and covariance, and named tails rather than upgrading the
 implemented comparison to distributional parity.
@@ -484,8 +486,8 @@ The rebuild uses one global rate. Typed per-channel rates are deferred. The
 resulting grid is an ephemeral submodel observable, not a recognized
 `ReadoutCollection` field.
 TensorDSLab prepares each cell's binary64 mean. Closed Stage 6 executed the
-selected hybrid mapping through private `readout/_random.py`; the Maintenance
-2 candidate calls TensorCore's `poisson(...)`: one-uniform
+selected hybrid mapping through private `readout/_random.py`; the closed
+Maintenance 2 implementation calls TensorCore's `poisson(...)`: one-uniform
 inverse-CDF sampling below mean `10` and Hoermann PTRS from `10` through its
 accepted execution ceiling `1e8`. This is an implementation of the named
 Poisson target law, not donor RNG or same-seed parity.
@@ -552,11 +554,10 @@ A_direct[g + 1, u]  ~ Poisson(R_direct[g + 1, u])
 A_delayed[g + 1, u] ~ Poisson(R_delayed[g + 1, u])
 ```
 
-The Maintenance 2 candidate gives the two retained modes and their two
-overflow roles separate config-owned `RngKey` values and calls TensorCore's
+The closed Maintenance 2 implementation gives the two retained modes and their
+two overflow roles separate config-owned `RngKey` values and calls TensorCore's
 public hybrid `poisson(...)`; closed Stage 6 used the corresponding private
-streams and the same frozen sampler mapping. Every actual
-aggregate cell rate
+streams and the same frozen sampler mapping. Every actual aggregate cell rate
 must be binary64, finite, nonnegative, and no greater than `1e8`. The sampler
 choice changes neither the declared Poisson law nor the intentional donor
 divergences below; its raw-word sequence has no IV-parity claim.
@@ -1027,14 +1028,14 @@ device-resident streams.
 The selected aggregate multinomial implementation uses TensorDSLab-owned
 sequential category planning with stable prepared current/later-category
 masses. Closed Stage 6 executed the frozen forward-CDF/BTRS mapping through
-private `readout/_random.py`; the Maintenance 2 candidate calls that promoted
-mapping through TensorCore's `binomial(...)`. It does not repeatedly
-subtract represented categories from one; that implementation detail was
+private `readout/_random.py`; the closed Maintenance 2 implementation calls
+that promoted mapping through TensorCore's `binomial(...)`. It does not
+repeatedly subtract represented categories from one; that implementation detail was
 rejected after the timing-jitter numerical study corrupted small residual
-tails. Promotion to TensorCore is an accepted target, not a claim that IV or
-its NumPy dependency uses the same binomial algorithm or consumes uniforms in
-the same order. Parity is therefore assessed against the named
-binomial/multinomial probability laws and their moments, covariance,
+tails. TensorCore ownership is implemented at exact version `0.9.0`; this does
+not imply that IV or its NumPy dependency uses the same binomial algorithm or
+consumes uniforms in the same order. Parity is therefore assessed against the
+named binomial/multinomial probability laws and their moments, covariance,
 boundaries, and tails rather than returned samples.
 The frozen BTRS acceptance calculation uses a finite binary64 Stirling-tail
 approximation and therefore does not claim ideal bitwise Binomial sampling.

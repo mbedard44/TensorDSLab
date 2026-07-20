@@ -23,8 +23,9 @@ The accepted rebuild target is specified in
 [`architecture/rebuild.md`](architecture/rebuild.md). Stage 3 replaced the
 historical pre-deployment TensorCore `0.6` representation without a
 compatibility layer. Stage 2 and Maintenance 1 remain historical evidence and
-do not constrain TensorDSLab's currently selected TensorCore `0.7` dependency
-to the retired representation.
+do not constrain the semantic-root architecture introduced against TensorCore
+`0.7` or the currently selected exact TensorCore `0.9.0` dependency to the
+retired representation.
 
 ## Target Collaborator Surface
 
@@ -47,6 +48,12 @@ The returned `ReadoutCollection` contains exactly the requested product types.
 The builder computes transitive prerequisites privately, computes each at most
 once, and does not retain an intermediate unless the caller requested it.
 Product-request iteration order has no semantic meaning.
+
+Before executing any product, the builder composes private product-owned
+preparation records for the complete closure and checks closure-wide
+stochastic-key uniqueness. Scientific preparation remains beside each product;
+the public orchestration layer owns only request planning, ordering, and
+retention.
 
 The public concepts are therefore:
 
@@ -224,7 +231,7 @@ tensor_dslab/
     __init__.py
     config.py                # ReadoutConfig
     collection.py            # ReadoutCollection
-    simulation.py            # future Stage 7 public simulate_readout()
+    simulation.py            # accepted Stage 7 public API; unimplemented
     _requirements.py         # shared private readout relationships
 
     photoelectrons/
@@ -258,19 +265,17 @@ tensor_dslab/
       _produce.py
 ```
 
-This is the accepted Maintenance 2 target, realized by its implementation.
+This is the accepted Maintenance 2 target, realized by its closed implementation.
 Closed Stage 5/6 production used `types.py`,
 `_RngStream`, and `readout/_random.py`. TensorCore has
 published its package-authoritative generic RNG plus independently testable
 same-dtype sub-slice as version `0.9.0` at exact commit
-`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. TensorDSLab Maintenance 2 has
-pinned that dependency, split the owned modules, and removed the retired local
-RNG surfaces without shims. While these exact bytes are absent from `main`,
-they remain the fixed-commit Validation/Review candidate; if present unchanged
-on `main`, Review's clean fast-forward has completed and Design acceptance
-remains pending. Final acceptance is complete only when the work order and
-implementation index record `Merged / Closed`. Stage 7 remains separately
-undispatched.
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. TensorDSLab Maintenance 2 is
+Merged / Closed through exact candidate
+`89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
+`9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. It pins that dependency, splits
+the owned modules, and removes the retired local RNG surfaces without shims.
+Stage 7 is Design-complete / Undispatched.
 
 Files are created only when an accepted implementation slice gives them real
 behavior. Product packages do not import `ReadoutConfig`,
@@ -285,6 +290,12 @@ producer. `_requirements.py` and `charge/effects/_*.py` remain unsupported
 private implementation modules. The accepted target removes `_random.py`;
 generic RNG mechanics come from TensorCore. There are no global `configs`,
 `fields`, `builders`, or `validation` dumping grounds.
+
+Stage 7 adds one private frozen preparation plan beside each generated product.
+The owning product `_prepare_*` function receives its exact config and relevant
+source/sampling/dtype facts; `_produce_*` receives that trusted plan rather than
+the config again. `readout.simulation` composes one private `_ReadoutPlan` only
+after every required product plan succeeds, before any producer is invoked.
 
 The producer module name is `_produce.py`, matching its `_produce_*` entry
 point. Stage 6 behavior-neutrally renamed all four transitional Stage 4/5
@@ -315,9 +326,14 @@ reusable-destination design must keep writable storage raw, exclusive, and
 unexposed until producer writes have been enqueued; it may not revive the old
 practice of overwriting a target already exposed as a valid field.
 
-Operations do not silently move, cast, detach, host-materialize, or synchronize
-an existing input. Ordinary same-stream PyTorch ordering applies;
-cross-stream consumers establish their own dependency.
+Operations do not silently move, cast, detach, or host-materialize an existing
+input. This does not prohibit a producer's declared fresh generated-product
+dtype conversion, including `Photoelectrons[torch.int64]` to floating Charge.
+Accepted deep-value validation and producer postconditions use scalar
+reductions that may synchronize CUDA as a functionality-first correctness
+cost. Field construction itself adds no synchronization; outside those checks,
+ordinary same-stream PyTorch ordering applies and cross-stream consumers
+establish their own dependency.
 
 ## Validation Philosophy
 
@@ -325,12 +341,21 @@ Public boundaries validate legitimate public inputs, including exact product
 requests, config relationships, axes, shape, dtype, device, sampling
 agreement, value domains at untrusted ingress, an accepted `CounterRng`
 instance, exact config-owned `RngKey` values, closure-wide key uniqueness, and
-representable numerical bounds. Request failures occur before RNG calls or
-tensor writes.
+representable numerical bounds. Supported statically preparable request
+failures occur before RNG requests, producer invocation, or semantic-output
+writes. TensorCore exposes no non-consuming RNG capability query, so a real
+custom-algorithm backend failure may occur only at its first genuine
+distribution request and is an execution failure rather than preflight.
 
 Cheap intrinsic leaf checks belong in `_require()`. Full-device value scans
 belong at explicit trust boundaries and builder postconditions rather than in
 every semantic constructor.
+
+Stage 7 closes the public result boundary by requiring every generated
+producer to invoke its existing product-specific deep validator after local
+field construction and before returning that field to orchestration. Invalid
+results do not reach downstream producers or the returned collection; the
+scan may synchronize CUDA.
 
 TensorDSLab does not harden itself against callers who deliberately leave the
 public contract by subclassing final leaves, modifying classes, bypassing root
@@ -344,7 +369,8 @@ The future TensorG4DS bridge is an explicit semantic conversion, not a subclass
 cast. It will own provenance-to-example mapping, detector channel mapping,
 dense PE binning on numeric left edges, boundary diagnostics, and exact-device
 evidence. `simulate_readout` itself performs no IO, source loading, PE binning,
-movement, cast, or provenance inference.
+source movement, input-normalization cast, or provenance inference. This does
+not prohibit a producer's declared fresh generated-product dtype conversion.
 
 TensorML receives deliberately selected product fields through a future
 model-facing boundary; a growing collection is not an implicit positional
@@ -389,7 +415,5 @@ CUDA was unavailable, so its evidence is eager CPU-only. Measured GPU
 optimization remains later work. TensorCore RNG/same-dtype acceptance and
 exact pin selection are complete at `0.9.0` commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`; TensorDSLab Maintenance 2 uses
-that exact dependency under the topology-dependent lifecycle above and
-precedes Stage 7.
-Stage 7 public orchestration is undispatched and has no accepted focused
-production work order.
+that exact dependency and is Merged / Closed. Stage 7 public orchestration is
+Design-complete / Undispatched under its focused work order.

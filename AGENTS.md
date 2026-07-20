@@ -217,17 +217,17 @@ private Charge producer and aggregate count-sampler slice. Fixed-commit
 Validation, independent Review, and Design's post-merge audit found no
 unresolved issue. The evidence is eager CPU-only because CUDA was unavailable;
 it makes no GPU execution, performance, fusion, install, or wheel-build claim.
-Maintenance 2 RNG and product-module ownership migration installs the
+Maintenance 2 RNG and product-module ownership migration is Merged / Closed.
+Its exact implementation candidate is
+`89a188abe330c06aa0b54c27cd61ac32a4fe9f63`, and Design's documentation-only
+closeout is `9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. It installs the
 product-owned module split, public TensorCore RNG/distribution use, exact
 config-owned role keys, and exact TensorCore `0.9.0` commit
-`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. Its lifecycle is topology-
-dependent: while these exact bytes are absent from `main`, they are the
-Implementation candidate under fixed-commit Validation and Review; if present
-unchanged on `main`, Review's clean fast-forward has completed and Design
-acceptance remains pending. Final acceptance is complete only when the work
-order and implementation index record `Merged / Closed`. The recorded
-evidence is eager CPU-only because CUDA was unavailable. Stage 7 public
-readout orchestration and later integration production remain undispatched.
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The accepted evidence is eager
+CPU-only because CUDA was unavailable. Stage 7 public readout orchestration is
+Design-complete / Undispatched under
+`docs/implementation/stage_7_public_readout_orchestration.md`; later
+integration production remains undispatched.
 
 If implementation reveals a concrete contradiction in the accepted design, stop
 and send the issue back to Design. Do not silently widen architecture, create
@@ -297,8 +297,8 @@ compatibility shims; closed Stage 5/6 work orders remain historical evidence
 for the former `types.py`, `_RngStream`, and `readout/_random.py` bytes. It pins
 TensorCore's published generic RNG and `require_same_dtype` surface at exact
 version `0.9.0` commit
-`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. Its topology-dependent lifecycle
-is governed by the branch-versus-`main` rule above.
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The migration is Merged / Closed
+at the exact candidate and Design closeout recorded above.
 
 Materialize only modules with real behavior accepted by the active work order.
 Every generated product owns its final `TensorField` leaf, public configs,
@@ -306,10 +306,10 @@ product validation, and private `_produce_*` builder. `Photoelectrons` remains
 the already-produced truth input and owns no producer. Private `_simulate_*`
 functions implement scientific submodels. `readout.config` contains only
 `ReadoutConfig`; `readout.collection` contains only `ReadoutCollection`;
-future Stage 7 `readout.simulation` will own the one public
-`simulate_readout(...)` orchestration function. Shared axes and sampling belong
-in `common`. Charge-specific multinomial/category orchestration, count-domain
-helpers, and scientific effects remain private.
+accepted but unimplemented Stage 7 `readout.simulation` will own the one public
+`simulate_readout(...)` orchestration function. Shared axes and sampling
+belong in `common`. Charge-specific multinomial/category orchestration,
+count-domain helpers, and scientific effects remain private.
 
 Keep import direction acyclic: TensorCore, common, private shared requirements,
 product configs/fields, product producers plus explicit prerequisite fields,
@@ -348,7 +348,7 @@ and implemented eager-reference behavior through exact Stage 6 candidate
 accepted evidence makes no GPU execution or cross-backend claim.
 
 That enum/module arrangement is retained only as closed Stage 5/6 evidence.
-The Maintenance 2 candidate preserves the same default addresses as exact
+The closed Maintenance 2 implementation preserves the same default addresses as exact
 config-owned TensorCore `RngKey` values, uses TensorCore for generic RNG and
 count-distribution mechanics, keeps Charge multinomial orchestration and count
 bookkeeping in `readout/charge/effects/_counts.py`, and removes `_RngStream`,
@@ -494,8 +494,8 @@ stochastic-role key placement in leaf configs, scientific position/category
 lattices, direct-uniform/Gaussian ordinals, multinomial ordering and final
 remainders, draw-free scientific policy, count accumulation, and ledgers.
 Import only public TensorCore package-root names; do not copy or import
-protected RNG or promoted distribution mechanics. The Maintenance 2 candidate
-pins exact TensorCore `0.9.0`; closed Stage 3 through 6 evidence remains scoped
+protected RNG or promoted distribution mechanics. The closed Maintenance 2
+implementation pins exact TensorCore `0.9.0`; closed Stage 3 through 6 evidence remains scoped
 to `0.7.0`. TensorDSLab uses
 `require_same_dtype` only for semantic-field relationships and retains raw
 tensor checks plus its private scalar-to-dtype representation helper.
@@ -583,16 +583,23 @@ analog waveform consumed by digitization.
 
 `simulate_readout(...)` requires an explicit nonempty iterable of exact product
 classes. It consumes the iterable once, rejects duplicates and unknown classes,
-computes the transitive prerequisite closure, validates every required config
-and source relationship before RNG use, executes each producer at most once,
-and retains exactly the requested fields. Request order has no collection
-semantics. Unrequested prerequisites remain private local values.
+computes the transitive prerequisite closure, and completes one private typed
+preparation plan for every required product before any RNG request, producer
+invocation, or semantic-output write. It then executes each producer at most
+once and retains exactly the requested fields. Product preparers own their
+scientific/contextual equations; `readout.simulation` composes them without
+duplication. Request order has no collection semantics. Unrequested
+prerequisites remain private local values.
 
 The accepted Stage 7 signature requires keyword-only `rng: CounterRng`, even
 for deterministic closures; there is no simultaneous `seed=` parameter.
 Deterministic closures request no values. Preflight rejects one `RngKey`
 assigned to distinct stochastic roles in the requested closure before any RNG
-call or producer write.
+request, producer invocation, or semantic-output write. TensorCore exposes no
+non-consuming concrete-algorithm capability query: the public boundary accepts
+nominal `CounterRng` membership, performs no dummy draw, and treats a real
+custom RNG/backend incompatibility at its first genuine distribution request
+as a dynamic execution failure.
 
 The computational graph is:
 
@@ -616,8 +623,25 @@ returns that exact field when requested, and creates guaranteed-fresh generated
 products. Generated products retained together are storage-independent. The
 builder does not mutate sources, silently move/cast/detach/host-materialize
 inputs, expose private scratch, or write through any alias after exposing a
-semantic result. Preflight failure occurs before RNG consumption or producer
-writes; failures after backend launch carry no rollback guarantee.
+semantic result. Declared fresh generated-product dtype conversion is not an
+input cast. Every supported statically preparable failure occurs before
+the first RNG request, producer invocation, or semantic-output write. Dynamic
+execution failures return no partial collection or exposed failed field but
+carry no rollback guarantee for private allocations or completed local
+prerequisites. Deep ingress validation and producer postconditions may
+synchronize CUDA through scalar reductions; field construction itself adds no
+synchronization point.
+
+Stage 7 accepts source devices of exactly CPU or CUDA, including truth-only
+requests. It validates `floating_dtype` only when the closure generates a
+floating product; a truth-only request does not consume that control.
+
+Stage 7 also closes the result trust boundary deferred by Stage 4. Every
+generated producer calls its existing product-specific
+`_require_valid_values(...)` exactly once after constructing its local field
+and before returning it for downstream use or retention. Invalid generated
+fields do not escape and no downstream producer runs; these deep postcondition
+scans may synchronize CUDA.
 
 Every generated dimension-preserving field reuses the source's exact immutable
 axis tuple and axis instances. Axis order may vary semantically; upstream

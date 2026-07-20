@@ -143,8 +143,10 @@ exactly the requested fields.
 
 Request order has no meaning. Changing retention alone must not change a
 common product value. Missing config, invalid `CounterRng`, duplicate role
-keys, or another request-level error fails before any RNG call or tensor
-write.
+keys, or another statically preparable request-level error fails before any
+RNG call, product-producer invocation, or semantic-output write. Product-owned
+private preparation records keep scientific equations beside their products;
+the public layer composes them into one private readout plan.
 
 Private `_produce_*` functions construct semantic products. Private
 `_simulate_*` functions implement scientific submodels inside a product
@@ -166,8 +168,10 @@ No retired producer name or compatibility shim remains.
 `ReadoutConfig` contains one required `SamplingConfig` and optional exact
 product configs. Each product owns its field and its config types. `None`
 disables an optional submodel; closed unions of exact config types select real
-alternative models. Product producers receive their exact config and shared
-sampling facts rather than the whole configuration as a service locator.
+alternative models. Each product preparer receives its exact config and
+relevant shared sampling/source facts, then its producer receives the trusted
+typed plan and explicit prerequisites. Neither receives the whole
+`ReadoutConfig` as a service locator.
 
 There is no generic `Config` ABC without a polymorphic consumer, no string
 algorithm selector, no product-level `persist` flag, and no mixing of
@@ -230,14 +234,15 @@ IID-white, and caller-supplied PSD noise producer plus only the private RNG
 behavior those models consume. It likewise makes no compiler, fusion,
 target-sized-temporary, throughput, or accelerator-performance claim.
 
-The first pure-waveform producer prepares its config-derived pulse template and
-sampled normalization in Python binary64, then materializes that template once
-in the `Charge` dtype/device. Analog saturation bounds and ADC transfer
-constants use the same binary64 scalar-preparation rule before field-dtype
-representability checks. Digitization retains an affine open interior and
-explicitly saturates at inclusive dtype-rounded pre-gain thresholds so the
-upper endpoint cannot lose one code to rounding. Payload-sized convolution,
-analog, and digitizer arithmetic remains in the input field dtype and device;
+The pure-waveform preparer derives its config-defined pulse template and
+sampled normalization in Python binary64; the producer then materializes that
+prepared template once in the `Charge` dtype/device. Analog saturation bounds
+and ADC transfer constants use the same binary64 preparation rule before
+field-dtype representability checks. Digitization retains an affine open
+interior and explicitly saturates at inclusive dtype-rounded pre-gain
+thresholds so the upper endpoint cannot lose one code to rounding.
+Payload-sized convolution, analog, and digitizer arithmetic remains in the
+input field dtype and device;
 existing input payloads are never host-materialized.
 
 ### Stage 5/6 Private RNG Is Historical Production Evidence
@@ -347,13 +352,11 @@ an accepted floating dtype.
 The Maintenance 2 implementation installs the selected exact
 TensorCore commit, splits module ownership, migrates stochastic functions,
 preserves default-key output continuity, and removes `_RngStream` plus
-`readout/_random.py` without a shim. While these exact bytes are absent from
-`main`, they remain the fixed-commit Validation/Review candidate; if present
-unchanged on `main`, Review's clean fast-forward has completed and Design
-acceptance remains pending. Final acceptance is complete only when the work
-order and implementation index record `Merged / Closed`. A separately
-dispatched Stage 7 would reject duplicate keys assigned to distinct roles in
-the requested transitive closure before any RNG call or write.
+`readout/_random.py` without a shim. It is Merged / Closed through exact
+candidate `89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
+`9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. Design-complete Stage 7 will
+reject duplicate keys assigned to distinct roles in the requested transitive
+closure before any RNG request, producer invocation, or semantic-output write.
 
 ### Charge Uses Aggregate Multinomial And Hybrid Poisson Sampling
 
@@ -628,6 +631,29 @@ Charge model, not an IV-DSLab equivalence margin. Intentional donor divergences
 still require an observable-specific collaborator or calibration margin under
 [`parity.md`](parity.md).
 
+### Stage 7 Public Readout Orchestration Is Design-Complete
+
+The focused
+[Stage 7 work order](implementation/stage_7_public_readout_orchestration.md)
+is Design-complete / Undispatched. It accepts one public
+`simulate_readout(...)` function, complete product-owned preparation before
+producer execution, one private typed readout plan, closure-wide structural
+role-key uniqueness, fixed execute-once topology, and exact requested
+retention. It also closes the result trust boundary deferred by Stage 4: every
+generated producer applies its exact private deep-value postcondition before
+the field can reach a downstream producer or the returned collection.
+
+TensorCore exposes no non-consuming algorithm-capability query. Stage 7 accepts
+the public `CounterRng` abstraction without a dummy draw or exact-Threefry
+restriction; a real custom RNG backend failure occurs at its first genuine
+distribution request and belongs to the execution-failure boundary. Deep
+value validation and product postconditions may synchronize CUDA through
+scalar reductions as an accepted functionality-first correctness cost.
+
+This Design decision creates no production bytes or dispatch. The public
+function and `readout/simulation.py` remain unimplemented until the user
+separately authorizes the accepted role-separated workflow.
+
 ## Superseded
 
 ### One Collection Subclass Per Product
@@ -689,8 +715,8 @@ supersedes its bare private producer/invocation seed, central stream enum, and
 generic `readout/_random.py` ownership with required `CounterRng`, config-owned
 `RngKey`, and TensorCore-owned generic counter/distribution mechanics. It
 preserves default-key output continuity and removes the retired local surfaces
-without aliases; lifecycle is determined by its presence on `main` as recorded
-above.
+without aliases. Maintenance 2 is Merged / Closed at the exact candidate and
+Design closeout recorded above.
 
 ### Separate Avalanche Architecture Attempts
 
@@ -742,18 +768,6 @@ conditional response with `-expm1`. It never clips a response into range,
 changes the realized AP destination or count, or enters recursive state.
 
 ## Open
-
-### Stage 7 Public Readout Orchestration
-
-The private product producers are implemented through Stage 6. The public
-request-aware `simulate_readout(...)` surface, complete request preflight,
-typed dependency closure, execute-once planning, and exact requested retention
-remain undispatched Stage 7 work. No focused Stage 7 production work order is
-accepted yet. TensorCore's generic RNG stage is published and the TensorDSLab
-Maintenance 2 implementation is present; its exact two-document Design
-closeout is the prerequisite for Stage 7. Stage 7 uses required
-`rng: CounterRng` and
-closure-wide role-key collision preflight rather than bare-seed validation.
 
 ### IV-DSLab Charge Equivalence Margins
 

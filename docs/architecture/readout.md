@@ -15,9 +15,12 @@ merge/closeout is `ea979862b05f4ef543f6971c86641df317232479`. It retained
 exact TensorCore `0.7.0` pin
 `b454d738f6385ce6489d85492a618a3dab139bb6`. Its evidence is eager CPU-only
 because all conditional CUDA tests were skipped. Public request-aware
-`simulate_readout(...)` remains future Stage 7 work and is not dispatched by
-this page. Stage 2 and Maintenance 1 remain historical evidence for the
-superseded TensorCore `0.6` foundation.
+`simulate_readout(...)` is Design-complete / Undispatched under the focused
+Stage 7 work order and remains unimplemented. Maintenance 2 is Merged / Closed
+through exact candidate `89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and
+Design closeout `9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. Stage 2 and
+Maintenance 1 remain historical evidence for the superseded TensorCore `0.6`
+foundation.
 
 ## Scope
 
@@ -57,7 +60,7 @@ could be a distinct `DigitalWaveform` product.
 
 ## Public Surface
 
-The planned Stage 7 collaborator call is:
+The accepted but unimplemented Stage 7 collaborator call is:
 
 ```python
 def simulate_readout(
@@ -179,7 +182,10 @@ keys and deterministic planning enforce that independence.
 
 Unknown products, duplicates, missing required config, invalid sampling,
 an invalid `CounterRng`, duplicate role keys, or another request-level problem
-fails before an RNG call or tensor write.
+fails before an RNG request, product-producer invocation, or semantic-output
+write. Product-owned private preparation records complete the entire closure
+before execution; the public planner does not duplicate their scientific
+equations.
 
 The planner is ordinary typed code, not a public dependency registry or
 workflow graph.
@@ -225,73 +231,101 @@ All use namespace `0x54445331` (`TDS1`). Keys identify stochastic roles and
 participate in config equality and `repr`; they do not contain a seed,
 algorithm, mutable state, device stream, or execution policy.
 
-Each producer receives only its exact product config and shared sampling facts
-when relevant. Private submodels receive their exact nested config rather than
-the complete `ReadoutConfig`.
+Each product preparer receives only its exact product config and shared
+sampling/source facts when relevant. It returns one private immutable product
+plan. Private submodels receive prepared values or their exact nested config
+rather than the complete `ReadoutConfig`.
 
 ## Private Product Functions
 
-Private functions use one naming distinction:
+Private functions use one three-way naming distinction:
 
+- `_prepare_*` validates contextual relationships and constructs one typed
+  product execution plan;
 - `_produce_*` constructs one semantic product; and
 - `_simulate_*` implements a scientific submodel inside a product producer.
 
-Conceptual product signatures are:
+Stage 7 refactors the private surface into conceptual prepare/produce pairs:
 
 ```python
-def _produce_charge(
+def _prepare_charge(
     photoelectrons: Photoelectrons,
     *,
     sampling: SamplingConfig,
     config: ChargeConfig,
-    rng: CounterRng,
     floating_dtype: torch.dtype,
-) -> Charge:
+) -> _ChargePlan:
     ...
 
+def _produce_charge(
+    photoelectrons: Photoelectrons,
+    *,
+    plan: _ChargePlan,
+    rng: CounterRng,
+) -> Charge: ...
+
+def _prepare_pure_waveform(
+    *,
+    sampling: SamplingConfig,
+    config: PureWaveformConfig,
+    floating_dtype: torch.dtype,
+) -> _PureWaveformPlan: ...
 
 def _produce_pure_waveform(
     charge: Charge,
     *,
-    sampling: SamplingConfig,
-    config: PureWaveformConfig,
-) -> PureWaveform:
-    ...
+    plan: _PureWaveformPlan,
+) -> PureWaveform: ...
 
-
-def _produce_noise_waveform(
+def _prepare_noise_waveform(
     photoelectrons: Photoelectrons,
     *,
     sampling: SamplingConfig,
     config: NoiseWaveformConfig,
-    rng: CounterRng,
     floating_dtype: torch.dtype,
-) -> NoiseWaveform:
-    ...
+) -> _NoiseWaveformPlan: ...
 
+def _produce_noise_waveform(
+    photoelectrons: Photoelectrons,
+    *,
+    plan: _NoiseWaveformPlan,
+    rng: CounterRng,
+) -> NoiseWaveform: ...
+
+def _prepare_analog_waveform(
+    *,
+    config: AnalogWaveformConfig,
+    floating_dtype: torch.dtype,
+) -> _AnalogWaveformPlan: ...
 
 def _produce_analog_waveform(
     pure: PureWaveform,
     noise: NoiseWaveform,
     *,
-    config: AnalogWaveformConfig,
-) -> AnalogWaveform:
-    ...
+    plan: _AnalogWaveformPlan,
+) -> AnalogWaveform: ...
 
+def _prepare_digitized_waveform(
+    *,
+    config: DigitizedWaveformConfig,
+    floating_dtype: torch.dtype,
+) -> _DigitizedWaveformPlan: ...
 
 def _produce_digitized_waveform(
     analog: AnalogWaveform,
     *,
-    config: DigitizedWaveformConfig,
-) -> DigitizedWaveform:
-    ...
+    plan: _DigitizedWaveformPlan,
+) -> DigitizedWaveform: ...
 ```
 
 There is no Photoelectrons producer. Product packages receive explicit
 prerequisites rather than a complete collection as a service locator.
 
-Private functions may trust complete public preflight. They do not reproduce
-the supported public boundary or defend direct unsupported calls.
+Every config still enters through an exact typed parameter on its owning
+preparer. The producer receives the trusted plan rather than a second config
+that could disagree with it. Private functions may trust complete public
+preparation. They do not reproduce the supported public boundary or defend
+direct unsupported calls.
 Only stochastic-capable `Charge` and `NoiseWaveform` producers receive
 `CounterRng`. Deterministic pure, analog, and digitized producers and
 deterministic preparation helpers do not. An exact-zero or disabled stochastic
@@ -596,7 +630,7 @@ Default keys use namespace `TDS1` and streams `1` through `10` in the
 historical Stage 5/6 order. Afterpulse uses one coupled key; direct and delayed
 crosstalk each use distinct retained/overflow keys. The public builder rejects
 one key assigned to different roles in the requested closure before any RNG
-call or write.
+request, product-producer invocation, or semantic-output write.
 
 TensorCore owns counter generation, logical positions, uniforms, parameterized
 Gaussian draws, Poisson sampling, binomial sampling, and the two count
@@ -619,12 +653,15 @@ Closed Stage 5/6 production used a private `_RngStream` and
 and pins TensorCore `0.9.0` exact commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, which supplies the required
 public RNG API and focused `require_same_dtype` relationship. The historical
-consumer proposal is fulfilled. While these exact bytes are absent from
-`main`, they remain the fixed-commit Validation/Review candidate; if present
-unchanged on `main`, Review's clean fast-forward has completed and Design
-acceptance remains pending. Final acceptance is complete only when the work
-order and implementation index record `Merged / Closed`. The closed Stage 5/6
-and recorded Maintenance 2 evidence are CPU-only because CUDA was unavailable.
+consumer proposal is fulfilled, and Maintenance 2 is Merged / Closed at the
+exact candidate and Design closeout above. The closed Stage 5/6 and Maintenance
+2 evidence are CPU-only because CUDA was unavailable.
+
+TensorCore exposes no non-consuming concrete-algorithm capability query. The
+public builder accepts nominal `CounterRng` membership, performs no dummy draw,
+and never restricts the abstraction to exact `Threefry4x32`. A real custom RNG
+backend failure occurs at its first genuine distribution request and belongs
+to the execution-failure boundary.
 
 ## Functional, Memory, And Exposure Contract
 
@@ -641,23 +678,34 @@ Producer writes are initiated or enqueued before constructing and exposing the
 semantic result. TensorDSLab never later writes through an alias to that
 storage. Private scratch and unrequested intermediates never enter the result.
 
+Stage 7 closes the public result trust boundary deferred by Stage 4. Each
+generated producer constructs one local result field after its payload writes,
+then invokes that product's existing private `_require_valid_values(...)`
+before returning it to orchestration. Charge must be finite and nonnegative;
+Pure, Noise, and Analog must be finite; Digitized must be nonnegative and
+bounded by its exact digitizer config. A failed postcondition exposes no field,
+invokes no downstream producer, and returns no partial collection. The scan may
+synchronize CUDA through scalar extraction.
+
 The initial API has no `out=`, destination collection, public workspace,
 stream lease, pool, or allocation-free claim. Future measured reuse keeps raw
 writable storage private and exclusive until writes are enqueued; an exposed
 valid field is never a mutable destination.
 
-Constructing a field does not synchronize the device. Same-stream consumers
-use normal PyTorch ordering; cross-stream consumers establish an explicit
-dependency.
+Constructing a field does not itself add synchronization. Deep source
+validation and producer postconditions use scalar reductions that may
+synchronize CUDA as an accepted correctness-first cost. Outside those checks,
+same-stream consumers use normal PyTorch ordering and cross-stream consumers
+establish an explicit dependency.
 
 ## Validation
 
 Validation separates universal structure, intrinsic semantics, trust-boundary
 value domains, and operation behavior.
 
-The future Stage 7 public preflight must cover at least:
+The accepted Stage 7 public preparation contract covers at least:
 
-- exact source type and deep nonnegative truth domain;
+- exact source type, CPU/CUDA device, and deep nonnegative truth domain;
 - exactly three readout axes, source shape, dtype, Torch layout, and device;
 - exact `SampleAxis` agreement with `SamplingConfig`;
 - one nonempty unique recognized product request;
@@ -665,11 +713,12 @@ The future Stage 7 public preflight must cover at least:
 - selected floating dtype and representable scalar constants;
 - a required `CounterRng` instance, exact config-owned `RngKey` values, and no
   duplicate key assigned to different roles in the requested closure;
-- concrete RNG device/dtype/distribution support only when that closure is
-  stochastic; a deterministic closure does not query the RNG;
+- no dummy RNG capability probe; a deterministic closure does not query the
+  RNG, while a real custom stochastic backend failure remains dynamic;
 - scientific parameter and prepared-kernel normalization;
 - causal delay and window/overflow policies; and
-- every failure before the first draw or write.
+- every statically preparable failure before the first RNG request, producer
+  invocation, or semantic-output write.
 
 Cross-stage behavioral validation includes:
 
@@ -703,10 +752,11 @@ In the Maintenance 2 implementation, `readout/config.py` contains only
 `ReadoutConfig` and `readout/collection.py` contains only `ReadoutCollection`.
 `_requirements.py` and `charge/effects/_*.py` are private support.
 `readout/_random.py` and `_RngStream` are removed rather than renamed.
-`readout/simulation.py` remains absent until Stage 7. Product packages never
+`readout/simulation.py` remains absent until the Design-complete Stage 7 work
+is implemented. Product packages never
 import the cross-product orchestration layer. Former Stage 6 paths remain
-closed historical evidence; Maintenance 2 lifecycle follows the three-state
-branch-versus-`main` rule above.
+closed historical evidence; Maintenance 2 is Merged / Closed at the exact
+candidate and Design closeout recorded above.
 
 The exact tree and import direction are normative in
 [`rebuild.md`](rebuild.md). Do not add empty placeholders or global
@@ -741,7 +791,7 @@ Charge RNG streams, aggregate samplers, and delay/jitter/cascade/ledger/smearing
 mechanics. The Maintenance 2 implementation pins selected TensorCore
 `0.9.0` commit `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, splits module
 ownership, migrates to config-owned keys, and preserves default-key outputs;
-its lifecycle follows the branch-versus-`main` rule above. Stage 7 remains
+it is Merged / Closed. Stage 7 is Design-complete / Undispatched and remains
 responsible for complete request-aware `simulate_readout(...)`; no partial
 public API should imply unsupported product closure. Measured GPU fusion
 remains a separate later optimization stage.

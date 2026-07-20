@@ -1,20 +1,19 @@
 # TensorDSLab Rebuild Architecture
 
-Status: accepted Design architecture for the TensorCore `0.7.0` rebuild.
+Status: accepted Design architecture for the TensorCore-based rebuild.
 Stages 3 through 6 are Merged / Closed. Stage 6's exact implementation
 candidate is `fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58`, and Review's
 evidence-only closeout is
-`ea979862b05f4ef543f6971c86641df317232479`. The public
-`simulate_readout(...)` surface remains future Stage 7 and undispatched. This
-architecture page does not itself dispatch implementation, change the
-installed dependency, replace production bytes, or make a compatibility
-claim. Maintenance 2 was separately dispatched, and its implementation bytes
-are present. Its lifecycle is topology-
-dependent: while these exact bytes are absent from `main`, they are the
-candidate under fixed-commit Validation and independent Review; if present
-unchanged on `main`, Review's clean fast-forward has completed and Design
-acceptance remains pending. Final acceptance is complete only when the work
-order and implementation index record `Merged / Closed`.
+`ea979862b05f4ef543f6971c86641df317232479`. Maintenance 2 is Merged / Closed
+through exact implementation candidate
+`89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
+`9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. It installs the selected
+TensorCore `0.9.0` dependency and module/RNG ownership boundary. The Stage 7
+public `simulate_readout(...)` contract is Design-complete / Undispatched under
+the [Stage 7 work order](../implementation/stage_7_public_readout_orchestration.md);
+the function and `readout/simulation.py` remain unimplemented. This
+architecture page does not dispatch implementation, replace production bytes,
+or make a compatibility claim.
 
 TensorDSLab Design has accepted a simpler next RNG and module-ownership target:
 one caller-constructed TensorCore `CounterRng` per simulation invocation,
@@ -28,8 +27,8 @@ version `0.9.0` at exact commit
 for Maintenance 2 after exact consumer probes. The implementation pins that
 commit, uses the public RNG/distribution surface, and realizes the accepted
 module ownership without compatibility shims. The Stage 5/6 private
-implementation remains closed historical evidence. Stage 7
-remains separate and undispatched.
+implementation remains closed historical evidence. Stage 7 remains a separate,
+undispatched production gate.
 
 Within this architecture, the fixed-`K` algorithm under
 [Fixed-Generation Correlated-Avalanche Baseline](#fixed-generation-correlated-avalanche-baseline)
@@ -49,15 +48,15 @@ and reverified it. Later dependency changes remain explicit implementation-
 work-order gates. This exact-baseline evidence is not a broad compatibility
 claim.
 
-The selected Maintenance 2 dependency adds public `RngKey`, `CounterRng`,
+The installed Maintenance 2 dependency adds public `RngKey`, `CounterRng`,
 `Threefry4x32`, `logical_positions`, `uniform`, `gaussian`, `poisson`, and
 `binomial` surfaces at exact TensorCore `0.9.0` commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The closed Stage 6 TensorCore
 commit `b454d738...` does not provide them. TensorCore independently owns
 their exact implementation and
 generic validation contract; TensorDSLab owns only the required consumer
-behavior recorded below. The Maintenance 2 implementation installs that
-selected surface under the topology-dependent lifecycle above.
+behavior recorded below. Maintenance 2 installed and verified that selected
+surface at the exact closed commits above.
 
 Stage 2 and Maintenance 1 remain valid historical evidence for the current
 package. This is a clean pre-deployment redesign, not a compatibility
@@ -299,7 +298,7 @@ tensor_dslab/
     __init__.py
     config.py                # ReadoutConfig only
     collection.py            # ReadoutCollection only
-    simulation.py            # future Stage 7 public orchestration
+    simulation.py            # accepted Stage 7 public orchestration; unimplemented
     _requirements.py         # shared private readout requirements
 
     photoelectrons/
@@ -372,8 +371,8 @@ not add source binning to the current readout package.
 
 `Photoelectrons` is an already-produced dense truth input. Its package has no
 `PhotoelectronsConfig` and no `_produce.py`; source construction and PE binning
-remain deferred to the future TensorG4DS bridge. Future Stage 7
-`simulate_readout(...)` will borrow the supplied field and validate its
+remain deferred to the future TensorG4DS bridge. Accepted Stage 7
+`simulate_readout(...)` borrows the supplied field and validates its
 realized `SampleAxis` against the caller's `SamplingConfig`.
 
 `_requirements.py` and every `charge/effects/_*.py` module are private.
@@ -406,10 +405,11 @@ graph and orchestrate it.
 
 The physical module path does not define public visibility. Package
 `__init__.py` files and `__all__` deliberately re-export the implemented
-collaborator-facing classes and configs; Stage 7 will add
-`simulate_readout(...)` deliberately. Collaborators need not import from
+collaborator-facing classes and configs; Stage 7 adds
+`simulate_readout(...)` deliberately when separately dispatched.
+Collaborators need not import from
 nested product modules. `simulation.py`, rather than a generic `api.py`, names
-the future behavior it will own. The singular product-local `config.py` and
+the accepted behavior it will own. The singular product-local `config.py` and
 `field.py` names state their concrete ownership; they are not global dumping
 grounds. Do not add global `configs/`, `fields.py`, `builders.py`, or
 `validation.py` modules.
@@ -471,7 +471,7 @@ or IO dependency.
 Stages 4 through 6 subsequently implemented every generated product's private
 `_produce_*` builder, Charge's private `_simulate_*` submodels, and the private
 RNG mechanics consumed by noise and Charge. The one remaining behavior symbol
-in this tree is future Stage 7
+in this tree is accepted but unimplemented Stage 7
 `readout.simulation.simulate_readout`. This staged separation kept the Stage 3
 foundation testable without creating empty architectural scaffolding.
 
@@ -834,6 +834,14 @@ trust boundary. Documentation must not claim that a bare constructor proves a
 config-dependent ADC maximum. Builder postconditions and deep validators are
 tested separately.
 
+Stage 7 closes that builder result boundary by requiring every generated
+producer to call its existing product-specific `_require_valid_values(...)`
+exactly once after constructing its local result field and before returning it
+to orchestration. A successful prerequisite is deeply valid before any
+downstream producer uses it. A failed postcondition may follow payload work and
+local field construction, but the field does not escape and no partial
+collection is returned. These explicit scans may synchronize CUDA.
+
 ## `ReadoutCollection`
 
 `ReadoutCollection` is an immutable completed result for one explicit product
@@ -940,8 +948,8 @@ The builder:
 7. executes each required product producer at most once; and
 8. retains only requested fields.
 
-Unknown, duplicate, empty, or unsatisfied requests fail before an RNG draw or
-tensor write.
+Unknown, duplicate, empty, or unsatisfied requests fail before an RNG request,
+product-producer invocation, or semantic-output write.
 
 The planner is ordinary typed code, not a public dependency registry. A
 conceptual implementation can derive booleans from the requested set:
@@ -965,10 +973,10 @@ random fields from unrelated requested branches.
 ## Scientific Configuration
 
 `ReadoutConfig` composes one required shared sampling policy with optional
-exact product configs. Every product producer with scientific choices accepts
-its exact config type. A time-dependent builder also receives the shared exact
-`SamplingConfig`; no subfunction receives the whole `ReadoutConfig` as a
-service locator.
+exact product configs. Every product preparer with scientific choices accepts
+its exact config type. A time-dependent preparer also receives the shared exact
+`SamplingConfig`; its producer consumes the resulting typed plan. No
+subfunction receives the whole `ReadoutConfig` as a service locator.
 
 Concrete configs are normal domain value classes:
 
@@ -1837,7 +1845,8 @@ additional meanings hidden in `SamplingConfig`.
 
 Picoseconds are the single numeric *time* execution unit in this architecture.
 Preflight normalizes nanosecond-valued jitter, pulse, and afterpulse config
-values to floating picoseconds once before any RNG draw or tensor write.
+values to floating picoseconds once before the affected submodel requests RNG
+values or writes its result payload.
 Waveform voltage is expressed in mV, PSD frequency left edges and exclusive
 stop in Hz, and absolute one-sided PSD values in `mV^2/Hz`; the PSD rebinning
 boundary performs the explicit frequency/time conversion implied by
@@ -1895,10 +1904,10 @@ Maintenance 2 validates each exact key field, the ten defaults, and inequality
 of the retained/overflow keys inside each crosstalk config. Stage 7 owns the
 cross-product closure check: it gathers every distinct stochastic role in the
 requested transitive closure and rejects one key assigned to different roles
-before any RNG call or producer write. Structurally present key-bearing
-configs participate even when their numeric parameters make the operation a
-no-op; absent configs, `ZeroNoiseConfig`, and unrequested branches do not.
-TensorDSLab never silently re-keys a collision.
+before any RNG request, producer invocation, or semantic-output write.
+Structurally present key-bearing configs participate even when their numeric
+parameters make the operation a no-op; absent configs, `ZeroNoiseConfig`, and
+unrequested branches do not. TensorDSLab never silently re-keys a collision.
 
 ### Runtime Inputs Are Not Scientific Config
 
@@ -1926,39 +1935,73 @@ Do not add loose default constants or a scientifically unqualified `default()`.
 ## Private Product Builders
 
 Private product operations are exact and independently tested with valid
-fixtures. Future Stage 7 `simulate_readout(...)` will pass them already-
-preflighted values. They do not repeat the public boundary or promise a
-supported direct-call API:
+fixtures. Stage 7 adds a private frozen preparation plan beside each generated
+product producer. The public builder prepares the entire requested closure
+before it invokes any producer, then passes only the already-prepared typed
+plan into that producer. These functions do not promise a supported direct-call
+API:
 
 ```python
-def _produce_charge(
+def _prepare_charge(
     photoelectrons: Photoelectrons,
     *,
     sampling: SamplingConfig,
     config: ChargeConfig,
-    rng: CounterRng,
     floating_dtype: torch.dtype,
+) -> _ChargePlan:
+    ...
+
+
+def _produce_charge(
+    photoelectrons: Photoelectrons,
+    *,
+    plan: _ChargePlan,
+    rng: CounterRng,
 ) -> Charge:
+    ...
+
+
+def _prepare_pure_waveform(
+    *,
+    sampling: SamplingConfig,
+    config: PureWaveformConfig,
+    floating_dtype: torch.dtype,
+) -> _PureWaveformPlan:
     ...
 
 
 def _produce_pure_waveform(
     charge: Charge,
     *,
-    sampling: SamplingConfig,
-    config: PureWaveformConfig,
+    plan: _PureWaveformPlan,
 ) -> PureWaveform:
+    ...
+
+
+def _prepare_noise_waveform(
+    photoelectrons: Photoelectrons,
+    *,
+    sampling: SamplingConfig,
+    config: NoiseWaveformConfig,
+    floating_dtype: torch.dtype,
+) -> _NoiseWaveformPlan:
     ...
 
 
 def _produce_noise_waveform(
     photoelectrons: Photoelectrons,
     *,
-    sampling: SamplingConfig,
-    config: NoiseWaveformConfig,
+    plan: _NoiseWaveformPlan,
     rng: CounterRng,
-    floating_dtype: torch.dtype,
 ) -> NoiseWaveform:
+    ...
+
+
+def _prepare_analog_waveform(
+    *,
+    config: AnalogWaveformConfig,
+    floating_dtype: torch.dtype,
+) -> _AnalogWaveformPlan:
     ...
 
 
@@ -1966,24 +2009,39 @@ def _produce_analog_waveform(
     pure: PureWaveform,
     noise: NoiseWaveform,
     *,
-    config: AnalogWaveformConfig,
+    plan: _AnalogWaveformPlan,
 ) -> AnalogWaveform:
+    ...
+
+
+def _prepare_digitized_waveform(
+    *,
+    config: DigitizedWaveformConfig,
+    floating_dtype: torch.dtype,
+) -> _DigitizedWaveformPlan:
     ...
 
 
 def _produce_digitized_waveform(
     analog: AnalogWaveform,
     *,
-    config: DigitizedWaveformConfig,
+    plan: _DigitizedWaveformPlan,
 ) -> DigitizedWaveform:
     ...
 ```
 
+Each exact product config enters its typed `_prepare_*` function. A producer
+does not also receive that config, which prevents a plan/config disagreement
+and avoids repeating contextual numerical preparation after execution starts.
+`readout.simulation` composes these product-owned plans; it does not own or
+duplicate their scientific equations.
+
 The naming split is intentional: `_produce_*` constructs and returns one
 completed semantic product, while `_simulate_*` names a private scientific
-submodel used inside a product producer. Neither family is public; future
-Stage 7 `simulate_readout(...)` remains the planned ordinary collaborator-
-facing simulation API.
+submodel used inside a product producer. `_prepare_*` names private contextual
+validation and numerical preparation. None of these families is public;
+Stage 7 `simulate_readout(...)` is the accepted but unimplemented ordinary
+collaborator-facing simulation API.
 
 Stage 6 behavior-neutrally completed the transitional `_product.py` and
 `_product_*` rename. Every generated product now uses `_produce.py` and an
@@ -2082,63 +2140,24 @@ or lifetime behavior.
 `_produce_noise_waveform(...)` uses `Photoelectrons` only as the authoritative
 axes/device/shape reference; it does not read PE counts as a noise input.
 
-Private charge subfunctions receive their exact config:
-
-```python
-def _simulate_dark_counts(
-    counts: torch.Tensor,
-    *,
-    sampling: SamplingConfig,
-    config: DarkCountConfig,
-    rng: CounterRng,
-) -> torch.Tensor:
-    ...
-
-
-def _simulate_timing_jitter(
-    counts: torch.Tensor,
-    *,
-    sample_dimension: int,
-    sampling: SamplingConfig,
-    config: TimingJitterConfig,
-    rng: CounterRng,
-) -> torch.Tensor:
-    ...
-
-
-def _simulate_correlated_avalanches(
-    seed_avalanches: torch.Tensor,
-    *,
-    sample_dimension: int,
-    sampling: SamplingConfig,
-    floating_dtype: torch.dtype,
-    config: CorrelatedAvalancheConfig,
-    rng: CounterRng,
-) -> _CorrelatedAvalancheResult:
-    ...
-
-
-def _simulate_charge_smearing(
-    charge_pe: torch.Tensor,
-    charge_square_sum: torch.Tensor,
-    *,
-    config: ChargeSmearingConfig,
-    rng: CounterRng,
-) -> torch.Tensor:
-    ...
-```
+Private Charge effects keep the `_simulate_dark_counts(...)`,
+`_simulate_timing_jitter(...)`, `_simulate_correlated_avalanches(...)`, and
+`_simulate_charge_smearing(...)` names. Stage 7 changes their private call
+boundary only as needed to consume the exact effect-specific facts already
+contained by `_ChargePlan`; they must not repeat dark-mean, timing-kernel,
+correlated-plan, ledger-envelope, or smearing-envelope preparation after
+product execution begins.
 
 Only operations whose numerical behavior depends on sample timing receive
-`SamplingConfig`. Operations that shift values along the sample axis also
-receive the already-resolved numeric `sample_dimension`; hot-path code does not
-look up timestamp strings. The coupled cascade additionally receives the
-selected floating dtype because it constructs the S1/S2 ledgers. No subfunction
-receives `ReadoutConfig` merely to reach one nested value. Every stochastic
-leaf receives the same immutable `CounterRng` invocation and selects the exact
-`RngKey` owned by its config. Draw-free identities simply make no RNG call.
-Product producers never share a mutable sequential stream between leaves.
-`_produce_charge(...)` is the implemented private typed product producer named
-by the scientific contract. Stage 7 will add the public
+prepared sampling facts. Operations that shift values along the sample axis
+also receive the already-resolved numeric `sample_dimension`; hot-path code
+does not look up timestamp strings. The coupled cascade receives the selected
+floating dtype because it constructs the S1/S2 ledgers. No subfunction receives
+`ReadoutConfig` merely to reach one nested value. Every stochastic leaf receives
+the same immutable `CounterRng` invocation and uses the exact `RngKey` owned by
+its leaf config. Draw-free identities make no RNG call. Product producers never
+share a mutable sequential stream between leaves. `_produce_charge(...)`
+remains the sole private typed Charge constructor; Stage 7 adds the public
 `simulate_readout(..., products=[Charge], ...)` request path.
 
 ## Public Builder
@@ -2165,22 +2184,20 @@ construct the RNG. A deterministic closure requests no values from it. The
 MVP exposes no `torch.Generator`, mutable generator state, ambient global RNG,
 or TensorDSLab-specific RNG wrapper.
 
+`readout.simulation` owns one private frozen `_ReadoutPlan` containing the
+requested product set, explicit closure booleans, and one optional product-owned
+plan for each generated product. It is a one-call execution record, not a
+public graph, registry, config, TensorCore object, collection member, workspace,
+or durable artifact. `_prepare_readout(...)` consumes the request iterable once,
+derives the fixed typed closure, prepares every required product, and validates
+the closure-wide key relationship.
+
 Conceptual orchestration:
 
 ```python
-requested_items = tuple(products)  # consume exactly once
-_require_nonempty_unique_product_request(requested_items)
-requested = frozenset(requested_items)
-
-need_digitized = DigitizedWaveform in requested
-need_analog = AnalogWaveform in requested or need_digitized
-need_pure = PureWaveform in requested or need_analog
-need_noise = NoiseWaveform in requested or need_analog
-need_charge = Charge in requested or need_pure
-
-_preflight_request(
+plan = _prepare_readout(
     photoelectrons,
-    requested=requested,
+    products=products,  # consumed exactly once here
     config=config,
     rng=rng,
     floating_dtype=floating_dtype,
@@ -2189,34 +2206,29 @@ _preflight_request(
 charge = (
     _produce_charge(
         photoelectrons,
-        sampling=config.sampling,
-        config=_require_config(config.charge, Charge),
+        plan=plan.charge,
         rng=rng,
-        floating_dtype=floating_dtype,
     )
-    if need_charge
+    if plan.charge is not None
     else None
 )
 
 pure = (
     _produce_pure_waveform(
         _require_value(charge, Charge),
-        sampling=config.sampling,
-        config=_require_config(config.pure_waveform, PureWaveform),
+        plan=plan.pure,
     )
-    if need_pure
+    if plan.pure is not None
     else None
 )
 
 noise = (
     _produce_noise_waveform(
         photoelectrons,
-        sampling=config.sampling,
-        config=_require_config(config.noise_waveform, NoiseWaveform),
+        plan=plan.noise,
         rng=rng,
-        floating_dtype=floating_dtype,
     )
-    if need_noise
+    if plan.noise is not None
     else None
 )
 
@@ -2224,21 +2236,18 @@ analog = (
     _produce_analog_waveform(
         _require_value(pure, PureWaveform),
         _require_value(noise, NoiseWaveform),
-        config=_require_config(config.analog_waveform, AnalogWaveform),
+        plan=plan.analog,
     )
-    if need_analog
+    if plan.analog is not None
     else None
 )
 
 digitized = (
     _produce_digitized_waveform(
         _require_value(analog, AnalogWaveform),
-        config=_require_config(
-            config.digitized_waveform,
-            DigitizedWaveform,
-        ),
+        plan=plan.digitized,
     )
-    if need_digitized
+    if plan.digitized is not None
     else None
 )
 
@@ -2252,10 +2261,15 @@ retained = tuple(
         analog,
         digitized,
     )
-    if value is not None and type(value) in requested
+    if value is not None and type(value) in plan.requested
 )
 return ReadoutCollection(fields=retained)
 ```
+
+The exact implementation may use explicit branches to help static type
+narrowing rather than pass an optional plan. The invariant is that each
+required producer receives its exact prepared plan, executes at most once, and
+is never invoked before the complete `_ReadoutPlan` exists.
 
 The fixed local tuple gives equivalent request sets the same mechanical
 construction order while remaining nonsemantic to `ReadoutCollection`.
@@ -2263,7 +2277,8 @@ Caller iterable order never affects field values, `field_types`, mechanical
 mapping iteration, or the documented collection contract. The tuple is private
 assembly code, not a public canonical field sequence or registry.
 
-Preflight completes before the first RNG draw or tensor write. It validates:
+Whole-request preparation completes before the first RNG raw-word request,
+product-producer invocation, or semantic-product/output write. It validates:
 
 - source deep-value validity;
 - product request type, uniqueness, and nonemptiness;
@@ -2271,30 +2286,38 @@ Preflight completes before the first RNG draw or tensor write. It validates:
   and the validated source `SampleAxis`, without regenerating all coordinates;
 - every config required by the transitive closure;
 - timestamp grammar and timing suitability for enabled operations;
-- source device and supported tensor layout;
+- a CPU or CUDA source device and the supported tensor layout;
 - `floating_dtype` is exactly `torch.float32` or `torch.float64` when the
   closure generates a floating product;
 - analog saturation bounds and digitizer `maximum_code`, `gain`, `span`,
   `slope`, `intercept`, and pre-gain endpoint thresholds are valid,
   representable, and noncollapsed in the selected execution dtype before
-  either waveform-tail producer launches; and
+  either waveform-tail producer launches;
 - every statically known discrete-control probability and Poisson mean is
   valid in binary64, every enabled Poisson address/cap is representable, and
   each dynamically realized crosstalk rate field will be checked before its
-  corresponding sampler requests words or writes its result; and
-- an accepted `CounterRng` instance on every request;
-- for an effective stochastic closure, support from its concrete TensorCore
-  algorithm for the required device, dtype, and distribution operations;
+  corresponding sampler requests words or writes its result;
+- nominal `CounterRng` membership on every request; and
 - exact `RngKey` fields and no duplicate key assigned to distinct stochastic
   roles in the requested transitive closure.
 
+Preparation may create ephemeral unexposed scalar/control tensors and perform
+read-only reductions required by accepted deep validation. Those reductions
+may synchronize a CUDA current stream through scalar extraction. They do not
+mutate the source, expose a semantic result, or begin the scientific product
+chain. TensorCore exposes no non-consuming concrete-RNG capability query, so
+Stage 7 neither inspects protected hooks nor issues a dummy draw. A real custom
+RNG/backend incompatibility is detected at the first genuine distribution call
+and belongs to the dynamic execution-failure boundary.
+
 `ReadoutConfig(sampling=sampling)` is a valid uniform config argument for a
 truth-only request. That deterministic closure checks nominal `CounterRng`
-membership but neither queries the RNG nor requires its concrete algorithm to
-support the source device. Irrelevant product configs and runtime controls are
-neither consumed nor allowed to perturb common product values.
+membership but neither queries the RNG nor validates `floating_dtype`, because
+it generates no floating product. Irrelevant product configs and runtime
+controls are neither consumed nor allowed to perturb common product values.
 
-A request such as this fails before work:
+A request such as this fails before any RNG request, product-producer
+invocation, or semantic-output write:
 
 ```python
 simulate_readout(
@@ -2307,7 +2330,7 @@ simulate_readout(
 ```
 
 A closure with two different stochastic roles assigned the same key also fails
-before work:
+before any RNG request, product-producer invocation, or semantic-output write:
 
 ```python
 simulate_readout(
@@ -2321,7 +2344,12 @@ simulate_readout(
 
 The builder performs no IO, loading, persistence, DAG scheduling, or implicit
 movement/cast of an existing input field. Generated products use their declared
-output dtypes.
+output dtypes. Allocator failure, TensorCore sampler exhaustion, dynamically
+realized count/rate/ledger overflow, invalid generated-payload postconditions,
+and internal producer invariant failure remain dynamic. No partial
+`ReadoutCollection` or semantic field escapes a failed call, but private
+allocations and already-computed local prerequisite fields have no rollback
+promise.
 
 ## Scientific Chain
 
@@ -2405,8 +2433,9 @@ S * N <= 2**63
 Here `S` is the sample count and `N` is the complete count-grid `numel`.
 `sigma == 0` remains the separate exact identity. A positive ratio outside the
 supported interval, an oversized timing window, or nonfinite preparation fails
-before RNG use or writes; it is not rounded into the identity or another
-supported law. Preflight first forms `T_ps = float(sample_period_ps)`, checks
+before the timing-jitter submodel requests RNG values or writes its result
+payload; it is not rounded into the identity or another supported law.
+Preflight first forms `T_ps = float(sample_period_ps)`, checks
 the unconverted config value against
 `(T_ps * 2**-52) * 1e-3 <= sigma_ns <= (T_ps * 64) * 1e-3`, and only then
 forms `sigma_ps = sigma_ns * 1e3`, divides `r = sigma_ps / T_ps`, and rechecks
@@ -2721,7 +2750,8 @@ optional recovery response. Only the already-constructed config records are
 structurally valid on those unused paths. Sampling-dependent ratio,
 sample-count, tail, and recovery numerical gates apply only when the
 corresponding mechanism can execute. This skip is resolved during complete
-public preflight before any RNG request or producer write.
+public preparation before any RNG request, product-producer invocation, or
+semantic-output write.
 
 The exact `CorrelatedAvalancheConfig` and mechanism records are defined in the
 configuration section above. Structural `None` disables a mechanism. With all
@@ -2909,8 +2939,9 @@ The first implementation supports the explicit domain:
 ```
 
 A mean outside this ratio interval or an active exponential preparation with
-more than 8192 samples fails before RNG use or writes rather than being rounded
-into a prompt or infinite-delay law. An unused kernel is skipped under the
+more than 8192 samples fails before the affected delay submodel requests RNG
+values or writes its result payload rather than being rounded into a prompt or
+infinite-delay law. An unused kernel is skipped under the
 identity rules above and receives no contextual numerical gate. The
 sample-count bound is an evidenced MVP preparation limit, not a property of
 the exponential distribution; extending it requires a focused numerical
@@ -3192,11 +3223,12 @@ explicitly nonzero causal delay. Preflight derives each accepted kernel's
 complete offset PMF and analytic right tail; the aggregate simulation draws no
 per-edge delay tensor on the hot path. Every prepared delay kernel must have
 nonnegative support and satisfy the accepted PMF-plus-right-tail numerical
-contract, or preflight fails before RNG consumption or writes. The selected TensorDSLab
-timing policy does not fold a later independent child-jitter draw into
-`Delta_m`. IV's later independent jitter of parent and child rows can produce a
-signed post-binned relative displacement, but that is a donor timing divergence
-rather than an alternate selected CT kernel. The independent-edge closure
+contract, or preparation fails before any RNG request, product-producer
+invocation, or semantic-output write. The selected TensorDSLab timing policy
+does not fold a later independent child-jitter draw into `Delta_m`. IV's later
+independent jitter of parent and child rows can produce a signed post-binned
+relative displacement, but that is a donor timing divergence rather than an
+alternate selected CT kernel. The independent-edge closure
 preserves each one-edge offset PMF but intentionally omits covariance from a
 shared hidden parent phase among siblings, mechanisms, or successive
 generations. Sharing one phase per parent would require marked per-parent state
@@ -4009,13 +4041,14 @@ use a negative configured peak voltage; there is no second gain or inversion
 switch. Output axes and shape match charge. Baseline is not part of the
 signal-only `PureWaveform`.
 
-The first functional producer prepares the config-derived sample times, pulse
+`_prepare_pure_waveform(...)` prepares the config-derived sample times, pulse
 values, sampled-extremum normalization, and signed scaling in Python binary64,
-validates that finite template before payload work, and materializes it once in
-the exact `Charge` dtype and device. This is host-side preparation of small
-configuration-derived coefficients, not host materialization of the input
-payload. Causal convolution and every payload-sized operation execute in the
-field dtype on the field device with no hidden widening.
+and validates that finite template before any product producer runs. The
+producer materializes those prepared coefficients once in the exact `Charge`
+dtype and device. This is host-side preparation of small configuration-derived
+coefficients, not host materialization of the input payload. Causal convolution
+and every payload-sized operation execute in the field dtype on the field
+device with no hidden widening.
 
 TensorDSLab intentionally standardizes the discretization around those donor
 equations:
@@ -4134,9 +4167,10 @@ nyquist_hz = fs_hz / 2
 All three values must be finite and positive. PSD source coverage through
 exactly `nyquist_hz` is sufficient; the exclusive endpoint has zero measure.
 
-Preflight also closes the finite-output numerical domain without a device-wide
-postcondition scan. Let `normal_guard` be `8.0` for `float32` and `16.0` for
-`float64`, conservative bounds above the accepted maximum Box-Muller radii.
+Preflight also closes the finite-output numerical domain analytically rather
+than relying on the later required device-wide producer postcondition. Let
+`normal_guard` be `8.0` for `float32` and `16.0` for `float64`, conservative
+bounds above the accepted maximum Box-Muller radii.
 The represented white RMS must satisfy both
 `torch.finfo(dtype).tiny <= rms_mv` and
 `normal_guard * rms_mv <= torch.finfo(dtype).max`. Represented PSD powers must
@@ -4323,16 +4357,17 @@ Box-Muller and PSD values require cross-backend statistical agreement rather
 than bitwise identity because transcendental and FFT implementations may
 differ.
 
-`_produce_noise_waveform(...)` performs only contextual preflight needed for
-its algorithm. It requires exact sampling/source agreement, an exact
+`_prepare_noise_waveform(...)` owns the contextual preparation needed for its
+algorithm. It requires exact sampling/source agreement, an exact
 `torch.float32` or `torch.float64` output dtype, and an accepted CPU/CUDA
-device. Its `rng` argument is an accepted `CounterRng` instance.
-`ZeroNoiseConfig` returns fresh exact zeros without invoking it; white and PSD
-models use the exact `RngKey` owned by their config. Intrinsic config validity
-remains owned by the frozen config constructors, and the private producer does
-not defend against fabricated private objects or constructor bypass. All
-contextual and numeric preparation completes before random-word generation or
-output allocation.
+device. `_produce_noise_waveform(...)` receives the accepted plan and an
+accepted `CounterRng`. `ZeroNoiseConfig` produces fresh exact zeros without
+invoking the RNG; white and PSD models use the exact `RngKey` captured from
+their config. Intrinsic config validity remains owned by the frozen config
+constructors, and the private producer does not defend against fabricated
+private objects or constructor bypass. All contextual and numeric preparation
+completes before an RNG request, product-producer invocation, or semantic-output
+write.
 
 ### Analog Waveform
 
@@ -4762,9 +4797,9 @@ All four distribution methods return fresh, non-aliasing, contiguous
 deterministic paths. Floating results use the requested dtype; Poisson and
 binomial results use `torch.int64`. They never mutate positions or law tensors,
 silently move or cast an input, or expose a partially written result.
-Validation completes before word generation and output writes. Backend
-execution remains subject to the ordinary selected-device synchronization
-semantics.
+Validation completes before word generation and distribution-result writes.
+Backend execution remains subject to the ordinary selected-device
+synchronization semantics.
 
 Distribution ordinals count returned variates, not raw words. The frozen
 mapping is:
@@ -4926,14 +4961,14 @@ declaration order, requested-product order, execution order, `Enum.auto()`, or
 Python `hash()`.
 
 Closed Stage 6 production represented those values through the private
-`readout._random._RngStream` enum. The Maintenance 2 candidate removes that
-enum and module without a compatibility shim after selecting the required
-TensorCore commit. Candidate default config keys reproduce the existing Stage
-5/6 raw-word addresses exactly. Numeric stream order records append-only identity, not
-physical execution order: timing jitter uses stream `8` while still executing
-before the correlated-avalanche roles. One AP key owns its complete coupled
-categorical realization; separate AP keys would incorrectly break that
-coupling.
+`readout._random._RngStream` enum. The closed Maintenance 2 implementation
+removed that enum and module without a compatibility shim after selecting the
+required TensorCore commit. Its default config keys reproduce the existing
+Stage 5/6 raw-word addresses exactly. Numeric stream order records append-only
+identity, not physical execution order: timing jitter uses stream `8` while
+still executing before the correlated-avalanche roles. One AP key owns its
+complete coupled categorical realization; separate AP keys would incorrectly
+break that coupling.
 
 For seed zero, namespace `TDS1`, logical position zero, source quantum zero,
 and block zero, the independent scalar Threefry oracle fixes these two
@@ -4958,7 +4993,8 @@ vectorized eager CUDA path when CUDA evidence is available; an independent
 scalar implementation is a validation oracle rather than a production
 execution mode. Compiled, Triton, MPS, and custom-kernel paths are not accepted
 Stage 5 execution modes. TensorCore owns the authoritative known-answer and
-cross-implementation tests consumed by the Maintenance 2 candidate. The initial fixed Random123
+cross-implementation tests retained by the closed Maintenance 2 implementation.
+The initial fixed Random123
 oracles include:
 
 ```text
@@ -4997,8 +5033,8 @@ count accumulation, mechanism bookkeeping, and physical ledgers.
 Stage 5 implements the precision-matched uniform conversions and Box-Muller
 mapping used by white and PSD noise. Stage 6 implements the Poisson and
 aggregate-binomial contracts below inside TensorDSLab. Those closed stages
-remain exact historical production evidence. The Maintenance 2 candidate uses
-the same generic Gaussian, Poisson, and binomial mappings promoted to
+remain exact historical production evidence. The Maintenance 2 implementation
+uses the same generic Gaussian, Poisson, and binomial mappings promoted to
 TensorCore without changing their default-key results; TensorDSLab retains
 only their scientific use and complete multinomial orchestration. The
 standalone Bernoulli threshold and continuous exponential inversion remain
@@ -5537,15 +5573,15 @@ population limit on aggregate Stage 6 inputs. A distribution-level draw may
 consume more than one raw word, so `raw_word_ordinal` must not be renamed or
 treated as a one-word draw number.
 
-The post-Maintenance noise preflight is deliberately contextual: it checks the
-required `CounterRng`, exact floating dtype and accepted device,
-sampling/source shape agreement, exact config key, checked logical-position
-arithmetic, the accepted public Gaussian ordinal/count bounds, and
-model-specific RMS/PSD representation before output allocation or random-word
-generation. A
-`ZeroNoiseConfig` path is draw-free. This preflight does not adversarially
-police privately constructed position tensors. The corresponding Charge
-population, address, accumulation, and failure envelope is frozen below.
+Stage 7 noise preparation is deliberately contextual: it checks the exact
+floating dtype and accepted device, sampling/source shape agreement, exact
+config key, checked logical-position arithmetic, accepted public Gaussian
+ordinal/count bounds, and model-specific RMS/PSD representation before any
+product producer or RNG request. The public builder separately checks nominal
+`CounterRng` membership. A `ZeroNoiseConfig` path is draw-free. Preparation
+does not adversarially police privately constructed position tensors. The
+corresponding Charge population, address, accumulation, and failure envelope
+is frozen below.
 TensorCore fixes Poisson PTRS and binomial BTRS rejection at 64 addressed
 attempts and fixes each inversion guard at 64 terms. Exhaustion fails
 deterministically rather than wrapping, reseeding, reusing an address, changing
@@ -5774,25 +5810,27 @@ accumulation and operation order are unchanged. Enabled smearing still visits
 `S2 == 0` cells under its frozen full-grid schedule; the represented zero scale
 makes their draw inert.
 
-Public semantic/config/address/source-count validation completes before any
-RNG request or producer write. After that boundary, the functionality-first
-implementation may allocate TensorDSLab-managed output, private scratch, and
-ordinary backend intermediates as its operations require. It makes no
-allocation-free or no-library-temporary claim. Every package-planned shape uses
-the checked byte arithmetic above, while actual allocator failure remains the
-resource gate rather than an arbitrary device-memory ceiling. Managed storage
-remains raw and unexposed until its writes are complete and the semantic field
-is constructed. Dynamically realized rates, counts, additions, and ledgers are
-checked before their next dependent draw or arithmetic operation.
+Complete public request and product preparation finishes before any RNG
+request, product-producer invocation, or semantic-output write. After that
+boundary, the functionality-first implementation may allocate TensorDSLab-
+managed output, private scratch, and ordinary backend intermediates as its
+operations require. It makes no allocation-free or no-library-temporary claim.
+Every package-planned shape uses the checked byte arithmetic above, while
+actual allocator failure remains the resource gate rather than an arbitrary
+device-memory ceiling. Managed writable storage remains raw and unexposed until
+its writes are complete and the semantic field is constructed. Dynamically
+realized rates, counts, additions, and ledgers are checked before their next
+dependent draw or arithmetic operation.
 
 Malformed supported public inputs retain their documented `TypeError` or
 `ValueError` boundary. Sampler exhaustion or a dynamically realized
-rate/count/ledger-domain violation raises `RuntimeError`. A preflight failure
-consumes no words and writes nothing. A failure after backend work begins has
-no rollback promise for private scratch, but source/config objects remain
-unchanged, stateless RNG state cannot advance, no semantic field, collection,
-or partial diagnostic is constructed or returned, and retrying the same
-backend/mode reproduces the same outcome.
+rate/count/ledger-domain violation raises `RuntimeError`. A preparation failure
+requests no RNG words and invokes no producer. A failure after backend work
+begins has no rollback promise for private scratch, allocations, or completed
+local prerequisite fields, but source/config objects remain unchanged,
+stateless RNG state cannot advance, and no partial collection, failed field, or
+diagnostic escapes through the public API. Resource failures carry no retry-
+outcome guarantee.
 
 ## Functional, Memory, And Lifetime Contract
 
@@ -5841,11 +5879,12 @@ that TensorDSLab later overwrites.
 TensorDSLab initiates or enqueues every producer write before constructing and
 exposing the corresponding result field, and it initiates no later write
 through any alias to that storage. Accelerator work uses the current PyTorch
-stream for the input device and returns without an implicit host
-synchronization. Same-stream consumers inherit ordinary stream ordering;
-cross-stream consumers must establish their own event/stream dependency before
-reading. Strong references preserve lifetime, not write safety or stream
-ordering.
+stream for the input device. Deep ingress validation and producer postconditions
+may synchronize CUDA through scalar extraction as an accepted correctness-first
+cost; field construction itself adds no synchronization. Outside those checks,
+same-stream consumers inherit ordinary stream ordering, and cross-stream
+consumers must establish their own event/stream dependency before reading.
+Strong references preserve lifetime, not write safety or stream ordering.
 
 Request selection reduces the long-lived result footprint; it does not by
 itself promise a lower peak during construction. The simple functional planner
@@ -6208,7 +6247,7 @@ The rebuild validation matrix includes:
   equality/`repr` participation, explicit exact-key overrides, crosstalk
   retained/overflow inequality, and absence of keys from deterministic,
   delay, recovery, and composite configs;
-- complete removal in the Maintenance 2 candidate of `_RngStream`,
+- complete removal in the closed Maintenance 2 implementation of `_RngStream`,
   `readout/_random.py`, and any replacement `readout/_rng.py`, while Charge
   multinomial/category orchestration, checked count helpers, and bookkeeping
   remain in `charge/effects/_counts.py`;
@@ -6219,8 +6258,9 @@ The rebuild validation matrix includes:
   `poisson`, and `binomial`, plus TensorDSLab multinomial orchestration,
   `NoiseWaveform`, and `Charge`, without importing or duplicating TensorCore
   raw-word or distribution implementation; and
-- future Stage 7 rejection of duplicate keys assigned to distinct roles in the
-  requested transitive closure before any RNG call or producer write,
+- Stage 7 rejection of duplicate keys assigned to distinct roles in the
+  requested transitive closure before any RNG request, producer invocation, or
+  semantic-output write,
   including structurally present numeric no-op configs and excluding absent,
   zero-noise, and unrequested branches;
 - exact TensorCore dependency, package-root imports, and ordinary-ABC static
@@ -6255,7 +6295,8 @@ The rebuild validation matrix includes:
 - one-pass product iterable consumption;
 - empty, duplicate, non-class, base-class, and foreign-class request rejection;
 - request order having no result semantics;
-- exact transitive config preflight before RNG or writes;
+- exact transitive product preparation before any RNG request, producer
+  invocation, or semantic-output write;
 - proof that every MVP calibration value is scalar and applies uniformly to
   all example/channel positions in one invocation, without channel-coordinate
   lookup, implicit parameter broadcasting, or tensors hidden inside configs;
@@ -6623,9 +6664,12 @@ The rebuild validation matrix includes:
   same-stream and explicit cross-stream ordering behavior;
 - ordinary-`torch.Tensor` execution evidence, with custom tensor subclasses and
   dispatch modes explicitly unsupported rather than exhaustively detected;
-- no CPU, NumPy, Python-list, move, cast, or detach path for an existing input
-  payload; small config-derived scalar/template preparation remains allowed as
-  explicitly documented by the owning producer;
+- no CPU, NumPy, Python-list, device-movement, in-place/source-replacement,
+  input-normalization, or detach path for an existing input payload; declared
+  fresh generated-product dtype conversion remains required, including
+  `Photoelectrons[torch.int64]` to floating Charge, and small config-derived
+  scalar/template preparation remains allowed as explicitly documented by the
+  owning producer;
 - transform-specific scientific/parity tests;
 - CPU tests and conditional CUDA tests with accurate qualifications;
 - stale `0.6` names and compatibility aliases absent; and
@@ -6660,24 +6704,22 @@ The completed production steps are:
   then clear fixed-commit Validation, independent Review, merge, and Design
   closeout gates.
 
-The Maintenance 2 lifecycle sequence is topology-dependent:
+The next production sequence is:
 
-1. While these exact bytes are absent from `main`, clear them against selected
-   TensorCore `0.9.0` commit
-   `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59` through fixed-commit Validation,
-   independent Review, and the Review-owned clean fast-forward. If they are
-   present unchanged on `main`, that fast-forward has completed and Design
-   acceptance remains pending. Final acceptance is complete only when the work
-   order and implementation index record `Merged / Closed`. The implementation
-   splits config/field/collection ownership, creates the focused
-   Charge effects package, migrates generic RNG and count-distribution use to
-   TensorCore, retains multinomial/category orchestration and checked count
-   bookkeeping in `_counts.py`, adds config-owned keys, removes `_RngStream`
-   and `readout/_random.py`, consolidates the private scalar-to-dtype
-   requirement, and preserves default-key continuity.
-2. Separately design and dispatch Stage 7 to publish request-aware
-   `simulate_readout(...)` with required `rng: CounterRng` and closure-wide
-   duplicate-key preflight.
+1. Maintenance 2 is Merged / Closed through exact implementation candidate
+   `89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
+   `9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`, against selected TensorCore
+   `0.9.0` commit `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`.
+   It split config/field/collection ownership, created the focused Charge
+   effects package, migrated generic RNG and count-distribution use to
+   TensorCore, retained multinomial/category orchestration and checked count
+   bookkeeping in `_counts.py`, added config-owned keys, removed `_RngStream`
+   and `readout/_random.py`, consolidated the private scalar-to-dtype
+   requirement, and preserved default-key continuity.
+2. Stage 7 is Design-complete / Undispatched. A later explicit dispatch may
+   implement request-aware `simulate_readout(...)`, whole-request preparation,
+   product-owned plans, required `rng: CounterRng`, closure-wide duplicate-key
+   validation, execute-once planning, and exact requested retention.
 3. Profile real GPU memory and execution before designing workspace/output
    reuse.
 4. Design the exact TensorG4DS-to-truth-Photoelectrons bridge.
@@ -6715,8 +6757,7 @@ the historical `0.6` contracts in the first table.
 | field-ID parity boundaries | product-request/builder parity boundaries |
 | semantic-coordinate RNG identity | config-owned `RngKey` plus logical flat tensor positions |
 
-The Maintenance 2 implementation supersedes these closed Stage 5/6 choices;
-its lifecycle follows the branch-versus-`main` rule above:
+The closed Maintenance 2 implementation supersedes these Stage 5/6 choices:
 
 | Closed Stage 5/6 implementation | Maintenance 2 implementation |
 | --- | --- |
@@ -6762,13 +6803,13 @@ and sampling live in `tensor_dslab.common`; each generated readout product owns
 its field, configs, validation, and implemented private product builder;
 `Photoelectrons` remains the producer-free truth input; `readout.config`
 contains only `ReadoutConfig`, `readout.collection` contains only
-`ReadoutCollection`, and future
+`ReadoutCollection`; accepted but unimplemented Stage 7
 `readout.simulation` will own the one public orchestration function. The private
 readout requirements and Charge effect modules are not public APIs.
 `Photoelectrons` is an already-produced input with neither a config nor a
 producer. The former Stage 6 `types.py` and `_random.py` layout remains closed
-Stage 5/6 implementation evidence; the Maintenance 2 candidate realizes the
-accepted target tree without aliases. Reopening that tree
+Stage 5/6 implementation evidence; the closed Maintenance 2 implementation
+realizes the accepted target tree without aliases. Reopening that tree
 requires a concrete import-cycle, cohesion, or implementation-size finding
 rather than a preference for layer-oriented grouping.
 
@@ -6829,39 +6870,37 @@ Stage 3 completed the TensorCore selection, inherited-constructor typing,
 public-import, and fixed consumer-probe gate at exact commit
 `b454d738f6385ce6489d85492a618a3dab139bb6`.
 
-The Maintenance 2 gate is topology-dependent:
+The remaining gates are:
 
-1. While these exact bytes are absent from `main`, fixed-commit Validation,
-   independent Review, and the clean fast-forward govern the module split and
-   public-only TensorCore RNG migration. If they are present unchanged on
-   `main`, Review's fast-forward has completed and Design acceptance remains
-   pending. Final acceptance is complete only when the work order and
-   implementation index record `Merged / Closed`. The implementation preserves
-   Stage 5/6 output continuity, keeps Charge multinomial/category orchestration
-   and checked count bookkeeping local, consolidates
-   `_require_representable_float`, and removes `_RngStream`,
-   `readout/_random.py`, and any replacement `readout/_rng.py` without shims.
-2. A focused Stage 7 work order for request/config/RNG/key-collision preflight,
-   prerequisite planning, each producer at most once, requested-only
-   retention, and the public `simulate_readout(...)` surface. Stage 6 already
-   closed the private Charge scientific transition, delay/recovery preparation,
-   stabilized aggregate samplers, all ten default role addresses, positional
-   schedules, per-cell count ceiling, relational generation/address bounds,
+1. Maintenance 2 is Merged / Closed through exact implementation candidate
+   `89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
+   `9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. It preserved Stage 5/6 output
+   continuity, kept Charge multinomial/category orchestration and checked count
+   bookkeeping local, consolidated `_require_representable_float`, and removed
+   `_RngStream`, `readout/_random.py`, and any replacement `readout/_rng.py`
+   without shims.
+2. The focused Stage 7 work order is Design-complete / Undispatched. It freezes
+   request/config/RNG/key-collision preparation, product-owned typed plans,
+   prerequisite execution at most once, requested-only retention, and the
+   public `simulate_readout(...)` surface. Stage 6 already closed the private
+   Charge scientific transition, delay/recovery preparation, stabilized
+   aggregate samplers, all ten default role addresses, positional schedules,
+   per-cell count ceiling, relational generation/address bounds,
    ledger/smearing envelope, failure effects, and TensorDSLab-model statistical
    policy on eager CPU. Standalone Bernoulli and sampled continuous-exponential
    equations remain recorded, but their implementation and evidence activate
    only if a later accepted consumer actually uses them.
-4. Waveform-tail optimization evidence after the functional producers are
+3. Waveform-tail optimization evidence after the functional producers are
    accepted: compiler/execution mode, equivalence to the frozen eager
    reference, one-kernel/no-target-sized-temporary instrumentation, and the
    fallback gate for a purpose-built kernel. Cross-product analog/digitized
    fusion remains excluded.
-5. Digitization-config association for independent/durable consumers.
-6. Exact TensorG4DS source and dense truth-binning bridge, including provenance
+4. Digitization-config association for independent/durable consumers.
+5. Exact TensorG4DS source and dense truth-binning bridge, including provenance
    origin, left-edge construction, exact boundary assignment at `0`, `i * T`,
    and exclusive `N * T`, plus `underflow_hit_count` and
    `overflow_hit_count` accounting.
-7. Whether typed collection convenience properties materially improve the API.
+6. Whether typed collection convenience properties materially improve the API.
 
 The fixed-`K` correlated-avalanche model is implemented and closed on eager
 CPU: exact config ownership, independent per-edge phase closure,

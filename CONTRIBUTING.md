@@ -17,15 +17,12 @@ The current identity and maturity are:
 
 ```text
 Project/display name: TensorDSLab
-Python import: tensor_dslab (accepted on main through Stage 6)
+Python import: tensor_dslab (accepted on main through Maintenance 2)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
-Package maturity: Stage 6 Charge Simulation Merged / Closed
-Active production gate: Maintenance 2 RNG and product-module ownership
-migration bytes are present; candidate while absent from `main`, Merged /
-Design acceptance pending when present unchanged on `main`, and Merged /
-Closed only when the work order and implementation index record closeout;
-Stage 7 remains later and undispatched
+Package maturity: Maintenance 2 RNG and product-module ownership Merged / Closed
+Active production gate: Stage 7 Public Readout Orchestration is
+Design-complete / Undispatched
 ```
 
 Stage 1 is Design-complete, and Stage 2 is Merged / Closed on `main` at
@@ -74,8 +71,8 @@ private Charge producer, aggregate samplers, and fixed-generation correlated-
 avalanche slice. Fixed-commit Validation, independent Review, and Design's
 post-merge audit found no unresolved issue. CUDA was unavailable, so its
 evidence is eager CPU-only and makes no GPU execution or performance claim.
-Stage 7 public orchestration, measured GPU fusion, and integration remain later
-work.
+Stage 7 public orchestration is Design-complete / Undispatched. Measured GPU
+fusion and integration remain later work.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency
@@ -218,7 +215,7 @@ TensorDSLab/
     readout/
       config.py               # ReadoutConfig
       collection.py           # ReadoutCollection
-      simulation.py           # future Stage 7 public orchestration
+      simulation.py           # accepted Stage 7 public orchestration; unimplemented
       _requirements.py        # private shared readout relationships
       photoelectrons/field.py
       charge/
@@ -246,18 +243,18 @@ as `TensorDSLab`; keep semantic subpackages directly below the import root.
 Do not create placeholder modules to reserve architecture. Add a module only
 when there is a real concept, behavior, or contract to house.
 
-This product-centered tree is the accepted Maintenance 2 ownership target,
-not a request to materialize every path at once. The Maintenance 2
-implementation realizes the accepted paths and removes the former Stage 5/6
-`types.py`, `_RngStream`, and `readout/_random.py` surfaces without shims.
+This product-centered tree is the accepted Maintenance 2 ownership target.
+Maintenance 2 is Merged / Closed through exact candidate
+`89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
+`9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`; it realizes the accepted paths
+and removes the former Stage 5/6 `types.py`, `_RngStream`, and
+`readout/_random.py` surfaces without shims.
 TensorCore fulfilled the historical consumer proposal in published version
 `0.9.0` at exact commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. TensorDSLab's Maintenance 2
-implementation pins that dependency. While these exact bytes are absent from
-`main`, they remain the fixed-commit Validation/Review candidate; if present
-unchanged on `main`, Review's clean fast-forward has completed and Design
-acceptance remains pending. Final acceptance is complete only when the work
-order and implementation index record `Merged / Closed`.
+implementation pins that dependency. Its accepted evidence is eager CPU-only:
+157 tests ran, 148 passed, 9 conditional CUDA tests skipped, and Pyright
+reported no diagnostics against either exact dependency form.
 Product `field.py` modules own final field leaves and validation; product
 `config.py` modules own configs. Product `_produce.py` modules own private
 `_produce_*` construction. Charge's scientific submodels, multinomial/category
@@ -304,9 +301,9 @@ stochastic roles, scientific position/category lattices, direct
 uniform/Gaussian ordinals, draw-free scientific policy, multinomial
 orchestration, final remainders, count accumulation, and ledgers. Use only
 public TensorCore package-root RNG surfaces; do not copy or import protected
-raw-word or promoted distribution mechanics. The Maintenance 2 candidate pins
-exact TensorCore `0.9.0`; closed Stage 3 through 6 evidence remains scoped to
-`0.7.0`. TensorDSLab uses
+raw-word or promoted distribution mechanics. The closed Maintenance 2
+implementation pins exact TensorCore `0.9.0`; closed Stage 3 through 6 evidence
+remains scoped to `0.7.0`. TensorDSLab uses
 `require_same_dtype` only for semantic-field relationships and retains raw
 tensor requirements plus its private scalar-to-dtype representation helper.
 
@@ -423,10 +420,11 @@ Photoelectrons axes/device/shape + SamplingConfig -> NoiseWaveform
 PureWaveform + NoiseWaveform -> AnalogWaveform -> DigitizedWaveform
 ```
 
-The future `simulate_readout(...)` computes the requested transitive closure
-privately, executes each producer at most once, and retains exactly the
-caller-requested products. Prerequisites need not be returned. `products` is
-in-memory retention only; persistence and IO remain deferred.
+The Design-complete but unimplemented Stage 7 `simulate_readout(...)` contract
+computes the requested transitive closure privately, executes each producer at
+most once, and retains exactly the caller-requested products. Prerequisites
+need not be returned. `products` is in-memory retention only; persistence and
+IO remain deferred.
 
 Consumer-facing adapters are deferred. TensorDSLab should first make the local
 typed product graph coherent enough that future consumers can depend on it
@@ -448,12 +446,13 @@ under private `charge/effects`. Do not create global
 `configs/`, `fields.py`, `builders.py`, `validation.py`, or `tensors.py`
 dumping grounds.
 
-`readout/config.py` contains exactly `ReadoutConfig`;
-`readout/collection.py` contains exactly `ReadoutCollection`; and
-`readout/simulation.py` will own public `simulate_readout(...)`, request
-validation, dependency planning, and orchestration. `readout/_requirements.py`
-and `charge/effects/_*.py` are private implementation modules. The accepted
-target has no `readout/_random.py` or replacement `_rng.py`; generic RNG
+`readout/config.py` contains exactly `ReadoutConfig`, and
+`readout/collection.py` contains exactly `ReadoutCollection`. When Stage 7 is
+implemented, `readout/simulation.py` owns public `simulate_readout(...)`,
+request validation, dependency planning, and orchestration.
+`readout/_requirements.py` and `charge/effects/_*.py` are private
+implementation modules. The accepted target has no `readout/_random.py` or
+replacement `_rng.py`; generic RNG
 mechanics come from TensorCore. `common/axes.py` and `common/sampling.py` own
 shared axis and sampling semantics.
 
@@ -465,13 +464,14 @@ packages do not import `ReadoutConfig`, `ReadoutCollection`, or
 
 Physical module location does not decide public visibility. Stage 3 package
 roots and `__all__` deliberately export the collaborator-facing axes, fields,
-configs, and collection. A later scientific stage adds
+configs, and collection. Separately dispatched Stage 7 adds
 `simulate_readout(...)` only when the function exists. Never create placeholder
 modules merely to reserve the accepted target tree.
 
 ## Target Domain Simulation Surface
 
-The completed rebuild will expose one public readout action. Stage 3 does not:
+The Design-complete Stage 7 contract exposes one public readout action once
+implemented; the current package does not yet provide it:
 
 ```python
 readout = simulate_readout(
@@ -484,9 +484,14 @@ readout = simulate_readout(
 
 The `products` iterable is required, consumed once, semantically unordered,
 and contains exact recognized classes. Reject empty requests, duplicates,
-base/foreign types, and missing transitive configs before RNG use or
-producer writes. Execute each prerequisite at most once and retain exactly the
-requested fields.
+base/foreign types, and missing transitive configs before any RNG request,
+product-producer invocation, or semantic-output write. Product-owned private
+preparation records must complete the entire closure before the first RNG
+request, producer invocation, or semantic-output write; `simulation.py`
+composes those plans without duplicating scientific equations. Execute each
+prerequisite at most once and retain exactly the requested fields. Each exact
+product config enters its typed preparer; the producer receives the trusted
+plan rather than the config again.
 
 `ReadoutConfig` composes one required `SamplingConfig` with optional
 product-specific configs. Config absence is structural. Product configs use
@@ -506,12 +511,18 @@ convention. Stage 6 behavior-neutrally renamed the four transitional Stage 4/5
 waveform modules, callables, imports, and tests. Do not restore an `_product_*`
 callable, `_product.py` module, alias, or compatibility shim.
 
-The builder does not load sources, perform IO, move or cast inputs, persist
-products, or own DAG scheduling. It requires one immutable TensorCore
+The builder does not load sources, perform IO, move or normalize existing
+inputs, persist products, or own DAG scheduling. A producer's declared fresh
+generated-product dtype conversion is not input normalization. The builder
+requires one immutable TensorCore
 `CounterRng`, even for a deterministic closure; there is no simultaneous
 `seed=` or ambient mutable generator. Deterministic private producers receive
 no RNG. Stochastic-capable Charge and noise producers receive it and select
-the exact `RngKey` owned by their leaf config.
+the exact `RngKey` owned by their leaf config. TensorCore exposes no
+non-consuming algorithm-capability query: Stage 7 validates nominal
+`CounterRng` membership, performs no dummy draw, and treats a real custom RNG
+backend failure at the first genuine distribution request as an execution
+failure.
 
 Default keys use namespace `0x54445331` and append-only streams:
 
@@ -532,12 +543,13 @@ Keys are exact immutable config fields and may be deliberately overridden.
 Do not use loose constants, `IntEnum`, `auto()`, hashes, declaration order,
 requested-product order, or mutable/global generators. Stage 7 rejects one key
 assigned to different stochastic roles in the requested closure before any
-RNG call or write.
+RNG request, producer invocation, or semantic-output write.
 
 Stage 5/6 implemented the same default addresses through private `_RngStream`
 and `readout/_random.py`; those bytes remain historical evidence. The
-Maintenance 2 candidate preserves their default-key outputs against selected
-TensorCore `0.9.0` and removes the old module and enum without shims.
+closed Maintenance 2 implementation preserves their default-key outputs
+against selected TensorCore `0.9.0` and removes the old module and enum without
+shims.
 
 Charge timing/AP redistribution uses TensorDSLab-owned aggregate multinomial
 factorization through calls to TensorCore's public `rng.binomial(...)`.
@@ -630,9 +642,11 @@ moves, casts, or host-materializes an existing field.
 Callers must not mutate tensors exposed through fields or collections. A
 producer initiates or enqueues all writes before it constructs and exposes a
 field, and TensorDSLab initiates no later write through any alias to that
-storage. Construction does not synchronize the device: same-stream consumers
-use ordinary stream ordering and cross-stream consumers establish their own
-dependency.
+storage. Field construction alone is not an additional synchronization point,
+but accepted deep-value validation and producer postconditions use scalar
+reductions that may synchronize CUDA. Outside those documented correctness
+checks, same-stream consumers use ordinary stream ordering and cross-stream
+consumers establish their own dependency.
 
 The initial API has no public `out=`, destination collection, workspace,
 allocator, lease, or allocation-free promise. Private scratch remains
@@ -738,9 +752,11 @@ APIs, or DAG APIs.
 
 Once implemented, `simulate_readout(...)` is the public scientific
 orchestration function. It consumes already-produced dense `Photoelectrons`,
-plans the requested product
-closure, and returns one completed `ReadoutCollection`. It must not load data,
-perform durable IO, move or cast inputs, persist products, or invoke DAG APIs.
+plans the requested product closure, and returns one completed
+`ReadoutCollection`. It must not load data, perform durable IO, move the source,
+normalize an existing input through a cast, persist products, or invoke DAG
+APIs. A producer's declared fresh generated-product dtype conversion remains
+required.
 
 ## Deferred Integration Surfaces
 
@@ -750,7 +766,7 @@ TensorDSLab may later expose stable public surfaces for operation specs,
 executable adapters, artifact/cache requirements, output validation, and
 recipe fragments.
 
-Future local product dependency planning inside `simulate_readout(...)` is
+Stage 7 local product dependency planning inside `simulate_readout(...)` is
 TensorDSLab scientific orchestration, not Projects/dag campaign orchestration.
 
 For compaction, TensorDSLab owns a strict deterministic storage-level operation
@@ -822,7 +838,8 @@ typed path:
   tensor records;
 - construction of TensorCore axes, fields, and collections;
 - explicit product-specific deep validation for untrusted field values; and
-- `simulate_readout(...)` request/config/source preflight before RNG or writes.
+- `simulate_readout(...)` whole-request preparation before any RNG request,
+  product-producer invocation, or semantic-output write.
 
 Once an object has crossed into a valid native record, hot-path functions
 should avoid repeatedly revalidating full object graphs. Product builders may
@@ -917,16 +934,24 @@ Good tests should:
   `_rng.py`;
 - for Stage 7, prove required `CounterRng` even on deterministic closures,
   draw-free deterministic execution, and closure-wide duplicate-role-key
-  rejection before RNG calls or writes;
+  rejection before RNG requests, producer invocation, or semantic-output
+  writes;
 - prove source `Photoelectrons` exact return and immutability, guaranteed-fresh
   generated fields, pairwise generated-output independence, exact source-axis
   reuse, and no post-exposure TensorDSLab writes;
+- for Stage 7, prove every generated producer runs its exact product-specific
+  deep postcondition before downstream use or retention, and that a failed
+  postcondition exposes no field or partial collection;
 - prove deterministic waveform operations preserve accepted autograd behavior
   and stochastic/digitized paths make only their documented claims;
-- prove preflight precedes RNG consumption and producer writes, while launched
-  backend failures make no rollback promise;
-- prove no source IO, persistence, host staging, device movement, casting, or
-  campaign orchestration occurs in `simulate_readout(...)`;
+- prove complete request preparation precedes RNG consumption, producer
+  invocation, and semantic-output writes, while launched backend failures make
+  no rollback promise;
+- prove no source IO, persistence, host staging, device movement,
+  in-place/source replacement, input normalization, or campaign orchestration
+  occurs in `simulate_readout(...)`; this does not prohibit a producer's
+  declared fresh generated-product dtype conversion, including
+  `Photoelectrons[torch.int64]` to floating Charge;
 - do not add adversarial tests for unsupported final-leaf subclassing, class
   mutation, constructor bypass, private calls, exposed-tensor mutation, or
   custom dispatch merely to harden outside the public contract;

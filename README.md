@@ -14,7 +14,8 @@ clustering, TensorML training, durable IO, or campaign orchestration.
 
 ## Implemented Foundation
 
-The package currently provides the TensorCore `0.7` semantic foundation for
+The package currently provides the semantic foundation introduced against
+TensorCore `0.7` and now installed against exact TensorCore `0.9.0` for
 post-binned readout:
 
 - `ExampleAxis`, `ChannelAxis`, and regular timestamp-backed `SampleAxis`;
@@ -66,24 +67,22 @@ Private implementation seams now produce complete `Charge`, `PureWaveform`,
 `NoiseWaveform`, `AnalogWaveform`, and `DigitizedWaveform` values. Charge
 production includes its configured dark-count, timing-jitter, fixed-generation
 correlated-avalanche, recovery-ledger, and smearing submodels; noise supports
-zero, white, and caller-supplied PSD models. These seams remain private. The
-Maintenance 2 moves generic RNG and distribution mechanics to exact TensorCore
-`0.9.0` and uses config-owned stochastic keys. While these exact bytes are
-absent from `main`, they remain the fixed-commit Validation/Review candidate;
-if present unchanged on `main`, Review's clean fast-forward has completed and
-Design acceptance remains pending. Final acceptance is complete only when the
-work order and implementation index record `Merged / Closed`. Public
-orchestration is not implemented. Ordinary users should continue to import
-only the documented package-root types and configs.
+zero, white, and caller-supplied PSD models. These seams remain private.
+Maintenance 2 is Merged / Closed through exact implementation candidate
+`89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
+`9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. It moves generic RNG and
+distribution mechanics to exact TensorCore `0.9.0`, uses config-owned
+stochastic keys, and records eager-CPU evidence only because CUDA was
+unavailable. Public orchestration is not implemented. Ordinary users should
+continue to import only the documented package-root types and configs.
 
 The historical [TensorCore consumer proposal](docs/implementation/proposed_tensorcore_counter_rng_and_distributions.md)
 is now fulfilled by published TensorCore `0.9.0` commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The
 [TensorDSLab Maintenance 2 work order](docs/implementation/maintenance_2_rng_and_product_module_ownership_migration.md)
-selects that exact dependency. The implementation pins it and completes the
-ownership migration under the topology-dependent lifecycle above. CUDA was
-unavailable, so the recorded evidence is eager CPU-only and makes no GPU or
-cross-backend claim.
+selects that exact dependency. The closed implementation pins it and completes
+the ownership migration. CUDA was unavailable, so the recorded evidence makes
+no GPU or cross-backend claim.
 
 ## Explicit Exclusions
 
@@ -93,7 +92,9 @@ binning, TensorG4DS or TensorML adapters, IO,
 caches, `out=`, workspaces, movement/selection helpers, or an allocation-free
 execution path. It makes no GPU-execution, release, deployment,
 backward-compatibility, conformance, or broad cross-package compatibility
-claim.
+claim. The focused
+[Stage 7 work order](docs/implementation/stage_7_public_readout_orchestration.md)
+is Design-complete / Undispatched.
 
 Start with [the documentation overview](docs/overview.md) and the
 [rebuild architecture](docs/architecture/rebuild.md). Local tests run from the

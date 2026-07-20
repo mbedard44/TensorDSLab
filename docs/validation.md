@@ -58,24 +58,23 @@ the focused Stage 6 run executed 65 tests: 60 passed and 5 CUDA tests skipped.
 Pyright `1.1.408` reported no findings. This is eager CPU-only evidence because
 CUDA was unavailable. It adds no public `simulate_readout(...)` surface.
 
-## Accepted Maintenance 2 RNG And Module-Migration Gates
+## Closed Maintenance 2 RNG And Module-Migration Evidence
 
-Maintenance 2 implementation bytes are present. Their TensorCore dependency
-gate is closed by published version `0.9.0` at exact commit
+Maintenance 2 is Merged / Closed through exact implementation candidate
+`89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
+`9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. Its TensorCore dependency gate
+is closed by published version `0.9.0` at exact commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, which provides generic `RngKey`,
 `CounterRng`, `Threefry4x32`, `logical_positions`, public `uniform`,
 `gaussian`, `poisson`, and `binomial`, plus the focused
 `require_same_dtype` relationship. TensorDSLab independently selected and
-probed that exact commit, and the implementation pins it through public
-package-root imports. The historical consumer proposal is fulfilled. While
-these exact bytes are absent from `main`, they remain the fixed-commit
-Validation/Review candidate; if present unchanged on `main`, Review's clean
-fast-forward has completed and Design acceptance remains pending. Final
-acceptance is complete only when the work order and implementation index
-record `Merged / Closed`. CUDA was unavailable, so the recorded evidence is
+probed that exact commit, and the closed implementation pins it through public
+package-root imports. The historical consumer proposal is fulfilled. Its full
+suite ran 157 tests: 148 passed and 9 conditional CUDA tests skipped. Pyright
+reported no diagnostics. CUDA was unavailable, so the recorded evidence is
 eager CPU-only and makes no GPU or cross-backend claim.
 
-The focused TensorDSLab migration must prove:
+The accepted Maintenance 2 evidence proves:
 
 - exact dependency pin and public package-root imports only;
 - TensorCore owns Random123 known-answer vectors, raw-word generation,
@@ -95,7 +94,7 @@ The focused TensorDSLab migration must prove:
   over the real ledger bound; separately, that bound is floored to the
   greatest target-dtype ledger it covers and the resulting same-device scale
   is checked against TensorCore's public Gaussian prepared-scale finite-output
-  envelope before any Charge effect, RNG request, or write;
+  envelope before any Charge effect, RNG request, or Charge-result write;
 - the frozen `K=0` adjacent boundaries remain exact (`float32` accepted
   `0x1.f61fea0000000p+98`, rejected `0x1.f61fec0000000p+98`; `float64`
   accepted `0x1.51e4a059b7cf4p+994`, rejected
@@ -137,14 +136,48 @@ The focused TensorDSLab migration must prove:
   `Charge` default-key continuity on the exact accepted backend/mode evidence
   boundary.
 
-Stage 7 separately validates the required public `rng: CounterRng`, no
-simultaneous `seed=`, deterministic closures requesting no values, and
-closure-wide rejection of one key assigned to distinct stochastic roles
-before the first RNG call or producer write. The collision set includes
-structurally present key-bearing configs even when numeric parameters make
-them no-ops, and excludes absent configs, `ZeroNoiseConfig`, and unrequested
-branches. Concrete RNG device/dtype/distribution support is required only when
-the effective closure is stochastic.
+## Design-Complete Stage 7 Validation Gate
+
+The focused
+[Stage 7 work order](implementation/stage_7_public_readout_orchestration.md)
+is Design-complete / Undispatched. It requires the public
+`rng: CounterRng`, no simultaneous `seed=`, and deterministic closures that
+request no RNG values. TensorCore exposes no non-consuming concrete-algorithm
+capability query, so Stage 7 must not issue a dummy draw, inspect protected
+hooks, or restrict the public boundary to `Threefry4x32`. A real custom
+RNG/backend incompatibility remains a dynamic failure at the first genuine
+distribution call.
+
+The Stage 7 implementation and fixed-commit evidence must prove at least:
+
+- all 63 nonempty recognized product subsets and one-pass request-iterable
+  consumption;
+- rejection of empty, duplicate, foreign, base, instance, and non-class product
+  requests without adversarial final-leaf subclass policing;
+- exact transitive configuration closure and no influence from unrequested
+  branches;
+- completion of every product-owned preparation plan before the first RNG
+  request, producer invocation, or semantic-product/output write;
+- closure-wide rejection of one `RngKey` assigned to distinct stochastic
+  roles, including structurally present numeric no-op configs and excluding
+  absent configs, `ZeroNoiseConfig`, and unrequested branches;
+- each required producer executing at most once, exact requested-only retention,
+  request-order independence, and common-product equality when retention grows;
+- exact source return when requested, source/config immutability, generated-
+  product freshness, pairwise output storage independence, and exact source-axis
+  reuse;
+- one exact product-specific deep postcondition per generated field before
+  downstream use or retention, including finite Pure/Noise/Analog values and
+  config-bounded Digitized values, plus no escaped field or downstream
+  invocation on failure;
+- CPU behavior and applicable conditional CUDA behavior, with CUDA deep-value
+  reductions and scalar extraction documented as possible current-stream
+  synchronization; and
+- no partial collection or semantic product escaping a failed call, without a
+  rollback promise for private allocations or completed local prerequisites.
+
+The Stage 7 work order is the exact scope and evidence authority. This section
+does not dispatch it or claim that `simulate_readout(...)` is implemented.
 
 Documentation-only Design work remains in Design unless the user requests an
 independent documentation Validation or Review. At minimum, run:
@@ -207,7 +240,7 @@ public constructor/config values
   -> TensorDSLab axes and product fields
   -> ReadoutCollection completed results
   -> implemented private product producers
-  -> future simulate_readout(...)
+  -> Design-complete, unimplemented simulate_readout(...)
   -> future TensorG4DS, TensorML, and durable boundaries
 ```
 
@@ -458,18 +491,18 @@ The top-level package should expose the three axes, `SamplingConfig`, six
 products, all public product configs, `ReadoutConfig`, and
 `ReadoutCollection`. It must not re-export TensorCore generic classes or
 scalars, private requirements, private validators, retired `0.6` names, or a
-placeholder simulation function. Stage 7 will replace the last prohibition
-with a deliberate export check for the implemented `simulate_readout`.
+placeholder simulation function. When separately dispatched, Stage 7 replaces
+the last prohibition with a deliberate export check for implemented
+`simulate_readout`.
 
 Closed Stage 6 regression checks proved every former product package,
-`readout.types`, the readout root, and the package root were acyclic. The
-Maintenance 2 candidate must instead prove fresh-process imports of every
-product `config`/`field` module, `readout.config`, `readout.collection`, the
-readout root, and the package root, plus absence of the retired `types.py`
-modules.
+`readout.types`, the readout root, and the package root were acyclic. Closed
+Maintenance 2 evidence instead proves fresh-process imports of every product
+`config`/`field` module, `readout.config`, `readout.collection`, the readout
+root, and the package root, plus absence of the retired `types.py` modules.
 Product packages must not import `ReadoutConfig`, `ReadoutCollection`, or
-future orchestration. The complete product graph may be imported only by the
-cross-product composition layer and deliberate export layers.
+the Stage 7 orchestration layer. The complete product graph may be imported
+only by the cross-product composition layer and deliberate export layers.
 
 ## Static Typing Checks
 
@@ -532,8 +565,9 @@ fusion or performance claim was made.
 
 The remaining acceptance matrix in
 [Rebuild Validation Strategy](architecture/rebuild.md#validation-strategy)
-therefore covers product-request closure and retention invariance under future
-Stage 7, later CUDA and measured optimization evidence, and future TensorG4DS,
+therefore covers product-request closure and retention invariance under the
+Design-complete Stage 7 work order, later CUDA and measured optimization
+evidence, and future TensorG4DS,
 TensorML, Reconstruction, and durable boundaries.
 
 Stage 5 does not activate Bernoulli, exponential, Poisson, categorical,
