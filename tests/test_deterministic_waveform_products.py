@@ -32,19 +32,22 @@ from tensor_dslab import (
     VetoPduPulseConfig,
 )
 from tensor_dslab.readout.analog_waveform._produce import (
-    _produce_analog_waveform,
+    _prepare_analog_waveform,
+    _produce_analog_waveform as _produce_analog_waveform_prepared,
 )
 from tensor_dslab.readout.analog_waveform.field import (
     _require_valid_values as require_valid_analog,
 )
 from tensor_dslab.readout.digitized_waveform._produce import (
-    _produce_digitized_waveform,
+    _prepare_digitized_waveform,
+    _produce_digitized_waveform as _produce_digitized_waveform_prepared,
 )
 from tensor_dslab.readout.digitized_waveform.field import (
     _require_valid_values as require_valid_digitized,
 )
 from tensor_dslab.readout.pure_waveform._produce import (
-    _produce_pure_waveform,
+    _prepare_pure_waveform,
+    _produce_pure_waveform as _produce_pure_waveform_prepared,
 )
 from tensor_dslab.readout.pure_waveform.field import (
     _require_valid_values as require_valid_pure,
@@ -380,6 +383,49 @@ def _guarded_adc_reference(
 
 def _independent_storage(left: torch.Tensor, right: torch.Tensor) -> bool:
     return left.untyped_storage().data_ptr() != right.untyped_storage().data_ptr()
+
+
+def _produce_pure_waveform(
+    charge: Charge,
+    *,
+    sampling: SamplingConfig,
+    config: PureWaveformConfig,
+) -> PureWaveform:
+    plan = _prepare_pure_waveform(
+        charge,
+        sampling=sampling,
+        config=config,
+        floating_dtype=charge.tensor.dtype,
+        device=charge.tensor.device,
+    )
+    return _produce_pure_waveform_prepared(charge, plan=plan)
+
+
+def _produce_analog_waveform(
+    pure: PureWaveform,
+    noise: NoiseWaveform,
+    *,
+    config: AnalogWaveformConfig,
+) -> AnalogWaveform:
+    plan = _prepare_analog_waveform(
+        config=config,
+        floating_dtype=pure.tensor.dtype,
+        device=pure.tensor.device,
+    )
+    return _produce_analog_waveform_prepared(pure, noise, plan=plan)
+
+
+def _produce_digitized_waveform(
+    analog: AnalogWaveform,
+    *,
+    config: DigitizedWaveformConfig,
+) -> DigitizedWaveform:
+    plan = _prepare_digitized_waveform(
+        config=config,
+        floating_dtype=analog.tensor.dtype,
+        device=analog.tensor.device,
+    )
+    return _produce_digitized_waveform_prepared(analog, plan=plan)
 
 
 class DeterministicWaveformProductsTest(unittest.TestCase):

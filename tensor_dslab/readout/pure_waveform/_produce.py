@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import math
 
 import torch
+from tensor_core import TensorField
 from torch.nn import functional
 
 from tensor_dslab.common import SampleAxis, SamplingConfig
@@ -16,7 +18,16 @@ from tensor_dslab.readout.pure_waveform.config import (
     TpcFebSnrPulseConfig,
     VetoPduPulseConfig,
 )
-from tensor_dslab.readout.pure_waveform.field import PureWaveform
+from tensor_dslab.readout.pure_waveform.field import (
+    PureWaveform,
+    _require_valid_values,
+)
+
+
+@dataclass(frozen=True, slots=True)
+class _PureWaveformPlan:
+    sample_dimension: int
+    coefficients: torch.Tensor
 
 
 def _template_sample_count(
@@ -72,13 +83,22 @@ def _veto_raw(t_ns: float, config: VetoPduPulseConfig) -> float:
     return gaussian * first_edge * second_edge
 
 
-def _produce_pure_waveform(
-    charge: Charge,
+def _prepare_pure_waveform(
+    source: TensorField,
     *,
     sampling: SamplingConfig,
     config: PureWaveformConfig,
-) -> PureWaveform:
-    _require_sampling(charge, sampling)
+    floating_dtype: torch.dtype,
+    device: torch.device,
+) -> _PureWaveformPlan:
+    if type(sampling) is not SamplingConfig:
+        raise TypeError("sampling must be exactly SamplingConfig")
+    if type(config) is not PureWaveformConfig:
+        raise TypeError("config must be exactly PureWaveformConfig")
+    if floating_dtype not in (torch.float32, torch.float64):
+        raise TypeError("floating_dtype must be torch.float32 or torch.float64")
+    _require_sampling(source, sampling)
+    sample_dimension = source.dimension_of(SampleAxis)
 
     try:
         sample_period_ns = sampling.sample_period_ps.value / 1000.0
@@ -118,7 +138,7 @@ def _produce_pure_waveform(
     peak_voltage_mv_per_pe = model.peak_voltage_mv_per_pe.value
     rounded_peak = _require_representable_float(
         peak_voltage_mv_per_pe,
-        dtype=charge.tensor.dtype,
+        dtype=floating_dtype,
         field="pulse normalized extremum",
     )
     if rounded_peak == 0.0:
@@ -128,24 +148,39 @@ def _produce_pure_waveform(
     rounded_coefficients = [
         _require_representable_float(
             value / normalization * peak_voltage_mv_per_pe,
-            dtype=charge.tensor.dtype,
+            dtype=floating_dtype,
             field=f"pulse coefficient[{index}]",
         )
         for index, value in enumerate(raw[:coefficient_count])
     ]
     coefficients = torch.tensor(
         rounded_coefficients,
-        dtype=charge.tensor.dtype,
-        device=charge.tensor.device,
+        dtype=floating_dtype,
+        device=device,
+    )
+    return _PureWaveformPlan(
+        sample_dimension=sample_dimension,
+        coefficients=coefficients,
     )
 
-    sample_dimension = charge.dimension_of(SampleAxis)
+
+def _produce_pure_waveform(
+    charge: Charge,
+    *,
+    plan: _PureWaveformPlan,
+) -> PureWaveform:
+    coefficients = plan.coefficients
+
+    sample_dimension = plan.sample_dimension
     sample_last = charge.tensor.movedim(sample_dimension, -1)
     sample_count = sample_last.shape[-1]
     rows = sample_last.reshape(-1, 1, sample_count)
+    coefficient_count = coefficients.shape[0]
     kernel = coefficients.flip(0).reshape(1, 1, coefficient_count)
     with torch.autocast(device_type=charge.tensor.device.type, enabled=False):
         padded = functional.pad(rows, (coefficient_count - 1, 0))
         convolved = functional.conv1d(padded, kernel)
     values = convolved.reshape(sample_last.shape).movedim(-1, sample_dimension)
-    return PureWaveform(tensor=values, axes=charge.axes)
+    result = PureWaveform(tensor=values, axes=charge.axes)
+    _require_valid_values(result)
+    return result

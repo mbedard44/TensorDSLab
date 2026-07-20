@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import math
 
 import torch
@@ -16,8 +17,38 @@ from tensor_dslab.readout.noise_waveform.config import (
     WhiteNoiseConfig,
     ZeroNoiseConfig,
 )
-from tensor_dslab.readout.noise_waveform.field import NoiseWaveform
+from tensor_dslab.readout.noise_waveform.field import (
+    NoiseWaveform,
+    _require_valid_values,
+)
 from tensor_dslab.readout.photoelectrons import Photoelectrons
+
+
+@dataclass(frozen=True, slots=True)
+class _ZeroNoisePlan:
+    pass
+
+
+@dataclass(frozen=True, slots=True)
+class _WhiteNoisePlan:
+    rng_key: RngKey
+    represented_rms: float
+
+
+@dataclass(frozen=True, slots=True)
+class _PsdNoisePlan:
+    rng_key: RngKey
+    represented_powers: torch.Tensor
+    sample_dimension: int
+
+
+@dataclass(frozen=True, slots=True)
+class _NoiseWaveformPlan:
+    shape: tuple[int, ...]
+    device: torch.device
+    floating_dtype: torch.dtype
+    model: _ZeroNoisePlan | _WhiteNoisePlan | _PsdNoisePlan
+    rng_roles: tuple[tuple[str, RngKey], ...]
 
 
 def _require_position_count(count: int, *, field: str) -> None:
@@ -143,7 +174,7 @@ def _psd_noise(
     dtype: torch.dtype,
     rng: CounterRng,
     rng_key: RngKey,
-    represented_powers: tuple[float, ...],
+    represented_powers: torch.Tensor,
 ) -> torch.Tensor:
     sample_count = shape[sample_dimension]
     frequency_count = sample_count // 2 + 1
@@ -167,14 +198,13 @@ def _psd_noise(
     normal_real = normals[..., 0]
     normal_imaginary = normals[..., 1]
 
-    powers = torch.tensor(represented_powers, dtype=dtype, device=device)
     complex_dtype = torch.complex64 if dtype is torch.float32 else torch.complex128
     dc = torch.zeros((row_count, 1), dtype=complex_dtype, device=device)
     interior_count = (sample_count - 1) // 2
     with torch.autocast(device_type=device.type, enabled=False):
         interior_scale = (
             torch.tensor(sample_count / 2.0, dtype=dtype, device=device)
-            * torch.sqrt(powers[1 : interior_count + 1])
+            * torch.sqrt(represented_powers[1 : interior_count + 1])
         )
         interior = torch.complex(
             normal_real[:, :interior_count] * interior_scale,
@@ -183,7 +213,7 @@ def _psd_noise(
         if sample_count % 2 == 0:
             nyquist_scale = (
                 torch.tensor(float(sample_count), dtype=dtype, device=device)
-                * torch.sqrt(powers[-1])
+                * torch.sqrt(represented_powers[-1])
             )
             nyquist_real = normal_real[:, -1:] * nyquist_scale
             nyquist = torch.complex(
@@ -204,14 +234,13 @@ def _psd_noise(
     return sample_last.reshape(sample_last_shape).movedim(-1, sample_dimension)
 
 
-def _produce_noise_waveform(
+def _prepare_noise_waveform(
     photoelectrons: Photoelectrons,
     *,
     sampling: SamplingConfig,
     config: NoiseWaveformConfig,
-    rng: CounterRng,
     floating_dtype: torch.dtype,
-) -> NoiseWaveform:
+) -> _NoiseWaveformPlan:
     if type(photoelectrons) is not Photoelectrons:
         raise TypeError("photoelectrons must be exactly Photoelectrons")
     if type(config) is not NoiseWaveformConfig:
@@ -223,52 +252,107 @@ def _produce_noise_waveform(
     device = photoelectrons.tensor.device
     if device.type not in ("cpu", "cuda"):
         raise ValueError("noise production supports only CPU and CUDA")
-    if not isinstance(rng, CounterRng):
-        raise TypeError("rng must be a CounterRng")
-
     shape = photoelectrons.shape
     output_count = math.prod(shape)
     _require_position_count(output_count, field="output")
     model = config.model
 
     if type(model) is ZeroNoiseConfig:
-        values = torch.zeros(shape, dtype=floating_dtype, device=device)
+        return _NoiseWaveformPlan(
+            shape=shape,
+            device=device,
+            floating_dtype=floating_dtype,
+            model=_ZeroNoisePlan(),
+            rng_roles=(),
+        )
     elif type(model) is WhiteNoiseConfig:
         represented_rms = _prepare_white_rms(
             model.rms_mv.value,
             dtype=floating_dtype,
         )
-        values = _white_noise(
+        return _NoiseWaveformPlan(
             shape=shape,
             device=device,
-            dtype=floating_dtype,
-            rng=rng,
-            rng_key=model.rng_key,
-            represented_rms=represented_rms,
+            floating_dtype=floating_dtype,
+            model=_WhiteNoisePlan(
+                rng_key=model.rng_key,
+                represented_rms=represented_rms,
+            ),
+            rng_roles=(("noise.white", model.rng_key),),
         )
     elif type(model) is PsdNoiseConfig:
-        represented_powers = _prepare_psd_powers(
+        represented_power_values = _prepare_psd_powers(
             model,
             sampling=sampling,
             dtype=floating_dtype,
         )
         sample_dimension = photoelectrons.dimension_of(SampleAxis)
         row_count = output_count // sampling.sample_count.value
-        coefficient_position_count = row_count * len(represented_powers)
+        coefficient_position_count = row_count * len(represented_power_values)
         _require_position_count(
             coefficient_position_count,
             field="PSD coefficient",
         )
-        values = _psd_noise(
-            shape=shape,
-            sample_dimension=sample_dimension,
-            device=device,
+        represented_powers = torch.tensor(
+            represented_power_values,
             dtype=floating_dtype,
-            rng=rng,
-            rng_key=model.rng_key,
-            represented_powers=represented_powers,
+            device=device,
+        )
+        return _NoiseWaveformPlan(
+            shape=shape,
+            device=device,
+            floating_dtype=floating_dtype,
+            model=_PsdNoisePlan(
+                rng_key=model.rng_key,
+                represented_powers=represented_powers,
+                sample_dimension=sample_dimension,
+            ),
+            rng_roles=(("noise.psd", model.rng_key),),
         )
     else:
         raise TypeError("NoiseWaveformConfig.model is not recognized")
 
-    return NoiseWaveform(tensor=values, axes=photoelectrons.axes)
+
+def _produce_noise_waveform(
+    photoelectrons: Photoelectrons,
+    *,
+    plan: _NoiseWaveformPlan,
+    rng: CounterRng,
+) -> NoiseWaveform:
+    if type(photoelectrons) is not Photoelectrons:
+        raise TypeError("photoelectrons must be exactly Photoelectrons")
+    if not isinstance(rng, CounterRng):
+        raise TypeError("rng must be a CounterRng")
+
+    model = plan.model
+    if type(model) is _ZeroNoisePlan:
+        values = torch.zeros(
+            plan.shape,
+            dtype=plan.floating_dtype,
+            device=plan.device,
+        )
+    elif type(model) is _WhiteNoisePlan:
+        values = _white_noise(
+            shape=plan.shape,
+            device=plan.device,
+            dtype=plan.floating_dtype,
+            rng=rng,
+            rng_key=model.rng_key,
+            represented_rms=model.represented_rms,
+        )
+    elif type(model) is _PsdNoisePlan:
+        values = _psd_noise(
+            shape=plan.shape,
+            sample_dimension=model.sample_dimension,
+            device=plan.device,
+            dtype=plan.floating_dtype,
+            rng=rng,
+            rng_key=model.rng_key,
+            represented_powers=model.represented_powers,
+        )
+    else:
+        raise RuntimeError("noise plan model is not recognized")
+
+    result = NoiseWaveform(tensor=values, axes=photoelectrons.axes)
+    _require_valid_values(result)
+    return result

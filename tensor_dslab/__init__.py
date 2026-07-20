@@ -36,6 +36,7 @@ from tensor_dslab.readout import (
     VetoPduPulseConfig,
     WhiteNoiseConfig,
     ZeroNoiseConfig,
+    simulate_readout,
 )
 
 __all__ = (
@@ -72,4 +73,5 @@ __all__ = (
     "VetoPduPulseConfig",
     "WhiteNoiseConfig",
     "ZeroNoiseConfig",
+    "simulate_readout",
 )

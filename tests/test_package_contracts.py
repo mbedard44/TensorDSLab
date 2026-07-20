@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import ast
-from inspect import isabstract, signature
+from inspect import Parameter, isabstract, signature
 import os
 from pathlib import Path
 import subprocess
@@ -27,6 +27,7 @@ from tensor_dslab import (
     PureWaveform,
     ReadoutCollection,
     SampleAxis,
+    simulate_readout,
 )
 
 
@@ -87,6 +88,7 @@ class PackageContractTest(unittest.TestCase):
             "VetoPduPulseConfig",
             "WhiteNoiseConfig",
             "ZeroNoiseConfig",
+            "simulate_readout",
         )
         self.assertEqual(readout.__all__, expected_readout)
         self.assertEqual(
@@ -125,6 +127,7 @@ class PackageContractTest(unittest.TestCase):
                 "VetoPduPulseConfig",
                 "WhiteNoiseConfig",
                 "ZeroNoiseConfig",
+                "simulate_readout",
             ),
         )
         for name in tensor_dslab.__all__:
@@ -203,6 +206,35 @@ class PackageContractTest(unittest.TestCase):
             tensor_dslab.ReadoutConfig.__module__,
             "tensor_dslab.readout.config",
         )
+        self.assertIs(simulate_readout, readout.simulate_readout)
+        self.assertEqual(
+            simulate_readout.__module__,
+            "tensor_dslab.readout.simulation",
+        )
+
+    def test_public_simulation_signature_is_exact(self) -> None:
+        parameters = signature(simulate_readout).parameters
+        self.assertEqual(
+            tuple(parameters),
+            (
+                "photoelectrons",
+                "products",
+                "config",
+                "rng",
+                "floating_dtype",
+            ),
+        )
+        self.assertIs(
+            parameters["photoelectrons"].kind,
+            Parameter.POSITIONAL_OR_KEYWORD,
+        )
+        for name in ("products", "config", "rng", "floating_dtype"):
+            self.assertIs(parameters[name].kind, Parameter.KEYWORD_ONLY)
+        self.assertIs(parameters["products"].default, Parameter.empty)
+        self.assertIs(parameters["config"].default, Parameter.empty)
+        self.assertIs(parameters["rng"].default, Parameter.empty)
+        self.assertIs(parameters["floating_dtype"].default, torch.float32)
+        self.assertNotIn("seed", parameters)
 
     def test_semantic_leaves_are_direct_final_fieldless_roots(self) -> None:
         leaf_groups = (
@@ -292,7 +324,6 @@ class PackageContractTest(unittest.TestCase):
             "tensor_dslab/readout/noise_waveform/types.py",
             "tensor_dslab/readout/analog_waveform/types.py",
             "tensor_dslab/readout/digitized_waveform/types.py",
-            "tensor_dslab/readout/simulation.py",
             "tensor_dslab/readout/photoelectrons/_product.py",
             "tensor_dslab/readout/charge/_product.py",
             "tensor_dslab/readout/pure_waveform/_product.py",
@@ -315,6 +346,18 @@ class PackageContractTest(unittest.TestCase):
             "_produce_noise_waveform",
             "_produce_analog_waveform",
             "_produce_digitized_waveform",
+            "_ReadoutPlan",
+            "_ChargePlan",
+            "_PureWaveformPlan",
+            "_NoiseWaveformPlan",
+            "_AnalogWaveformPlan",
+            "_DigitizedWaveformPlan",
+            "_prepare_readout",
+            "_prepare_charge",
+            "_prepare_pure_waveform",
+            "_prepare_noise_waveform",
+            "_prepare_analog_waveform",
+            "_prepare_digitized_waveform",
         )
         public_modules = (
             tensor_dslab,
@@ -542,6 +585,7 @@ class PackageContractTest(unittest.TestCase):
             "tensor_dslab.readout.digitized_waveform._produce",
             "tensor_dslab.readout.config",
             "tensor_dslab.readout.collection",
+            "tensor_dslab.readout.simulation",
             "tensor_dslab.readout",
             "tensor_dslab",
         )

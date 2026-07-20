@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 from fractions import Fraction
 
 import torch
-from tensor_core import CounterRng, logical_positions
+from tensor_core import CounterRng, RngKey, logical_positions
 
 from tensor_dslab.common import SamplingConfig
 from tensor_dslab.readout.charge.config import DarkCountConfig
@@ -13,6 +14,12 @@ from tensor_dslab.readout.charge.effects._counts import (
     _checked_add,
     _require_count_domain,
 )
+
+
+@dataclass(frozen=True, slots=True)
+class _DarkCountPlan:
+    mean: float
+    rng_key: RngKey
 
 
 def _prepare_dark_mean(
@@ -37,23 +44,32 @@ def _prepare_dark_mean(
     return mean
 
 
+def _prepare_dark_counts(
+    config: DarkCountConfig,
+    *,
+    sampling: SamplingConfig,
+) -> _DarkCountPlan:
+    return _DarkCountPlan(
+        mean=_prepare_dark_mean(config, sampling=sampling),
+        rng_key=config.rng_key,
+    )
+
+
 def _simulate_dark_counts(
     counts: torch.Tensor,
     *,
-    sampling: SamplingConfig,
-    config: DarkCountConfig,
+    plan: _DarkCountPlan,
     rng: CounterRng,
 ) -> torch.Tensor:
-    if type(config) is not DarkCountConfig:
-        raise TypeError("config must be exactly DarkCountConfig")
+    if type(plan) is not _DarkCountPlan:
+        raise TypeError("plan must be exactly _DarkCountPlan")
     _require_count_domain(counts, field="dark-count input")
-    mean = _prepare_dark_mean(config, sampling=sampling)
-    if mean == 0.0:
+    if plan.mean == 0.0:
         return counts
     positions = logical_positions(tuple(counts.shape), device=counts.device)
     sampled = rng.poisson(
-        mean=mean,
-        key=config.rng_key,
+        mean=plan.mean,
+        key=plan.rng_key,
         positions=positions,
         quantum=0,
     )

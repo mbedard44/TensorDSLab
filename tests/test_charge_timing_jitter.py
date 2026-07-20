@@ -5,13 +5,13 @@ import unittest
 from unittest.mock import patch
 
 import torch
-from tensor_core import NonnegativeFloat, PositiveInteger, Threefry4x32
+from tensor_core import CounterRng, NonnegativeFloat, PositiveInteger, Threefry4x32
 
 from tensor_dslab import SamplingConfig, TimingJitterConfig
 from tensor_dslab.readout.charge.effects import _timing_jitter as timing_jitter
 from tensor_dslab.readout.charge.effects._timing_jitter import (
     _prepare_timing_jitter,
-    _simulate_timing_jitter,
+    _simulate_timing_jitter as _simulate_timing_jitter_prepared,
 )
 
 
@@ -19,6 +19,29 @@ def _sampling(*, count: int = 4) -> SamplingConfig:
     return SamplingConfig(
         sample_period_ps=PositiveInteger(2000),
         sample_count=PositiveInteger(count),
+    )
+
+
+def _simulate_timing_jitter(
+    counts: torch.Tensor,
+    *,
+    sample_dimension: int,
+    sampling: SamplingConfig,
+    config: TimingJitterConfig,
+    rng: CounterRng,
+) -> torch.Tensor:
+    if config.sigma_ns.value == 0.0:
+        return counts
+    plan = _prepare_timing_jitter(
+        config,
+        sampling=sampling,
+        tensor_numel=counts.numel(),
+    )
+    return _simulate_timing_jitter_prepared(
+        counts,
+        sample_dimension=sample_dimension,
+        plan=plan,
+        rng=rng,
     )
 
 

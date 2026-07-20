@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 import math
 
 import torch
@@ -9,14 +10,34 @@ from tensor_dslab.readout.analog_waveform.field import AnalogWaveform
 from tensor_dslab.readout.digitized_waveform.config import (
     DigitizedWaveformConfig,
 )
-from tensor_dslab.readout.digitized_waveform.field import DigitizedWaveform
+from tensor_dslab.readout.digitized_waveform.field import (
+    DigitizedWaveform,
+    _require_valid_values,
+)
 
 
-def _produce_digitized_waveform(
-    analog: AnalogWaveform,
+@dataclass(frozen=True, slots=True)
+class _DigitizedWaveformPlan:
+    config: DigitizedWaveformConfig
+    zero: torch.Tensor
+    maximum: torch.Tensor
+    slope: torch.Tensor
+    intercept: torch.Tensor
+    lower_input: torch.Tensor
+    upper_input: torch.Tensor
+
+
+def _prepare_digitized_waveform(
     *,
     config: DigitizedWaveformConfig,
-) -> DigitizedWaveform:
+    floating_dtype: torch.dtype,
+    device: torch.device,
+) -> _DigitizedWaveformPlan:
+    if type(config) is not DigitizedWaveformConfig:
+        raise TypeError("config must be exactly DigitizedWaveformConfig")
+    if floating_dtype not in (torch.float32, torch.float64):
+        raise TypeError("floating_dtype must be torch.float32 or torch.float64")
+
     maximum_code = (1 << config.bit_depth.value) - 1
     try:
         gain = 10.0 ** (config.analog_gain_db.value / 20.0)
@@ -41,40 +62,39 @@ def _produce_digitized_waveform(
     if span <= 0.0 or slope <= 0.0:
         raise ValueError("ADC span and slope must be positive in binary64")
 
-    dtype = analog.tensor.dtype
     rounded_maximum_code = _require_representable_float(
         maximum_code,
-        dtype=dtype,
+        dtype=floating_dtype,
         field="ADC maximum code",
     )
     rounded_gain = _require_representable_float(
         gain,
-        dtype=dtype,
+        dtype=floating_dtype,
         field="ADC gain",
     )
     rounded_span = _require_representable_float(
         span,
-        dtype=dtype,
+        dtype=floating_dtype,
         field="ADC span",
     )
     rounded_slope = _require_representable_float(
         slope,
-        dtype=dtype,
+        dtype=floating_dtype,
         field="ADC slope",
     )
     rounded_intercept = _require_representable_float(
         intercept,
-        dtype=dtype,
+        dtype=floating_dtype,
         field="ADC intercept",
     )
     rounded_lower_input = _require_representable_float(
         lower_input_mv,
-        dtype=dtype,
+        dtype=floating_dtype,
         field="ADC lower input threshold",
     )
     rounded_upper_input = _require_representable_float(
         upper_input_mv,
-        dtype=dtype,
+        dtype=floating_dtype,
         field="ADC upper input threshold",
     )
     if rounded_maximum_code != maximum_code:
@@ -100,22 +120,39 @@ def _produce_digitized_waveform(
         lower_input,
         upper_input,
     ) = tuple(
-        torch.tensor(value, dtype=dtype, device=analog.tensor.device)
+        torch.tensor(value, dtype=floating_dtype, device=device)
         for value in scalar_values
     )
+    return _DigitizedWaveformPlan(
+        config=config,
+        zero=zero,
+        maximum=maximum,
+        slope=slope_tensor,
+        intercept=intercept_tensor,
+        lower_input=lower_input,
+        upper_input=upper_input,
+    )
 
+
+def _produce_digitized_waveform(
+    analog: AnalogWaveform,
+    *,
+    plan: _DigitizedWaveformPlan,
+) -> DigitizedWaveform:
     interior = torch.clamp(
         torch.add(
-            torch.mul(analog.tensor, slope_tensor),
-            intercept_tensor,
+            torch.mul(analog.tensor, plan.slope),
+            plan.intercept,
         ),
-        min=zero,
-        max=maximum,
+        min=plan.zero,
+        max=plan.maximum,
     )
     code_float = torch.where(
-        analog.tensor <= lower_input,
-        zero,
-        torch.where(analog.tensor >= upper_input, maximum, interior),
+        analog.tensor <= plan.lower_input,
+        plan.zero,
+        torch.where(analog.tensor >= plan.upper_input, plan.maximum, interior),
     )
     values = code_float.to(dtype=torch.int32)
-    return DigitizedWaveform(tensor=values, axes=analog.axes)
+    result = DigitizedWaveform(tensor=values, axes=analog.axes)
+    _require_valid_values(result, plan.config)
+    return result

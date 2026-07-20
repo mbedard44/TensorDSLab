@@ -39,6 +39,7 @@ from tensor_dslab import (
     ExampleAxis,
     ExponentialDelayConfig,
     FixedDelayConfig,
+    NoiseWaveform,
     NoiseWaveformConfig,
     Photoelectrons,
     PsdNoiseConfig,
@@ -53,17 +54,21 @@ from tensor_dslab import (
     ZeroNoiseConfig,
 )
 from tensor_dslab.readout.analog_waveform._produce import (
-    _produce_analog_waveform,
+    _produce_analog_waveform as _produce_analog_waveform_prepared,
 )
-from tensor_dslab.readout.charge._produce import _produce_charge
+from tensor_dslab.readout.charge._produce import (
+    _prepare_charge,
+    _produce_charge as _produce_charge_prepared,
+)
 from tensor_dslab.readout.digitized_waveform._produce import (
-    _produce_digitized_waveform,
+    _produce_digitized_waveform as _produce_digitized_waveform_prepared,
 )
 from tensor_dslab.readout.noise_waveform._produce import (
-    _produce_noise_waveform,
+    _prepare_noise_waveform,
+    _produce_noise_waveform as _produce_noise_waveform_prepared,
 )
 from tensor_dslab.readout.pure_waveform._produce import (
-    _produce_pure_waveform,
+    _produce_pure_waveform as _produce_pure_waveform_prepared,
 )
 
 
@@ -98,6 +103,40 @@ def _sampling() -> SamplingConfig:
         sample_period_ps=PositiveInteger(2000),
         sample_count=PositiveInteger(4),
     )
+
+
+def _produce_charge(
+    photoelectrons: Photoelectrons,
+    *,
+    sampling: SamplingConfig,
+    config: ChargeConfig,
+    rng: CounterRng,
+    floating_dtype: torch.dtype,
+) -> Charge:
+    plan = _prepare_charge(
+        photoelectrons,
+        sampling=sampling,
+        config=config,
+        floating_dtype=floating_dtype,
+    )
+    return _produce_charge_prepared(photoelectrons, plan=plan, rng=rng)
+
+
+def _produce_noise_waveform(
+    photoelectrons: Photoelectrons,
+    *,
+    sampling: SamplingConfig,
+    config: NoiseWaveformConfig,
+    rng: CounterRng,
+    floating_dtype: torch.dtype,
+) -> NoiseWaveform:
+    plan = _prepare_noise_waveform(
+        photoelectrons,
+        sampling=sampling,
+        config=config,
+        floating_dtype=floating_dtype,
+    )
+    return _produce_noise_waveform_prepared(photoelectrons, plan=plan, rng=rng)
 
 
 class _RecordingRng(CounterRng):
@@ -719,20 +758,31 @@ class RngOwnershipMigrationTest(unittest.TestCase):
             )
 
     def test_public_producer_signatures_and_draw_free_branches(self) -> None:
-        for producer in (_produce_noise_waveform, _produce_charge):
+        for producer in (
+            _produce_noise_waveform_prepared,
+            _produce_charge_prepared,
+        ):
             parameters = signature(producer).parameters
             self.assertIn("rng", parameters)
+            self.assertIn("plan", parameters)
             self.assertNotIn("seed", parameters)
+            self.assertNotIn("config", parameters)
+            self.assertNotIn("sampling", parameters)
+            self.assertNotIn("floating_dtype", parameters)
             self.assertIs(parameters["rng"].kind, Parameter.KEYWORD_ONLY)
             self.assertIs(parameters["rng"].default, Parameter.empty)
         for producer in (
-            _produce_pure_waveform,
-            _produce_analog_waveform,
-            _produce_digitized_waveform,
+            _produce_pure_waveform_prepared,
+            _produce_analog_waveform_prepared,
+            _produce_digitized_waveform_prepared,
         ):
             parameters = signature(producer).parameters
+            self.assertIn("plan", parameters)
             self.assertNotIn("rng", parameters)
             self.assertNotIn("seed", parameters)
+            self.assertNotIn("config", parameters)
+            self.assertNotIn("sampling", parameters)
+            self.assertNotIn("floating_dtype", parameters)
 
         source = _source()
         rng = _FailingRng(seed=0)

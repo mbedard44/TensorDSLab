@@ -37,6 +37,7 @@ from tensor_dslab.readout.pure_waveform import (
     TpcFebSnrPulseConfig,
     VetoPduPulseConfig,
 )
+from tensor_dslab.readout.simulation import simulate_readout
 
 __all__ = (
     "AfterpulseConfig",
@@ -68,4 +69,5 @@ __all__ = (
     "VetoPduPulseConfig",
     "WhiteNoiseConfig",
     "ZeroNoiseConfig",
+    "simulate_readout",
 )

@@ -32,7 +32,8 @@ from tensor_dslab import (
 )
 from tensor_dslab.readout.noise_waveform._produce import (
     _prepare_psd_powers,
-    _produce_noise_waveform,
+    _prepare_noise_waveform,
+    _produce_noise_waveform as _produce_noise_waveform_prepared,
 )
 
 
@@ -62,6 +63,27 @@ def _sampling(*, count: int, period_ps: int = 1_000) -> SamplingConfig:
     return SamplingConfig(
         sample_period_ps=PositiveInteger(period_ps),
         sample_count=PositiveInteger(count),
+    )
+
+
+def _produce_noise_waveform(
+    photoelectrons: Photoelectrons,
+    *,
+    sampling: SamplingConfig,
+    config: NoiseWaveformConfig,
+    rng: CounterRng,
+    floating_dtype: torch.dtype,
+) -> NoiseWaveform:
+    plan = _prepare_noise_waveform(
+        photoelectrons,
+        sampling=sampling,
+        config=config,
+        floating_dtype=floating_dtype,
+    )
+    return _produce_noise_waveform_prepared(
+        photoelectrons,
+        plan=plan,
+        rng=rng,
     )
 
 

@@ -8,12 +8,7 @@ from tensor_core import CounterRng, RngKey
 
 from tensor_dslab.common import SamplingConfig
 from tensor_dslab.readout._requirements import _require_representable_float
-from tensor_dslab.readout.charge.config import (
-    AfterpulseConfig,
-    CorrelatedAvalancheConfig,
-    DelayedCrosstalkConfig,
-    DirectCrosstalkConfig,
-)
+from tensor_dslab.readout.charge.config import CorrelatedAvalancheConfig
 from tensor_dslab.readout.charge.effects._counts import (
     _MAX_COUNT,
     _checked_add,
@@ -39,6 +34,17 @@ class _CorrelatedAvalanchePlan:
     afterpulse: _AfterpulsePlan | None
     ledger_depth: int
     ledger_bound: float
+    maximum_generations: int
+    sample_count: int
+    tensor_numel: int
+    direct_mean: float | None
+    direct_retained_rng_key: RngKey | None
+    direct_overflow_rng_key: RngKey | None
+    delayed_mean: float | None
+    delayed_retained_rng_key: RngKey | None
+    delayed_overflow_rng_key: RngKey | None
+    afterpulse_probability: float | None
+    afterpulse_rng_key: RngKey | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -92,15 +98,33 @@ def _prepare_correlated_plan(
     tensor_numel: int,
 ) -> _CorrelatedAvalanchePlan:
     maximum_generations = config.maximum_generations.value
+    sample_count = sampling.sample_count.value
     if maximum_generations == 0:
         _, bound = _ledger_envelope(
             floating_dtype=floating_dtype,
             maximum_generations=0,
             retained_mechanisms=0,
             recovered_afterpulse=False,
-            sample_count=sampling.sample_count.value,
+            sample_count=sample_count,
         )
-        return _CorrelatedAvalanchePlan(None, None, None, 1, bound)
+        return _CorrelatedAvalanchePlan(
+            direct_crosstalk=None,
+            delayed_crosstalk=None,
+            afterpulse=None,
+            ledger_depth=1,
+            ledger_bound=bound,
+            maximum_generations=0,
+            sample_count=sample_count,
+            tensor_numel=tensor_numel,
+            direct_mean=None,
+            direct_retained_rng_key=None,
+            direct_overflow_rng_key=None,
+            delayed_mean=None,
+            delayed_retained_rng_key=None,
+            delayed_overflow_rng_key=None,
+            afterpulse_probability=None,
+            afterpulse_rng_key=None,
+        )
 
     direct = (
         None
@@ -176,14 +200,57 @@ def _prepare_correlated_plan(
         maximum_generations=maximum_generations,
         retained_mechanisms=retained_mechanisms,
         recovered_afterpulse=recovered_afterpulse,
-        sample_count=sampling.sample_count.value,
+        sample_count=sample_count,
     )
     return _CorrelatedAvalanchePlan(
-        direct,
-        delayed,
-        afterpulse,
-        depth,
-        bound,
+        direct_crosstalk=direct,
+        delayed_crosstalk=delayed,
+        afterpulse=afterpulse,
+        ledger_depth=depth,
+        ledger_bound=bound,
+        maximum_generations=maximum_generations,
+        sample_count=sample_count,
+        tensor_numel=tensor_numel,
+        direct_mean=(
+            None
+            if direct is None or config.direct_crosstalk is None
+            else config.direct_crosstalk.mean_offspring_per_parent.value
+        ),
+        direct_retained_rng_key=(
+            None
+            if direct is None or config.direct_crosstalk is None
+            else config.direct_crosstalk.retained_rng_key
+        ),
+        direct_overflow_rng_key=(
+            None
+            if direct is None or config.direct_crosstalk is None
+            else config.direct_crosstalk.overflow_rng_key
+        ),
+        delayed_mean=(
+            None
+            if delayed is None or config.delayed_crosstalk is None
+            else config.delayed_crosstalk.mean_offspring_per_parent.value
+        ),
+        delayed_retained_rng_key=(
+            None
+            if delayed is None or config.delayed_crosstalk is None
+            else config.delayed_crosstalk.retained_rng_key
+        ),
+        delayed_overflow_rng_key=(
+            None
+            if delayed is None or config.delayed_crosstalk is None
+            else config.delayed_crosstalk.overflow_rng_key
+        ),
+        afterpulse_probability=(
+            None
+            if afterpulse is None or config.afterpulse is None
+            else config.afterpulse.probability.value
+        ),
+        afterpulse_rng_key=(
+            None
+            if afterpulse is None or config.afterpulse is None
+            else config.afterpulse.rng_key
+        ),
     )
 
 
@@ -246,7 +313,8 @@ def _draw_afterpulses(
     *,
     positions: torch.Tensor,
     plan: _AfterpulsePlan,
-    config: AfterpulseConfig,
+    probability: float,
+    rng_key: RngKey,
     generation_index: int,
     tensor_numel: int,
     floating_dtype: torch.dtype,
@@ -258,7 +326,6 @@ def _draw_afterpulses(
     retained_charge = torch.zeros_like(frontier, dtype=floating_dtype)
     overflow_charge = torch.zeros_like(frontier, dtype=floating_dtype)
     charge_square_sum = torch.zeros_like(frontier, dtype=floating_dtype)
-    probability = config.probability.value
 
     for source in range(sample_count):
         source_counts = frontier[..., source]
@@ -321,7 +388,7 @@ def _draw_afterpulses(
             failure_masses=tuple(failure_masses),
             positions=tuple(category_positions),
             rng=rng,
-            key=config.rng_key,
+            key=rng_key,
             field="afterpulse",
         )
         retained_categories = drawn_categories[:-1]
@@ -407,13 +474,12 @@ def _simulate_correlated_avalanches(
     seed_avalanches: torch.Tensor,
     *,
     sample_dimension: int,
-    sampling: SamplingConfig,
     floating_dtype: torch.dtype,
-    config: CorrelatedAvalancheConfig,
+    plan: _CorrelatedAvalanchePlan,
     rng: CounterRng,
 ) -> _CorrelatedAvalancheResult:
-    if type(config) is not CorrelatedAvalancheConfig:
-        raise TypeError("config must be exactly CorrelatedAvalancheConfig")
+    if type(plan) is not _CorrelatedAvalanchePlan:
+        raise TypeError("plan must be exactly _CorrelatedAvalanchePlan")
     if floating_dtype not in (torch.float32, torch.float64):
         raise TypeError("floating_dtype must be torch.float32 or torch.float64")
     _require_count_domain(seed_avalanches, field="correlated-avalanche roots")
@@ -421,23 +487,19 @@ def _simulate_correlated_avalanches(
         raise TypeError("sample_dimension must be exactly an integer")
     if sample_dimension < 0 or sample_dimension >= seed_avalanches.ndim:
         raise ValueError("sample_dimension is outside the root rank")
-    if seed_avalanches.shape[sample_dimension] != sampling.sample_count.value:
-        raise ValueError("sample dimension disagrees with SamplingConfig")
+    if seed_avalanches.shape[sample_dimension] != plan.sample_count:
+        raise ValueError("sample dimension disagrees with the prepared plan")
+    if seed_avalanches.numel() != plan.tensor_numel:
+        raise ValueError("input size disagrees with the prepared plan")
 
     tensor_numel = seed_avalanches.numel()
-    plan = _prepare_correlated_plan(
-        config,
-        sampling=sampling,
-        floating_dtype=floating_dtype,
-        tensor_numel=tensor_numel,
-    )
     sample_last = seed_avalanches.movedim(sample_dimension, -1)
     positions = _original_positions(
         tuple(seed_avalanches.shape),
         sample_dimension=sample_dimension,
         device=seed_avalanches.device,
     )
-    maximum_generations = config.maximum_generations.value
+    maximum_generations = plan.maximum_generations
 
     S1 = sample_last.to(floating_dtype)
     S2 = sample_last.to(floating_dtype)
@@ -516,16 +578,19 @@ def _simulate_correlated_avalanches(
         children = torch.zeros_like(sample_last)
 
         if plan.direct_crosstalk is not None:
-            direct_config = config.direct_crosstalk
-            if type(direct_config) is not DirectCrosstalkConfig:
-                raise RuntimeError("prepared direct-crosstalk config disappeared")
+            if (
+                plan.direct_mean is None
+                or plan.direct_retained_rng_key is None
+                or plan.direct_overflow_rng_key is None
+            ):
+                raise RuntimeError("direct-crosstalk plan is incomplete")
             new_count, new_overflow = _draw_crosstalk(
                 frontier,
                 positions=positions,
                 plan=plan.direct_crosstalk,
-                mean=direct_config.mean_offspring_per_parent.value,
-                retained_key=direct_config.retained_rng_key,
-                overflow_key=direct_config.overflow_rng_key,
+                mean=plan.direct_mean,
+                retained_key=plan.direct_retained_rng_key,
+                overflow_key=plan.direct_overflow_rng_key,
                 generation_index=generation_index,
                 tensor_numel=tensor_numel,
                 rng=rng,
@@ -562,16 +627,19 @@ def _simulate_correlated_avalanches(
             )
 
         if plan.delayed_crosstalk is not None:
-            delayed_config = config.delayed_crosstalk
-            if type(delayed_config) is not DelayedCrosstalkConfig:
-                raise RuntimeError("prepared delayed-crosstalk config disappeared")
+            if (
+                plan.delayed_mean is None
+                or plan.delayed_retained_rng_key is None
+                or plan.delayed_overflow_rng_key is None
+            ):
+                raise RuntimeError("delayed-crosstalk plan is incomplete")
             new_count, new_overflow = _draw_crosstalk(
                 frontier,
                 positions=positions,
                 plan=plan.delayed_crosstalk,
-                mean=delayed_config.mean_offspring_per_parent.value,
-                retained_key=delayed_config.retained_rng_key,
-                overflow_key=delayed_config.overflow_rng_key,
+                mean=plan.delayed_mean,
+                retained_key=plan.delayed_retained_rng_key,
+                overflow_key=plan.delayed_overflow_rng_key,
                 generation_index=generation_index,
                 tensor_numel=tensor_numel,
                 rng=rng,
@@ -608,9 +676,11 @@ def _simulate_correlated_avalanches(
             )
 
         if plan.afterpulse is not None:
-            afterpulse_config = config.afterpulse
-            if type(afterpulse_config) is not AfterpulseConfig:
-                raise RuntimeError("prepared afterpulse config disappeared")
+            if (
+                plan.afterpulse_probability is None
+                or plan.afterpulse_rng_key is None
+            ):
+                raise RuntimeError("afterpulse plan is incomplete")
             (
                 new_count,
                 new_overflow,
@@ -621,7 +691,8 @@ def _simulate_correlated_avalanches(
                 frontier,
                 positions=positions,
                 plan=plan.afterpulse,
-                config=afterpulse_config,
+                probability=plan.afterpulse_probability,
+                rng_key=plan.afterpulse_rng_key,
                 generation_index=generation_index,
                 tensor_numel=tensor_numel,
                 floating_dtype=floating_dtype,

@@ -4,7 +4,7 @@ import math
 from dataclasses import dataclass
 
 import torch
-from tensor_core import CounterRng
+from tensor_core import CounterRng, RngKey
 
 from tensor_dslab.common import SamplingConfig
 from tensor_dslab.readout.charge.config import TimingJitterConfig
@@ -25,6 +25,8 @@ _COMPLETE_LAW_TOLERANCE = 1.0e-11
 class _TimingJitterPlan:
     probabilities: tuple[float, ...]
     left_tails: tuple[float, ...]
+    rng_key: RngKey
+
 
 def _log_jitter_g(value: float) -> float:
     log_phi = -0.5 * value * value - 0.5 * math.log(2.0 * math.pi)
@@ -134,37 +136,33 @@ def _prepare_timing_jitter(
         - 1.0
     ) > _COMPLETE_LAW_TOLERANCE:
         raise ValueError("timing-jitter complete-law identity failed")
-    return _TimingJitterPlan(tuple(probabilities), tuple(left_tails))
+    return _TimingJitterPlan(
+        tuple(probabilities),
+        tuple(left_tails),
+        config.rng_key,
+    )
 
 
 def _simulate_timing_jitter(
     counts: torch.Tensor,
     *,
     sample_dimension: int,
-    sampling: SamplingConfig,
-    config: TimingJitterConfig,
+    plan: _TimingJitterPlan,
     rng: CounterRng,
 ) -> torch.Tensor:
-    if type(config) is not TimingJitterConfig:
-        raise TypeError("config must be exactly TimingJitterConfig")
+    if type(plan) is not _TimingJitterPlan:
+        raise TypeError("plan must be exactly _TimingJitterPlan")
     _require_count_domain(counts, field="timing-jitter input")
     if type(sample_dimension) is not int:
         raise TypeError("sample_dimension must be exactly an integer")
     if sample_dimension < 0 or sample_dimension >= counts.ndim:
         raise ValueError("sample_dimension is outside the count rank")
-    if counts.shape[sample_dimension] != sampling.sample_count.value:
-        raise ValueError("sample dimension disagrees with SamplingConfig")
-    if config.sigma_ns.value == 0.0:
-        return counts
-    plan = _prepare_timing_jitter(
-        config,
-        sampling=sampling,
-        tensor_numel=counts.numel(),
-    )
+    sample_count = len(plan.probabilities)
+    if counts.shape[sample_dimension] != sample_count:
+        raise ValueError("sample dimension disagrees with the prepared plan")
     if not bool(torch.any(counts != 0).item()):
         return counts.clone()
 
-    sample_count = sampling.sample_count.value
     total_count = counts.numel()
     sample_last = counts.movedim(sample_dimension, -1)
     remaining = sample_last.clone()
@@ -209,7 +207,7 @@ def _simulate_timing_jitter(
                 failure_masses=(later_mass,),
                 positions=(positions[..., source] + target * total_count,),
                 rng=rng,
-                key=config.rng_key,
+                key=plan.rng_key,
                 field="timing jitter",
             )
             remaining[..., source] = source_remainder

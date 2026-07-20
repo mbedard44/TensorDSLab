@@ -1,17 +1,22 @@
 # Stage 7 Public Readout Orchestration Work Order
 
-Status: **Design-complete / Undispatched**.
+Status: **Implementation candidate / Validation pending** while these exact
+implementation bytes are absent from `main`. If they are present unchanged on
+`main`, Review's clean fast-forward has completed and the state is
+**Merged / Design acceptance pending** until this work order and the
+implementation index record **Merged / Closed**.
 
 Stable work-order key:
 `TensorDSLab/stage-7-public-readout-orchestration`.
 
 This is the package-authoritative TensorDSLab Design work order for the first
-public readout simulation operation. Its containing Design commit is the exact
-authority; a commit cannot embed its own hash, so any later dispatch must name
-and reverify that commit explicitly. Documentation acceptance does not dispatch
-production. Implementation remains blocked until the user separately authorizes
-execution and Design privately reverifies the persistent Implementation,
-Validation, and Review routes.
+public readout simulation operation. Its containing Design commit is exact
+authority `254a624b39993c4dc0b9a2a832ebd07398ac5a24`. The user separately
+authorized production, Design reverified the persistent Implementation,
+Validation, and Review routes, and Implementation prepared Candidate 1 on
+`codex/stage-7-public-readout-orchestration`. The candidate commit is named
+externally in the fixed-commit handoff because a commit cannot embed its own
+hash. No Validation or Review clearance is claimed by these bytes.
 
 ## Objective
 
@@ -80,18 +85,18 @@ package version:  0.9.0
 archive SHA-256:  f793ef3645ab44175e445feb94444a90e01ccc34d01fc467db36bd81ad0606bd
 ```
 
-The implementation branch, if separately dispatched, is:
+The implementation branch selected by the later dispatch is:
 
 ```text
 codex/stage-7-public-readout-orchestration
 ```
 
-Before dispatch, Design must verify that the committed work-order authority is
-a clean linear descendant of the package baseline; the dependency line still
-pins the exact commit above; the implementation branch is absent or points at
-the authority; and all three execution routes are Active, current,
-return-capable, and bound to this workspace and work-order key. Raw platform
-route identifiers remain private and must not enter committed files.
+At dispatch, Design verified that the committed work-order authority was a
+clean linear descendant of the package baseline; the dependency line still
+pinned the exact commit above; the implementation branch was absent; and all
+three execution routes were Active, current, return-capable, and bound to this
+workspace and work-order key. Raw platform route identifiers remain private
+and must not enter committed files.
 
 Package governance remains:
 
@@ -101,7 +106,7 @@ conformance_finding: Not evaluated
 coordination_status: Deferred
 registry_storage_profile: Disabled
 maintenance_2: Merged / Closed
-stage_7: Design-complete / Undispatched
+stage_7: topology-dependent candidate state recorded above
 ```
 
 Coordination is not an execution route. This work authorizes no push.
@@ -907,6 +912,45 @@ The existing full source/archive suite is the regression floor. Test totals may
 increase, but no closed test may be removed, skipped unconditionally, or
 weakened merely to make Stage 7 pass.
 
+## Implementation Candidate 1 Evidence
+
+Implementation completed the dispatched Stage 7 scope on the exact branch and
+Design authority recorded above. Candidate 1 adds the one public
+`simulate_readout(...)` orchestration surface, composes the five product-owned
+typed preparation plans, preserves the accepted private scientific execution,
+and adds the required request, failure-ordering, key-collision, continuity,
+storage, autograd, import, typing, and conditional-CUDA evidence. Its exact
+commit is identified by the fixed-commit Validation handoff; this record does
+not claim Validation or Review clearance.
+
+Implementation independently recreated TensorCore `0.9.0` as a clean detached
+source checkout at exact commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, with direct parent
+`0e72f0e69cf9140b692d408e49a504cbdcb101b7`. A new exact Git ZIP reproduced
+SHA-256
+`f793ef3645ab44175e445feb94444a90e01ccc34d01fc467db36bd81ad0606bd`.
+The final Implementation evidence was:
+
+```text
+focused source suite:  28 run,  25 passed,  3 conditional CUDA skips
+focused archive suite: 28 run,  25 passed,  3 conditional CUDA skips
+full source suite:    186 run, 174 passed, 12 conditional CUDA skips
+full archive suite:   186 run, 174 passed, 12 conditional CUDA skips
+Pyright source:         0 errors, 0 warnings, 0 informations
+Pyright archive:        0 errors, 0 warnings, 0 informations
+import isolation:       False False False False in both dependency forms
+```
+
+Pyright was exact version `1.1.411` in standard mode. The environment was
+Python `3.13.11`, PyTorch `2.12.1`, macOS `15.7.4` on arm64, and eager CPU.
+`torch.version.cuda` was `None`, CUDA availability was `False`, and the CUDA
+device count was zero. The three Stage 7 CUDA tests and nine retained
+conditional CUDA tests therefore skipped; this is a CPU result and makes no
+GPU execution or performance claim. Dependency identity, package metadata,
+source/archive loading, public exports, fresh-process isolation, retired and
+forbidden surfaces, import direction, exact changed-path allowlist, protected
+bytes, diff hygiene, privacy, and artifact gates passed. No push occurred.
+
 ## Stage Checkpoints
 
 Implementation should deliver the stage in these reviewable checkpoints on one
@@ -928,9 +972,10 @@ authority.
 
 ## Dispatch And Finite Role Loop
 
-This document is not a dispatch. A later user authorization and Design
-handoff must name the exact committed authority, dependency, branch, scope,
-routes, and work-order key.
+The Design issuance of this document was not itself a dispatch. The later user
+authorization and Design handoff named and reverified the exact committed
+authority, dependency, branch, scope, routes, and work-order key before
+Candidate 1 work began.
 
 The accepted production workflow is:
 
@@ -976,9 +1021,11 @@ Blocked
 
 ## Documentation Synchronization
 
-This Design authority synchronizes the live package documents to Maintenance 2
-Merged / Closed and Stage 7 Design-complete / Undispatched. Closed historical
-work orders and governance records remain unchanged.
+At issuance, this Design authority synchronized the live package documents to
+Maintenance 2 Merged / Closed and Stage 7 Design-complete / Undispatched.
+Candidate 1 updates only the lifecycle/evidence portions of this work order and
+the implementation index; closed historical work orders and governance records
+remain unchanged.
 
 Implementation may record candidate and Validation evidence in this work order
 and the implementation index when its dispatched handoff requires that
@@ -1102,8 +1149,11 @@ Stage 7 is complete only when all of the following are true:
 - final Design accepts the merged evidence and synchronizes live docs; and
 - the work order and implementation index record `Merged / Closed`.
 
-Until a separate user authorization and exact Design dispatch, Stage 7 remains
-**Design-complete / Undispatched**. After dispatch it advances only through the
-lifecycle states above and is complete only at **Merged / Closed**. Completion
-does not authorize any deferred integration, optimization, IO, compatibility,
-deployment, conformance, Coordination, Profile B, or push action.
+Stage 7 has been dispatched and Candidate 1 advances only through the lifecycle
+states above. While the candidate bytes are absent from `main`, fixed-commit
+Validation and Review remain required. If the exact bytes are present unchanged
+on `main`, Review's clean fast-forward has completed but final Design acceptance
+remains pending until this work order and the implementation index record
+**Merged / Closed**. Completion does not authorize any deferred integration,
+optimization, IO, compatibility, deployment, conformance, Coordination,
+Profile B, or push action.

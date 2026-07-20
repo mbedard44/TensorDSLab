@@ -47,7 +47,26 @@ from tensor_dslab.readout.charge.effects import _dark_counts as dark_effect
 from tensor_dslab.readout.charge.effects import _smearing as smearing_effect
 from tensor_dslab.readout.charge import _produce as charge_producer
 
-_produce_charge = charge_producer._produce_charge
+
+def _produce_charge(
+    photoelectrons: Photoelectrons,
+    *,
+    sampling: SamplingConfig,
+    config: ChargeConfig,
+    rng: CounterRng,
+    floating_dtype: torch.dtype,
+) -> Charge:
+    plan = charge_producer._prepare_charge(
+        photoelectrons,
+        sampling=sampling,
+        config=config,
+        floating_dtype=floating_dtype,
+    )
+    return charge_producer._produce_charge(
+        photoelectrons,
+        plan=plan,
+        rng=rng,
+    )
 
 
 class _FailingRng(CounterRng):
@@ -488,8 +507,10 @@ class DarkCountStatisticalTest(unittest.TestCase):
             counts = torch.zeros((per_seed, 1, 2), dtype=torch.int64)
             dark = dark_effect._simulate_dark_counts(
                 counts,
-                sampling=sampling,
-                config=config,
+                plan=dark_effect._prepare_dark_counts(
+                    config,
+                    sampling=sampling,
+                ),
                 rng=Threefry4x32(seed=seed),
             )
             observations.append(dark[:, 0, 0].to(torch.float64))
@@ -644,8 +665,13 @@ class ChargeSmearingTest(unittest.TestCase):
                         result = smearing_effect._simulate_charge_smearing(
                             ledgers,
                             ledgers,
-                            config=ChargeSmearingConfig(
-                                relative_sigma=NonnegativeFloat(accepted)
+                            plan=smearing_effect._prepare_charge_smearing(
+                                ChargeSmearingConfig(
+                                    relative_sigma=NonnegativeFloat(accepted)
+                                ),
+                                floating_dtype=dtype,
+                                ledger_bound=ledger_bound,
+                                device=ledgers.device,
                             ),
                             rng=_FixedBlockRng(seed=1),
                         )

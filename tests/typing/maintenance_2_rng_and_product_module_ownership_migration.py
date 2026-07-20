@@ -23,8 +23,9 @@ from tensor_dslab import (
     SamplingConfig,
     WhiteNoiseConfig,
 )
-from tensor_dslab.readout.charge._produce import _produce_charge
+from tensor_dslab.readout.charge._produce import _prepare_charge, _produce_charge
 from tensor_dslab.readout.noise_waveform._produce import (
+    _prepare_noise_waveform,
     _produce_noise_waveform,
 )
 
@@ -45,7 +46,7 @@ source = Photoelectrons(
 rng = Threefry4x32(seed=17)
 key = RngKey(namespace=0x54445331, stream=101)
 
-noise = _produce_noise_waveform(
+noise_plan = _prepare_noise_waveform(
     source,
     sampling=sampling,
     config=NoiseWaveformConfig(
@@ -54,13 +55,13 @@ noise = _produce_noise_waveform(
             rng_key=key,
         )
     ),
-    rng=rng,
     floating_dtype=torch.float32,
 )
+noise = _produce_noise_waveform(source, plan=noise_plan, rng=rng)
 assert_type(noise, NoiseWaveform)
 assert_type(noise.tensor, torch.Tensor)
 
-charge = _produce_charge(
+charge_plan = _prepare_charge(
     source,
     sampling=sampling,
     config=ChargeConfig(
@@ -69,8 +70,8 @@ charge = _produce_charge(
             rng_key=key,
         )
     ),
-    rng=rng,
     floating_dtype=torch.float64,
 )
+charge = _produce_charge(source, plan=charge_plan, rng=rng)
 assert_type(charge, Charge)
 assert_type(charge.tensor, torch.Tensor)

@@ -435,12 +435,18 @@ def _simulate(
     dtype: torch.dtype = torch.float64,
     rng: CounterRng | None = None,
 ) -> correlated_effect._CorrelatedAvalancheResult:
+    sampling = _sampling(count=roots.shape[-1])
+    plan = correlated_effect._prepare_correlated_plan(
+        config,
+        sampling=sampling,
+        floating_dtype=dtype,
+        tensor_numel=roots.numel(),
+    )
     return _simulate_correlated_avalanches(
         roots,
         sample_dimension=roots.ndim - 1,
-        sampling=_sampling(count=roots.shape[-1]),
         floating_dtype=dtype,
-        config=config,
+        plan=plan,
         rng=Threefry4x32(seed=1234) if rng is None else rng,
     )
 
@@ -509,12 +515,18 @@ class CorrelatedAvalancheIdentityTest(unittest.TestCase):
             "_prepare_exponential_delay",
             side_effect=AssertionError("K=0 must not prepare afterpulsing"),
         ):
+            sampling = _sampling(count=8193)
+            plan = correlated_effect._prepare_correlated_plan(
+                k_zero,
+                sampling=sampling,
+                floating_dtype=torch.float32,
+                tensor_numel=roots.numel(),
+            )
             result = _simulate_correlated_avalanches(
                 roots,
                 sample_dimension=2,
-                sampling=_sampling(count=8193),
                 floating_dtype=torch.float32,
-                config=k_zero,
+                plan=plan,
                 rng=_FailingRng(seed=0),
             )
         self.assertTrue(torch.equal(result.total_count, roots))
@@ -549,12 +561,18 @@ class CorrelatedAvalancheIdentityTest(unittest.TestCase):
             "_prepare_afterpulse_recovery",
             side_effect=AssertionError("zero afterpulsing must not prepare recovery"),
         ):
+            sampling = _sampling(count=2)
+            plan = correlated_effect._prepare_correlated_plan(
+                zero_effect,
+                sampling=sampling,
+                floating_dtype=torch.float64,
+                tensor_numel=small_roots.numel(),
+            )
             result = _simulate_correlated_avalanches(
                 small_roots,
                 sample_dimension=2,
-                sampling=_sampling(count=2),
                 floating_dtype=torch.float64,
-                config=zero_effect,
+                plan=plan,
                 rng=_FailingRng(seed=0),
             )
         self.assertTrue(torch.equal(result.total_count, small_roots))
@@ -616,12 +634,17 @@ class CorrelatedAvalancheMechanismTest(unittest.TestCase):
             afterpulse=_afterpulse(probability=0.5),
         )
         _RecordingRng.calls = []
+        plan = correlated_effect._prepare_correlated_plan(
+            config,
+            sampling=_sampling(),
+            floating_dtype=torch.float64,
+            tensor_numel=roots.numel(),
+        )
         result = _simulate_correlated_avalanches(
             roots,
             sample_dimension=2,
-            sampling=_sampling(),
             floating_dtype=torch.float64,
-            config=config,
+            plan=plan,
             rng=_RecordingRng(seed=0),
         )
         streams: list[int] = []

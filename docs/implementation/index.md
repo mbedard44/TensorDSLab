@@ -308,7 +308,10 @@ compatibility and authorizes no push.
 
 ### [Stage 7: Public Readout Orchestration](stage_7_public_readout_orchestration.md)
 
-Status: **Design-complete / Undispatched**.
+Status: **Implementation candidate / Validation pending** while the exact
+candidate bytes are absent from `main`. If present unchanged on `main`, Review's
+clean fast-forward has completed and final Design acceptance remains pending
+until this index and the work order record **Merged / Closed**.
 
 The Maintenance 2 prerequisite is satisfied at exact implementation candidate
 `89a188abe330c06aa0b54c27cd61ac32a4fe9f63`, Design closeout
@@ -320,8 +323,18 @@ execution, private product-owned prepared plans, exact typed prerequisite
 planning, every producer at most once, requested-only retention, the complete
 public `simulate_readout(..., rng=...)` surface, and focused composition/
 storage/import/typing evidence. It adds no IO, persistence, workspace,
-output-reuse, integration, or performance policy. Production requires a
-separate user dispatch after route and baseline reverification.
+output-reuse, integration, or performance policy.
+
+The user authorized production from exact Design authority
+`254a624b39993c4dc0b9a2a832ebd07398ac5a24`. Implementation Candidate 1 is a
+linear branch descendant of that authority and is now under fixed-commit
+Validation. Implementation independently reproduced the exact TensorCore ZIP
+hash and ran the focused source/archive suites at 28 tests with 25 passes and
+3 conditional CUDA skips, both full suites at 186 tests with 174 passes and
+12 conditional CUDA skips, and Pyright `1.1.411` with zero diagnostics against
+both dependency forms. CUDA was unavailable, so the evidence is eager CPU
+only. The exact candidate commit is named externally in the Validation handoff;
+these bytes claim no Validation or Review clearance and authorize no push.
 
 ### Later Integration And Artifact Stages
 
