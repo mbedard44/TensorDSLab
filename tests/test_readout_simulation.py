@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from contextlib import ExitStack
 from dataclasses import replace
 from itertools import combinations, product
@@ -150,6 +151,71 @@ class _RecordingRng(CounterRng):
     @classmethod
     def reset(cls) -> None:
         cls.calls = []
+
+
+_RngCall = tuple[RngKey, torch.Tensor, int, int]
+
+
+def _capture_rng_calls(
+    action: Callable[[CounterRng], object],
+    *,
+    seed: int,
+) -> tuple[_RngCall, ...]:
+    _RecordingRng.reset()
+    action(_RecordingRng(seed=seed))
+    return tuple(_RecordingRng.calls)
+
+
+def _assert_rng_calls_equal(
+    test: unittest.TestCase,
+    observed: tuple[_RngCall, ...],
+    expected: tuple[_RngCall, ...],
+) -> None:
+    test.assertEqual(len(observed), len(expected))
+    for index, (observed_call, expected_call) in enumerate(
+        zip(observed, expected, strict=True)
+    ):
+        observed_key, observed_positions, observed_quantum, observed_block = (
+            observed_call
+        )
+        expected_key, expected_positions, expected_quantum, expected_block = (
+            expected_call
+        )
+        test.assertEqual(observed_key, expected_key, msg=f"call {index} key")
+        test.assertEqual(
+            observed_positions.dtype,
+            expected_positions.dtype,
+            msg=f"call {index} positions dtype",
+        )
+        test.assertEqual(
+            observed_positions.device,
+            expected_positions.device,
+            msg=f"call {index} positions device",
+        )
+        test.assertEqual(
+            observed_positions.shape,
+            expected_positions.shape,
+            msg=f"call {index} positions shape",
+        )
+        test.assertEqual(
+            observed_positions.stride(),
+            expected_positions.stride(),
+            msg=f"call {index} positions stride",
+        )
+        test.assertTrue(
+            torch.equal(observed_positions, expected_positions),
+            msg=f"call {index} positions",
+        )
+        test.assertEqual(
+            observed_quantum,
+            expected_quantum,
+            msg=f"call {index} quantum",
+        )
+        test.assertEqual(
+            observed_block,
+            expected_block,
+            msg=f"call {index} block",
+        )
 
 
 class _OneShotProducts:
@@ -759,6 +825,52 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
             floating_dtype=torch.int64,
         )
 
+    def test_truth_only_requires_deep_source_and_sampling_agreement(
+        self,
+    ) -> None:
+        sampling = _sampling()
+        source = _photoelectrons(sampling)
+
+        negative_values = source.tensor.clone()
+        negative_values.reshape(-1)[0] = -1
+        negative = Photoelectrons(tensor=negative_values, axes=source.axes)
+
+        example, channel, _ = source.axes
+        shifted_start = Photoelectrons(
+            tensor=source.tensor.clone(),
+            axes=(
+                example,
+                channel,
+                SampleAxis(
+                    coordinates=("1ps", "1001ps", "2001ps", "3001ps")
+                ),
+            ),
+        )
+        wrong_period = Photoelectrons(
+            tensor=source.tensor.clone(),
+            axes=(
+                example,
+                channel,
+                SampleAxis(
+                    coordinates=("0ps", "2000ps", "4000ps", "6000ps")
+                ),
+            ),
+        )
+        cases = (
+            ("negative values", negative, sampling),
+            ("sample count", source, _sampling(count=5)),
+            ("sample start", shifted_start, sampling),
+            ("sample period", wrong_period, sampling),
+        )
+        for name, candidate_source, candidate_sampling in cases:
+            with self.subTest(case=name):
+                self._assert_preflight_failure(
+                    ValueError,
+                    source=candidate_source,
+                    products=(Photoelectrons,),
+                    config=ReadoutConfig(sampling=candidate_sampling),
+                )
+
     def test_each_real_product_preparation_failure_precedes_all_producers(self) -> None:
         sampling = _sampling()
         source = _photoelectrons(sampling)
@@ -826,6 +938,7 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
     def test_successful_generated_products_run_each_deep_validator_once(self) -> None:
         sampling = _sampling()
         source = _photoelectrons(sampling)
+        config = _config(sampling)
         validators = (
             charge_producer,
             pure_producer,
@@ -847,11 +960,26 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
             result = simulate_readout(
                 source,
                 products=PRODUCT_TYPES,
-                config=_config(sampling),
+                config=config,
                 rng=_FailingRng(seed=0),
             )
-        for validator_mock in validator_mocks:
+        digitized_config = config.digitized_waveform
+        assert digitized_config is not None
+        for validator_mock, field_type in zip(
+            validator_mocks,
+            GENERATED_TYPES,
+            strict=True,
+        ):
             validator_mock.assert_called_once()
+            validator_call = validator_mock.call_args
+            assert validator_call is not None
+            self.assertIs(validator_call.args[0], result.field(field_type))
+            self.assertEqual(validator_call.kwargs, {})
+            if field_type is DigitizedWaveform:
+                self.assertEqual(len(validator_call.args), 2)
+                self.assertIs(validator_call.args[1], digitized_config)
+            else:
+                self.assertEqual(len(validator_call.args), 1)
         self.assertTrue(torch.all(torch.isfinite(result.tensor(Charge))).item())
         self.assertTrue(torch.all(result.tensor(Charge) >= 0.0).item())
         for field_type in (PureWaveform, NoiseWaveform, AnalogWaveform):
@@ -1021,6 +1149,99 @@ class ReadoutRngContractTest(unittest.TestCase):
         self.assertEqual(rng.calls, 1)
         collection_mock.assert_not_called()
 
+    def test_public_stochastic_closures_match_exact_direct_rng_calls(
+        self,
+    ) -> None:
+        sampling = _sampling()
+        source = _photoelectrons(sampling)
+        seed = 0x0123_4567_89AB_CDEF
+        dtype = torch.float64
+
+        charge_config = ChargeConfig(
+            dark_count=DarkCountConfig(rate_hz=NonnegativeFloat(2.5e8))
+        )
+        charge_plan = charge_producer._prepare_charge(
+            source,
+            sampling=sampling,
+            config=charge_config,
+            floating_dtype=dtype,
+        )
+        public_charge_calls = _capture_rng_calls(
+            lambda rng: simulate_readout(
+                source,
+                products=(Charge,),
+                config=_config(sampling, charge=charge_config),
+                rng=rng,
+                floating_dtype=dtype,
+            ),
+            seed=seed,
+        )
+        direct_charge_calls = _capture_rng_calls(
+            lambda rng: charge_producer._produce_charge(
+                source,
+                plan=charge_plan,
+                rng=rng,
+            ),
+            seed=seed,
+        )
+        self.assertEqual(len(direct_charge_calls), 1)
+        _assert_rng_calls_equal(
+            self,
+            public_charge_calls,
+            direct_charge_calls,
+        )
+
+        noise_cases = (
+            (
+                "white",
+                NoiseWaveformConfig(
+                    model=WhiteNoiseConfig(rms_mv=PositiveFloat(0.25))
+                ),
+            ),
+            (
+                "PSD",
+                NoiseWaveformConfig(
+                    model=PsdNoiseConfig(
+                        frequency_left_edges_hz=(NonnegativeFloat(0.0),),
+                        frequency_stop_hz=PositiveFloat(500_000_000.0),
+                        power_density_mv2_per_hz=(NonnegativeFloat(1.0e-9),),
+                    )
+                ),
+            ),
+        )
+        for name, noise_config in noise_cases:
+            with self.subTest(noise=name):
+                noise_plan = noise_producer._prepare_noise_waveform(
+                    source,
+                    sampling=sampling,
+                    config=noise_config,
+                    floating_dtype=dtype,
+                )
+                public_noise_calls = _capture_rng_calls(
+                    lambda rng: simulate_readout(
+                        source,
+                        products=(NoiseWaveform,),
+                        config=_config(sampling, noise=noise_config),
+                        rng=rng,
+                        floating_dtype=dtype,
+                    ),
+                    seed=seed,
+                )
+                direct_noise_calls = _capture_rng_calls(
+                    lambda rng: noise_producer._produce_noise_waveform(
+                        source,
+                        plan=noise_plan,
+                        rng=rng,
+                    ),
+                    seed=seed,
+                )
+                self.assertEqual(len(direct_noise_calls), 2)
+                _assert_rng_calls_equal(
+                    self,
+                    public_noise_calls,
+                    direct_noise_calls,
+                )
+
     def test_every_structural_noop_charge_role_participates_in_key_collisions(
         self,
     ) -> None:
@@ -1178,20 +1399,51 @@ class ReadoutRngContractTest(unittest.TestCase):
         self.assertEqual(noise_only.field_types, frozenset({NoiseWaveform}))
         self.assertGreater(len(_RecordingRng.calls), 0)
 
+        for stream in range(0x0000_0002, 0x0000_000B):
+            with self.subTest(absent_default_stream=stream):
+                reused_key = RngKey(namespace=0x54445331, stream=stream)
+                reused_white = NoiseWaveformConfig(
+                    model=WhiteNoiseConfig(
+                        rms_mv=PositiveFloat(1.0),
+                        rng_key=reused_key,
+                    )
+                )
+                _RecordingRng.reset()
+                absent_roles = simulate_readout(
+                    source,
+                    products=(Charge, NoiseWaveform),
+                    config=_config(
+                        sampling,
+                        charge=ChargeConfig(),
+                        noise=reused_white,
+                    ),
+                    rng=_RecordingRng(seed=0),
+                )
+                self.assertEqual(
+                    absent_roles.field_types,
+                    frozenset({Charge, NoiseWaveform}),
+                )
+                self.assertGreater(len(_RecordingRng.calls), 0)
+                for call_key, _, _, _ in _RecordingRng.calls:
+                    self.assertEqual(call_key, reused_key)
+
     def test_psd_and_intra_charge_role_collisions_are_rejected(self) -> None:
         sampling = _sampling()
         source = _photoelectrons(sampling)
-        shared = RngKey(namespace=0xABCDEF04, stream=1)
+        left = RngKey(namespace=0xABCDEF04, stream=1)
+        right = RngKey(namespace=0xABCDEF04, stream=1)
+        self.assertIsNot(left, right)
+        self.assertEqual(left, right)
         dark = DarkCountConfig(
-            rate_hz=NonnegativeFloat(0.0),
-            rng_key=shared,
+            rate_hz=NonnegativeFloat(2.5e8),
+            rng_key=left,
         )
         psd = NoiseWaveformConfig(
             model=PsdNoiseConfig(
                 frequency_left_edges_hz=(NonnegativeFloat(0.0),),
                 frequency_stop_hz=PositiveFloat(500_000_000.0),
                 power_density_mv2_per_hz=(NonnegativeFloat(1.0e-9),),
-                rng_key=shared,
+                rng_key=right,
             )
         )
         cases = (
@@ -1211,7 +1463,7 @@ class ReadoutRngContractTest(unittest.TestCase):
                         dark_count=dark,
                         smearing=ChargeSmearingConfig(
                             relative_sigma=NonnegativeFloat(0.0),
-                            rng_key=shared,
+                            rng_key=left,
                         ),
                     ),
                 ),
@@ -1225,7 +1477,10 @@ class ReadoutRngContractTest(unittest.TestCase):
                         stack.enter_context(patch.object(simulation, name))
                         for name, _ in PRODUCERS
                     )
-                    with self.assertRaises(ValueError):
+                    with self.assertRaisesRegex(
+                        ValueError,
+                        "distinct stochastic roles",
+                    ):
                         simulate_readout(
                             source,
                             products=requested,

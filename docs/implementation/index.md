@@ -326,15 +326,17 @@ storage/import/typing evidence. It adds no IO, persistence, workspace,
 output-reuse, integration, or performance policy.
 
 The user authorized production from exact Design authority
-`254a624b39993c4dc0b9a2a832ebd07398ac5a24`. Implementation Candidate 1 is a
-linear branch descendant of that authority and is now under fixed-commit
-Validation. Implementation independently reproduced the exact TensorCore ZIP
-hash and ran the focused source/archive suites at 28 tests with 25 passes and
-3 conditional CUDA skips, both full suites at 186 tests with 174 passes and
-12 conditional CUDA skips, and Pyright `1.1.411` with zero diagnostics against
+`254a624b39993c4dc0b9a2a832ebd07398ac5a24`. Fixed-commit Validation returned
+Candidate 1 for four bounded test-proof corrections without a production or
+scope finding. Direct-child Candidate 2 is now under fixed-commit Validation.
+Implementation independently reproduced the exact TensorCore ZIP hash and ran
+the Candidate 2 focused source/archive suites at 30 tests with 27 passes and 3
+conditional CUDA skips, both full suites at 188 tests with 176 passes and 12
+conditional CUDA skips, and Pyright `1.1.411` with zero diagnostics against
 both dependency forms. CUDA was unavailable, so the evidence is eager CPU
-only. The exact candidate commit is named externally in the Validation handoff;
-these bytes claim no Validation or Review clearance and authorize no push.
+only. Exact candidate commits are named externally in their Validation
+handoffs; these bytes claim no Validation or Review clearance and authorize no
+push.
 
 ### Later Integration And Artifact Stages
 

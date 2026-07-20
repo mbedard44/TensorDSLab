@@ -14,9 +14,11 @@ public readout simulation operation. Its containing Design commit is exact
 authority `254a624b39993c4dc0b9a2a832ebd07398ac5a24`. The user separately
 authorized production, Design reverified the persistent Implementation,
 Validation, and Review routes, and Implementation prepared Candidate 1 on
-`codex/stage-7-public-readout-orchestration`. The candidate commit is named
-externally in the fixed-commit handoff because a commit cannot embed its own
-hash. No Validation or Review clearance is claimed by these bytes.
+`codex/stage-7-public-readout-orchestration`. Validation returned Candidate 1
+for four bounded test-proof corrections, and Implementation prepared the
+direct-child Candidate 2. Candidate commits are named externally in their
+fixed-commit handoffs because a commit cannot embed its own hash. No Validation
+or Review clearance is claimed by these bytes.
 
 ## Objective
 
@@ -951,6 +953,36 @@ source/archive loading, public exports, fresh-process isolation, retired and
 forbidden surfaces, import direction, exact changed-path allowlist, protected
 bytes, diff hygiene, privacy, and artifact gates passed. No push occurred.
 
+## Implementation Candidate 2 Evidence
+
+Fixed-commit Validation returned Candidate 1 without a production,
+architecture, TensorCore, dependency, documentation, or scope finding. It
+identified four required proof gaps in `tests/test_readout_simulation.py`:
+truth-only ingress isolation, `RngKey` value equality and absent-role
+exclusion, exact no-probe stochastic call records, and exact generated-field
+validator targets. Candidate 2 is Candidate 1's direct child and corrects
+those proofs without changing production, public API, science, dependency, or
+closed evidence. Its exact commit is identified by the fixed-commit Validation
+handoff; these bytes remain Validation pending.
+
+Candidate 2 independently reran the exact TensorCore source/archive gates. The
+fixed evidence is:
+
+```text
+focused source suite:  30 run,  27 passed,  3 conditional CUDA skips
+focused archive suite: 30 run,  27 passed,  3 conditional CUDA skips
+full source suite:    188 run, 176 passed, 12 conditional CUDA skips
+full archive suite:   188 run, 176 passed, 12 conditional CUDA skips
+Pyright source:         0 errors, 0 warnings, 0 informations
+Pyright archive:        0 errors, 0 warnings, 0 informations
+import isolation:       False False False False in both dependency forms
+```
+
+The dependency commit, direct parent, archive SHA-256, environment, unavailable
+CUDA/build-tool qualifications, no-effects, allowlist/protected bytes, import
+direction, retired/forbidden surfaces, privacy, artifact, and no-push
+dispositions remain exactly as recorded for Candidate 1.
+
 ## Stage Checkpoints
 
 Implementation should deliver the stage in these reviewable checkpoints on one
@@ -1023,9 +1055,9 @@ Blocked
 
 At issuance, this Design authority synchronized the live package documents to
 Maintenance 2 Merged / Closed and Stage 7 Design-complete / Undispatched.
-Candidate 1 updates only the lifecycle/evidence portions of this work order and
-the implementation index; closed historical work orders and governance records
-remain unchanged.
+Candidates 1 and 2 update only the lifecycle/evidence portions of this work
+order and the implementation index; closed historical work orders and
+governance records remain unchanged.
 
 Implementation may record candidate and Validation evidence in this work order
 and the implementation index when its dispatched handoff requires that
@@ -1149,7 +1181,7 @@ Stage 7 is complete only when all of the following are true:
 - final Design accepts the merged evidence and synchronizes live docs; and
 - the work order and implementation index record `Merged / Closed`.
 
-Stage 7 has been dispatched and Candidate 1 advances only through the lifecycle
+Stage 7 has been dispatched and Candidate 2 advances only through the lifecycle
 states above. While the candidate bytes are absent from `main`, fixed-commit
 Validation and Review remain required. If the exact bytes are present unchanged
 on `main`, Review's clean fast-forward has completed but final Design acceptance
