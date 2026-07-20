@@ -18,10 +18,14 @@ Validation, and Review routes, and Implementation prepared Candidate 1 on
 for four bounded test-proof corrections, and Implementation prepared the
 direct-child Candidate 2. Validation cleared Candidate 2, but Review returned
 it for two additional bounded committed-test proof gaps. Design authorized a
-final direct-child Candidate 3 correction limited to those proofs. Candidate
-commits are named externally in their fixed-commit handoffs because a commit
-cannot embed its own hash. No Validation or Review clearance is claimed by the
-Candidate 3 bytes.
+final direct-child Candidate 3 correction limited to those proofs. Validation
+returned Candidate 3 because its ZeroNoise assertion observed the product
+module's preparer rather than the binding used by public orchestration. With
+the ordinary candidate budget exhausted, Design authorized one exceptional
+direct-child supplemental correction limited to that remaining proof.
+Candidate commits are named externally in their fixed-commit handoffs because
+a commit cannot embed its own hash. No Validation or Review clearance is
+claimed by the supplemental candidate bytes.
 
 ## Objective
 
@@ -998,9 +1002,12 @@ bounded correction. Candidate 3 is Candidate 2's direct child and instruments
 the exact truth-field construction hook after fixture construction for both
 truth-only success and every truth-only preflight failure, and asserts the
 exact prepared ZeroNoise `rng_roles == ()`. Process-local versions of both
-Review mutants fail the corrected evidence. No production, public API,
-science, dependency, architecture, scope, import, typing, or protected byte
-changes relative to Candidate 2.
+Review mutants were initially reported as failing the corrected evidence, but
+fixed-commit Validation confirmed that the public-path phantom-role mutant
+still survived because the assertion observed a different bound preparer. The
+truth-construction mutant remained closed. No production, public API, science,
+dependency, architecture, scope, import, typing, or protected byte changes
+relative to Candidate 2.
 
 Candidate 3 independently reran the exact TensorCore source/archive gates. The
 fixed evidence is:
@@ -1018,8 +1025,46 @@ import isolation:       False False False False in both dependency forms
 The dependency commit, direct parent, archive SHA-256, environment, unavailable
 CUDA/build-tool qualifications, no-effects, allowlist/protected bytes, import
 direction, retired/forbidden surfaces, privacy, artifact, and no-push
-dispositions remain exactly as recorded above. Implementation dispatches
-Candidate 3 through fixed-commit Validation; this evidence record itself
+dispositions remain exactly as recorded above. Candidate 3 was dispatched
+through fixed-commit Validation and returned as recorded above; this evidence
+record itself claims no Validation or Review clearance.
+
+## Exceptional Supplemental Candidate Evidence
+
+Validation returned Candidate 3 on the exhausted ordinary budget for the one
+remaining ZeroNoise proof defect. Design authorized exactly one supplemental
+direct-child correction. The public proof now observes
+`simulation._prepare_noise_waveform`, the exact binding consumed by
+`simulate_readout`, and its collision-sensitive Charge role uses the forbidden
+phantom default `RngKey(namespace=0x54445331, stream=1)`. Accepted ZeroNoise
+execution must therefore succeed with an exact empty role tuple and no words;
+a phantom public-path role fails either the exact plan assertion or the
+closure-wide collision check.
+
+The exact Review mutation command now reports
+`replacement_truth_mutant False 4` and `phantom_zero_key_mutant False 1`; both
+mutants fail the committed evidence. The supplemental candidate changes no
+production, public API, science, dependency, architecture, scope, import,
+typing, or protected byte relative to Candidate 3.
+
+The supplemental candidate independently reran the exact TensorCore
+source/archive gates. The fixed evidence is:
+
+```text
+focused source suite:  30 run,  27 passed,  3 conditional CUDA skips
+focused archive suite: 30 run,  27 passed,  3 conditional CUDA skips
+full source suite:    188 run, 176 passed, 12 conditional CUDA skips
+full archive suite:   188 run, 176 passed, 12 conditional CUDA skips
+Pyright source:         0 errors, 0 warnings, 0 informations
+Pyright archive:        0 errors, 0 warnings, 0 informations
+import isolation:       False False False False in both dependency forms
+```
+
+The dependency commit, direct parent, archive SHA-256, environment, unavailable
+CUDA/build-tool qualifications, no-effects, allowlist/protected bytes, import
+direction, retired/forbidden surfaces, privacy, artifact, and no-push
+dispositions remain exactly as recorded above. Implementation dispatches the
+supplemental candidate through fixed-commit Validation; this record itself
 claims no Validation or Review clearance.
 
 ## Stage Checkpoints
@@ -1094,9 +1139,9 @@ Blocked
 
 At issuance, this Design authority synchronized the live package documents to
 Maintenance 2 Merged / Closed and Stage 7 Design-complete / Undispatched.
-Candidates 1–3 update only the lifecycle/evidence portions of this work
-order and the implementation index; closed historical work orders and
-governance records remain unchanged.
+Candidates 1–3 and the exceptional supplemental candidate update only the
+lifecycle/evidence portions of this work order and the implementation index;
+closed historical work orders and governance records remain unchanged.
 
 Implementation may record candidate and Validation evidence in this work order
 and the implementation index when its dispatched handoff requires that
@@ -1220,11 +1265,11 @@ Stage 7 is complete only when all of the following are true:
 - final Design accepts the merged evidence and synchronizes live docs; and
 - the work order and implementation index record `Merged / Closed`.
 
-Stage 7 has been dispatched and Candidate 3 advances only through the lifecycle
-states above. While the candidate bytes are absent from `main`, fixed-commit
-Validation and Review remain required. If the exact bytes are present unchanged
-on `main`, Review's clean fast-forward has completed but final Design acceptance
-remains pending until this work order and the implementation index record
-**Merged / Closed**. Completion does not authorize any deferred integration,
-optimization, IO, compatibility, deployment, conformance, Coordination,
-Profile B, or push action.
+Stage 7 has been dispatched and the exceptional supplemental candidate advances
+only through the lifecycle states above. While the candidate bytes are absent
+from `main`, fixed-commit Validation and Review remain required. If the exact
+bytes are present unchanged on `main`, Review's clean fast-forward has completed
+but final Design acceptance remains pending until this work order and the
+implementation index record **Merged / Closed**. Completion does not authorize
+any deferred integration, optimization, IO, compatibility, deployment,
+conformance, Coordination, Profile B, or push action.

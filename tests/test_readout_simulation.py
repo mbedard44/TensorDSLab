@@ -1375,7 +1375,7 @@ class ReadoutRngContractTest(unittest.TestCase):
     def test_zero_absent_and_unrequested_branches_contribute_no_key(self) -> None:
         sampling = _sampling()
         source = _photoelectrons(sampling)
-        shared = RngKey(namespace=0xABCDEF02, stream=1)
+        shared = RngKey(namespace=0x54445331, stream=0x0000_0001)
         charge = ChargeConfig(
             dark_count=DarkCountConfig(
                 rate_hz=NonnegativeFloat(0.0),
@@ -1389,7 +1389,7 @@ class ReadoutRngContractTest(unittest.TestCase):
             )
         )
         zero = NoiseWaveformConfig(model=ZeroNoiseConfig())
-        zero_plan = noise_producer._prepare_noise_waveform(
+        zero_plan = simulation._prepare_noise_waveform(
             source,
             sampling=sampling,
             config=zero,

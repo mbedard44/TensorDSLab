@@ -333,16 +333,22 @@ it for two additional bounded committed-test proof gaps without finding a
 production, API, science, dependency, architecture, scope, import, typing, or
 documentation-contract defect. Design authorized final direct-child Candidate
 3 to prove zero replacement `Photoelectrons` constructions and the exact empty
-ZeroNoise active-key set.
+ZeroNoise active-key set. Validation returned Candidate 3 because the direct
+ZeroNoise assertion observed the product module's preparer rather than the
+binding used by public orchestration. With the ordinary I-to-V budget
+exhausted, Design authorized exactly one exceptional direct-child supplemental
+correction for that remaining proof.
 
 Implementation independently reproduced the exact TensorCore ZIP hash and ran
-the Candidate 3 focused source/archive suites at 30 tests with 27 passes and 3
-conditional CUDA skips, both full suites at 188 tests with 176 passes and 12
-conditional CUDA skips, and Pyright `1.1.411` with zero diagnostics against
-both dependency forms. CUDA was unavailable, so the evidence is eager CPU
-only. Exact candidate commits are named externally in their Validation
-handoffs; the Candidate 3 bytes claim no Validation or Review clearance and
-authorize no push.
+the supplemental candidate focused source/archive suites at 30 tests with 27
+passes and 3 conditional CUDA skips, both full suites at 188 tests with 176
+passes and 12 conditional CUDA skips, and Pyright `1.1.411` with zero
+diagnostics against both dependency forms. Review's exact mutation command now
+reports `replacement_truth_mutant False 4` and
+`phantom_zero_key_mutant False 1`. CUDA was unavailable, so the evidence is
+eager CPU only. Exact candidate commits are named externally in their
+Validation handoffs; the supplemental candidate bytes claim no Validation or
+Review clearance and authorize no push.
 
 ### Later Integration And Artifact Stages
 
