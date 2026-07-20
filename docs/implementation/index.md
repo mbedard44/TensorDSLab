@@ -328,15 +328,21 @@ output-reuse, integration, or performance policy.
 The user authorized production from exact Design authority
 `254a624b39993c4dc0b9a2a832ebd07398ac5a24`. Fixed-commit Validation returned
 Candidate 1 for four bounded test-proof corrections without a production or
-scope finding. Direct-child Candidate 2 is now under fixed-commit Validation.
+scope finding. Validation cleared direct-child Candidate 2, but Review returned
+it for two additional bounded committed-test proof gaps without finding a
+production, API, science, dependency, architecture, scope, import, typing, or
+documentation-contract defect. Design authorized final direct-child Candidate
+3 to prove zero replacement `Photoelectrons` constructions and the exact empty
+ZeroNoise active-key set.
+
 Implementation independently reproduced the exact TensorCore ZIP hash and ran
-the Candidate 2 focused source/archive suites at 30 tests with 27 passes and 3
+the Candidate 3 focused source/archive suites at 30 tests with 27 passes and 3
 conditional CUDA skips, both full suites at 188 tests with 176 passes and 12
 conditional CUDA skips, and Pyright `1.1.411` with zero diagnostics against
 both dependency forms. CUDA was unavailable, so the evidence is eager CPU
 only. Exact candidate commits are named externally in their Validation
-handoffs; these bytes claim no Validation or Review clearance and authorize no
-push.
+handoffs; the Candidate 3 bytes claim no Validation or Review clearance and
+authorize no push.
 
 ### Later Integration And Artifact Stages
 

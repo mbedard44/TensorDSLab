@@ -16,9 +16,12 @@ authorized production, Design reverified the persistent Implementation,
 Validation, and Review routes, and Implementation prepared Candidate 1 on
 `codex/stage-7-public-readout-orchestration`. Validation returned Candidate 1
 for four bounded test-proof corrections, and Implementation prepared the
-direct-child Candidate 2. Candidate commits are named externally in their
-fixed-commit handoffs because a commit cannot embed its own hash. No Validation
-or Review clearance is claimed by these bytes.
+direct-child Candidate 2. Validation cleared Candidate 2, but Review returned
+it for two additional bounded committed-test proof gaps. Design authorized a
+final direct-child Candidate 3 correction limited to those proofs. Candidate
+commits are named externally in their fixed-commit handoffs because a commit
+cannot embed its own hash. No Validation or Review clearance is claimed by the
+Candidate 3 bytes.
 
 ## Objective
 
@@ -963,7 +966,9 @@ exclusion, exact no-probe stochastic call records, and exact generated-field
 validator targets. Candidate 2 is Candidate 1's direct child and corrects
 those proofs without changing production, public API, science, dependency, or
 closed evidence. Its exact commit is identified by the fixed-commit Validation
-handoff; these bytes remain Validation pending.
+handoff. Validation cleared Candidate 2, and Review returned it without a
+production, API, scientific, dependency, architecture, scope, import, typing,
+or documentation-contract finding.
 
 Candidate 2 independently reran the exact TensorCore source/archive gates. The
 fixed evidence is:
@@ -982,6 +987,40 @@ The dependency commit, direct parent, archive SHA-256, environment, unavailable
 CUDA/build-tool qualifications, no-effects, allowlist/protected bytes, import
 direction, retired/forbidden surfaces, privacy, artifact, and no-push
 dispositions remain exactly as recorded for Candidate 1.
+
+## Implementation Candidate 3 Evidence
+
+Review returned Candidate 2 for two additional committed-test proof gaps: the
+truth-only evidence did not observe construction and discard of a replacement
+`Photoelectrons`, and the `ZeroNoiseConfig` evidence did not lock the prepared
+plan's active key set to the exact empty tuple. Design authorized one final
+bounded correction. Candidate 3 is Candidate 2's direct child and instruments
+the exact truth-field construction hook after fixture construction for both
+truth-only success and every truth-only preflight failure, and asserts the
+exact prepared ZeroNoise `rng_roles == ()`. Process-local versions of both
+Review mutants fail the corrected evidence. No production, public API,
+science, dependency, architecture, scope, import, typing, or protected byte
+changes relative to Candidate 2.
+
+Candidate 3 independently reran the exact TensorCore source/archive gates. The
+fixed evidence is:
+
+```text
+focused source suite:  30 run,  27 passed,  3 conditional CUDA skips
+focused archive suite: 30 run,  27 passed,  3 conditional CUDA skips
+full source suite:    188 run, 176 passed, 12 conditional CUDA skips
+full archive suite:   188 run, 176 passed, 12 conditional CUDA skips
+Pyright source:         0 errors, 0 warnings, 0 informations
+Pyright archive:        0 errors, 0 warnings, 0 informations
+import isolation:       False False False False in both dependency forms
+```
+
+The dependency commit, direct parent, archive SHA-256, environment, unavailable
+CUDA/build-tool qualifications, no-effects, allowlist/protected bytes, import
+direction, retired/forbidden surfaces, privacy, artifact, and no-push
+dispositions remain exactly as recorded above. Implementation dispatches
+Candidate 3 through fixed-commit Validation; this evidence record itself
+claims no Validation or Review clearance.
 
 ## Stage Checkpoints
 
@@ -1055,7 +1094,7 @@ Blocked
 
 At issuance, this Design authority synchronized the live package documents to
 Maintenance 2 Merged / Closed and Stage 7 Design-complete / Undispatched.
-Candidates 1 and 2 update only the lifecycle/evidence portions of this work
+Candidates 1–3 update only the lifecycle/evidence portions of this work
 order and the implementation index; closed historical work orders and
 governance records remain unchanged.
 
@@ -1181,7 +1220,7 @@ Stage 7 is complete only when all of the following are true:
 - final Design accepts the merged evidence and synchronizes live docs; and
 - the work order and implementation index record `Merged / Closed`.
 
-Stage 7 has been dispatched and Candidate 2 advances only through the lifecycle
+Stage 7 has been dispatched and Candidate 3 advances only through the lifecycle
 states above. While the candidate bytes are absent from `main`, fixed-commit
 Validation and Review remain required. If the exact bytes are present unchanged
 on `main`, Review's clean fast-forward has completed but final Design acceptance

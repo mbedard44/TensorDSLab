@@ -721,6 +721,14 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
         global_rng_state = torch.random.get_rng_state().clone()
         exact_rng = _FailingRng(seed=0) if rng is None else rng
         with ExitStack() as stack:
+            photoelectrons_constructor = stack.enter_context(
+                patch.object(
+                    Photoelectrons,
+                    "__init__",
+                    autospec=True,
+                    wraps=Photoelectrons.__init__,
+                )
+            )
             field_constructor_mocks = tuple(
                 stack.enter_context(
                     patch.object(
@@ -768,6 +776,7 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
         self.assertTrue(torch.equal(torch.random.get_rng_state(), global_rng_state))
         for producer_mock in producer_mocks:
             producer_mock.assert_not_called()
+        photoelectrons_constructor.assert_not_called()
         for field_constructor_mock in field_constructor_mocks:
             field_constructor_mock.assert_not_called()
         collection_mock.assert_not_called()
@@ -1045,13 +1054,23 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
     ) -> None:
         sampling = _sampling()
         source = _photoelectrons(sampling)
-        result = simulate_readout(
-            source,
-            products=(Photoelectrons,),
-            config=ReadoutConfig(sampling=sampling),
-            rng=_FailingRng(seed=0),
-            floating_dtype=object(),  # type: ignore[arg-type]
-        )
+        with ExitStack() as stack:
+            photoelectrons_constructor = stack.enter_context(
+                patch.object(
+                    Photoelectrons,
+                    "__init__",
+                    autospec=True,
+                    wraps=Photoelectrons.__init__,
+                )
+            )
+            result = simulate_readout(
+                source,
+                products=(Photoelectrons,),
+                config=ReadoutConfig(sampling=sampling),
+                rng=_FailingRng(seed=0),
+                floating_dtype=object(),  # type: ignore[arg-type]
+            )
+        photoelectrons_constructor.assert_not_called()
         self.assertIs(result.field(Photoelectrons), source)
         self._assert_preflight_failure(
             TypeError,
@@ -1370,6 +1389,13 @@ class ReadoutRngContractTest(unittest.TestCase):
             )
         )
         zero = NoiseWaveformConfig(model=ZeroNoiseConfig())
+        zero_plan = noise_producer._prepare_noise_waveform(
+            source,
+            sampling=sampling,
+            config=zero,
+            floating_dtype=torch.float32,
+        )
+        self.assertEqual(zero_plan.rng_roles, ())
 
         rng = _FailingRng(seed=0)
         result = simulate_readout(
