@@ -133,8 +133,38 @@ The accepted Maintenance 2 evidence proves:
 - TensorCore independently proves the public distribution mappings, while
   TensorDSLab migration probes prove `uniform`, `gaussian`, `poisson`, and
   `binomial` address/output continuity and completed `NoiseWaveform` and
-  `Charge` default-key continuity on the exact accepted backend/mode evidence
-  boundary.
+  `Charge` default-key continuity on the exact recorded numerical-stack
+  evidence boundary.
+
+## Maintenance 3 Environment-Qualified Continuity
+
+The focused
+[Maintenance 3 work order](implementation/maintenance_3_environment_qualified_stochastic_continuity.md)
+is Design-complete / User-authorized / Undispatched. It corrects a test-applicability defect
+exposed before any accepted Stage 8 measurement: Maintenance 2's completed
+stochastic hexadecimal literals are exact evidence for their recorded macOS
+15.7.4 arm64, Python 3.13.11, PyTorch 2.12.1 eager-CPU stack, not a portable
+CPU bitwise contract.
+
+Validation has three distinct obligations:
+
+1. Threefry raw words and fixed-point uniforms retain their separately
+   documented exact scope. TensorDSLab exercises only public TensorCore
+   surfaces and keeps its public fixed-point-uniform literals exact on every
+   accepted test stack.
+2. On the exact recorded Maintenance 2 stack, the unchanged Gaussian,
+   Poisson, binomial, completed-noise, and completed-Charge literals must still
+   execute and match exactly.
+3. On another accepted stack, those completed requests execute independently
+   twice and match exactly within that unchanged stack, while all existing
+   structural, invariant, analytic, and statistical checks remain active.
+
+For completed transcendental values, an unchanged stack includes the
+OS/architecture, Python/PyTorch build, backend/device implementation, eager
+execution mode, dtype, and relevant math settings. Validation must not turn an
+observed platform difference into a ULP tolerance or alternate golden table,
+nor skip or xfail the fixture. Maintenance 3 changes no production,
+dependency, RNG, or scientific byte.
 
 ## Closed Stage 7 Public-Orchestration Evidence
 
@@ -579,7 +609,7 @@ Stage 5 does not activate Bernoulli, exponential, Poisson, categorical,
 multinomial, rejection, source-quantum, iterative-generation, Charge-stream,
 compiled, Triton, fusion, or performance validation. Its exact checks cover raw
 words, addresses, fixed-point uniform conversion, zero noise, fixed-seed
-same-backend repeatability, and deterministic PSD construction. Its stochastic
+same-stack repeatability, and deterministic PSD construction. Its stochastic
 checks use analytic estimator uncertainty for white/PSD moments and covariance.
 The PSD DC coefficient is exact zero; the sample-domain record mean is bounded
 by inverse-FFT roundoff rather than required to equal zero exactly.
@@ -629,7 +659,7 @@ matrix included at least:
 - aggregate timing-jitter ensemble agreement with the analytic multinomial
   means, variances, covariance, displacement moments, and drop probability,
   including an explicit per-PE ideal-law oracle used only for validation; plus
-  exact repeatability for the same accepted backend/mode/environment and
+  exact repeatability for the same unchanged numerical execution stack and
   statistical CPU/CUDA agreement for completed jitter unless stronger evidence
   is later ratified; and proof that production jitter neither expands PEs nor
   calls the Box-Muller normal primitive;
@@ -744,7 +774,7 @@ matrix included at least:
 - analytic Poisson mean, variance, zero probability, selected PMF/tails,
   superposition, dark-count cell independence, and separate DiCT/DeCT retained
   and overflow accounting;
-- exact same-backend/mode repeatability and integer-history equality across
+- exact same-stack repeatability and integer-history equality across
   float32/float64 Charge requests, with conditional CPU/CUDA statistical
   agreement for completed Poisson values rather than bitwise equality; and
 - synthetic forced-exhaustion and checked-overflow fixtures proving that no
@@ -752,8 +782,8 @@ matrix included at least:
   closed-open uniform with a binary64 rate immediately below `10` to lock the
   selected inversion recurrence's success-or-exhaustion result; source/config
   immutability, no fallback or partial diagnostic exposure, deterministic retry
-  on the same backend/mode, and stateless RNG behavior after both preflight and
-  dynamic failures; and
+  on the same unchanged numerical execution stack, and stateless RNG behavior
+  after both preflight and dynamic failures; and
 - allocation-boundary fixtures proving checked package-planned shape-byte
   arithmetic, ordinary managed/backend allocation and OOM propagation without
   a fabricated memory cap or allocation-free claim, raw storage remaining

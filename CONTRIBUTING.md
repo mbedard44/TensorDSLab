@@ -627,8 +627,20 @@ source-payload-independent, and
 `requires_grad=False`. The accepted reference path is eager CPU with
 conditional eager CUDA. Raw words and fixed-point uniforms are exact across
 accepted implementations; completed normal/PSD products compare exactly only
-within one unchanged backend/mode and statistically across backends. Do not
-turn private helper signatures into public or compatibility contracts.
+within one unchanged numerical execution stack and statistically across
+backends. For completed transcendental values, unchanged includes the
+OS/architecture, Python and PyTorch build, backend/device implementation,
+execution mode, dtype, and relevant math settings—not merely the word
+`CPU` or `CUDA`.
+
+Literal floating-point continuity fixtures must name the exact numerical stack
+that owns them. On that stack, retain exact payload assertions. On another
+accepted stack, prove exact replay within that unchanged stack plus the
+accepted structural, invariant, analytic, and statistical contracts. Do not
+silently substitute a post-observation ULP tolerance, a new platform-specific
+golden table, a skip, or an expected failure. Raw-word and fixed-point-uniform
+claims retain their separately documented exact scope. Do not turn private
+helper signatures into public or compatibility contracts.
 
 Every field-returning path must adopt TensorCore's operation-owned result
 taxonomy: exact return, guaranteed storage-sharing, sharing permitted but

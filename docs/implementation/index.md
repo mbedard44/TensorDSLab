@@ -168,7 +168,8 @@ central enum begins with exact streams `NOISE_WHITE = 0x0000_0001` and
 The acceptance mode is functionality-first vectorized eager CPU with
 conditional eager CUDA. Raw words and fixed-point uniforms are exact across
 accepted implementations; completed normal/PSD products are exactly
-repeatable on the same backend/mode and compare statistically across backends.
+repeatable on one unchanged numerical execution stack and compare
+statistically across backends.
 The stage adds no public API, Charge-only distribution primitive,
 `simulate_readout(...)`, compile/fusion/performance claim, workspace, IO, or
 integration surface.
@@ -355,6 +356,40 @@ source/archive, typing, mutation, dependency, import/export, scope, privacy,
 and hygiene gates post-merge. Final Design independently accepted the merged
 topology, public surface, evidence, and qualifications and changed no
 production or test byte. This closeout authorizes no push.
+
+## Maintenance 3 Production Work Order
+
+### [Maintenance 3: Environment-Qualified Stochastic Continuity](maintenance_3_environment_qualified_stochastic_continuity.md)
+
+Status: **Design-complete / User-authorized / Undispatched** from exact clean starting `main`
+`e7207a0cafe9ff4d68253518aabc0e462173e69d`.
+
+The first Stage 8 executable-input commit
+`728840bf2858c861104d5f7bb3cdbb4e3e1361b5` correctly stopped before any
+accepted Stage 8 focused/candidate result, benchmark, profiler, or measurement
+because its protected suite applied Maintenance 2's exact macOS
+completed-stochastic literals on a different Della Linux/x86_64 CPU stack. The
+run reported 188 tests, 186 passes, two last-bit float32 failures, and no skips;
+the existing conditional CUDA tests did execute, but the failing overall suite
+produced no accepted Stage 8 result. The exact Stage 8 authority and executable
+input remain immutable stopped evidence and are not candidates for merge or
+reuse as accepted evidence.
+
+Maintenance 3 changes only
+`tests/test_rng_ownership_migration.py` plus synchronized documentation. It
+preserves every historical literal and all fixed-point-uniform assertions
+within their accepted exact scope. The exact recorded macOS stack continues to enforce the
+literal completed Gaussian, Poisson, binomial, noise, and Charge payloads.
+Another accepted stack executes the same requests independently twice and
+requires exact replay within that unchanged numerical stack plus the existing
+invariants and statistical contracts. It adds no ULP tolerance, Della-specific
+golden, skip, expected failure, production change, TensorCore change, or
+scientific change.
+
+After fixed-commit Validation, independent Review, clean fast-forward, and
+final Design closeout, Stage 8 still requires a new Design authority from the
+merged Maintenance 3 baseline and a complete evidence rerun from scratch.
+Maintenance 3 does not itself dispatch or complete Stage 8.
 
 ### Later Integration And Artifact Stages
 

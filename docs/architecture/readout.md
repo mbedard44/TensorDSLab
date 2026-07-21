@@ -449,9 +449,9 @@ individual squared weights, not the square of aggregate charge.
 Prepared probabilities, Poisson rate fields, and discrete sampler control use
 binary64 independently of the requested `Charge` dtype. `S1`, `S2`, AP charge
 diagnostics, and the returned product remain in that requested dtype. Thus one
-unchanged backend/mode produces the same integer avalanche history for float32
-and float64 requests even though their floating ledgers need not be bitwise
-equal.
+unchanged numerical execution stack produces the same integer avalanche
+history for float32 and float64 requests even though their floating ledgers
+need not be bitwise equal.
 
 Crosstalk delay choices are exact fixed or exponential laws. A shared causal
 guard rejects prepared negative-delay mass rather than silently clamping an

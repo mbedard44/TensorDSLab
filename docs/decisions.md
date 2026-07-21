@@ -273,9 +273,10 @@ subnormal regime and white/PSD scales that could overflow the selected dtype.
 
 The accepted reference is vectorized eager CPU with conditional eager CUDA.
 Raw words and fixed-point uniforms are exact across accepted implementations;
-completed normal and PSD products are exactly repeatable only on the same
-backend/mode and compare statistically across backends. Results are fresh,
-source-payload-independent `NoiseWaveform` values with `requires_grad=False`.
+completed normal and PSD products are exactly repeatable only on one unchanged
+numerical execution stack and compare statistically across backends. Results
+are fresh, source-payload-independent `NoiseWaveform` values with
+`requires_grad=False`.
 Compiled execution and performance optimization remain later measured work.
 
 ### Invocation `CounterRng` And Config-Owned `RngKey` Are The Accepted Target
@@ -412,8 +413,9 @@ words define decisions within that band.
 All discrete probabilities, Poisson rate fields, and sampler control use
 binary64 independently of the requested `Charge` dtype. Avalanche counts are
 `int64`; S1/S2, AP charge diagnostics, and the final product remain in the
-requested floating dtype. On one unchanged backend/mode, integer avalanche
-history must therefore be identical for float32 and float64 Charge requests.
+requested floating dtype. On one unchanged numerical execution stack, integer
+avalanche history must therefore be identical for float32 and float64 Charge
+requests.
 Completed CPU/CUDA Poisson fields compare statistically rather than bitwise
 because the selected algorithms use transcendental functions.
 
@@ -538,8 +540,8 @@ evaluator in eager CPU mode; CUDA was unavailable, so CPU/CUDA agreement
 remains an unobserved contract. The reference may perform quadratic sample-
 count work; a later optimization requires measured evidence and may not
 silently change the law. Completed jitter requires exact repeatability only on
-the same accepted backend, eager mode, dependency environment, inputs, axis
-order, config keys, RNG algorithm, and invocation seed; CPU/CUDA completed
+the same unchanged numerical execution stack, inputs, axis order, config keys,
+RNG algorithm, and invocation seed; CPU/CUDA completed
 values compare statistically only after both paths have evidence.
 
 ### Public Validation Does Not Mean Adversarial Hardening
@@ -657,6 +659,30 @@ accepted source/archive evidence ran 188 tests in each dependency form: 176
 passed and 12 conditional CUDA tests skipped. Pyright `1.1.411` reported zero
 diagnostics in both forms. CUDA was unavailable, so this decision establishes
 no GPU execution, cross-backend, fusion, allocation, or performance claim.
+
+### Completed Stochastic Literals Are Numerical-Stack Qualified
+
+Maintenance 2's completed Gaussian, Poisson, binomial, noise, and Charge
+hexadecimal fixtures remain exact evidence for their explicitly recorded
+macOS 15.7.4 arm64, Python 3.13.11, PyTorch 2.12.1 eager-CPU stack. They are not
+a portable CPU literal contract. For operations involving transcendentals,
+exact replay requires one unchanged numerical execution stack, including the
+OS/architecture, Python/PyTorch build, backend/device implementation,
+execution mode, dtype, and relevant math settings.
+
+Threefry raw words and fixed-point uniforms retain their separately documented
+exact scope. Another accepted stack proves exact replay within itself plus the
+existing structural, invariant, analytic, and statistical contracts. It does
+not acquire a post-observation ULP tolerance, alternate platform golden table,
+skip, or expected failure.
+
+This validation-boundary correction changes no RNG algorithm, address, key,
+scientific equation, production code, TensorCore dependency, or historical
+literal. The first Stage 8 executable correctly stopped before accepted
+measurement when its work order over-applied the macOS literals on Della. That
+authority and executable input remain immutable stopped evidence; a later
+Stage 8 restart requires a new authority from the merged Maintenance 3
+baseline.
 
 ## Superseded
 

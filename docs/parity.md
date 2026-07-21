@@ -883,9 +883,10 @@ Classification: **statistical parity**, with the matching ideal iid-normal law
 retained as an analytic oracle when mean, RMS, and independence assumptions
 match. Global RNG state, sequential draw order, finite digital normal law, and
 same-seed IV/TensorDSLab values are intentionally excluded. TensorDSLab's own
-same-backend repeatability additionally requires identical shape, dimension
-order, coordinate order, config, dtype, and positional RNG version; it does not
-promise reorder or chunk invariance.
+same-stack repeatability additionally requires an unchanged OS/architecture,
+Python/PyTorch build, backend/device implementation, eager execution mode,
+math settings, shape, dimension order, coordinate order, config, dtype, and
+positional RNG version; it does not promise reorder or chunk invariance.
 
 Stage 5 fixes `NOISE_WHITE = 0x0000_0001` under private
 `tensordslab.threefry4x32-20/v1`. White RMS is prepared in binary64 and rounded
@@ -897,12 +898,12 @@ claim of an unbounded ideal Gaussian.
 
 Stage 5 is Merged / Closed through exact implementation candidate
 `538089910be0fcaceff363c43e41e92e87af2efd`. Its frozen eager-CPU evidence
-clears the accepted same-backend repeatability and analytic statistical gates.
+clears the accepted same-stack repeatability and analytic statistical gates.
 CUDA was unavailable, so this closeout adds no cross-backend execution or GPU
 performance claim.
 
 Validation should compare mean, RMS, relevant tail behavior, sample/channel
-covariance, and same-shape same-backend repeatability using analytic estimator
+covariance, and same-shape same-stack repeatability using analytic estimator
 uncertainty rather than an arbitrary normality-test p-value. Reordering and
 chunking should verify the documented positional contract rather than assert
 invariant values. A fixed white-noise array is a reproducibility fixture, not
@@ -1056,10 +1057,10 @@ The rebuild RNG targets are:
 
 - exact repeatability for identical TensorDSLab input values, shape, dimension
   order, coordinate order, config-owned keys, dtype, RNG algorithm/version,
-  and invocation seed on the same supported backend and execution mode;
+  and invocation seed on the same unchanged numerical execution stack;
 - TensorCore-owned exact Threefry raw-word and fixed-point-uniform agreement
   between accepted implementations;
-- exact same-backend/mode integer avalanche history across float32 and float64
+- exact same-stack integer avalanche history across float32 and float64
   Charge requests because discrete sampler control is always binary64;
 - cross-backend statistical agreement for completed Box-Muller, PSD, Poisson,
   conditional-binomial, and aggregate-multinomial values with the accepted

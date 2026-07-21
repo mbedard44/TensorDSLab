@@ -2783,8 +2783,8 @@ Poisson control calculation uses binary64, represented by `torch.float64` on
 the execution device. Config-derived CDF/PMF preparation likewise uses host
 binary64 before one checked device materialization. This makes the integer
 avalanche realization independent of whether the caller requests float32 or
-float64 `Charge` on the same backend and execution mode. It does not make the
-floating ledgers or final products bitwise equal across those dtypes.
+float64 `Charge` on the same unchanged numerical execution stack. It does not
+make the floating ledgers or final products bitwise equal across those dtypes.
 
 Preflight and each dynamically constructed generation-rate boundary prove the
 relevant probabilities and rates finite, nonnegative, and inside their selected
@@ -4352,12 +4352,12 @@ CUDA execution only when that CUDA path has passed its required evidence.
 MPS, Meta, compiled, Triton, and custom-kernel execution are outside Stage 5.
 An unsupported device is rejected before output allocation or random-word
 generation; the producer never moves an input or generated payload through the
-host. Identical accepted inputs reproduce exactly on the same backend and
-execution mode. Raw Threefry words and fixed-point uniform conversions must
-agree exactly between accepted CPU and CUDA implementations, while completed
-Box-Muller and PSD values require cross-backend statistical agreement rather
-than bitwise identity because transcendental and FFT implementations may
-differ.
+host. Identical accepted inputs reproduce exactly on the same unchanged
+numerical execution stack. Raw Threefry words and fixed-point uniform
+conversions must agree exactly between accepted CPU and CUDA implementations,
+while completed Box-Muller and PSD values require cross-backend statistical
+agreement rather than bitwise identity because transcendental and FFT
+implementations may differ.
 
 `_prepare_noise_waveform(...)` owns the contextual preparation needed for its
 algorithm. It requires exact sampling/source agreement, an exact
@@ -5015,13 +5015,22 @@ output:  59cd1dbb b8879579 86b5d00c ac8b6d84
 
 Raw-word identity does not automatically make floating distribution transforms
 bitwise identical across backends. Stage 5 requires exact accepted-CPU/CUDA
-agreement for fixed-point uniform conversion, exact same-backend repeatability
+agreement for fixed-point uniform conversion, exact same-stack repeatability
 for Box-Muller and completed noise products, and cross-backend statistical
 agreement for completed Gaussian and PSD values. Bernoulli, exponential,
 Poisson, categorical, and rejection behavior are not Stage 5 implementation
 claims. Stage 6 subsequently implemented and validated the aggregate-binomial,
 multinomial, and hybrid Poisson contracts on eager CPU; CUDA was unavailable,
 so their cross-backend evidence remains unestablished.
+
+For completed operations involving transcendentals, “same backend” is
+shorthand for one unchanged numerical execution stack: OS and architecture,
+Python and PyTorch build, backend/device implementation, eager execution mode,
+dtype, and relevant math settings. Two systems both described as CPU are not
+therefore bitwise equivalent. Exact literal fixtures are owned only by their
+recorded stack; another accepted stack proves exact replay within itself plus
+the applicable invariants and statistical laws. This qualification does not
+weaken the separately documented exact raw-word or fixed-point-uniform scope.
 
 Neither package may read or mutate PyTorch's global RNG state, create a
 `torch.Generator`, use `torch.poisson` as the normative sampler, or depend on
@@ -5455,11 +5464,11 @@ fallback implementations.
 
 Threefry words and uniform conversion remain exact across accepted CPU/CUDA
 implementations. Completed Poisson samples require exact repeatability only for
-the same backend and execution mode. Inversion uses `exp`; PTRS additionally
-uses square root, logarithm, and `lgamma`, so completed CPU/CUDA fields compare
-statistically rather than bitwise. On one unchanged backend/mode, the same
-input, config, seed, and positional lattice must produce the same integer
-history for float32 and float64 `Charge` requests.
+the same unchanged numerical execution stack. Inversion uses `exp`; PTRS
+additionally uses square root, logarithm, and `lgamma`, so completed CPU/CUDA
+fields compare statistically rather than bitwise. On one unchanged numerical
+execution stack, the same input, config, seed, and positional lattice must
+produce the same integer history for float32 and float64 `Charge` requests.
 
 The primary PTRS reference is W. Hoermann,
 [*The transformed rejection method for generating Poisson random
@@ -5553,12 +5562,13 @@ rare threshold observables are sensitive to it is the trigger for a separately
 versioned widened or tail-complete normal algorithm.
 
 Stage 5 specifies bit-for-bit target-dtype uniform agreement across accepted
-CPU/CUDA implementations. Box-Muller outputs retain the same-backend
+CPU/CUDA implementations. Box-Muller outputs retain the same-stack
 repeatability boundary because `log`, square root, sine, and cosine may differ
-across backends. Stage 6 activated and proved analytic timing preparation,
-aggregate-binomial and Poisson behavior, and smearing's Box-Muller use on eager
-CPU. CUDA was unavailable, so cross-backend Charge evidence remains
-unestablished. Standalone Bernoulli or continuous-exponential behavior
+across backend/device implementations and numerical stacks. Stage 6 activated
+and proved analytic timing preparation, aggregate-binomial and Poisson
+behavior, and smearing's Box-Muller use on eager CPU. CUDA was unavailable, so
+cross-backend Charge evidence remains unestablished. Standalone Bernoulli or
+continuous-exponential behavior
 activates only if a later accepted consumer actually uses it. None of these
 selections creates a CPU/CUDA bitwise guarantee for completed stochastic
 products.
@@ -6410,7 +6420,7 @@ The rebuild validation matrix includes:
   threshold-`2**32` results; Stage 6 did not implement this unused primitive;
 - TensorCore prerequisite evidence for the Box-Muller raw-word schedule,
   ordered cosine/sine components at one exact positional address,
-  scalar-consumer spare-result discard, native-dtype execution, same-backend
+  scalar-consumer spare-result discard, native-dtype execution, same-stack
   repeatability, component moments and covariance, and explicit
   `float32`/`float64` radial cutoffs; TensorDSLab separately proves
   two-component PSD use and completed-product continuity;
@@ -6529,10 +6539,10 @@ The rebuild validation matrix includes:
   uniform at a binary64 rate immediately below `10` to fix the inversion
   recurrence's exact success-or-exhaustion result;
 - TensorCore Poisson mean, variance, zero probability, selected PMF/tail,
-  no-`torch.poisson`, no-fallback, same-backend/mode repeatability, and
+  no-`torch.poisson`, no-fallback, same-stack repeatability, and
   conditional CUDA statistical evidence; TensorDSLab separately proves
   physical aggregate superposition, exact public-call keys/positions, and
-  same-backend integer-history equality across float32/float64 Charge requests
+  same-stack integer-history equality across float32/float64 Charge requests
   rather than completed-field bitwise identity;
 - arbitrary-rank and arbitrary-shape positional RNG oracles, including scalar
   and empty results where the selected backend accepts them;
@@ -6552,8 +6562,10 @@ The rebuild validation matrix includes:
   `torch.Generator`;
 - proof that axis classes, coordinate strings, and timestamps do not enter the
   random address or hot-path RNG inputs;
-- exact same-backend repeatability only for an unchanged positional schema,
-  values, config, dtype, algorithm/version, and seed;
+- exact same-stack repeatability only for an unchanged OS/architecture,
+  Python/PyTorch build, backend/device implementation, execution mode, math
+  settings, positional schema, values, config, dtype, algorithm/version, and
+  seed;
 - proof that coordinate relabeling alone preserves positional bits while
   changing semantic association, with no coordinate-identity or
   tensor-permutation invariance claim;
