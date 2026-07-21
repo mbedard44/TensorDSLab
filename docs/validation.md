@@ -136,19 +136,20 @@ The accepted Maintenance 2 evidence proves:
   `Charge` default-key continuity on the exact accepted backend/mode evidence
   boundary.
 
-## Design-Complete Stage 7 Validation Gate
+## Closed Stage 7 Public-Orchestration Evidence
 
 The focused
 [Stage 7 work order](implementation/stage_7_public_readout_orchestration.md)
-is Design-complete / Undispatched. It requires the public
+is Merged / Closed through exact Review-cleared implementation candidate
+`6dd55024685013fb9412a7247d3ddde7be1a3177`. It required the public
 `rng: CounterRng`, no simultaneous `seed=`, and deterministic closures that
 request no RNG values. TensorCore exposes no non-consuming concrete-algorithm
-capability query, so Stage 7 must not issue a dummy draw, inspect protected
+capability query, so Stage 7 does not issue a dummy draw, inspect protected
 hooks, or restrict the public boundary to `Threefry4x32`. A real custom
 RNG/backend incompatibility remains a dynamic failure at the first genuine
 distribution call.
 
-The Stage 7 implementation and fixed-commit evidence must prove at least:
+The Stage 7 implementation and fixed-commit evidence prove:
 
 - all 63 nonempty recognized product subsets and one-pass request-iterable
   consumption;
@@ -170,14 +171,19 @@ The Stage 7 implementation and fixed-commit evidence must prove at least:
   downstream use or retention, including finite Pure/Noise/Analog values and
   config-bounded Digitized values, plus no escaped field or downstream
   invocation on failure;
-- CPU behavior and applicable conditional CUDA behavior, with CUDA deep-value
-  reductions and scalar extraction documented as possible current-stream
-  synchronization; and
+- CPU behavior, plus the presence and explicit skipped qualification of
+  conditional CUDA checks; CUDA deep-value reductions and scalar extraction
+  remain documented as possible current-stream synchronization; and
 - no partial collection or semantic product escaping a failed call, without a
   rollback promise for private allocations or completed local prerequisites.
 
-The Stage 7 work order is the exact scope and evidence authority. This section
-does not dispatch it or claim that `simulate_readout(...)` is implemented.
+The Stage 7 work order is the exact scope and evidence authority. Validation
+and independent Review cleared the same final candidate, and Review
+fast-forwarded and reverified unchanged `main`. The source and independently
+recreated archive suites each ran 188 tests: 176 passed and 12 conditional
+CUDA tests skipped. Pyright `1.1.411` reported zero diagnostics in both forms.
+CUDA was unavailable, so this is eager CPU-only evidence and makes no GPU,
+cross-backend, fusion, allocation, or performance claim.
 
 Documentation-only Design work remains in Design unless the user requests an
 independent documentation Validation or Review. At minimum, run:
@@ -240,7 +246,7 @@ public constructor/config values
   -> TensorDSLab axes and product fields
   -> ReadoutCollection completed results
   -> implemented private product producers
-  -> Design-complete, unimplemented simulate_readout(...)
+  -> implemented Stage 7 simulate_readout(...)
   -> future TensorG4DS, TensorML, and durable boundaries
 ```
 
@@ -488,12 +494,11 @@ Verify deliberate `__all__` values and object identity across:
 - the top-level `tensor_dslab` collaborator API.
 
 The top-level package should expose the three axes, `SamplingConfig`, six
-products, all public product configs, `ReadoutConfig`, and
-`ReadoutCollection`. It must not re-export TensorCore generic classes or
-scalars, private requirements, private validators, retired `0.6` names, or a
-placeholder simulation function. When separately dispatched, Stage 7 replaces
-the last prohibition with a deliberate export check for implemented
-`simulate_readout`.
+products, all public product configs, `ReadoutConfig`, `ReadoutCollection`, and
+the implemented Stage 7 `simulate_readout`. It must not re-export TensorCore
+generic classes or scalars, private requirements, private validators, retired
+`0.6` names, or another simulation entry point. The readout root and package
+root must export the same `simulate_readout` object exactly once.
 
 Closed Stage 6 regression checks proved every former product package,
 `readout.types`, the readout root, and the package root were acyclic. Closed
@@ -563,12 +568,12 @@ overflow, smearing, operation-owned freshness, and stream ordering. The
 evidence is eager CPU-only; conditional CUDA checks were skipped and no GPU
 fusion or performance claim was made.
 
-The remaining acceptance matrix in
+Stage 7 subsequently validated and merged product-request closure, complete
+preparation, execute-once orchestration, requested-only retention, and the
+public result boundary. The remaining acceptance matrix in
 [Rebuild Validation Strategy](architecture/rebuild.md#validation-strategy)
-therefore covers product-request closure and retention invariance under the
-Design-complete Stage 7 work order, later CUDA and measured optimization
-evidence, and future TensorG4DS,
-TensorML, Reconstruction, and durable boundaries.
+therefore covers later CUDA and measured optimization evidence, and future
+TensorG4DS, TensorML, Reconstruction, and durable boundaries.
 
 Stage 5 does not activate Bernoulli, exponential, Poisson, categorical,
 multinomial, rejection, source-quantum, iterative-generation, Charge-stream,

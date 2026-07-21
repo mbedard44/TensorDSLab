@@ -37,8 +37,9 @@ TensorDSLab semantic leaves. Private scientific producers are implemented
 through Stage 6, and Maintenance 2 is Merged / Closed through exact candidate
 `89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
 `9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. Public readout orchestration is
-Design-complete / Undispatched under the focused Stage 7 work order. Later
-integration remains a Design target.
+Merged / Closed through exact Review-cleared Stage 7 candidate
+`6dd55024685013fb9412a7247d3ddde7be1a3177`. Later GPU characterization and
+integration remain Design targets.
 
 [Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
 Closed through exact implementation candidate
@@ -67,13 +68,16 @@ smearing, and `_produce_charge(...)`. It also retired `NormalDelayConfig` and
 behavior-neutrally renamed the four waveform producer families. Fixed-commit
 Validation, independent Review, and Design's post-merge audit found no
 unresolved issue. CUDA was unavailable, so the evidence is eager CPU-only.
-Stage 7 public `simulate_readout(...)` orchestration is Design-complete /
-Undispatched and remains unimplemented.
+Stage 7 is Merged / Closed through exact Review-cleared candidate
+`6dd55024685013fb9412a7247d3ddde7be1a3177`. It implements public
+`simulate_readout(...)`, complete closure preparation, execute-once product
+planning, exact requested retention, and generated-product postconditions.
+Its 12 conditional CUDA tests skipped, so it adds no GPU execution or
+performance claim.
 
-Before Stage 7, the accepted architecture requires TensorCore's generic
-counter/distribution surface—`uniform`, `gaussian`, `poisson`, and
-`binomial`—plus `require_same_dtype`, followed by one TensorDSLab Maintenance
-2 migration. TensorCore fulfilled the historical
+Stage 7 uses the generic TensorCore counter/distribution surface installed by
+Maintenance 2—`uniform`, `gaussian`, `poisson`, and `binomial`—plus
+`require_same_dtype`. TensorCore fulfilled the historical
 [consumer proposal](implementation/proposed_tensorcore_counter_rng_and_distributions.md)
 in published version `0.9.0` at exact commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. TensorDSLab's
@@ -137,7 +141,7 @@ PureWaveform + NoiseWaveform
        -> DigitizedWaveform
 ```
 
-The future public call is intentionally small:
+The implemented public call is intentionally small:
 
 ```python
 readout = simulate_readout(
@@ -201,7 +205,7 @@ tensor_dslab/
   readout/
     config.py                 # implemented Maintenance 2 ownership
     collection.py             # implemented Maintenance 2 ownership
-    simulation.py             # accepted Stage 7; unimplemented
+    simulation.py             # implemented Stage 7 public orchestration
     _requirements.py
     photoelectrons/field.py
     charge/
@@ -223,22 +227,23 @@ tensor_dslab/
 
 Every generated product package owns its field, configs, validation, and
 implemented private `_produce_*` producer. `Photoelectrons` remains the
-producer-less truth input. Accepted Stage 7 `readout/simulation.py` will own
-the one public orchestration function when implemented. `_requirements.py` and
+producer-less truth input. Closed Stage 7 `readout/simulation.py` owns the one
+public orchestration function. `_requirements.py` and
 Charge effect modules are private. Generic RNG and distribution mechanics
 belong to the selected TensorCore `0.9.0` Maintenance 2 dependency;
 config-owned `RngKey` values select stochastic roles.
 No behavior module is created as an empty placeholder; the complete ownership
 and import rules are in `architecture/rebuild.md`.
 
-The tree above is realized by the Maintenance 2 implementation.
+The product/module ownership portion of the tree above is realized by
+Maintenance 2; Stage 7 completes `readout/simulation.py` and the public
+orchestration surface.
 TensorCore RNG/distribution/same-dtype acceptance, publication, and the exact
 TensorDSLab dependency pin are complete at `0.9.0` commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The implementation preserves
 default-key continuity and removes `types.py`, `_RngStream`, and
 `readout/_random.py` without shims; their Stage 5/6 bytes remain closed
-historical evidence. Maintenance 2 is Merged / Closed, and Stage 7 is
-Design-complete / Undispatched.
+historical evidence. Maintenance 2 and Stage 7 are Merged / Closed.
 
 Stage 6 behavior-neutrally renamed all four transitional Stage 4/5 waveform
 modules, callables, imports, and tests from `_product.py` / `_product_*` to
@@ -273,7 +278,7 @@ no retired producer name or compatibility shim remains.
   Merged / Closed TensorDSLab ownership migration against the selected exact
   TensorCore dependency.
 - [Stage 7 Work Order](implementation/stage_7_public_readout_orchestration.md):
-  Design-complete / Undispatched public request planning, whole-closure
+  Merged / Closed public request planning, whole-closure
   preparation, execute-once orchestration, and exact-retention contract.
 - [Stage 3 Work Order](implementation/stage_3_tensorcore_0_7_product_foundation.md):
   Merged / Closed TensorCore `0.7` semantic product/config foundation and

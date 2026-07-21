@@ -15,9 +15,10 @@ merge/closeout is `ea979862b05f4ef543f6971c86641df317232479`. It retained
 exact TensorCore `0.7.0` pin
 `b454d738f6385ce6489d85492a618a3dab139bb6`. Its evidence is eager CPU-only
 because all conditional CUDA tests were skipped. Public request-aware
-`simulate_readout(...)` is Design-complete / Undispatched under the focused
-Stage 7 work order and remains unimplemented. Maintenance 2 is Merged / Closed
-through exact candidate `89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and
+`simulate_readout(...)` is Merged / Closed through exact Review-cleared Stage 7
+candidate `6dd55024685013fb9412a7247d3ddde7be1a3177`. Maintenance 2 is Merged /
+Closed through exact candidate `89a188abe330c06aa0b54c27cd61ac32a4fe9f63`
+and
 Design closeout `9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. Stage 2 and
 Maintenance 1 remain historical evidence for the superseded TensorCore `0.6`
 foundation.
@@ -60,7 +61,7 @@ could be a distinct `DigitalWaveform` product.
 
 ## Public Surface
 
-The accepted but unimplemented Stage 7 collaborator call is:
+The implemented Stage 7 collaborator call is:
 
 ```python
 def simulate_readout(
@@ -90,7 +91,7 @@ assert readout.field_types == frozenset(
 analog = readout.field(AnalogWaveform)
 ```
 
-When Stage 7 is implemented, `simulate_readout` will be the one ordinary public
+`simulate_readout` is the one ordinary public
 simulation API. The already-implemented private product producers and
 scientific submodels remain independently testable internal units, not
 alternate supported entry points.
@@ -752,8 +753,7 @@ In the Maintenance 2 implementation, `readout/config.py` contains only
 `ReadoutConfig` and `readout/collection.py` contains only `ReadoutCollection`.
 `_requirements.py` and `charge/effects/_*.py` are private support.
 `readout/_random.py` and `_RngStream` are removed rather than renamed.
-`readout/simulation.py` remains absent until the Design-complete Stage 7 work
-is implemented. Product packages never
+Closed Stage 7 implements `readout/simulation.py`. Product packages never
 import the cross-product orchestration layer. Former Stage 6 paths remain
 closed historical evidence; Maintenance 2 is Merged / Closed at the exact
 candidate and Design closeout recorded above.
@@ -791,10 +791,10 @@ Charge RNG streams, aggregate samplers, and delay/jitter/cascade/ledger/smearing
 mechanics. The Maintenance 2 implementation pins selected TensorCore
 `0.9.0` commit `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, splits module
 ownership, migrates to config-owned keys, and preserves default-key outputs;
-it is Merged / Closed. Stage 7 is Design-complete / Undispatched and remains
-responsible for complete request-aware `simulate_readout(...)`; no partial
-public API should imply unsupported product closure. Measured GPU fusion
-remains a separate later optimization stage.
+it is Merged / Closed. Stage 7 is also Merged / Closed and implements complete
+request-aware `simulate_readout(...)`; no partial public API implies
+unsupported product closure. Measured GPU characterization remains a separate
+evidence stage; any justified fusion work remains a later optimization stage.
 
 ## Return To Design Before
 

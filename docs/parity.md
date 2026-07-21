@@ -4,15 +4,18 @@ Status: active Design contract for evaluating IV-DSLab and DSLab donor
 behavior. Merged Stage 4 tests provide bounded deterministic waveform
 evidence, Stage 5 tests provide bounded TensorDSLab-model stochastic-noise
 evidence, and Stage 6 tests provide bounded private-Charge model-conformance
-evidence on eager CPU. This does not establish a comprehensive donor fixture
-corpus, public requested-`Charge` comparison, accepted IV equivalence margin,
-CUDA evidence, or broad stochastic donor parity.
+evidence on eager CPU. Closed Stage 7 adds bounded public-orchestration and
+requested-product composition/contract evidence. This does not establish a
+comprehensive donor fixture corpus, public requested-`Charge` donor
+comparison, accepted IV equivalence margin, CUDA evidence, or broad stochastic
+donor parity.
 
 The bounded Stage 6 evidence is exact implementation candidate
 `fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58` and Review closeout
 `ea979862b05f4ef543f6971c86641df317232479`, against TensorCore `0.7.0`
 `b454d738f6385ce6489d85492a618a3dab139bb6`. Its conditional CUDA cases were
-skipped, and its public Stage 7 comparison boundary does not yet exist.
+skipped. The public Stage 7 comparison boundary now exists through exact
+Review-cleared candidate `6dd55024685013fb9412a7247d3ddde7be1a3177`.
 Maintenance 2 is Merged / Closed through exact implementation candidate
 `89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
 `9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. It uses exact TensorCore commit
@@ -20,8 +23,8 @@ Maintenance 2 is Merged / Closed through exact implementation candidate
 the accepted scientific/address mappings while changing their module and
 generic-RNG owner.
 CUDA was unavailable, so it adds no GPU or completed-value cross-backend
-evidence. Stage 7 is Design-complete / Undispatched; the public executable
-comparison boundary remains absent until separate implementation and closure.
+evidence. Stage 7 is Merged / Closed, but no observable-specific IV comparison
+or acceptance margin follows merely from implementing the executable boundary.
 
 ## Purpose
 
@@ -149,10 +152,12 @@ Stage 4's reviewed tests establish the named TPC/Veto pulse checkpoints,
 independent deterministic reference equations, conditional analog composition,
 and representation-mapped ADC behavior in that work order's accepted CPU
 evidence domain. Stage 5 and Stage 6 add bounded stochastic-noise and private-
-Charge conformance evidence for the selected TensorDSLab models. They do not
-establish complete eventwise IV parity, a comprehensive donor fixture corpus,
-public requested-`Charge` behavior, accepted donor-equivalence margins, or GPU
-evidence. Every stronger classification still requires its named focused
+Charge conformance evidence for the selected TensorDSLab models. Those stages
+do not establish complete eventwise IV parity, a comprehensive donor fixture
+corpus, public requested-`Charge` composition, accepted donor-equivalence
+margins, or GPU evidence. Closed Stage 7 adds public composition/contract
+evidence but no donor comparison or stronger parity classification. Every
+stronger classification still requires its named focused
 evidence.
 
 ## Required Shape Of A Parity Claim
@@ -191,7 +196,7 @@ frontier/ledger boundary and observable and must not invent another product
 type. Every claim also names the exact axes, `SamplingConfig`, product config,
 dtype, comparison boundary, and observable.
 
-The planned Stage 7 builder returns exactly the nonempty product set requested
+The Stage 7 builder returns exactly the nonempty product set requested
 by the caller. Privately computed prerequisites and avalanche diagnostics are
 not additional parity results. Unless a claim explicitly covers a composition,
 its acceptance criteria apply only to the named product.
@@ -204,7 +209,7 @@ nor parity evidence. A new analog-composition claim still requires both
 
 ## Execution And Scheduling Neutrality
 
-The selected rebuild plans one functional Stage 7 `simulate_readout(...)`
+The selected rebuild implements one functional Stage 7 `simulate_readout(...)`
 surface. It does not carry the historical Stage 2 architecture's public `out`,
 `ReadoutWorkspace`, fixed-chain builder, lease, or allocation-free contracts
 forward by default. Those existing contracts remain historical evidence, not
@@ -276,9 +281,8 @@ different boundaries:
 1. a private timing-redistribution diagnostic from a common binned
    `Photoelectrons` input, without treating jitter as a replacement truth
    product;
-2. the Design-complete but unimplemented Stage 7
-   `simulate_readout(..., products=[Charge])` from common
-   `Photoelectrons` for end-to-end charge statistics; or
+2. the implemented Stage 7 `simulate_readout(..., products=[Charge])` from
+   common `Photoelectrons` for end-to-end charge statistics; or
 3. a private ephemeral count-grid boundary used only to validate an internal
    dark-count, crosstalk, afterpulse, or smearing submodel.
 
@@ -299,7 +303,8 @@ selected finite aggregate sampler still reduce the implemented timing-jitter
 claim to statistical parity. The assumption cannot reproduce eventwise IV
 behavior when the original PE phases were known or were not conditionally
 uniform. Nor does Stage 6's isolated private-submodel result establish parity
-for the future public requested-`Charge` composition.
+for the implemented public requested-`Charge` composition; Stage 7's
+composition evidence is not donor-parity evidence.
 
 ## Full-Chain Order
 
@@ -342,10 +347,10 @@ retain exactly the caller-requested products
 
 Effect-order classification: **intentional divergence**.
 
-The future public requested `Charge` result may target **statistical parity**
-for named charge observables over an accepted input/config ensemble. TensorDSLab
-must not claim distributional or eventwise parity for that composed stochastic
-flow.
+The implemented public requested `Charge` boundary may target **statistical
+parity** for named charge observables over an accepted input/config ensemble.
+TensorDSLab must not claim distributional or eventwise parity for that composed
+stochastic flow.
 Passing isolated internal-submodel checks is necessary evidence, but it does not
 prove the end-to-end target. Any campaign-level comparison likewise remains
 statistical validation of named observables, not evidence that the composed
@@ -768,7 +773,7 @@ aggregate PE-equivalent response rather than SI charge.
 
 ## End-To-End Requested `Charge`
 
-The planned Stage 7 public comparison boundary is:
+The implemented Stage 7 public comparison boundary is:
 
 ```text
 Photoelectrons -> simulate_readout(..., products=[Charge]) -> Charge
@@ -785,9 +790,10 @@ negative clipping, and RNG construction preclude an end-to-end distributional
 claim.
 
 Stage 6 validated `_produce_charge(...)` and its private submodels on eager
-CPU; it did not validate public request planning, collection retention, or IV
-equivalence. A later parity stage must exercise the public composition as well
-as the private submodels. At minimum it should compare per-channel and
+CPU. Stage 7 validated public request planning, collection
+retention, and composition on eager CPU, but it does not establish IV
+equivalence. A later parity stage must compare the implemented public
+composition with donor evidence. At minimum it should compare per-channel and
 per-sample charge mean and variance, zero-cell probability, total response,
 occupancy, edge loss, selected tail quantiles, and any accepted time-profile
 statistic over named
@@ -1210,9 +1216,9 @@ equivalence claim rather than an open numerical implementation tolerance.
 
 ## Deferred Decisions
 
-- CUDA Charge execution, CPU/CUDA agreement, GPU performance/fusion, and
-  public Stage 7 orchestration evidence; eager CPU implementation and sampler
-  evidence under the selected aggregate algorithms is closed;
+- CUDA Charge execution, CPU/CUDA agreement, and GPU performance/fusion;
+  eager CPU implementation, sampler, and public Stage 7 orchestration evidence
+  under the selected aggregate algorithms is closed;
 - per-channel parameter representation;
 - whether any calibrated crosstalk approximation should match selected IV
   moments or remain a standalone TensorDSLab model;

@@ -17,12 +17,12 @@ The current identity and maturity are:
 
 ```text
 Project/display name: TensorDSLab
-Python import: tensor_dslab (accepted on main through Maintenance 2)
+Python import: tensor_dslab (accepted on main through Stage 7)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
-Package maturity: Maintenance 2 RNG and product-module ownership Merged / Closed
-Active production gate: Stage 7 Public Readout Orchestration is
-Design-complete / Undispatched
+Package maturity: Stage 7 Public Readout Orchestration Merged / Closed
+Next production gate: none dispatched; later GPU characterization and
+integration remain Design work
 ```
 
 Stage 1 is Design-complete, and Stage 2 is Merged / Closed on `main` at
@@ -71,8 +71,11 @@ private Charge producer, aggregate samplers, and fixed-generation correlated-
 avalanche slice. Fixed-commit Validation, independent Review, and Design's
 post-merge audit found no unresolved issue. CUDA was unavailable, so its
 evidence is eager CPU-only and makes no GPU execution or performance claim.
-Stage 7 public orchestration is Design-complete / Undispatched. Measured GPU
-fusion and integration remain later work.
+Stage 7 public orchestration is Merged / Closed through exact Review-cleared
+candidate `6dd55024685013fb9412a7247d3ddde7be1a3177`. Its fixed-commit
+Validation, independent Review, and post-merge verification found no unresolved
+issue. CUDA was unavailable, so its evidence is eager CPU-only; measured GPU
+characterization, optimization, and integration remain later work.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency
@@ -215,7 +218,7 @@ TensorDSLab/
     readout/
       config.py               # ReadoutConfig
       collection.py           # ReadoutCollection
-      simulation.py           # accepted Stage 7 public orchestration; unimplemented
+      simulation.py           # implemented Stage 7 public orchestration
       _requirements.py        # private shared readout relationships
       photoelectrons/field.py
       charge/
@@ -243,12 +246,14 @@ as `TensorDSLab`; keep semantic subpackages directly below the import root.
 Do not create placeholder modules to reserve architecture. Add a module only
 when there is a real concept, behavior, or contract to house.
 
-This product-centered tree is the accepted Maintenance 2 ownership target.
-Maintenance 2 is Merged / Closed through exact candidate
+This product-centered tree combines the Maintenance 2 ownership target with
+the Stage 7 public orchestration module. Maintenance 2 is Merged / Closed
+through exact candidate
 `89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
-`9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`; it realizes the accepted paths
-and removes the former Stage 5/6 `types.py`, `_RngStream`, and
-`readout/_random.py` surfaces without shims.
+`9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`; it realizes the product/module
+ownership paths and removes the former Stage 5/6 `types.py`, `_RngStream`, and
+`readout/_random.py` surfaces without shims. Stage 7 completes
+`readout/simulation.py` and the public orchestration surface.
 TensorCore fulfilled the historical consumer proposal in published version
 `0.9.0` at exact commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. TensorDSLab's Maintenance 2
@@ -420,7 +425,7 @@ Photoelectrons axes/device/shape + SamplingConfig -> NoiseWaveform
 PureWaveform + NoiseWaveform -> AnalogWaveform -> DigitizedWaveform
 ```
 
-The Design-complete but unimplemented Stage 7 `simulate_readout(...)` contract
+The implemented Stage 7 `simulate_readout(...)` contract
 computes the requested transitive closure privately, executes each producer at
 most once, and retains exactly the caller-requested products. Prerequisites
 need not be returned. `products` is in-memory retention only; persistence and
@@ -447,8 +452,8 @@ under private `charge/effects`. Do not create global
 dumping grounds.
 
 `readout/config.py` contains exactly `ReadoutConfig`, and
-`readout/collection.py` contains exactly `ReadoutCollection`. When Stage 7 is
-implemented, `readout/simulation.py` owns public `simulate_readout(...)`,
+`readout/collection.py` contains exactly `ReadoutCollection`. Implemented
+Stage 7 `readout/simulation.py` owns public `simulate_readout(...)`,
 request validation, dependency planning, and orchestration.
 `readout/_requirements.py` and `charge/effects/_*.py` are private
 implementation modules. The accepted target has no `readout/_random.py` or
@@ -464,14 +469,13 @@ packages do not import `ReadoutConfig`, `ReadoutCollection`, or
 
 Physical module location does not decide public visibility. Stage 3 package
 roots and `__all__` deliberately export the collaborator-facing axes, fields,
-configs, and collection. Separately dispatched Stage 7 adds
-`simulate_readout(...)` only when the function exists. Never create placeholder
+configs, and collection. Closed Stage 7 deliberately adds
+`simulate_readout(...)` at both public export layers. Never create placeholder
 modules merely to reserve the accepted target tree.
 
 ## Target Domain Simulation Surface
 
-The Design-complete Stage 7 contract exposes one public readout action once
-implemented; the current package does not yet provide it:
+Closed Stage 7 exposes one public readout action:
 
 ```python
 readout = simulate_readout(
@@ -750,7 +754,7 @@ validation, or expensive computation.
 upstream work. `assemble_*` functions must not call loaders, writers, cache
 APIs, or DAG APIs.
 
-Once implemented, `simulate_readout(...)` is the public scientific
+`simulate_readout(...)` is the public scientific
 orchestration function. It consumes already-produced dense `Photoelectrons`,
 plans the requested product closure, and returns one completed
 `ReadoutCollection`. It must not load data, perform durable IO, move the source,
@@ -1020,9 +1024,8 @@ manifest, rule-coverage, source-anchor, dormant-trigger, deviation, raw-ID,
 changed-file-allowlist, and forbidden-claim checks defined in
 [Validation](docs/validation.md#governance-adoption-checks). Runtime, import,
 dependency, export, environment, and post-merge commands are active for the
-accepted package surfaces through Stage 5. Integration and unimplemented
-scientific-runtime commands remain dormant until their corresponding surfaces
-exist.
+accepted package surfaces through Stage 7. Integration and later scientific-
+runtime commands remain dormant until their corresponding surfaces exist.
 
 ## Before Production Review
 

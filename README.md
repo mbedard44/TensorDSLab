@@ -22,9 +22,10 @@ post-binned readout:
 - `SamplingConfig` for zero-start, integer-picosecond left-edge samples;
 - `Photoelectrons`, `Charge`, `PureWaveform`, `NoiseWaveform`,
   `AnalogWaveform`, and `DigitizedWaveform` fields;
-- product-owned immutable scientific configuration records; and
+- product-owned immutable scientific configuration records;
 - `ReadoutCollection`, an immutable completed result containing any nonempty
-  unordered subset of the six products.
+  unordered subset of the six products; and
+- `simulate_readout(...)`, the one public request-aware readout operation.
 
 The exact concrete axis, field, and collection classes carry in-process
 semantic identity. There are no parallel axis IDs, field IDs, layout objects,
@@ -73,8 +74,11 @@ Maintenance 2 is Merged / Closed through exact implementation candidate
 `9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. It moves generic RNG and
 distribution mechanics to exact TensorCore `0.9.0`, uses config-owned
 stochastic keys, and records eager-CPU evidence only because CUDA was
-unavailable. Public orchestration is not implemented. Ordinary users should
-continue to import only the documented package-root types and configs.
+unavailable. Stage 7 is Merged / Closed through exact Review-cleared candidate
+`6dd55024685013fb9412a7247d3ddde7be1a3177`; it implements complete
+whole-request preparation, execute-once prerequisite planning, exact requested
+retention, and the public `simulate_readout(...)` export. Ordinary users should
+import the documented package-root API rather than private product producers.
 
 The historical [TensorCore consumer proposal](docs/implementation/proposed_tensorcore_counter_rng_and_distributions.md)
 is now fulfilled by published TensorCore `0.9.0` commit
@@ -86,15 +90,15 @@ no GPU or cross-backend claim.
 
 ## Explicit Exclusions
 
-This foundation does not yet implement `simulate_readout(...)`, public atomic
-product transforms, the accepted `CounterRng`-based simulation boundary, PE
-binning, TensorG4DS or TensorML adapters, IO,
-caches, `out=`, workspaces, movement/selection helpers, or an allocation-free
-execution path. It makes no GPU-execution, release, deployment,
+This package does not yet implement PE binning, TensorG4DS or TensorML
+adapters, IO, caches, public atomic product transforms, `out=`, workspaces,
+movement/selection helpers, or an allocation-free execution path. It makes no
+GPU-execution, release, deployment,
 backward-compatibility, conformance, or broad cross-package compatibility
 claim. The focused
 [Stage 7 work order](docs/implementation/stage_7_public_readout_orchestration.md)
-is Design-complete / Undispatched.
+is Merged / Closed; its accepted evidence is eager CPU-only because CUDA was
+unavailable.
 
 Start with [the documentation overview](docs/overview.md) and the
 [rebuild architecture](docs/architecture/rebuild.md). Local tests run from the

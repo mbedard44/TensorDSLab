@@ -308,10 +308,9 @@ compatibility and authorizes no push.
 
 ### [Stage 7: Public Readout Orchestration](stage_7_public_readout_orchestration.md)
 
-Status: **Implementation candidate / Validation pending** while the exact
-candidate bytes are absent from `main`. If present unchanged on `main`, Review's
-clean fast-forward has completed and final Design acceptance remains pending
-until this index and the work order record **Merged / Closed**.
+Status: **Merged / Closed** through exact Review-cleared implementation
+candidate and merged `main`
+`6dd55024685013fb9412a7247d3ddde7be1a3177`.
 
 The Maintenance 2 prerequisite is satisfied at exact implementation candidate
 `89a188abe330c06aa0b54c27cd61ac32a4fe9f63`, Design closeout
@@ -327,13 +326,16 @@ output-reuse, integration, or performance policy.
 
 The user authorized production from exact Design authority
 `254a624b39993c4dc0b9a2a832ebd07398ac5a24`. Fixed-commit Validation returned
-Candidate 1 for four bounded test-proof corrections without a production or
-scope finding. Validation cleared direct-child Candidate 2, but Review returned
-it for two additional bounded committed-test proof gaps without finding a
+Candidate 1 `0a028d715a75c2af5a38e6143815944403922737` for four bounded
+test-proof corrections without a production or scope finding. Validation
+cleared direct-child Candidate 2
+`7ab98bea4c3db2b3a3d3710e18cb6dc1c96c0c06`, but Review returned it for two
+additional bounded committed-test proof gaps without finding a
 production, API, science, dependency, architecture, scope, import, typing, or
 documentation-contract defect. Design authorized final direct-child Candidate
-3 to prove zero replacement `Photoelectrons` constructions and the exact empty
-ZeroNoise active-key set. Validation returned Candidate 3 because the direct
+3 `e152aa05c0f960742e255ea40eb7e4591e628965` to prove zero replacement
+`Photoelectrons` constructions and the exact empty ZeroNoise active-key set.
+Validation returned Candidate 3 because the direct
 ZeroNoise assertion observed the product module's preparer rather than the
 binding used by public orchestration. With the ordinary I-to-V budget
 exhausted, Design authorized exactly one exceptional direct-child supplemental
@@ -346,9 +348,13 @@ passes and 12 conditional CUDA skips, and Pyright `1.1.411` with zero
 diagnostics against both dependency forms. Review's exact mutation command now
 reports `replacement_truth_mutant False 4` and
 `phantom_zero_key_mutant False 1`. CUDA was unavailable, so the evidence is
-eager CPU only. Exact candidate commits are named externally in their
-Validation handoffs; the supplemental candidate bytes claim no Validation or
-Review clearance and authorize no push.
+eager CPU only. Validation cleared exact supplemental candidate
+`6dd55024685013fb9412a7247d3ddde7be1a3177`; independent Review cleared those
+same bytes, fast-forwarded `main` without a merge commit, and repeated the
+source/archive, typing, mutation, dependency, import/export, scope, privacy,
+and hygiene gates post-merge. Final Design independently accepted the merged
+topology, public surface, evidence, and qualifications and changed no
+production or test byte. This closeout authorizes no push.
 
 ### Later Integration And Artifact Stages
 

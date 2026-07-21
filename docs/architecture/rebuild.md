@@ -8,12 +8,12 @@ evidence-only closeout is
 through exact implementation candidate
 `89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
 `9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. It installs the selected
-TensorCore `0.9.0` dependency and module/RNG ownership boundary. The Stage 7
-public `simulate_readout(...)` contract is Design-complete / Undispatched under
-the [Stage 7 work order](../implementation/stage_7_public_readout_orchestration.md);
-the function and `readout/simulation.py` remain unimplemented. This
-architecture page does not dispatch implementation, replace production bytes,
-or make a compatibility claim.
+TensorCore `0.9.0` dependency and module/RNG ownership boundary. Stage 7 public
+`simulate_readout(...)` orchestration is Merged / Closed through exact
+Review-cleared candidate `6dd55024685013fb9412a7247d3ddde7be1a3177` under
+the [Stage 7 work order](../implementation/stage_7_public_readout_orchestration.md).
+This architecture page does not dispatch later implementation or make a
+compatibility claim.
 
 TensorDSLab Design has accepted a simpler next RNG and module-ownership target:
 one caller-constructed TensorCore `CounterRng` per simulation invocation,
@@ -27,8 +27,8 @@ version `0.9.0` at exact commit
 for Maintenance 2 after exact consumer probes. The implementation pins that
 commit, uses the public RNG/distribution surface, and realizes the accepted
 module ownership without compatibility shims. The Stage 5/6 private
-implementation remains closed historical evidence. Stage 7 remains a separate,
-undispatched production gate.
+implementation remains closed historical evidence. Stage 7 is a separate
+Merged / Closed production slice.
 
 Within this architecture, the fixed-`K` algorithm under
 [Fixed-Generation Correlated-Avalanche Baseline](#fixed-generation-correlated-avalanche-baseline)
@@ -298,7 +298,7 @@ tensor_dslab/
     __init__.py
     config.py                # ReadoutConfig only
     collection.py            # ReadoutCollection only
-    simulation.py            # accepted Stage 7 public orchestration; unimplemented
+    simulation.py            # implemented Stage 7 public orchestration
     _requirements.py         # shared private readout requirements
 
     photoelectrons/
@@ -405,11 +405,11 @@ graph and orchestrate it.
 
 The physical module path does not define public visibility. Package
 `__init__.py` files and `__all__` deliberately re-export the implemented
-collaborator-facing classes and configs; Stage 7 adds
-`simulate_readout(...)` deliberately when separately dispatched.
+collaborator-facing classes and configs; closed Stage 7 deliberately exports
+`simulate_readout(...)`.
 Collaborators need not import from
 nested product modules. `simulation.py`, rather than a generic `api.py`, names
-the accepted behavior it will own. The singular product-local `config.py` and
+the accepted behavior it owns. The singular product-local `config.py` and
 `field.py` names state their concrete ownership; they are not global dumping
 grounds. Do not add global `configs/`, `fields.py`, `builders.py`, or
 `validation.py` modules.
@@ -419,8 +419,9 @@ it real behavior. Do not create empty files to reserve this tree.
 
 ### Accepted Post-Maintenance Symbol Inventory
 
-This is the accepted ownership inventory realized by the Maintenance 2
-implementation. The closed Stage 5/6 tree used `types.py` and
+This is the accepted ownership inventory. Maintenance 2 realized its
+product/module ownership portion, and Stage 7 completed
+`readout/simulation.py`. The closed Stage 5/6 tree used `types.py` and
 `readout/_random.py`; the closed work orders remain exact historical evidence
 for those bytes. The migration moves symbols without aliases after the
 TensorCore RNG dependency gate. Future slices may add private
@@ -446,6 +447,7 @@ registry or create a later behavior module as a placeholder.
 | `readout/digitized_waveform/field.py` | `DigitizedWaveform` | product-local `_require_valid_values` accepting the exact config |
 | `readout/config.py` | `ReadoutConfig` | none |
 | `readout/collection.py` | `ReadoutCollection` | none |
+| `readout/simulation.py` | `simulate_readout` | `_ReadoutPlan` and request/preflight/orchestration helpers |
 
 The shared private requirement functions exist only where two or more product
 modules need the exact same relationship. Product-specific value-domain scans
@@ -463,16 +465,16 @@ makes no backward-compatibility claim.
 Every product subpackage root re-exports only its public row above. The
 `common` and `readout` roots compose those deliberate exports, and the package
 root re-exports the collaborator-facing axes, sampling/config types, product
-field types, `ReadoutConfig`, and `ReadoutCollection`. Generic TensorCore names
-are never re-exported. Importing the public package must not transitively load
-private RNG mechanics or a future simulation, compiler, TensorG4DS, TensorML,
-or IO dependency.
+field types, `ReadoutConfig`, `ReadoutCollection`, and `simulate_readout`.
+Generic TensorCore names are never re-exported. Importing the public package
+deliberately loads the
+Stage 7 orchestration module but must not transitively load private TensorCore
+RNG mechanics, a compiler, TensorG4DS, TensorML, or an IO dependency.
 
 Stages 4 through 6 subsequently implemented every generated product's private
 `_produce_*` builder, Charge's private `_simulate_*` submodels, and the private
-RNG mechanics consumed by noise and Charge. The one remaining behavior symbol
-in this tree is accepted but unimplemented Stage 7
-`readout.simulation.simulate_readout`. This staged separation kept the Stage 3
+RNG mechanics consumed by noise and Charge. Closed Stage 7 implements
+`readout.simulation.simulate_readout`. The staged separation kept the Stage 3
 foundation testable without creating empty architectural scaffolding.
 
 The rebuild retires:
@@ -2040,8 +2042,8 @@ The naming split is intentional: `_produce_*` constructs and returns one
 completed semantic product, while `_simulate_*` names a private scientific
 submodel used inside a product producer. `_prepare_*` names private contextual
 validation and numerical preparation. None of these families is public;
-Stage 7 `simulate_readout(...)` is the accepted but unimplemented ordinary
-collaborator-facing simulation API.
+Stage 7 `simulate_readout(...)` is the implemented ordinary collaborator-facing
+simulation API.
 
 Stage 6 behavior-neutrally completed the transitional `_product.py` and
 `_product_*` rename. Every generated product now uses `_produce.py` and an
@@ -6320,8 +6322,9 @@ The rebuild validation matrix includes:
 - Stage 4 static and runtime proof that the waveform tail contains only the
   two owning product producers and does not introduce decorative pointwise
   Python wrappers or cross-product fusion;
-- later public-orchestration proof that requesting only `DigitizedWaveform`
-  still computes `AnalogWaveform` exactly once as an unretained prerequisite;
+- closed Stage 7 public-orchestration proof that requesting only
+  `DigitizedWaveform` still computes `AnalogWaveform` exactly once as an
+  unretained prerequisite;
 - a later conditional accelerator optimization stage may add compiler-graph,
   profiler, and memory evidence for one fused backend kernel and no
   target-sized temporary; Stage 4 requires no such evidence and makes no
@@ -6704,7 +6707,7 @@ The completed production steps are:
   then clear fixed-commit Validation, independent Review, merge, and Design
   closeout gates.
 
-The next production sequence is:
+The completed prerequisites and next production sequence are:
 
 1. Maintenance 2 is Merged / Closed through exact implementation candidate
    `89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
@@ -6716,10 +6719,12 @@ The next production sequence is:
    bookkeeping in `_counts.py`, added config-owned keys, removed `_RngStream`
    and `readout/_random.py`, consolidated the private scalar-to-dtype
    requirement, and preserved default-key continuity.
-2. Stage 7 is Design-complete / Undispatched. A later explicit dispatch may
-   implement request-aware `simulate_readout(...)`, whole-request preparation,
-   product-owned plans, required `rng: CounterRng`, closure-wide duplicate-key
-   validation, execute-once planning, and exact requested retention.
+2. Stage 7 is Merged / Closed through exact Review-cleared candidate
+   `6dd55024685013fb9412a7247d3ddde7be1a3177`. It implements request-aware
+   `simulate_readout(...)`, whole-request preparation, product-owned plans,
+   required `rng: CounterRng`, closure-wide duplicate-key validation,
+   execute-once planning, exact requested retention, and generated-product
+   postconditions.
 3. Profile real GPU memory and execution before designing workspace/output
    reuse.
 4. Design the exact TensorG4DS-to-truth-Photoelectrons bridge.
@@ -6803,13 +6808,14 @@ and sampling live in `tensor_dslab.common`; each generated readout product owns
 its field, configs, validation, and implemented private product builder;
 `Photoelectrons` remains the producer-free truth input; `readout.config`
 contains only `ReadoutConfig`, `readout.collection` contains only
-`ReadoutCollection`; accepted but unimplemented Stage 7
-`readout.simulation` will own the one public orchestration function. The private
+`ReadoutCollection`; implemented Stage 7 `readout.simulation` owns the one
+public orchestration function. The private
 readout requirements and Charge effect modules are not public APIs.
 `Photoelectrons` is an already-produced input with neither a config nor a
 producer. The former Stage 6 `types.py` and `_random.py` layout remains closed
-Stage 5/6 implementation evidence; the closed Maintenance 2 implementation
-realizes the accepted target tree without aliases. Reopening that tree
+Stage 5/6 implementation evidence. Closed Maintenance 2 realizes the
+product/module ownership portion without aliases, and closed Stage 7 completes
+`readout/simulation.py`. Reopening that tree
 requires a concrete import-cycle, cohesion, or implementation-size finding
 rather than a preference for layer-oriented grouping.
 
@@ -6870,7 +6876,7 @@ Stage 3 completed the TensorCore selection, inherited-constructor typing,
 public-import, and fixed consumer-probe gate at exact commit
 `b454d738f6385ce6489d85492a618a3dab139bb6`.
 
-The remaining gates are:
+Closed prerequisites and remaining Design gates are:
 
 1. Maintenance 2 is Merged / Closed through exact implementation candidate
    `89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
@@ -6879,7 +6885,8 @@ The remaining gates are:
    bookkeeping local, consolidated `_require_representable_float`, and removed
    `_RngStream`, `readout/_random.py`, and any replacement `readout/_rng.py`
    without shims.
-2. The focused Stage 7 work order is Design-complete / Undispatched. It freezes
+2. The focused Stage 7 work order is Merged / Closed through exact candidate
+   `6dd55024685013fb9412a7247d3ddde7be1a3177`. It implements
    request/config/RNG/key-collision preparation, product-owned typed plans,
    prerequisite execution at most once, requested-only retention, and the
    public `simulate_readout(...)` surface. Stage 6 already closed the private

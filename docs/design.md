@@ -29,8 +29,7 @@ retired representation.
 
 ## Target Collaborator Surface
 
-Once Stage 7 is implemented, the normal workflow is one public function plus
-named product classes:
+The normal workflow is one public function plus named product classes:
 
 ```python
 readout = simulate_readout(
@@ -231,7 +230,7 @@ tensor_dslab/
     __init__.py
     config.py                # ReadoutConfig
     collection.py            # ReadoutCollection
-    simulation.py            # accepted Stage 7 public API; unimplemented
+    simulation.py            # implemented Stage 7 public API
     _requirements.py         # shared private readout relationships
 
     photoelectrons/
@@ -265,8 +264,10 @@ tensor_dslab/
       _produce.py
 ```
 
-This is the accepted Maintenance 2 target, realized by its closed implementation.
-Closed Stage 5/6 production used `types.py`,
+This product-centered tree combines the Maintenance 2 ownership target with
+the Stage 7 public orchestration module. Maintenance 2 realized the
+product/module ownership migration in its closed implementation; Stage 7
+completed `readout/simulation.py`. Closed Stage 5/6 production used `types.py`,
 `_RngStream`, and `readout/_random.py`. TensorCore has
 published its package-authoritative generic RNG plus independently testable
 same-dtype sub-slice as version `0.9.0` at exact commit
@@ -275,7 +276,8 @@ Merged / Closed through exact candidate
 `89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
 `9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. It pins that dependency, splits
 the owned modules, and removes the retired local RNG surfaces without shims.
-Stage 7 is Design-complete / Undispatched.
+Stage 7 is Merged / Closed through exact Review-cleared candidate
+`6dd55024685013fb9412a7247d3ddde7be1a3177`.
 
 Files are created only when an accepted implementation slice gives them real
 behavior. Product packages do not import `ReadoutConfig`,
@@ -291,7 +293,7 @@ private implementation modules. The accepted target removes `_random.py`;
 generic RNG mechanics come from TensorCore. There are no global `configs`,
 `fields`, `builders`, or `validation` dumping grounds.
 
-Stage 7 adds one private frozen preparation plan beside each generated product.
+Stage 7 added one private frozen preparation plan beside each generated product.
 The owning product `_prepare_*` function receives its exact config and relevant
 source/sampling/dtype facts; `_produce_*` receives that trusted plan rather than
 the config again. `readout.simulation` composes one private `_ReadoutPlan` only
@@ -416,4 +418,7 @@ optimization remains later work. TensorCore RNG/same-dtype acceptance and
 exact pin selection are complete at `0.9.0` commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`; TensorDSLab Maintenance 2 uses
 that exact dependency and is Merged / Closed. Stage 7 public orchestration is
-Design-complete / Undispatched under its focused work order.
+also Merged / Closed through exact Review-cleared candidate
+`6dd55024685013fb9412a7247d3ddde7be1a3177` under its focused work order. Its
+accepted evidence is eager CPU-only because CUDA was unavailable; measured GPU
+characterization remains later work.

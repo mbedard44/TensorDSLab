@@ -354,8 +354,8 @@ TensorCore commit, splits module ownership, migrates stochastic functions,
 preserves default-key output continuity, and removes `_RngStream` plus
 `readout/_random.py` without a shim. It is Merged / Closed through exact
 candidate `89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
-`9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. Design-complete Stage 7 will
-reject duplicate keys assigned to distinct roles in the requested transitive
+`9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. Closed Stage 7
+rejects duplicate keys assigned to distinct roles in the requested transitive
 closure before any RNG request, producer invocation, or semantic-output write.
 
 ### Charge Uses Aggregate Multinomial And Hybrid Poisson Sampling
@@ -631,11 +631,12 @@ Charge model, not an IV-DSLab equivalence margin. Intentional donor divergences
 still require an observable-specific collaborator or calibration margin under
 [`parity.md`](parity.md).
 
-### Stage 7 Public Readout Orchestration Is Design-Complete
+### Stage 7 Public Readout Orchestration Is Merged / Closed
 
 The focused
 [Stage 7 work order](implementation/stage_7_public_readout_orchestration.md)
-is Design-complete / Undispatched. It accepts one public
+is Merged / Closed through exact Review-cleared implementation candidate
+`6dd55024685013fb9412a7247d3ddde7be1a3177`. It implements one public
 `simulate_readout(...)` function, complete product-owned preparation before
 producer execution, one private typed readout plan, closure-wide structural
 role-key uniqueness, fixed execute-once topology, and exact requested
@@ -650,9 +651,12 @@ distribution request and belongs to the execution-failure boundary. Deep
 value validation and product postconditions may synchronize CUDA through
 scalar reductions as an accepted functionality-first correctness cost.
 
-This Design decision creates no production bytes or dispatch. The public
-function and `readout/simulation.py` remain unimplemented until the user
-separately authorizes the accepted role-separated workflow.
+Fixed-commit Validation and independent Review cleared the exact merged bytes,
+and Review completed a clean fast-forward plus post-merge verification. The
+accepted source/archive evidence ran 188 tests in each dependency form: 176
+passed and 12 conditional CUDA tests skipped. Pyright `1.1.411` reported zero
+diagnostics in both forms. CUDA was unavailable, so this decision establishes
+no GPU execution, cross-backend, fusion, allocation, or performance claim.
 
 ## Superseded
 
@@ -771,11 +775,12 @@ changes the realized AP destination or count, or enters recursive state.
 
 ### IV-DSLab Charge Equivalence Margins
 
-Stage 6 validates the selected TensorDSLab probability model. It does not
-establish IV-DSLab equivalence for intentionally divergent mechanisms or the
-future public requested-Charge composition. Each donor claim still requires a
-named observable and a collaborator- or calibration-owned acceptance margin
-under [`parity.md`](parity.md).
+Stage 6 validates the selected TensorDSLab probability model but does not
+establish IV-DSLab equivalence for intentionally divergent mechanisms. Stage 7
+implements and validates the public requested-`Charge` composition contract,
+but it adds no donor comparison or equivalence margin. Each donor claim still
+requires a named observable and a collaborator- or calibration-owned
+acceptance margin under [`parity.md`](parity.md).
 
 ### Waveform-Tail Optimization Evidence
 

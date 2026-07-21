@@ -225,9 +225,14 @@ product-owned module split, public TensorCore RNG/distribution use, exact
 config-owned role keys, and exact TensorCore `0.9.0` commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The accepted evidence is eager
 CPU-only because CUDA was unavailable. Stage 7 public readout orchestration is
-Design-complete / Undispatched under
-`docs/implementation/stage_7_public_readout_orchestration.md`; later
-integration production remains undispatched.
+Merged / Closed through exact Review-cleared implementation candidate
+`6dd55024685013fb9412a7247d3ddde7be1a3177` under
+`docs/implementation/stage_7_public_readout_orchestration.md`. It implements
+the public `simulate_readout(...)` surface, whole-request preparation,
+execute-once prerequisite planning, exact requested retention, and generated-
+product postconditions. Its accepted evidence is likewise eager CPU-only
+because CUDA was unavailable; later GPU characterization and integration
+production remain undispatched.
 
 If implementation reveals a concrete contradiction in the accepted design, stop
 and send the issue back to Design. Do not silently widen architecture, create
@@ -291,10 +296,11 @@ tensor_dslab/
       _produce.py
 ```
 
-This is the accepted Maintenance 2 ownership tree, not permission to create
-placeholders. The Maintenance 2 implementation realizes it without
-compatibility shims; closed Stage 5/6 work orders remain historical evidence
-for the former `types.py`, `_RngStream`, and `readout/_random.py` bytes. It pins
+This is the accepted product-centered ownership tree, not permission to create
+placeholders. Maintenance 2 realized the product/module ownership migration
+without compatibility shims, and Stage 7 completed `readout/simulation.py`;
+closed Stage 5/6 work orders remain historical evidence for the former
+`types.py`, `_RngStream`, and `readout/_random.py` bytes. Maintenance 2 pins
 TensorCore's published generic RNG and `require_same_dtype` surface at exact
 version `0.9.0` commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The migration is Merged / Closed
@@ -306,7 +312,7 @@ product validation, and private `_produce_*` builder. `Photoelectrons` remains
 the already-produced truth input and owns no producer. Private `_simulate_*`
 functions implement scientific submodels. `readout.config` contains only
 `ReadoutConfig`; `readout.collection` contains only `ReadoutCollection`;
-accepted but unimplemented Stage 7 `readout.simulation` will own the one public
+implemented Stage 7 `readout.simulation` owns the one public
 `simulate_readout(...)` orchestration function. Shared axes and sampling
 belong in `common`. Charge-specific multinomial/category orchestration,
 count-domain helpers, and scientific effects remain private.
@@ -556,9 +562,8 @@ typed product graph coherent enough that future consumers can depend on it
 without parsing raw `.fil`, table, array, manifest, or private representation
 details.
 
-The following is the accepted completed-rebuild simulation contract, not the
-Stage 3 implemented surface. The later public readout operation consumes an
-already-produced dense truth field:
+The following is the implemented Stage 7 completed-readout contract. The
+public readout operation consumes an already-produced dense truth field:
 
 ```text
 Photoelectrons
@@ -617,8 +622,7 @@ streams, invocation seeds, or campaign policy. Exact stochastic leaf configs
 may own immutable `RngKey` role identities. `products` controls only final
 in-memory retention. IO is deferred.
 
-When implemented, the initial builder is functional. It borrows
-`Photoelectrons` read-only,
+The initial builder is functional. It borrows `Photoelectrons` read-only,
 returns that exact field when requested, and creates guaranteed-fresh generated
 products. Generated products retained together are storage-independent. The
 builder does not mutate sources, silently move/cast/detach/host-materialize
