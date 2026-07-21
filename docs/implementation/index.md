@@ -361,8 +361,11 @@ production or test byte. This closeout authorizes no push.
 
 ### [Maintenance 3: Environment-Qualified Stochastic Continuity](maintenance_3_environment_qualified_stochastic_continuity.md)
 
-Status: **Design-complete / User-authorized / Undispatched** from exact clean starting `main`
-`e7207a0cafe9ff4d68253518aabc0e462173e69d`.
+Status: **Candidate / Validation pending** from exact committed Design
+authority `37cd6403b66107ccd24acd7bf1e50c63f0599313` while these exact bytes are
+absent from `main`. If they are present unchanged on `main`, Review's
+fast-forward is complete and the state is **Merged / Design acceptance
+pending** until this index and the work order record **Merged / Closed**.
 
 The first Stage 8 executable-input commit
 `728840bf2858c861104d5f7bb3cdbb4e3e1361b5` correctly stopped before any

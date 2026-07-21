@@ -1,6 +1,9 @@
 # Maintenance 3 Environment-Qualified Stochastic Continuity Work Order
 
-Status: **Design-complete / User-authorized / Undispatched**.
+Status: **Candidate / Validation pending** while these exact bytes are absent
+from `main`. If they are present unchanged on `main`, Review's fast-forward is
+complete and the state is **Merged / Design acceptance pending** until this
+work order and the implementation index record **Merged / Closed**.
 
 Stable work-order key:
 `TensorDSLab/maintenance-3-environment-qualified-stochastic-continuity`.
@@ -86,15 +89,19 @@ package_adoption_state:     Adopted
 conformance_finding:        Not evaluated
 coordination_status:        Deferred
 registry_storage_profile:   Disabled
-maintenance_3:              Design-complete / User-authorized / Undispatched
+maintenance_3:              topology-dependent lifecycle described below
 stage_8:                    Stopped / superseding authority required
 ```
 
-User authorization is not production dispatch. Maintenance 3 remains
-Undispatched until Design has committed this exact authority on the clean
-baseline, reverified the persistent package-owned Implementation, Validation,
-and Review routes as Active and return-capable for this work-order key, and
-sent an explicit dispatch naming the authority commit and branch.
+Design committed exact authority
+`37cd6403b66107ccd24acd7bf1e50c63f0599313` as the direct child of starting
+`main`, reverified the persistent package-owned Implementation, Validation,
+and Review routes, and explicitly dispatched the fixed Implementation branch.
+While this candidate is absent from `main`, its state is **Candidate /
+Validation pending** and neither later gate is implied. If Review
+fast-forwards these exact bytes to `main`, the state becomes **Merged / Design
+acceptance pending**; only the later two-document Design closeout may record
+**Merged / Closed**.
 
 The permitted execution-state vocabulary is:
 

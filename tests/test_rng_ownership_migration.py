@@ -4,7 +4,9 @@ from collections.abc import Callable
 from dataclasses import fields, replace
 import importlib.util
 from inspect import Parameter, signature
-from typing import ClassVar
+import platform
+import sys
+from typing import Any, ClassVar
 import unittest
 from unittest import mock
 
@@ -74,6 +76,17 @@ from tensor_dslab.readout.pure_waveform._produce import (
 
 _NAMESPACE = 0x54445331
 _SEED = 0x0123456789ABCDEF
+
+
+def _is_maintenance_2_reference_stack() -> bool:
+    return (
+        sys.version_info[:3] == (3, 13, 11)
+        and str(torch.__version__) == "2.12.1"
+        and torch.version.cuda is None
+        and platform.system() == "Darwin"
+        and platform.mac_ver()[0] == "15.7.4"
+        and platform.machine() == "arm64"
+    )
 
 
 def _hex_bits(values: torch.Tensor) -> tuple[str, ...]:
@@ -177,6 +190,179 @@ class _FailingRng(CounterRng):
 
 
 class RngOwnershipMigrationTest(unittest.TestCase):
+    def _replay_public_request(
+        self,
+        *,
+        method_name: str,
+        request: Callable[[CounterRng], torch.Tensor],
+        identity_arguments: dict[str, object],
+        value_arguments: dict[str, object],
+        assert_inputs_unchanged: Callable[[], None],
+    ) -> tuple[torch.Tensor, torch.Tensor]:
+        first_rng = Threefry4x32(seed=_SEED)
+        second_rng = Threefry4x32(seed=_SEED)
+        self.assertIsNot(first_rng, second_rng)
+        self.assertEqual(first_rng, second_rng)
+        self.assertIs(type(first_rng), Threefry4x32)
+        self.assertIs(type(second_rng), Threefry4x32)
+
+        original: Any = getattr(CounterRng, method_name)
+        returned: list[torch.Tensor] = []
+
+        def record_return(*args: object, **kwargs: object) -> torch.Tensor:
+            result: torch.Tensor = original(*args, **kwargs)
+            returned.append(result)
+            return result
+
+        with mock.patch.object(
+            CounterRng,
+            method_name,
+            autospec=True,
+            side_effect=record_return,
+        ) as distribution:
+            first = request(first_rng)
+            assert_inputs_unchanged()
+            second = request(second_rng)
+            assert_inputs_unchanged()
+
+        self.assertEqual(distribution.call_count, 2)
+        calls = distribution.call_args_list
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(len(returned), 2)
+        self.assertIs(first, returned[0])
+        self.assertIs(second, returned[1])
+        for call, expected_rng in zip(
+            calls,
+            (first_rng, second_rng),
+            strict=True,
+        ):
+            self.assertEqual(len(call.args), 1)
+            self.assertIs(call.args[0], expected_rng)
+            self.assertEqual(
+                set(call.kwargs),
+                set(identity_arguments) | set(value_arguments),
+            )
+            for name, expected in identity_arguments.items():
+                self.assertIs(call.kwargs[name], expected)
+            for name, expected in value_arguments.items():
+                self.assertEqual(call.kwargs[name], expected)
+
+        self.assertIsNot(first, second)
+        self.assertNotEqual(
+            first.untyped_storage().data_ptr(),
+            second.untyped_storage().data_ptr(),
+        )
+        self.assertTrue(torch.equal(first, second))
+        self.assertEqual(first.reshape(-1).tolist(), second.reshape(-1).tolist())
+        self.assertEqual(first_rng.seed, _SEED)
+        self.assertEqual(second_rng.seed, _SEED)
+        self.assertEqual(first_rng, second_rng)
+        return first, second
+
+    def _replay_completed_product(
+        self,
+        *,
+        prepared_name: str,
+        invoke: Callable[[CounterRng], NoiseWaveform | Charge],
+        source: Photoelectrons,
+        sampling: SamplingConfig,
+        config: NoiseWaveformConfig | ChargeConfig,
+        field_type: type[NoiseWaveform] | type[Charge],
+        floating_dtype: torch.dtype,
+    ) -> tuple[NoiseWaveform | Charge, NoiseWaveform | Charge]:
+        source_tensor = source.tensor
+        source_storage = source_tensor.untyped_storage().data_ptr()
+        source_values = source_tensor.clone()
+        source_axes = source.axes
+        sampling_repr = repr(sampling)
+        config_repr = repr(config)
+        first_rng = Threefry4x32(seed=_SEED)
+        second_rng = Threefry4x32(seed=_SEED)
+        self.assertIsNot(first_rng, second_rng)
+        self.assertEqual(first_rng, second_rng)
+
+        original: Any = globals()[prepared_name]
+        returned: list[NoiseWaveform | Charge] = []
+
+        def record_return(
+            *args: object,
+            **kwargs: object,
+        ) -> NoiseWaveform | Charge:
+            result: NoiseWaveform | Charge = original(*args, **kwargs)
+            returned.append(result)
+            return result
+
+        def assert_inputs_unchanged() -> None:
+            self.assertIs(source.tensor, source_tensor)
+            self.assertEqual(
+                source.tensor.untyped_storage().data_ptr(),
+                source_storage,
+            )
+            self.assertTrue(torch.equal(source.tensor, source_values))
+            self.assertIs(source.axes, source_axes)
+            self.assertEqual(repr(sampling), sampling_repr)
+            self.assertEqual(repr(config), config_repr)
+
+        with mock.patch(
+            f"{__name__}.{prepared_name}",
+            autospec=True,
+            side_effect=record_return,
+        ) as producer:
+            first = invoke(first_rng)
+            assert_inputs_unchanged()
+            second = invoke(second_rng)
+            assert_inputs_unchanged()
+
+        self.assertEqual(producer.call_count, 2)
+        calls = producer.call_args_list
+        self.assertEqual(len(calls), 2)
+        self.assertEqual(len(returned), 2)
+        self.assertIs(first, returned[0])
+        self.assertIs(second, returned[1])
+        self.assertIs(calls[0].args[0], source)
+        self.assertIs(calls[1].args[0], source)
+        self.assertIs(calls[0].kwargs["rng"], first_rng)
+        self.assertIs(calls[1].kwargs["rng"], second_rng)
+        self.assertIsNot(calls[0].kwargs["plan"], calls[1].kwargs["plan"])
+
+        self.assertIs(type(first), field_type)
+        self.assertIs(type(second), field_type)
+        self.assertIsNot(first, second)
+        self.assertIs(first.tensor.dtype, floating_dtype)
+        self.assertIs(second.tensor.dtype, floating_dtype)
+        self.assertEqual(tuple(first.tensor.shape), tuple(source.tensor.shape))
+        self.assertEqual(tuple(second.tensor.shape), tuple(source.tensor.shape))
+        self.assertEqual(first.tensor.device, source.tensor.device)
+        self.assertEqual(second.tensor.device, source.tensor.device)
+        self.assertIs(first.axes, source.axes)
+        self.assertIs(second.axes, source.axes)
+        self.assertIsNot(first.tensor, second.tensor)
+        self.assertNotEqual(
+            first.tensor.untyped_storage().data_ptr(),
+            second.tensor.untyped_storage().data_ptr(),
+        )
+        self.assertNotEqual(
+            first.tensor.untyped_storage().data_ptr(),
+            source_storage,
+        )
+        self.assertNotEqual(
+            second.tensor.untyped_storage().data_ptr(),
+            source_storage,
+        )
+        self.assertTrue(torch.equal(first.tensor, second.tensor))
+        self.assertEqual(
+            _hex_bits(first.tensor),
+            _hex_bits(second.tensor),
+        )
+        self.assertTrue(bool(torch.isfinite(first.tensor).all().item()))
+        self.assertTrue(bool(torch.isfinite(second.tensor).all().item()))
+        self.assertFalse(first.tensor.requires_grad)
+        self.assertFalse(second.tensor.requires_grad)
+        self.assertEqual(first_rng.seed, _SEED)
+        self.assertEqual(second_rng.seed, _SEED)
+        self.assertEqual(first_rng, second_rng)
+        return first, second
+
     def test_exact_config_owned_key_defaults_overrides_and_identity(self) -> None:
         fixed = FixedDelayConfig(delay_ns=NonnegativeFloat(0.0))
         direct = DirectCrosstalkConfig(
@@ -584,7 +770,6 @@ class RngOwnershipMigrationTest(unittest.TestCase):
                 )
 
     def test_public_tensorcore_distribution_continuity(self) -> None:
-        rng = Threefry4x32(seed=_SEED)
         positions = torch.tensor(
             [0, 1, 2, 4_294_967_299],
             dtype=torch.int64,
@@ -599,6 +784,46 @@ class RngOwnershipMigrationTest(unittest.TestCase):
                 ),
             )
         )
+        positions_snapshot = positions.clone()
+
+        def assert_positions_unchanged() -> None:
+            self.assertTrue(torch.equal(positions, positions_snapshot))
+
+        def assert_float_pair(
+            first: torch.Tensor,
+            second: torch.Tensor,
+            *,
+            dtype: torch.dtype,
+            shape: tuple[int, ...],
+        ) -> None:
+            for result in (first, second):
+                self.assertIs(type(result), torch.Tensor)
+                self.assertIs(result.dtype, dtype)
+                self.assertEqual(tuple(result.shape), shape)
+                self.assertEqual(result.device, torch.device("cpu"))
+                self.assertIs(result.layout, torch.strided)
+                self.assertTrue(result.is_contiguous())
+                self.assertFalse(result.requires_grad)
+                self.assertTrue(bool(torch.isfinite(result).all().item()))
+
+        def assert_count_pair(
+            first: torch.Tensor,
+            second: torch.Tensor,
+            *,
+            upper: torch.Tensor | int,
+        ) -> None:
+            for result in (first, second):
+                self.assertIs(type(result), torch.Tensor)
+                self.assertIs(result.dtype, torch.int64)
+                self.assertEqual(tuple(result.shape), tuple(positions.shape))
+                self.assertEqual(result.device, torch.device("cpu"))
+                self.assertIs(result.layout, torch.strided)
+                self.assertTrue(result.is_contiguous())
+                self.assertFalse(result.requires_grad)
+                self.assertTrue(bool(torch.all(result >= 0).item()))
+                self.assertTrue(bool(torch.all(result <= upper).item()))
+
+        reference_stack = _is_maintenance_2_reference_stack()
 
         key1 = RngKey(namespace=_NAMESPACE, stream=1)
         expected_uniform = {
@@ -618,16 +843,41 @@ class RngOwnershipMigrationTest(unittest.TestCase):
             ),
         }
         for (dtype, include_zero), expected in expected_uniform.items():
-            actual = rng.uniform(
-                key=key1,
-                positions=positions,
-                dtype=dtype,
-                quantum=0,
-                ordinal=0,
-                count=1,
-                include_zero=include_zero,
+            first, second = self._replay_public_request(
+                method_name="uniform",
+                request=lambda rng: rng.uniform(
+                    key=key1,
+                    positions=positions,
+                    dtype=dtype,
+                    quantum=0,
+                    ordinal=0,
+                    count=1,
+                    include_zero=include_zero,
+                ),
+                identity_arguments={
+                    "key": key1,
+                    "positions": positions,
+                    "dtype": dtype,
+                },
+                value_arguments={
+                    "quantum": 0,
+                    "ordinal": 0,
+                    "count": 1,
+                    "include_zero": include_zero,
+                },
+                assert_inputs_unchanged=assert_positions_unchanged,
             )
-            self.assertEqual(_hex_bits(actual), expected)
+            assert_float_pair(
+                first,
+                second,
+                dtype=dtype,
+                shape=tuple(positions.shape),
+            )
+            for actual in (first, second):
+                self.assertTrue(bool(torch.all(actual < 1.0).item()))
+                comparison = actual >= 0.0 if include_zero else actual > 0.0
+                self.assertTrue(bool(torch.all(comparison).item()))
+                self.assertEqual(_hex_bits(actual), expected)
 
         expected_gaussian = {
             torch.float32: (
@@ -639,17 +889,41 @@ class RngOwnershipMigrationTest(unittest.TestCase):
             ),
         }
         for dtype, expected in expected_gaussian.items():
-            actual = rng.gaussian(
-                mean=0.0,
-                standard_deviation=0.75,
-                key=key1,
-                positions=positions,
-                dtype=dtype,
-                quantum=0,
-                ordinal=0,
-                count=1,
+            first, second = self._replay_public_request(
+                method_name="gaussian",
+                request=lambda rng: rng.gaussian(
+                    mean=0.0,
+                    standard_deviation=0.75,
+                    key=key1,
+                    positions=positions,
+                    dtype=dtype,
+                    quantum=0,
+                    ordinal=0,
+                    count=1,
+                ),
+                identity_arguments={
+                    "key": key1,
+                    "positions": positions,
+                    "dtype": dtype,
+                },
+                value_arguments={
+                    "mean": 0.0,
+                    "standard_deviation": 0.75,
+                    "quantum": 0,
+                    "ordinal": 0,
+                    "count": 1,
+                },
+                assert_inputs_unchanged=assert_positions_unchanged,
             )
-            self.assertEqual(_hex_bits(actual), expected)
+            assert_float_pair(
+                first,
+                second,
+                dtype=dtype,
+                shape=tuple(positions.shape),
+            )
+            if reference_stack:
+                self.assertEqual(_hex_bits(first), expected)
+                self.assertEqual(_hex_bits(second), expected)
 
         key2 = RngKey(namespace=_NAMESPACE, stream=2)
         expected_pair = {
@@ -665,19 +939,49 @@ class RngOwnershipMigrationTest(unittest.TestCase):
             ),
         }
         for dtype, expected in expected_pair.items():
-            actual = rng.gaussian(
-                mean=0.0,
-                standard_deviation=1.0,
-                key=key2,
-                positions=positions,
-                dtype=dtype,
-                quantum=0,
-                ordinal=0,
-                count=2,
+            first, second = self._replay_public_request(
+                method_name="gaussian",
+                request=lambda rng: rng.gaussian(
+                    mean=0.0,
+                    standard_deviation=1.0,
+                    key=key2,
+                    positions=positions,
+                    dtype=dtype,
+                    quantum=0,
+                    ordinal=0,
+                    count=2,
+                ),
+                identity_arguments={
+                    "key": key2,
+                    "positions": positions,
+                    "dtype": dtype,
+                },
+                value_arguments={
+                    "mean": 0.0,
+                    "standard_deviation": 1.0,
+                    "quantum": 0,
+                    "ordinal": 0,
+                    "count": 2,
+                },
+                assert_inputs_unchanged=assert_positions_unchanged,
             )
-            self.assertEqual(_hex_bits(actual), expected)
+            assert_float_pair(
+                first,
+                second,
+                dtype=dtype,
+                shape=tuple(positions.shape) + (2,),
+            )
+            if reference_stack:
+                self.assertEqual(_hex_bits(first), expected)
+                self.assertEqual(_hex_bits(second), expected)
 
         means = torch.tensor([0.0, 0.75, 9.5, 25.0], dtype=torch.float64)
+        means_snapshot = means.clone()
+
+        def assert_poisson_inputs_unchanged() -> None:
+            assert_positions_unchanged()
+            self.assertTrue(torch.equal(means, means_snapshot))
+
         expected_poisson = {
             3: (0, 2, 12, 30),
             4: (0, 0, 8, 25),
@@ -686,27 +990,79 @@ class RngOwnershipMigrationTest(unittest.TestCase):
             7: (0, 4, 4, 26),
         }
         for stream, expected in expected_poisson.items():
-            actual = rng.poisson(
-                mean=means,
-                key=RngKey(namespace=_NAMESPACE, stream=stream),
-                positions=positions,
-                quantum=0,
+            key = RngKey(namespace=_NAMESPACE, stream=stream)
+            first, second = self._replay_public_request(
+                method_name="poisson",
+                request=lambda rng: rng.poisson(
+                    mean=means,
+                    key=key,
+                    positions=positions,
+                    quantum=0,
+                ),
+                identity_arguments={
+                    "mean": means,
+                    "key": key,
+                    "positions": positions,
+                },
+                value_arguments={"quantum": 0},
+                assert_inputs_unchanged=assert_poisson_inputs_unchanged,
             )
-            self.assertEqual(tuple(int(value) for value in actual), expected)
+            assert_count_pair(first, second, upper=(1 << 53) - 1)
+            if reference_stack:
+                self.assertEqual(
+                    tuple(int(value) for value in first),
+                    expected,
+                )
+                self.assertEqual(
+                    tuple(int(value) for value in second),
+                    expected,
+                )
 
         counts = torch.tensor([0, 3, 20, 100], dtype=torch.int64)
         success = torch.tensor([0.0, 0.25, 0.9, 0.2], dtype=torch.float64)
         failure = torch.tensor([0.0, 0.75, 0.1, 0.8], dtype=torch.float64)
+        counts_snapshot = counts.clone()
+        success_snapshot = success.clone()
+        failure_snapshot = failure.clone()
+
+        def assert_binomial_inputs_unchanged() -> None:
+            assert_positions_unchanged()
+            self.assertTrue(torch.equal(counts, counts_snapshot))
+            self.assertTrue(torch.equal(success, success_snapshot))
+            self.assertTrue(torch.equal(failure, failure_snapshot))
+
         for stream, expected in ((8, (0, 1, 19, 17)), (9, (0, 1, 16, 23))):
-            actual = rng.binomial(
-                counts=counts,
-                success_mass=success,
-                failure_mass=failure,
-                key=RngKey(namespace=_NAMESPACE, stream=stream),
-                positions=positions,
-                quantum=0,
+            key = RngKey(namespace=_NAMESPACE, stream=stream)
+            first, second = self._replay_public_request(
+                method_name="binomial",
+                request=lambda rng: rng.binomial(
+                    counts=counts,
+                    success_mass=success,
+                    failure_mass=failure,
+                    key=key,
+                    positions=positions,
+                    quantum=0,
+                ),
+                identity_arguments={
+                    "counts": counts,
+                    "success_mass": success,
+                    "failure_mass": failure,
+                    "key": key,
+                    "positions": positions,
+                },
+                value_arguments={"quantum": 0},
+                assert_inputs_unchanged=assert_binomial_inputs_unchanged,
             )
-            self.assertEqual(tuple(int(value) for value in actual), expected)
+            assert_count_pair(first, second, upper=counts)
+            if reference_stack:
+                self.assertEqual(
+                    tuple(int(value) for value in first),
+                    expected,
+                )
+                self.assertEqual(
+                    tuple(int(value) for value in second),
+                    expected,
+                )
 
         gaussian_means = (0.25, -1.0, 3.5, 0.0)
         gaussian_scales = (0.5, 0.25, 1.5, 2.0)
@@ -720,17 +1076,52 @@ class RngOwnershipMigrationTest(unittest.TestCase):
             ),
         }
         for dtype, expected in expected_stream10.items():
-            actual = rng.gaussian(
-                mean=torch.tensor(gaussian_means, dtype=dtype),
-                standard_deviation=torch.tensor(gaussian_scales, dtype=dtype),
-                key=RngKey(namespace=_NAMESPACE, stream=10),
-                positions=positions,
-                dtype=dtype,
-                quantum=0,
-                ordinal=0,
-                count=1,
+            represented_means = torch.tensor(gaussian_means, dtype=dtype)
+            represented_scales = torch.tensor(gaussian_scales, dtype=dtype)
+            means_before = represented_means.clone()
+            scales_before = represented_scales.clone()
+            key = RngKey(namespace=_NAMESPACE, stream=10)
+
+            def assert_gaussian_inputs_unchanged() -> None:
+                assert_positions_unchanged()
+                self.assertTrue(torch.equal(represented_means, means_before))
+                self.assertTrue(torch.equal(represented_scales, scales_before))
+
+            first, second = self._replay_public_request(
+                method_name="gaussian",
+                request=lambda rng: rng.gaussian(
+                    mean=represented_means,
+                    standard_deviation=represented_scales,
+                    key=key,
+                    positions=positions,
+                    dtype=dtype,
+                    quantum=0,
+                    ordinal=0,
+                    count=1,
+                ),
+                identity_arguments={
+                    "mean": represented_means,
+                    "standard_deviation": represented_scales,
+                    "key": key,
+                    "positions": positions,
+                    "dtype": dtype,
+                },
+                value_arguments={
+                    "quantum": 0,
+                    "ordinal": 0,
+                    "count": 1,
+                },
+                assert_inputs_unchanged=assert_gaussian_inputs_unchanged,
             )
-            self.assertEqual(_hex_bits(actual), expected)
+            assert_float_pair(
+                first,
+                second,
+                dtype=dtype,
+                shape=tuple(positions.shape),
+            )
+            if reference_stack:
+                self.assertEqual(_hex_bits(first), expected)
+                self.assertEqual(_hex_bits(second), expected)
 
     def test_public_tensorcore_zero_dimension_address_span(self) -> None:
         with self.assertRaisesRegex(
@@ -864,7 +1255,8 @@ class RngOwnershipMigrationTest(unittest.TestCase):
 
     def test_completed_noise_and_charge_eager_cpu_continuity(self) -> None:
         source = _source()
-        rng = Threefry4x32(seed=_SEED)
+        sampling = _sampling()
+        reference_stack = _is_maintenance_2_reference_stack()
         white_config = NoiseWaveformConfig(
             model=WhiteNoiseConfig(rms_mv=PositiveFloat(0.75))
         )
@@ -896,22 +1288,53 @@ class RngOwnershipMigrationTest(unittest.TestCase):
             ),
         }
         for dtype in (torch.float32, torch.float64):
-            white = _produce_noise_waveform(
-                source,
-                sampling=_sampling(),
+            first_white, second_white = self._replay_completed_product(
+                prepared_name="_produce_noise_waveform_prepared",
+                invoke=lambda rng: _produce_noise_waveform(
+                    source,
+                    sampling=sampling,
+                    config=white_config,
+                    rng=rng,
+                    floating_dtype=dtype,
+                ),
+                source=source,
+                sampling=sampling,
                 config=white_config,
-                rng=rng,
+                field_type=NoiseWaveform,
                 floating_dtype=dtype,
             )
-            psd = _produce_noise_waveform(
-                source,
-                sampling=_sampling(),
+            first_psd, second_psd = self._replay_completed_product(
+                prepared_name="_produce_noise_waveform_prepared",
+                invoke=lambda rng: _produce_noise_waveform(
+                    source,
+                    sampling=sampling,
+                    config=psd_config,
+                    rng=rng,
+                    floating_dtype=dtype,
+                ),
+                source=source,
+                sampling=sampling,
                 config=psd_config,
-                rng=rng,
+                field_type=NoiseWaveform,
                 floating_dtype=dtype,
             )
-            self.assertEqual(_hex_bits(white.tensor), expected_white[dtype])
-            self.assertEqual(_hex_bits(psd.tensor), expected_psd[dtype])
+            if reference_stack:
+                self.assertEqual(
+                    _hex_bits(first_white.tensor),
+                    expected_white[dtype],
+                )
+                self.assertEqual(
+                    _hex_bits(second_white.tensor),
+                    expected_white[dtype],
+                )
+                self.assertEqual(
+                    _hex_bits(first_psd.tensor),
+                    expected_psd[dtype],
+                )
+                self.assertEqual(
+                    _hex_bits(second_psd.tensor),
+                    expected_psd[dtype],
+                )
 
         charge_config = ChargeConfig(
             dark_count=DarkCountConfig(rate_hz=NonnegativeFloat(5.0e8)),
@@ -950,14 +1373,30 @@ class RngOwnershipMigrationTest(unittest.TestCase):
             ),
         }
         for dtype in (torch.float32, torch.float64):
-            charge = _produce_charge(
-                source,
-                sampling=_sampling(),
+            first_charge, second_charge = self._replay_completed_product(
+                prepared_name="_produce_charge_prepared",
+                invoke=lambda rng: _produce_charge(
+                    source,
+                    sampling=sampling,
+                    config=charge_config,
+                    rng=rng,
+                    floating_dtype=dtype,
+                ),
+                source=source,
+                sampling=sampling,
                 config=charge_config,
-                rng=rng,
+                field_type=Charge,
                 floating_dtype=dtype,
             )
-            self.assertEqual(_hex_bits(charge.tensor), expected_charge[dtype])
+            if reference_stack:
+                self.assertEqual(
+                    _hex_bits(first_charge.tensor),
+                    expected_charge[dtype],
+                )
+                self.assertEqual(
+                    _hex_bits(second_charge.tensor),
+                    expected_charge[dtype],
+                )
 
     def test_recording_hook_observes_config_key_and_retired_modules_are_absent(
         self,
