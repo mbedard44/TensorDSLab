@@ -678,6 +678,16 @@ class RuntimeActionOwnershipTest(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "axes and shape"):
             validate_charge(short_charge, source=source, runtime=runtime.charge)
 
+        wrong_axes_noise = NoiseWaveform(
+            tensor=torch.zeros(source.shape, dtype=torch.float32),
+            axes=other_axes,
+        )
+        with self.assertRaisesRegex(ValueError, "axes and shape"):
+            validate_noise_waveform(
+                wrong_axes_noise,
+                source=source,
+                runtime=runtime.noise_waveform,
+            )
         wrong_noise = NoiseWaveform(
             tensor=torch.zeros(source.shape, dtype=torch.float64),
             axes=source.axes,
@@ -729,6 +739,30 @@ class RuntimeActionOwnershipTest(unittest.TestCase):
             tensor=torch.zeros(source.shape, dtype=torch.float32),
             axes=source.axes,
         )
+        pure = PureWaveform(
+            tensor=torch.ones(source.shape, dtype=torch.float32),
+            axes=source.axes,
+        )
+        wrong_axes_analog = AnalogWaveform(
+            tensor=torch.zeros(source.shape, dtype=torch.float32),
+            axes=other_axes,
+        )
+        with self.assertRaisesRegex(ValueError, "prerequisite axes and shape"):
+            validate_analog_waveform(
+                wrong_axes_analog,
+                pure=pure,
+                noise=noise,
+            )
+        short_analog = AnalogWaveform(
+            tensor=torch.zeros((1, 1, 2), dtype=torch.float32),
+            axes=short_axes,
+        )
+        with self.assertRaisesRegex(ValueError, "prerequisite axes and shape"):
+            validate_analog_waveform(
+                short_analog,
+                pure=pure,
+                noise=noise,
+            )
         aliased_analog = AnalogWaveform(tensor=charge.tensor, axes=charge.axes)
         with self.assertRaisesRegex(ValueError, "fresh storage"):
             validate_analog_waveform(
@@ -854,6 +888,24 @@ class RuntimeActionOwnershipTest(unittest.TestCase):
         )
         with self.assertRaisesRegex(ValueError, "Charge device"):
             validate_pure_waveform(cpu_pure, source=cuda_charge)
+        cuda_pure = PureWaveform(
+            tensor=torch.zeros(source.shape, dtype=torch.float32, device="cuda"),
+            axes=source.axes,
+        )
+        cuda_noise = NoiseWaveform(
+            tensor=torch.zeros(source.shape, dtype=torch.float32, device="cuda"),
+            axes=source.axes,
+        )
+        cpu_analog = AnalogWaveform(
+            tensor=torch.zeros(source.shape, dtype=torch.float32),
+            axes=source.axes,
+        )
+        with self.assertRaisesRegex(ValueError, "same device"):
+            validate_analog_waveform(
+                cpu_analog,
+                pure=cuda_pure,
+                noise=cuda_noise,
+            )
         cuda_analog = AnalogWaveform(
             tensor=torch.zeros(source.shape, dtype=torch.float32, device="cuda"),
             axes=source.axes,
