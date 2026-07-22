@@ -232,15 +232,18 @@ the public `simulate_readout(...)` surface, whole-request preparation,
 execute-once prerequisite planning, exact requested retention, and generated-
 product postconditions. Its accepted evidence is likewise eager CPU-only
 because CUDA was unavailable. Maintenance 3 Environment-Qualified Stochastic
-Continuity is Design-complete / User-authorized / Undispatched under
+Continuity is Merged / Closed through exact Review-cleared candidate
+`dfe45c96f9cc141f91e29a6a3d81bd7a3e8a49f0` and its five-document Design
+closeout under
 `docs/implementation/maintenance_3_environment_qualified_stochastic_continuity.md`.
 It corrects only the applicability of Maintenance 2's exact macOS eager-CPU
 stochastic literals: fixed-point uniforms retain their accepted
 cross-implementation exact scope, recorded completed-value literals remain
-exact on their recorded stack, and other
-accepted stacks prove exact same-stack replay plus existing invariants and
-statistics. It changes no production, dependency, RNG, or scientific
-contract.
+exact on their recorded stack, and other accepted stacks prove exact
+same-stack replay plus existing invariants and statistics. Fixed-commit
+Validation and independent Review cleared the unchanged candidate on the
+recorded macOS stack and in separate full-A100 Della allocations. It changes
+no production, dependency, RNG, or scientific contract.
 
 The first Stage 8 real-CUDA attempt correctly stopped before any accepted
 measurement when its protected-suite gate over-applied those macOS literals to
@@ -248,7 +251,7 @@ the frozen Della Linux/x86_64 stack. Exact Stage 8 authority
 `84802c1f2c89a6a5deeec305ce7bb2cd9ad2e829` and executable input
 `728840bf2858c861104d5f7bb3cdbb4e3e1361b5` remain immutable stopped evidence
 and are not executable authority. Stage 8 requires a new Design authority from
-the merged Maintenance 3 baseline before any rerun. Later GPU
+the closed Maintenance 3 baseline before any rerun. Later GPU
 characterization and integration production remain undispatched.
 
 If implementation reveals a concrete contradiction in the accepted design, stop

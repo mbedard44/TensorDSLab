@@ -38,13 +38,15 @@ through Stage 6, and Maintenance 2 is Merged / Closed through exact candidate
 `89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
 `9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. Public readout orchestration is
 Merged / Closed through exact Review-cleared Stage 7 candidate
-`6dd55024685013fb9412a7247d3ddde7be1a3177`. Maintenance 3 is
-Design-complete / User-authorized / Undispatched to correct only the numerical-stack
-applicability of Maintenance 2's completed stochastic literals. The first
-Stage 8 executable correctly stopped before accepted measurement on that
-test-contract conflict; it cannot resume without a new authority from the
-merged Maintenance 3 baseline. Later GPU characterization and integration
-remain Design targets.
+`6dd55024685013fb9412a7247d3ddde7be1a3177`. Maintenance 3 is Merged / Closed
+through exact Review-cleared candidate
+`dfe45c96f9cc141f91e29a6a3d81bd7a3e8a49f0` and its five-document Design
+closeout. It corrects only the numerical-stack applicability of Maintenance
+2's completed stochastic literals and changes no production, dependency,
+RNG, or scientific contract. The first Stage 8 executable correctly stopped
+before accepted measurement on that test-contract conflict; it cannot resume
+without a new authority from the closed Maintenance 3 baseline. Later GPU
+characterization and integration remain Design targets.
 
 [Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
 Closed through exact implementation candidate
@@ -283,8 +285,8 @@ no retired producer name or compatibility shim remains.
   Merged / Closed TensorDSLab ownership migration against the selected exact
   TensorCore dependency.
 - [Maintenance 3 Work Order](implementation/maintenance_3_environment_qualified_stochastic_continuity.md):
-  Design-complete / User-authorized / Undispatched environment qualification for completed
-  stochastic continuity fixtures, with no production or scientific change.
+  Merged / Closed environment qualification for completed stochastic
+  continuity fixtures, with no production or scientific change.
 - [Stage 7 Work Order](implementation/stage_7_public_readout_orchestration.md):
   Merged / Closed public request planning, whole-closure
   preparation, execute-once orchestration, and exact-retention contract.

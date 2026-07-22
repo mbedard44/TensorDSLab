@@ -1,9 +1,9 @@
 # Maintenance 3 Environment-Qualified Stochastic Continuity Work Order
 
-Status: **Candidate / Validation pending** while these exact bytes are absent
-from `main`. If they are present unchanged on `main`, Review's fast-forward is
-complete and the state is **Merged / Design acceptance pending** until this
-work order and the implementation index record **Merged / Closed**.
+Status: **Merged / Closed** through exact Validation- and Review-cleared
+candidate `dfe45c96f9cc141f91e29a6a3d81bd7a3e8a49f0`, Review's clean
+fast-forward of those unchanged bytes, and the containing exact direct-child
+five-document Design closeout.
 
 Stable work-order key:
 `TensorDSLab/maintenance-3-environment-qualified-stochastic-continuity`.
@@ -89,7 +89,7 @@ package_adoption_state:     Adopted
 conformance_finding:        Not evaluated
 coordination_status:        Deferred
 registry_storage_profile:   Disabled
-maintenance_3:              topology-dependent lifecycle described below
+maintenance_3:              Merged / Closed
 stage_8:                    Stopped / superseding authority required
 ```
 
@@ -97,10 +97,11 @@ Design committed exact authority
 `37cd6403b66107ccd24acd7bf1e50c63f0599313` as the direct child of starting
 `main`, reverified the persistent package-owned Implementation, Validation,
 and Review routes, and explicitly dispatched the fixed Implementation branch.
-While this candidate is absent from `main`, its state is **Candidate /
-Validation pending** and neither later gate is implied. If Review
-fast-forwards these exact bytes to `main`, the state becomes **Merged / Design
-acceptance pending**; only the later two-document Design closeout may record
+Implementation produced exact candidate
+`dfe45c96f9cc141f91e29a6a3d81bd7a3e8a49f0` as its direct child. Validation
+and independent Review cleared that same immutable candidate, Review
+fast-forwarded clean `main` to it, and final Design accepted the evidence and
+performed the authorized five-document closeout. The final state is
 **Merged / Closed**.
 
 The permitted execution-state vocabulary is:
@@ -523,10 +524,13 @@ tests/test_rng_ownership_migration.py
 ```
 
 Design's eight architecture/workflow documents outside the work order and
-index are frozen after the authority commit. Implementation owns only the
-bounded test correction plus truthful lifecycle synchronization in the work
-order and index. If another path is required, stop and return to Design before
-editing it.
+index were frozen throughout Implementation, Validation, and Review.
+Implementation owned only the bounded test correction plus truthful lifecycle
+synchronization in the work order and index. Review correctly returned to
+Design when the original two-document closeout could not synchronize three of
+those frozen current-state records. Design's later explicit resolution kept
+the candidate immutable and expanded only final Design's post-merge closeout
+to the exact five paths recorded below.
 
 ## Protected Bytes And Exclusions
 
@@ -582,11 +586,23 @@ If Review returns a finding, Design must authorize its exact bounded scope;
 Implementation owns the correction, Validation clears the new fixed bytes, and
 read-only Review rechecks them. Review does not edit the candidate.
 
-Final Design performs an evidence-only closeout after the merge. That closeout
-must be an exact direct child of the Review-cleared merged candidate and may
-modify only the work order and implementation index. It changes no test,
-production, dependency, metadata, governance, or other documentation byte and
-records exact parent, name-status, diff, evidence, final state, and no-effects.
+Final Design performs an evidence-only closeout after the merge. Design's
+explicit post-finding resolution superseded only the original two-document
+closeout limit. The closeout must be the exact direct child of the
+Review-cleared merged candidate and may modify exactly:
+
+```text
+M  AGENTS.md
+M  docs/implementation/index.md
+M  docs/implementation/maintenance_3_environment_qualified_stochastic_continuity.md
+M  docs/overview.md
+M  docs/validation.md
+```
+
+It changes no test, production, dependency, metadata, governance,
+architecture, parity, decision, closed-work-order, or other documentation byte
+and records exact parent, name-status, diff, evidence, final state, and
+no-effects.
 
 No Stage 8 measurement or new Stage 8 executable candidate may run in parallel
 with this maintenance.
@@ -639,3 +655,79 @@ again from scratch; the stopped run contributes only diagnostic evidence.
 The separately authorized restart receives a fresh finite role-loop budget
 because the stopped attempt never reached Validation. Maintenance 3 Della
 passes remain Maintenance 3 evidence only and do not count as Stage 8 results.
+
+## Final Evidence And Design Closeout
+
+The accepted topology is exact and linear:
+
+```text
+starting main:     e7207a0cafe9ff4d68253518aabc0e462173e69d
+Design authority:  37cd6403b66107ccd24acd7bf1e50c63f0599313
+fixed candidate:   dfe45c96f9cc141f91e29a6a3d81bd7a3e8a49f0
+candidate tree:    2269eb6b95460a6c7ad0aea6c181cd3ed4af9b52
+```
+
+The candidate is the exact direct child of the Design authority. Relative to
+that authority it modifies only the work order, implementation index, and
+`tests/test_rng_ownership_migration.py`; the cumulative starting-main set is
+the frozen eleven-path allowlist above. The selected dependency remained exact
+TensorCore `0.9.0` commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, parent
+`0e72f0e69cf9140b692d408e49a504cbdcb101b7`, tree
+`1012acf512933f4077fd63267d95fc97f9ee8842`, and canonical archive SHA-256
+`f793ef3645ab44175e445feb94444a90e01ccc34d01fc467db36bd81ad0606bd`.
+
+Implementation's final allocated Della run passed every normative runtime,
+environment, inventory, source/archive, mutation, and cleanliness gate before
+a later private summary invocation failed administratively. Design preserved
+that failed wrapper status and accepted only the immutable underlying evidence;
+no absent in-job summary was treated as a passing gate. Fixed-commit Validation
+then independently cleared the candidate locally and in a separate full-A100
+Della allocation. On the recorded macOS stack it passed focused source/archive
+at `9/9/0`, complete source/archive at
+`188 run / 176 passed / 12 conditional CUDA skips`, and Pyright with zero
+diagnostics. On Della it passed four fresh-process focused runs at `9/9/0` and
+complete source/archive at `188/188/0`, with the required branch and mutation
+proofs and unchanged frozen inventories.
+
+Independent Review first returned one Design-owned lifecycle-scope finding:
+the original two-document closeout could not synchronize three frozen
+current-state records. Design kept the candidate immutable and explicitly
+expanded only the post-merge closeout to the five paths listed above. Review
+then independently reconstructed both dependency forms, repeated the macOS
+focused, complete, typing, mutation, import, scope, privacy, and hygiene gates,
+and completed a separate full-A100 Della allocation with four focused
+`9/9/0` runs and complete source/archive `188/188/0` results. Review
+fast-forwarded clean `main` from the exact starting commit to the unchanged
+candidate and repeated the applicable local gates successfully after merge.
+The finite loop ended at Implementation-to-Validation `1/3` and
+Validation-to-Implementation `0/3`.
+
+Review's successful Della harness verified the exact runtime, device, package
+inventories, candidate, dependency, and results. It did not separately print
+or assert the redundant descriptive RHEL 9.8, CUDA-compatibility 13.3, and
+cuFFT 11.3.0.4 label strings; the frozen package inventories still bound the
+relevant CUDA libraries. A duplicate job queued only to print those labels was
+canceled before allocation and contributes no evidence. No raw scheduler or
+private route identifier is durable package data.
+
+Final Design independently accepted the merged topology, exact dependency,
+candidate scope, unchanged historical literals, environment-selected branch
+semantics, source/archive results, mutation evidence, qualifications, and
+Review's no-effects report. This containing commit is the exact direct-child
+closeout authority and is identified externally by `HEAD` after creation. Its
+name-status relative to the candidate is exactly:
+
+```text
+M  AGENTS.md
+M  docs/implementation/index.md
+M  docs/implementation/maintenance_3_environment_qualified_stochastic_continuity.md
+M  docs/overview.md
+M  docs/validation.md
+```
+
+The closeout changes no production, test, dependency, metadata, governance,
+architecture, parity, decision, or closed-work-order byte. Maintenance 3 is
+therefore **Merged / Closed**. No push occurred. This closeout authorizes no
+Stage 8 execution, benchmark, profiler, compatibility, deployment,
+conformance, integration, or production claim.

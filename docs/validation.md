@@ -136,17 +136,18 @@ The accepted Maintenance 2 evidence proves:
   `Charge` default-key continuity on the exact recorded numerical-stack
   evidence boundary.
 
-## Maintenance 3 Environment-Qualified Continuity
+## Closed Maintenance 3 Environment-Qualified Continuity
 
 The focused
 [Maintenance 3 work order](implementation/maintenance_3_environment_qualified_stochastic_continuity.md)
-is Design-complete / User-authorized / Undispatched. It corrects a test-applicability defect
-exposed before any accepted Stage 8 measurement: Maintenance 2's completed
-stochastic hexadecimal literals are exact evidence for their recorded macOS
-15.7.4 arm64, Python 3.13.11, PyTorch 2.12.1 eager-CPU stack, not a portable
-CPU bitwise contract.
+is Merged / Closed through exact Review-cleared candidate
+`dfe45c96f9cc141f91e29a6a3d81bd7a3e8a49f0` and its five-document Design
+closeout. It corrects a test-applicability defect exposed before any accepted
+Stage 8 measurement: Maintenance 2's completed stochastic hexadecimal
+literals are exact evidence for their recorded macOS 15.7.4 arm64, Python
+3.13.11, PyTorch 2.12.1 eager-CPU stack, not a portable CPU bitwise contract.
 
-Validation has three distinct obligations:
+The closed contract has three distinct validation obligations:
 
 1. Threefry raw words and fixed-point uniforms retain their separately
    documented exact scope. TensorDSLab exercises only public TensorCore
@@ -165,6 +166,24 @@ execution mode, dtype, and relevant math settings. Validation must not turn an
 observed platform difference into a ULP tolerance or alternate golden table,
 nor skip or xfail the fixture. Maintenance 3 changes no production,
 dependency, RNG, or scientific byte.
+
+Fixed-commit Validation and independent Review cleared the exact candidate
+against freshly reconstructed TensorCore `0.9.0` source and canonical archive
+forms. On the recorded macOS stack, each role passed the focused source and
+archive module at `9/9/0`, the complete source and archive suites at
+`188 run / 176 passed / 12 conditional CUDA skips`, and Pyright with zero
+diagnostics. In separate full-A100 Della allocations, each role passed four
+fresh-process focused runs at `9/9/0` and the complete source and archive
+suites at `188/188/0`; the required replay/literal-branch mutants were
+rejected and the frozen environment inventories remained unchanged.
+
+Review's successful Della harness bound the exact frozen CUDA-library package
+inventories but did not separately print or assert three redundant descriptive
+labels for RHEL, CUDA compatibility, and cuFFT. A duplicate job queued only to
+add those literal prints was canceled before allocation and contributes no
+evidence. This qualification does not weaken the executed runtime, device,
+inventory, source/archive, mutation, or result gates. Maintenance 3 evidence
+does not count as Stage 8 evidence or authorize a Stage 8 restart.
 
 ## Closed Stage 7 Public-Orchestration Evidence
 

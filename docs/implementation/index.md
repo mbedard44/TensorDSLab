@@ -361,11 +361,11 @@ production or test byte. This closeout authorizes no push.
 
 ### [Maintenance 3: Environment-Qualified Stochastic Continuity](maintenance_3_environment_qualified_stochastic_continuity.md)
 
-Status: **Candidate / Validation pending** from exact committed Design
-authority `37cd6403b66107ccd24acd7bf1e50c63f0599313` while these exact bytes are
-absent from `main`. If they are present unchanged on `main`, Review's
-fast-forward is complete and the state is **Merged / Design acceptance
-pending** until this index and the work order record **Merged / Closed**.
+Status: **Merged / Closed** from exact committed Design authority
+`37cd6403b66107ccd24acd7bf1e50c63f0599313` through exact Validation- and
+Review-cleared candidate `dfe45c96f9cc141f91e29a6a3d81bd7a3e8a49f0`,
+Review's clean fast-forward of those unchanged bytes, and the exact
+direct-child five-document Design closeout.
 
 The first Stage 8 executable-input commit
 `728840bf2858c861104d5f7bb3cdbb4e3e1361b5` correctly stopped before any
@@ -389,10 +389,18 @@ invariants and statistical contracts. It adds no ULP tolerance, Della-specific
 golden, skip, expected failure, production change, TensorCore change, or
 scientific change.
 
-After fixed-commit Validation, independent Review, clean fast-forward, and
-final Design closeout, Stage 8 still requires a new Design authority from the
-merged Maintenance 3 baseline and a complete evidence rerun from scratch.
-Maintenance 3 does not itself dispatch or complete Stage 8.
+Fixed-commit Validation and independent Review cleared the same candidate.
+Their recorded macOS source/archive suites passed with the expected twelve
+conditional CUDA skips, and their separate full-A100 Della allocations passed
+the complete source and archive suites at `188/188/0`. Review then
+fast-forwarded clean `main` to the unchanged candidate. Final Design accepted
+the evidence and synchronized the five authorized lifecycle documents without
+changing production, tests, dependencies, metadata, governance, architecture,
+or scientific contracts.
+
+Stage 8 still requires a new Design authority from this closed Maintenance 3
+baseline and a complete evidence rerun from scratch. Maintenance 3 does not
+itself dispatch or complete Stage 8.
 
 ### Later Integration And Artifact Stages
 
