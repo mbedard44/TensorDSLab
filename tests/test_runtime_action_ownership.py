@@ -814,7 +814,10 @@ class RuntimeActionOwnershipTest(unittest.TestCase):
             floating_dtype=torch.float32,
         )
         self.assertTrue(
-            all(field.tensor.device.type == "cuda" for field in result.fields)
+            all(
+                field.tensor.device.type == "cuda"
+                for field in result.fields.values()
+            )
         )
         _, runtime = prepare_readout(
             source,
