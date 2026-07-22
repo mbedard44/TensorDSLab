@@ -245,15 +245,17 @@ Validation and independent Review cleared the unchanged candidate on the
 recorded macOS stack and in separate full-A100 Della allocations. It changes
 no production, dependency, RNG, or scientific contract.
 
-Maintenance 4 Runtime Action Ownership is **Design-complete /
-User-authorized / Undispatched** under
-`docs/implementation/maintenance_4_runtime_action_ownership.md`. Its accepted
-behavior-preserving target replaces product-local `_produce.py` bundles and
-`*Plan` records with non-exported product `runtime/` packages, concrete
-`*Runtime` records, and explicit `prepare_*`, `produce_*`, and `validate_*`
-actions. It changes no public facade, scientific equation, stochastic address,
-result law, dependency, or supported device boundary. No Maintenance 4
-production work has begun.
+Maintenance 4 Runtime Action Ownership is **Merged / Closed** through exact
+Review-cleared supplemental candidate
+`b3c7c907004741ba67b8b92a54bbdc8c85216dda` under
+`docs/implementation/maintenance_4_runtime_action_ownership.md`. It replaces
+product-local `_produce.py` bundles and `*Plan` records with non-exported
+product `runtime/` packages, concrete `*Runtime` records, and explicit
+`prepare_*`, `produce_*`, and `validate_*` actions. Fixed-commit Validation and
+independent Review cleared the exact final bytes locally and in separate fresh
+full-A100 source/archive allocations. It changes no public facade, scientific
+equation, stochastic address, result law, dependency, or supported device
+boundary, and it makes no performance or Stage 8 claim.
 
 The first Stage 8 real-CUDA attempt correctly stopped before any accepted
 measurement when its protected-suite gate over-applied those macOS literals to
@@ -261,7 +263,7 @@ the frozen Della Linux/x86_64 stack. Exact Stage 8 authority
 `84802c1f2c89a6a5deeec305ce7bb2cd9ad2e829` and executable input
 `728840bf2858c861104d5f7bb3cdbb4e3e1361b5` remain immutable stopped evidence
 and are not executable authority. Stage 8 requires a new Design authority from
-the closed Maintenance 3 baseline before any rerun. Later GPU
+the closed Maintenance 4 baseline before any rerun. Later GPU
 characterization and integration production remain undispatched.
 
 If implementation reveals a concrete contradiction in the accepted design, stop
@@ -283,7 +285,8 @@ The checkout root is the project folder. The `tensor_dslab/` directory is the
 Python import package. Do not create a
 flat TitleCase Python package that imports as `TensorDSLab`.
 
-The accepted Maintenance 4 target uses this product-centered readout tree:
+The merged Maintenance 4 implementation uses this product-centered readout
+tree:
 
 ```text
 tensor_dslab/
@@ -334,12 +337,12 @@ tensor_dslab/
       runtime/{prepare.py,produce.py,validate.py}
 ```
 
-This is an accepted target, not permission to create placeholders before
-Maintenance 4 dispatch. Maintenance 2 realized the current product/module
-ownership migration without compatibility shims, and Stage 7 completed
+This is implemented production structure, not permission to create additional
+placeholders. Maintenance 2 realized the preceding product/module ownership
+migration without compatibility shims, and Stage 7 completed
 `readout/simulation.py`; their private `_produce.py`, `*Plan`,
-`_requirements.py`, and `charge/effects/` paths remain exact historical and
-starting-baseline facts. Maintenance 2 pins TensorCore's published generic RNG
+`_requirements.py`, and `charge/effects/` paths remain exact historical facts.
+Maintenance 2 pins TensorCore's published generic RNG
 and `require_same_dtype` surface at exact version `0.9.0` commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The migration is Merged / Closed
 at the exact candidate and Design closeout recorded above.
@@ -387,9 +390,9 @@ TensorDSLab must not retain or rename `_random.py`.
 Stage 6 behavior-neutrally renamed all four transitional waveform modules,
 callables, imports, and tests from `_product.py` / `_product_*` to
 `_produce.py` / `_produce_*`. Those paths remain exact closed Stage 6/7 and
-Maintenance 2 evidence. Maintenance 4 supersedes them only for the accepted
-live target, without restoring `_product.py`, adding an alias, or providing a
-compatibility shim for either private convention.
+Maintenance 2 evidence. Maintenance 4 supersedes them in the merged live tree,
+without restoring `_product.py`, adding an alias, or providing a compatibility
+shim for either private convention.
 
 Merged Stage 6 implements the aggregate multinomial and hybrid Poisson
 contracts selected in `docs/architecture/rebuild.md`. The five Poisson roles,
@@ -414,12 +417,14 @@ and implemented eager-reference behavior through exact Stage 6 candidate
 accepted evidence makes no GPU execution or cross-backend claim.
 
 That enum/module arrangement is retained only as closed Stage 5/6 evidence.
-The closed Maintenance 2 implementation preserves the same default addresses as exact
+The closed Maintenance 2 implementation preserves the same default addresses
+as exact
 config-owned TensorCore `RngKey` values, uses TensorCore for generic RNG and
 count-distribution mechanics, keeps Charge multinomial orchestration and count
 bookkeeping in `readout/charge/effects/_counts.py`, and removes `_RngStream`,
 `readout/_random.py`, and any replacement `_rng.py` without shims.
-The accepted Maintenance 4 target moves that Charge-owned behavior intact to
+The merged Maintenance 4 implementation moves that Charge-owned behavior
+intact to
 `readout/charge/runtime/effects/counts.py`; it does not change the historical
 Maintenance 2 record or any RNG behavior.
 
@@ -654,8 +659,8 @@ analog waveform consumed by digitization.
 classes. It consumes the iterable once, rejects duplicates and unknown classes,
 computes the transitive prerequisite closure, and completes one private typed
 Runtime for every required product before any RNG request, production call, or
-semantic-output write. The accepted Maintenance 4 target prepares one shared
-`SamplingRuntime` and composes the optional product Runtime values in one
+semantic-output write. The merged Maintenance 4 implementation prepares one
+shared `SamplingRuntime` and composes the optional product Runtime values in one
 `ReadoutRuntime`; Runtime presence is the execution signal rather than a
 duplicated set of `need_*` flags. It then executes each producer at most once
 and retains exactly the requested fields. Product preparers own their

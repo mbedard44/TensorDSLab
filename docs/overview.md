@@ -45,17 +45,18 @@ closeout. It corrects only the numerical-stack applicability of Maintenance
 2's completed stochastic literals and changes no production, dependency,
 RNG, or scientific contract. The first Stage 8 executable correctly stopped
 before accepted measurement on that test-contract conflict; it cannot resume
-without a new authority from the closed Maintenance 3 baseline. Later GPU
+without a new authority from the closed Maintenance 4 baseline. Later GPU
 characterization and integration remain Design targets.
 
 [Maintenance 4](implementation/maintenance_4_runtime_action_ownership.md) is
-**Design-complete / User-authorized / Undispatched**. It selects a
+**Merged / Closed** through exact Review-cleared supplemental candidate
+`b3c7c907004741ba67b8b92a54bbdc8c85216dda`. It implements a
 behavior-preserving internal action split—complete request preparation,
 product Runtime construction, tensor production, and immediate product
 validation—without changing `simulate_readout(...)`, scientific behavior,
-RNG addressing, TensorCore `0.9.0`, or the supported device boundary. Its
-target tree and contracts below are accepted Design, not yet production
-evidence.
+RNG addressing, TensorCore `0.9.0`, or the supported device boundary. Exact
+local source/archive evidence and separate fresh Validation and Review
+full-A100 source/archive allocations cleared the final bytes.
 
 [Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
 Closed through exact implementation candidate
@@ -287,8 +288,8 @@ physical file visibility does not expand the collaborator-facing API.
 
 Maintenance 2 realized the product-centered public ownership and Stage 7
 completed `readout/simulation.py` and the public orchestration surface.
-Maintenance 4 is the undispatched internal ownership refactor that realizes
-the Runtime/action tree above.
+Maintenance 4 is the merged internal ownership refactor that realizes the
+Runtime/action tree above.
 TensorCore RNG/distribution/same-dtype acceptance, publication, and the exact
 TensorDSLab dependency pin are complete at `0.9.0` commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The implementation preserves
@@ -298,7 +299,7 @@ historical evidence. Maintenance 2 and Stage 7 are Merged / Closed.
 
 Historically, Stage 6 behavior-neutrally renamed the four Stage 4/5 waveform
 families from `_product.py` / `_product_*` to `_produce.py` / `_produce_*`.
-Maintenance 4 deliberately supersedes those live private bundles with
+Maintenance 4 deliberately supersedes those former private bundles with
 product-owned `runtime/prepare.py`, `runtime/produce.py`, and
 `runtime/validate.py`, again without compatibility shims. Closed work orders
 retain their original private paths as historical evidence.
@@ -334,9 +335,10 @@ retain their original private paths as historical evidence.
   Merged / Closed environment qualification for completed stochastic
   continuity fixtures, with no production or scientific change.
 - [Maintenance 4 Work Order](implementation/maintenance_4_runtime_action_ownership.md):
-  Design-complete / User-authorized / Undispatched internal Runtime/action
-  ownership refactor; public API, science, dependency, and RNG behavior remain
-  unchanged.
+  Merged / Closed internal Runtime/action ownership refactor through exact
+  Review-cleared supplemental candidate
+  `b3c7c907004741ba67b8b92a54bbdc8c85216dda`; public API, science,
+  dependency, and RNG behavior remain unchanged.
 - [Stage 7 Work Order](implementation/stage_7_public_readout_orchestration.md):
   Merged / Closed public request planning, whole-closure
   preparation, execute-once orchestration, and exact-retention contract.

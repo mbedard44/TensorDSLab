@@ -17,14 +17,13 @@ The current identity and maturity are:
 
 ```text
 Project/display name: TensorDSLab
-Python import: tensor_dslab (accepted on main through Maintenance 3;
-unchanged by the Maintenance 4 target)
+Python import: tensor_dslab (accepted on main through Maintenance 4)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
-Package maturity: Maintenance 3 Merged / Closed; Maintenance 4
-Design-complete / User-authorized / Undispatched
-Next production gate: Maintenance 4 exact-authority dispatch; Stage 8 remains
-stopped and requires a superseding Design authority
+Package maturity: Maintenance 4 Merged / Closed
+Next production gate: separately authorized future work; Stage 8 remains
+stopped and requires a new Design authority from the closed Maintenance 4
+baseline
 ```
 
 Stage 1 is Design-complete, and Stage 2 is Merged / Closed on `main` at
@@ -84,13 +83,14 @@ through exact Review-cleared candidate
 `dfe45c96f9cc141f91e29a6a3d81bd7a3e8a49f0` and its five-document Design
 closeout. It qualifies completed stochastic literals by numerical stack and
 changes no production, dependency, RNG, or scientific contract. Maintenance 4
-Runtime Action Ownership is **Design-complete / User-authorized /
-Undispatched** under
-`docs/implementation/maintenance_4_runtime_action_ownership.md`. Its accepted
-target is an internal behavior-preserving split into product-owned Runtime,
-prepare, produce, and validate actions; it adds no public surface and has not
-begun production implementation. The first Stage 8 attempt remains stopped
-evidence and is not executable authority.
+Runtime Action Ownership is **Merged / Closed** through exact Review-cleared
+supplemental candidate `b3c7c907004741ba67b8b92a54bbdc8c85216dda` under
+`docs/implementation/maintenance_4_runtime_action_ownership.md`. It implements
+the internal behavior-preserving split into product-owned Runtime, prepare,
+produce, and validate actions without adding a public surface. Separate fresh
+Validation and Review full-A100 source/archive runs cleared the exact final
+bytes. The first Stage 8 attempt remains stopped evidence and is not executable
+authority.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency
@@ -281,11 +281,10 @@ as `TensorDSLab`; keep semantic subpackages directly below the import root.
 Do not create placeholder modules to reserve architecture. Add a module only
 when there is a real concept, behavior, or contract to house.
 
-This product-centered tree is the accepted Maintenance 4 target. It combines
+This product-centered tree is the merged Maintenance 4 implementation. It
+combines
 the public ownership established by Maintenance 2 and Stage 7 with
-non-exported product runtime actions; Maintenance 4 remains Design-complete /
-User-authorized / Undispatched, so the current production tree stays at its
-exact Maintenance 3 baseline until dispatch. Maintenance 2 is Merged / Closed
+non-exported product runtime actions. Maintenance 2 is Merged / Closed
 through exact candidate
 `89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
 `9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`; it realizes the product/module
@@ -497,17 +496,17 @@ dumping grounds, or a generic Runtime/Action framework.
 `readout/config.py` contains exactly `ReadoutConfig`, and
 `readout/collection.py` contains exactly `ReadoutCollection`. Implemented
 Stage 7 `readout/simulation.py` continues to own public
-`simulate_readout(...)`; in the accepted Maintenance 4 target it becomes a
+`simulate_readout(...)`; in the merged Maintenance 4 implementation it is a
 thin owner of the public signature, topological produce/validate sequence,
 exact retention, and final collection construction.
 `readout/runtime/prepare.py` owns request parsing, dependency and config
 closure, key uniqueness, and composition of product Runtime values.
 `readout/runtime/sampling.py` is a small private dependency leaf shared by
 request and product preparation. `readout/requirements.py` and every product
-runtime/effect module are non-exported implementation modules. The accepted
-target has no `readout/_random.py` or replacement `_rng.py`; generic RNG
-mechanics come from TensorCore. `common/axes.py` and `common/sampling.py` retain
-only shared semantic axis and sampling contracts.
+runtime/effect module are non-exported implementation modules. The current
+implementation has no `readout/_random.py` or replacement `_rng.py`; generic
+RNG mechanics come from TensorCore. `common/axes.py` and `common/sampling.py`
+retain only shared semantic axis and sampling contracts.
 
 Keep import direction acyclic: TensorCore, common, shared readout requirements,
 product configs/fields, the private source-bound sampling runtime, product
@@ -523,7 +522,7 @@ importable Python modules but are unsupported and carry no compatibility
 promise; runtime `__init__.py` files export nothing. Cross-module runtime names
 therefore omit leading underscores, while TensorCore's semantic-leaf
 `_require()` hook and genuinely module-local helpers retain them. Never create
-placeholder modules merely to reserve the accepted target tree.
+placeholder modules merely to reserve a future tree.
 
 ## Target Domain Simulation Surface
 
@@ -580,9 +579,9 @@ them; digitization applies its ADC transfer. Runtime paths are not public APIs
 and may trust preconditions established by the public boundary.
 
 Stage 6's `_produce.py` / `_produce_*` convention remains exact historical
-evidence. The accepted Maintenance 4 target removes those private paths
+evidence. The merged Maintenance 4 implementation removed those private paths
 without an alias, compatibility shim, or restoration of the earlier
-`_product.py` / `_product_*` names once implemented.
+`_product.py` / `_product_*` names.
 
 The builder does not load sources, perform IO, move or normalize existing
 inputs, persist products, or own DAG scheduling. A producer's declared fresh

@@ -87,17 +87,18 @@ qualifies completed stochastic literals by numerical stack and changes no
 production, dependency, RNG, or scientific contract.
 
 [Maintenance 4 Runtime Action Ownership](docs/implementation/maintenance_4_runtime_action_ownership.md)
-is **Design-complete / User-authorized / Undispatched**. Its accepted
-behavior-preserving target reorganizes each generated product behind a
-non-exported `runtime/` package with explicit `prepare_*`, `produce_*`, and
-`validate_*` actions and concrete prepared `*Runtime` records. Whole-request
+is **Merged / Closed** through exact Review-cleared supplemental candidate
+`b3c7c907004741ba67b8b92a54bbdc8c85216dda`. It reorganizes each generated
+product behind a non-exported `runtime/` package with explicit `prepare_*`,
+`produce_*`, and `validate_*` actions and concrete prepared `*Runtime` records.
+Whole-request
 preparation remains before RNG or product execution, and
-`simulate_readout(...)` will continue to run `produce -> validate ->
+`simulate_readout(...)` continues to run `produce -> validate ->
 descendant` before constructing the final collection. Runtime modules remain
 ordinary importable Python implementation details, but no runtime name is a
-facade export or carries a compatibility promise. Maintenance 4 has not begun
-production implementation and changes no public API, product meaning,
-scientific equation, stochastic address, result law, dependency, or supported
+facade export or carries a compatibility promise. Maintenance 4 changes no
+public API, product meaning, scientific equation, stochastic address, result
+law, dependency, or supported
 device boundary.
 
 The historical [TensorCore consumer proposal](docs/implementation/proposed_tensorcore_counter_rng_and_distributions.md)

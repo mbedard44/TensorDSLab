@@ -398,22 +398,24 @@ the evidence and synchronized the five authorized lifecycle documents without
 changing production, tests, dependencies, metadata, governance, architecture,
 or scientific contracts.
 
-Stage 8 still requires a new Design authority from this closed Maintenance 3
-baseline and a complete evidence rerun from scratch. Maintenance 3 does not
-itself dispatch or complete Stage 8.
+Stage 8 still requires a new Design authority and a complete evidence rerun
+from scratch. Following Maintenance 4 closure below, any restart must begin
+from the closed Maintenance 4 baseline; Maintenance 3 did not itself dispatch
+or complete Stage 8.
 
 ## Maintenance 4 Production Work Order
 
 ### [Maintenance 4: Runtime Action Ownership](maintenance_4_runtime_action_ownership.md)
 
-Status: **Implementation candidate / Validation pending at issuance**. While
-the candidate bytes are absent from `main`, their exact current gate
-disposition is carried by the fixed-commit role handoff. If they later appear
-unchanged on `main`, Review's clean fast-forward has completed and final
-Design acceptance remains pending until this index and the work order record
-**Merged / Closed**.
+Status: **Merged / Closed** through exact Review-cleared supplemental candidate
+`b3c7c907004741ba67b8b92a54bbdc8c85216dda`, tree
+`2d35a0e926b912f3fa846da97726e4e2490c4cc3`. Review fast-forwarded clean
+`main` from `5fdd3fafe2c44357b09df2a04b88cb121f2d3638` to the exact
+candidate without a merge commit. Final Design accepted the merged bytes and
+synchronized the living documentation in a documentation-only direct child.
+No push occurred.
 
-Maintenance 4 is a focused, behavior-preserving internal refactor from exact
+Maintenance 4 is the completed behavior-preserving internal refactor from exact
 clean package baseline `5fdd3fafe2c44357b09df2a04b88cb121f2d3638` while
 retaining exact TensorCore `0.9.0` commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. It introduces non-exported
@@ -424,23 +426,38 @@ effects below `charge/runtime/effects/`, and makes
 `readout.simulation.simulate_readout(...)` a thin
 `prepare -> produce -> validate -> descendant -> retain` orchestrator.
 
+The bounded candidate chain from Design authority
+`36b9cd8338a0a5dad7e6c005d25e70c067a7e66d` was:
+
+- Candidate 1: `0d9c322ea4db075af88b42fb7e7eeddd058e8d49`;
+- Candidate 2: `8666f5dc9fa4e17e651a145afe98cb8873bb6a43`;
+- Candidate 3: `cab01ca434d5c89f550e960fff8c1684fa7c2a8f`;
+- final Design-authorized supplemental:
+  `b3c7c907004741ba67b8b92a54bbdc8c85216dda`.
+
+Validation returned the first two candidates for bounded committed-proof
+defects and cleared Candidate 3. Independent Review returned Candidate 3 for
+one consolidated relationship-proof gap. Design authorized the single exact
+direct-child supplemental correction; Validation cleared it unchanged and
+Review's single recheck found zero remaining findings.
+
+Against independently reconstructed exact TensorCore source and canonical
+archive forms, the final local focused suites passed at
+`97 run / 88 passed / 9 conditional CUDA skips`, full discovery passed at
+`198 / 185 / 13`, and Pyright `1.1.411` reported zero diagnostics in both
+forms. Validation and Review each ran separate fresh full-A100 allocations;
+each role passed focused source and archive suites at `97/97/0` and full source
+and archive suites at `198/198/0`.
+
 The exact public API, products, configs, science, stochastic addresses and
 draw order, numerical results at accepted comparison boundaries, source and
 storage contracts, autograd behavior, TensorCore dependency, and Maintenance
 3 environment qualification remain unchanged. Privacy is export-driven:
 runtime actions use clean internal names but appear in no supported facade.
-The old private paths are removed without shims. The maintenance authorizes no
-renderer, IO/artifact, integration, workspace, optimization, Stage 8 restart,
-dependency change, compatibility claim, or push.
-
-Implementation produced Candidate 1 as one direct child of exact Design
-authority `36b9cd8338a0a5dad7e6c005d25e70c067a7e66d`; its exact candidate hash is
-named in the handoff. Against independently reconstructed exact TensorCore
-source and canonical-archive forms, the local focused matrix ran 97 tests
-(88 passed, 9 conditional CUDA skips) and full discovery ran 198 tests
-(185 passed, 13 conditional CUDA skips) in each form. Pyright 1.1.411 reported
-zero diagnostics against each. Local CUDA and MPS were unavailable;
-Validation and Review still own separate mandatory fresh full-A100 evidence.
+The old private paths are removed without shims. The work authorizes no
+renderer, IO/artifact surface, integration, workspace, optimization, Stage 8
+restart, compatibility claim, or push. Any later Stage 8 restart requires a
+new Design authority from this closed Maintenance 4 baseline.
 
 ### Later Integration And Artifact Stages
 

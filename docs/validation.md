@@ -234,19 +234,25 @@ CUDA tests skipped. Pyright `1.1.411` reported zero diagnostics in both forms.
 CUDA was unavailable, so this is eager CPU-only evidence and makes no GPU,
 cross-backend, fusion, allocation, or performance claim.
 
-## Maintenance 4 Runtime Action Ownership Gate
+## Closed Maintenance 4 Runtime Action Ownership Evidence
 
 The focused
 [Maintenance 4 work order](implementation/maintenance_4_runtime_action_ownership.md)
-is **Design-complete / User-authorized / Undispatched**. It authorizes a
-behavior-preserving internal ownership refactor from product `_produce.py`
-bundles and `*Plan` records to unexported product
-`runtime/{prepare,produce,validate}.py` actions and `*Runtime` records. This is
-accepted Design authority, not implementation evidence; no Maintenance 4
-production candidate exists yet.
+is **Merged / Closed** through exact Review-cleared supplemental candidate
+`b3c7c907004741ba67b8b92a54bbdc8c85216dda`, tree
+`2d35a0e926b912f3fa846da97726e4e2490c4cc3`. Review cleanly fast-forwarded
+`main` from `5fdd3fafe2c44357b09df2a04b88cb121f2d3638` to those exact bytes
+without a merge commit. Final Design accepted the merged result and records
+closure in this documentation-only direct child.
 
-Maintenance 4 Validation must preserve all Stage 7 public, scientific, RNG,
-storage, and autograd evidence while proving the new boundaries:
+Maintenance 4 implements the behavior-preserving internal ownership refactor
+from product `_produce.py` bundles and `*Plan` records to unexported product
+`runtime/{prepare,produce,validate}.py` actions and concrete `*Runtime`
+records. It changes no public facade, scientific equation, stochastic address,
+result law, dependency, or supported device boundary.
+
+Fixed-commit Validation and independent Review preserved all Stage 7 public,
+scientific, RNG, storage, and autograd evidence while proving:
 
 - public facade exports and `simulate_readout(...)` object identity remain
   unchanged; Runtime records/actions remain absent from every public
@@ -279,14 +285,23 @@ storage, and autograd evidence while proving the new boundaries:
   prepared exact maximum code rather than a Config;
 - the convolution-ready PureWaveform kernel is flipped/shaped once during
   preparation without changing same-stack values or gradients; and
-- old live `_requirements.py`, product `_produce.py`, and `charge/effects/`
+- former `_requirements.py`, product `_produce.py`, and `charge/effects/`
   paths are absent without aliases or shims, while closed work orders remain
   unchanged historical evidence.
 
-Validation must also audit duplicate logic. It should accept only narrow
+The final evidence chain begins at Design authority
+`36b9cd8338a0a5dad7e6c005d25e70c067a7e66d`, includes Review-returned
+Candidate 3 `cab01ca434d5c89f550e960fff8c1684fa7c2a8f`, and ends at the exact
+supplemental candidate above with zero remaining Review findings. TensorCore
+remains pinned to exact `0.9.0` commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The local and full-A100
+totals are recorded below; none changes the public, scientific, RNG,
+dependency, performance, or Stage 8 boundary.
+
+Validation and Review also audited duplicate logic. They accepted only narrow
 extractions whose exact type, axis, shape, dtype, device, sampling,
 representability, finite/range, freshness, numerical-order, RNG, and autograd
-semantics are genuinely identical. It must reject a Runtime/Action ABC,
+semantics are genuinely identical. They rejected a Runtime/Action ABC,
 registry, reflection layer, generic dependency graph, decorator framework,
 untyped action mapping, or broad `utils.py` / `helpers.py` dumping ground.
 
@@ -474,7 +489,7 @@ underflow and overflow separately when that bridge is implemented.
 ## Shared Private Requirement Checks
 
 `tensor_dslab.readout.requirements` is the unexported shared relationship
-owner selected by Maintenance 4. The old live
+owner selected by Maintenance 4. The former
 `tensor_dslab.readout._requirements` path is removed without a shim. Focused
 tests should prove retained or narrowly extracted helpers preserve the
 `TypeError` distinction for malformed types and `ValueError` distinction for
@@ -633,10 +648,10 @@ root, and the package root, plus absence of the retired `types.py` modules.
 Product packages must not import `ReadoutConfig`, `ReadoutCollection`, or
 the Stage 7 orchestration layer. The complete product graph may be imported
 only by the cross-product composition layer and deliberate export layers.
-Under the Maintenance 4 target, product runtime modules also must not import
-`ReadoutRuntime`, simulation, TensorML, TensorG4DS, DAG, or a private
-TensorCore module. Internal callers import exact defining runtime modules and
-never a runtime-package facade.
+Under the merged Maintenance 4 implementation, product runtime modules also
+must not import `ReadoutRuntime`, simulation, TensorML, TensorG4DS, DAG, or a
+private TensorCore module. Internal callers import exact defining runtime
+modules and never a runtime-package facade.
 
 ## Static Typing Checks
 
@@ -704,13 +719,20 @@ public result boundary. The remaining acceptance matrix in
 therefore covers later CUDA and measured optimization evidence, and future
 TensorG4DS, TensorML, Reconstruction, and durable boundaries.
 
-Maintenance 4 is the next accepted but undispatched validation slice. It must
-reprove those Stage 7 results against unchanged scientific behavior while
-moving private ownership to Config-to-Runtime preparation, execution-only
-production, and immediate product runtime validation. It additionally requires
-separate fixed-commit Validation and independent Review full-A100 correctness
-runs on the accepted Maintenance 3 Della environment, but authorizes no Stage 8
-benchmark, profiler, threshold, kernel-count, memory, or performance claim.
+Maintenance 4 subsequently validated and merged the Config-to-Runtime
+preparation, execution-only production, and immediate product-runtime
+validation ownership split without changing scientific behavior. Against each
+exact TensorCore source/archive form, the final candidate passed the local
+focused suite at `97 run / 88 passed / 9 conditional CUDA skips`, full
+discovery at `198 / 185 / 13`, and Pyright with zero diagnostics. In separate
+fresh full-A100 allocations, fixed-commit Validation and independent Review
+each passed focused source and archive suites at `97/97/0` and full source and
+archive suites at `198/198/0`.
+
+Those A100 runs establish correctness and same-stack replay only. They ran no
+Stage 8 benchmark, profiler, threshold, kernel-count, memory, or performance
+measurement. Any Stage 8 restart requires a new Design authority from the
+closed Maintenance 4 baseline.
 
 Stage 5 does not activate Bernoulli, exponential, Poisson, categorical,
 multinomial, rejection, source-quantum, iterative-generation, Charge-stream,

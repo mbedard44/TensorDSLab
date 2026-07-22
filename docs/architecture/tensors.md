@@ -26,9 +26,10 @@ compatibility result follows from either exact baseline.
 
 Maintenance 3 is Merged / Closed through exact Review-cleared candidate
 `dfe45c96f9cc141f91e29a6a3d81bd7a3e8a49f0`. Maintenance 4 Runtime Action
-Ownership is **Design-complete / User-authorized / Undispatched**. It preserves
-this TensorCore boundary and the exact `0.9.0` dependency while reorganizing
-only unexported TensorDSLab preparation, production, and validation ownership.
+Ownership is **Merged / Closed** through exact Review-cleared supplemental
+candidate `b3c7c907004741ba67b8b92a54bbdc8c85216dda`. It preserves this
+TensorCore boundary and the exact `0.9.0` dependency while reorganizing only
+unexported TensorDSLab preparation, production, and validation ownership.
 
 The previous TensorCore `0.6` ID/layout/sidecar architecture is historical and
 is intentionally not preserved through aliases.
@@ -395,8 +396,9 @@ repeat the whole boundary or defend direct unsupported calls. Cheap
 correctness-critical local assertions remain acceptable when they protect the
 function's own valid-result contract.
 
-Maintenance 4 preserves the Stage 7 public-operation postcondition through an
-explicit action boundary. A product producer constructs and returns one local
+The merged Maintenance 4 implementation preserves the Stage 7
+public-operation postcondition through an explicit action boundary. A product
+producer constructs and returns one local
 field without interpreting Config or performing its deep scan. Orchestration
 then invokes the corresponding product-owned runtime validator exactly once
 with the exact generated field and its named direct prerequisite relationship
@@ -432,7 +434,7 @@ casting an upstream object into a downstream leaf. A future TensorML boundary
 selects and orders exact products explicitly rather than relying on collection
 iteration or subclass identity as a model ABI.
 
-Maintenance 4 prepares an internal Config-to-Runtime-to-Product seam but adds
+Maintenance 4 implements an internal Config-to-Runtime-to-Product seam but adds
 no public renderer or model component. A reusable `PureWaveformRenderer`, its
 buffer/state behavior, and its synchronization-free trusted forward boundary
 remain a separate focused Design and implementation stage.

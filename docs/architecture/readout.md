@@ -24,9 +24,11 @@ Maintenance 1 remain historical evidence for the superseded TensorCore `0.6`
 foundation. Maintenance 3 is Merged / Closed through exact Review-cleared
 candidate `dfe45c96f9cc141f91e29a6a3d81bd7a3e8a49f0` and its five-document
 Design closeout. Maintenance 4 Runtime Action Ownership is
-**Design-complete / User-authorized / Undispatched**. Its accepted work order
-defines the next behavior-preserving private ownership refactor; no
-Maintenance 4 production byte exists yet.
+**Merged / Closed** through exact Review-cleared supplemental candidate
+`b3c7c907004741ba67b8b92a54bbdc8c85216dda`. It implements the accepted
+behavior-preserving private ownership refactor with no public or scientific
+contract change. Fixed-commit Validation and independent Review cleared the
+exact source/archive forms locally and in separate fresh full-A100 allocations.
 
 ## Scope
 
@@ -247,7 +249,7 @@ rather than the complete `ReadoutConfig`.
 
 ## Private Product Runtime Actions
 
-Maintenance 4 defines one explicit private action triad for every generated
+Maintenance 4 implements one explicit private action triad for every generated
 product:
 
 ```text
@@ -768,7 +770,7 @@ beneath `charge/runtime/effects/`.
 `readout/config.py` contains only `ReadoutConfig`, and
 `readout/collection.py` contains only `ReadoutCollection`.
 `readout/requirements.py` owns only genuinely shared private relationships;
-runtime packages import no cross-product orchestration layer. The old live
+runtime packages import no cross-product orchestration layer. The former
 `readout/_requirements.py`, product `_produce.py` bundles, and
 `charge/effects/` paths are retired without shims by Maintenance 4. Closed
 work orders continue to name their historical paths as exact evidence.
@@ -814,11 +816,11 @@ it is Merged / Closed. Stage 7 is also Merged / Closed and implements complete
 request-aware `simulate_readout(...)`; no partial public API implies
 unsupported product closure. Maintenance 3 is Merged / Closed and qualifies
 completed stochastic literals by their exact numerical stack without changing
-production. Maintenance 4 is Design-complete / User-authorized / Undispatched;
-it defines the behavior-preserving runtime-action ownership target described
-above and authorizes no renderer. Measured GPU characterization remains a
-separate evidence stage; any justified fusion work remains a later
-optimization stage.
+production. Maintenance 4 is Merged / Closed through exact candidate
+`b3c7c907004741ba67b8b92a54bbdc8c85216dda`; it implements the
+behavior-preserving runtime-action ownership split described above and
+authorizes no renderer. Measured GPU characterization remains a separate
+evidence stage; any justified fusion work remains a later optimization stage.
 
 ## Return To Design Before
 

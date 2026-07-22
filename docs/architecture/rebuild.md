@@ -15,17 +15,23 @@ the [Stage 7 work order](../implementation/stage_7_public_readout_orchestration.
 This architecture page does not dispatch later implementation or make a
 compatibility claim.
 
-Maintenance 4 Runtime Action Ownership is **Design-complete / User-authorized /
-Undispatched** under the
+Maintenance 4 Runtime Action Ownership is **Merged / Closed** through exact
+Review-cleared supplemental candidate
+`b3c7c907004741ba67b8b92a54bbdc8c85216dda` with tree
+`2d35a0e926b912f3fa846da97726e4e2490c4cc3`, under the
 [Maintenance 4 work order](../implementation/maintenance_4_runtime_action_ownership.md).
-It is a behavior-preserving internal refactor that replaces the live
+It is a behavior-preserving internal refactor that replaces the former
 product-local `_produce.py` bundles and `*Plan` records with explicit,
 non-exported preparation, production, and validation actions under product
-`runtime/` packages. Until that exact work order is dispatched and merged, the
-current production tree remains the closed Stage 7 tree; the target below is
-Design authority rather than a claim that the files already exist.
+`runtime/` packages. Fixed-commit Validation and independent Review cleared the
+same final bytes locally and in separate fresh full-A100 source/archive runs.
+It changes no public, scientific, RNG, dependency, supported-device,
+performance, or Stage 8 contract. The first Stage 8 attempt remains stopped
+evidence; any rerun requires a new Design authority from the closed
+Maintenance 4 baseline.
 
-TensorDSLab Design has accepted a simpler next RNG and module-ownership target:
+TensorDSLab Design selected and implemented the following RNG and
+module-ownership foundation:
 one caller-constructed TensorCore `CounterRng` per simulation invocation,
 config-owned `RngKey` values for stochastic roles, public parameterized
 Gaussian, Poisson, and binomial distributions on that RNG, product
@@ -37,8 +43,8 @@ version `0.9.0` at exact commit
 for Maintenance 2 after exact consumer probes. The implementation pins that
 commit, uses the public RNG/distribution surface, and realizes the accepted
 module ownership without compatibility shims. The Stage 5/6 private
-implementation remains closed historical evidence. Stage 7 is a separate
-Merged / Closed production slice.
+implementation remains closed historical evidence. Stage 7 and Maintenance 4
+are separate Merged / Closed production slices.
 
 Within this architecture, the fixed-`K` algorithm under
 [Fixed-Generation Correlated-Avalanche Baseline](#fixed-generation-correlated-avalanche-baseline)
@@ -292,9 +298,10 @@ or adversarial test coverage.
 
 ## Selected Rebuild Package Shape
 
-Status: accepted Design contract for the rebuild. A production work order may
-materialize only the files needed by its implementation slice; this complete
-tree is the ownership target, not authorization to create placeholders.
+Status: implemented and Design-accepted through Maintenance 4. The displayed
+tree is the current merged production structure. A future work order may
+materialize only files needed by its own implementation slice; this is not
+authorization to create placeholders.
 
 ```text
 tensor_dslab/
@@ -396,7 +403,7 @@ rather than a second private facade.
 never import either cross-product composition module. `requirements.py`
 contains only relationships genuinely shared across products and is not
 exported. There is no
-target `readout/_random.py` or `readout/_rng.py`: generic counter generation,
+`readout/_random.py` or `readout/_rng.py`: generic counter generation,
 logical positions, uniforms, parameterized Gaussian draws, Poisson
 inversion/PTRS, and binomial inversion/BTRS move to the accepted TensorCore
 dependency. Charge-owned multinomial/category orchestration, count-domain
@@ -465,13 +472,12 @@ intentional because validation is a first-class product action.
 Create another future module only when an accepted implementation stage gives
 it real behavior. Do not create empty files to reserve this tree.
 
-### Accepted Runtime-Action Symbol Inventory
+### Implemented Runtime-Action Symbol Inventory
 
-This is the Maintenance 4 target inventory. Maintenance 2 and Stage 7 remain
-closed historical evidence for the currently merged production bytes; the new
-paths become live only after Maintenance 4 is dispatched, validated, reviewed,
-and merged. The migration moves private symbols without aliases. Future slices
-may add private details needed to express accepted contracts, but must not
+This is the merged Maintenance 4 live inventory. Maintenance 2 and Stage 7
+remain closed predecessor evidence. Maintenance 4 moved private symbols
+without aliases. Future slices may add private details needed to express
+accepted contracts, but must not
 introduce a second registry or create a later behavior module as a placeholder.
 
 | Module | Public symbols in the active MVP | Shared private symbols |
@@ -891,8 +897,9 @@ trust boundary. Documentation must not claim that a bare constructor proves a
 config-dependent ADC maximum. Builder postconditions and deep validators are
 tested separately.
 
-Stage 7 closed that builder result boundary inside each producer. Maintenance 4
-preserves the boundary while making validation a separate product-owned action:
+Stage 7 closed that builder result boundary inside each producer. The merged
+Maintenance 4 implementation preserves the boundary while making validation a
+separate product-owned action:
 `simulate_readout(...)` calls the exact `validate_<product>(...)` once with the
 new local result and its named prerequisite relationships immediately after
 production and before any descendant. A successful prerequisite is deeply
@@ -1992,8 +1999,9 @@ Do not add loose default constants or a scientifically unqualified `default()`.
 
 ## Product Runtime Actions
 
-Maintenance 4 gives every generated product three explicit, independently
-tested actions under its non-exported `runtime/` package:
+The merged Maintenance 4 implementation gives every generated product three
+explicit, independently tested actions under its non-exported `runtime/`
+package:
 
 ```text
 Config plus preflight facts
@@ -2041,9 +2049,9 @@ imports are possible Python implementation access, not supported API. Tiny
 genuinely module-local mathematical helpers may retain a leading underscore.
 
 The closed Stage 6/7 `_produce.py`, `_produce_*`, `_prepare_*`, `_simulate_*`,
-`*Plan`, and `_requirements.py` paths remain historical facts only. Maintenance
-4 removes the live private paths and cross-module names without aliases or
-compatibility shims.
+`*Plan`, and `_requirements.py` paths remain historical facts only. The merged
+Maintenance 4 implementation removed the former private paths and cross-module
+names without aliases or compatibility shims.
 
 Only stochastic-capable product producers receive `rng`. The deterministic
 pure, analog, and digitized producers do not accept it. A stochastic-capable
@@ -6316,9 +6324,10 @@ The rebuild validation matrix includes:
 - request order having no result semantics;
 - exact transitive product preparation before any RNG request, producer
   invocation, or semantic-output write;
-- Maintenance 4 target-tree and import proof for empty non-exporting runtime
-  package roots, exact product-owned `prepare` / `produce` / `validate`
-  actions, final frozen slotted Runtime records, no Config or semantic product
+- merged Maintenance 4 implemented-tree and import proof for empty
+  non-exporting runtime package roots, exact product-owned `prepare` /
+  `produce` / `validate` actions, final frozen slotted Runtime records, no
+  Config or semantic product
   retained in a Runtime, no Config/validator import in a producer, and no old
   private-path shim;
 - one `SamplingRuntime` prepared once per public request and shared by exact
@@ -6738,7 +6747,7 @@ The completed production steps are:
   then clear fixed-commit Validation, independent Review, merge, and Design
   closeout gates.
 
-The completed prerequisites and next production sequence are:
+The completed prerequisites and remaining production sequence are:
 
 1. Maintenance 2 is Merged / Closed through exact implementation candidate
    `89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
@@ -6756,11 +6765,13 @@ The completed prerequisites and next production sequence are:
    required `rng: CounterRng`, closure-wide duplicate-key validation,
    execute-once planning, exact requested retention, and generated-product
    postconditions.
-3. Maintenance 4 Runtime Action Ownership is Design-complete /
-   User-authorized / Undispatched. It is the next production slice and replaces
-   the private monolithic bundles and plans with explicit ProductRuntime,
-   prepare, produce, and validate ownership while preserving Stage 7 behavior.
-4. Profile real GPU memory and execution before designing workspace/output
+3. Maintenance 4 Runtime Action Ownership is Merged / Closed through exact
+   Review-cleared candidate `b3c7c907004741ba67b8b92a54bbdc8c85216dda`.
+   It realizes explicit ProductRuntime, prepare, produce, and validate
+   ownership while preserving Stage 7 behavior.
+4. The first Stage 8 real-CUDA attempt remains stopped evidence. Any rerun
+   requires a new Design authority from the closed Maintenance 4 baseline.
+   Profile real GPU memory and execution before designing workspace/output
    reuse.
 5. Design the exact TensorG4DS-to-truth-Photoelectrons bridge.
 6. Design explicit TensorML/reconstruction adapters.
@@ -6838,8 +6849,8 @@ Charge evidence remain later gates.
 
 ## Closed Decisions And Remaining Design Gates
 
-The Maintenance 4 target package tree and import ownership are closed for that
-work order. Shared semantic axes and sampling live in `tensor_dslab.common`;
+The merged Maintenance 4 package tree and import ownership are implemented and
+closed. Shared semantic axes and sampling live in `tensor_dslab.common`;
 each generated readout product owns its field, configs, ProductRuntime, and
 explicit preparation, production, and validation actions; `Photoelectrons`
 remains the producer-free truth input with an ingress validator;
@@ -6850,12 +6861,11 @@ requirements, and Charge effect modules are not public APIs.
 `Photoelectrons` is an already-produced input with neither a config nor a
 producer. The former Stage 6 `types.py` and `_random.py` layout remains closed
 Stage 5/6 implementation evidence. Closed Maintenance 2 realizes the initial
-product/module ownership portion without aliases, and closed Stage 7 completes
-`readout/simulation.py`. Maintenance 4 is the accepted but undispatched
-internal ownership replacement; until it merges, those target modules are
-Design authority rather than present production. Reopening the target requires
-a concrete import-cycle, cohesion, or implementation-size finding rather than
-a preference for layer-oriented grouping.
+product/module ownership portion without aliases, closed Stage 7 completes
+`readout/simulation.py`, and closed Maintenance 4 realizes the internal
+ownership replacement in present production. Reopening the implemented
+structure requires a concrete import-cycle, cohesion, or implementation-size
+finding rather than a preference for layer-oriented grouping.
 
 The MVP sampling and semantic timestamp contract is closed. One exact
 `SamplingConfig` owns positive integer `sample_period_ps`, `sample_count >= 2`,
@@ -6935,15 +6945,18 @@ Closed prerequisites and remaining Design gates are:
    policy on eager CPU. Standalone Bernoulli and sampled continuous-exponential
    equations remain recorded, but their implementation and evidence activate
    only if a later accepted consumer actually uses them.
-3. Maintenance 4 Runtime Action Ownership is Design-complete /
-   User-authorized / Undispatched. It must preserve the exact public,
-   scientific, RNG, numerical, storage, and autograd boundary while realizing
-   the product runtime action tree, shared `SamplingRuntime`, complete closure
-   preparation, and immediate validation before descendant use.
-4. Waveform-tail optimization evidence after the functional producers are
-   accepted: compiler/execution mode, equivalence to the frozen eager
-   reference, one-kernel/no-target-sized-temporary instrumentation, and the
-   fallback gate for a purpose-built kernel. Cross-product analog/digitized
+3. Maintenance 4 Runtime Action Ownership is Merged / Closed through exact
+   Review-cleared candidate `b3c7c907004741ba67b8b92a54bbdc8c85216dda`.
+   It preserved the exact public, scientific, RNG, numerical, storage, and
+   autograd boundary while realizing the product runtime action tree, shared
+   `SamplingRuntime`, complete closure preparation, and immediate validation
+   before descendant use.
+4. Any Stage 8 rerun requires a new Design authority from the closed
+   Maintenance 4 baseline. Waveform-tail optimization evidence after the
+   functional producers are accepted: compiler/execution mode, equivalence to
+   the frozen eager reference, one-kernel/no-target-sized-temporary
+   instrumentation, and the fallback gate for a purpose-built kernel.
+   Cross-product analog/digitized
    fusion remains excluded.
 5. Digitization-config association for independent/durable consumers.
 6. Exact TensorG4DS source and dense truth-binning bridge, including provenance

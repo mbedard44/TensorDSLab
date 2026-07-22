@@ -1,14 +1,13 @@
 # Maintenance 4 Runtime Action Ownership Work Order
 
-Status: **Implementation candidate / Validation pending at issuance**.
+Status: **Merged / Closed** through exact Review-cleared supplemental candidate
+`b3c7c907004741ba67b8b92a54bbdc8c85216dda`, tree
+`2d35a0e926b912f3fa846da97726e4e2490c4cc3`.
 
-While these exact bytes are absent from `main`, they describe Candidate 1
-under the fixed-commit Validation and Review gates; the current gate
-disposition is carried by the role handoff rather than inferred from this
-snapshot. If these bytes later appear unchanged on `main`, Review's clean
-fast-forward has completed and final Design acceptance remains pending unless
-and until this work order and the implementation index record
-**Merged / Closed**.
+Review cleanly fast-forwarded `main` from
+`5fdd3fafe2c44357b09df2a04b88cb121f2d3638` to those exact bytes without a
+merge commit. Final Design accepted the merged result and records closure in
+this documentation-only direct child.
 
 Stable work-order key:
 `TensorDSLab/maintenance-4-runtime-action-ownership`.
@@ -123,8 +122,9 @@ conformance_finding:       Not evaluated
 coordination_status:       Deferred
 registry_storage_profile:  Disabled
 maintenance_3:             Merged / Closed
-maintenance_4:             Implementation candidate / Validation pending
-stage_8:                   Stopped / superseding authority required
+maintenance_4:             Merged / Closed
+stage_8:                   Stopped / new authority required from closed
+                           Maintenance 4 baseline
 ```
 
 Coordination is not an execution route. This work authorizes no push.
@@ -284,7 +284,7 @@ Every `runtime/__init__.py` and `runtime/effects/__init__.py` is empty. It must
 not re-export actions, records, effects, or helper names and must not create an
 internal facade. Internal callers import the exact defining module.
 
-The following old live paths are removed without shims:
+The following former paths were removed without shims:
 
 ```text
 tensor_dslab/readout/_requirements.py
@@ -1355,7 +1355,8 @@ conditional skips or reuse Maintenance 3 output.
 Implementation completed the bounded runtime-action refactor on the fixed
 `codex/maintenance-4-runtime-action-ownership` branch as one direct child of
 Design authority `36b9cd8338a0a5dad7e6c005d25e70c067a7e66d`. The exact
-candidate commit is named in the role handoff. Its cumulative delta is limited
+Candidate 1 commit is `0d9c322ea4db075af88b42fb7e7eeddd058e8d49`. Its
+cumulative delta is limited
 to the production, test, typing, work-order, and index allowlists above; all
 other authority bytes remain protected.
 
@@ -1403,6 +1404,51 @@ make no new CUDA claim. Candidate 1 changes no public API, class identity,
 scientific equation, stochastic key/address/call order, dependency, metadata,
 governance, parity boundary, integration surface, optimization contract,
 release posture, or stopped Stage 8 state. It was not merged or pushed.
+
+## Final Validation, Review, And Merge Evidence
+
+The bounded ordinary loop produced Candidate 1
+`0d9c322ea4db075af88b42fb7e7eeddd058e8d49`, Candidate 2
+`8666f5dc9fa4e17e651a145afe98cb8873bb6a43`, and Candidate 3
+`cab01ca434d5c89f550e960fff8c1684fa7c2a8f`. Validation returned Candidates
+1 and 2 for bounded committed-proof defects and cleared Candidate 3.
+Independent Review found no production, API, science, dependency, architecture,
+or scope defect, but returned Candidate 3 for one consolidated missing
+relationship-proof packet.
+
+Design authorized exactly one direct-child supplemental correction. Exact
+supplemental candidate `b3c7c907004741ba67b8b92a54bbdc8c85216dda`, tree
+`2d35a0e926b912f3fa846da97726e4e2490c4cc3`, changed only
+`tests/test_runtime_action_ownership.py` from Candidate 3, adding the required
+Noise axes and Analog result axes, shape, and device proofs. Validation cleared
+it unchanged. Review independently killed the corresponding source/archive
+mutants, found zero remaining issues, and fast-forwarded clean `main` from
+`5fdd3fafe2c44357b09df2a04b88cb121f2d3638` to the exact candidate without
+a merge commit.
+
+Against exact TensorCore source and canonical-archive forms, the final local
+focused suites passed at `97 run / 88 passed / 9 conditional CUDA skips`, full
+discovery passed at `198 / 185 / 13`, and Pyright `1.1.411` reported zero
+diagnostics in both forms. Validation and Review each used a separate fresh
+full-A100 allocation and each passed focused source and archive suites at
+`97/97/0` and full source and archive suites at `198/198/0`. Both roles
+reverified exact TensorCore `0.9.0` commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, its source/archive identity,
+the frozen runtime and inventory facts, repository cleanliness, and artifact
+absence.
+
+Review's successful A100 harness did not separately parse the redundant
+CUDA-compatibility label from the `nvidia-smi` banner; the executable runtime,
+device, driver, libraries, frozen inventories, and all normative tests matched.
+Earlier private Validation or Review harness/probe stops occurred before
+normative candidate evidence and revealed no candidate or dependency defect.
+
+The accepted result changes no public API, scientific equation, stochastic
+key, address, call order, result law, dependency, metadata, governance, parity
+boundary, storage/autograd contract, or supported-device boundary. The A100
+runs are correctness evidence only; no benchmark, profiler, Stage 8
+measurement, performance claim, release claim, compatibility claim, or push
+follows.
 
 ## Documentation And Historical Records
 
@@ -1605,3 +1651,8 @@ Maintenance 4 is complete only when:
 Completion authorizes no renderer, Stage 8 restart, optimization, IO,
 integration, compatibility, deployment, conformance, Coordination, Profile B,
 or push action.
+
+Exact candidate `b3c7c907004741ba67b8b92a54bbdc8c85216dda` and this
+documentation-only Design closeout satisfy every completion condition above.
+Any later Stage 8 restart requires a new Design authority from this closed
+Maintenance 4 baseline.

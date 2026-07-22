@@ -203,9 +203,9 @@ and `runtime/validate.py`. Charge submodels live in focused non-exported
 modules under `charge/runtime/effects`, including Charge-owned
 multinomial/category orchestration, checked count helpers, delay preparation,
 and bookkeeping in `counts.py`. Generic RNG and distribution mechanics come
-from TensorCore; the accepted target has no `readout/_random.py` or replacement
-`_rng.py`. Product Runtime modules never import the cross-product collection,
-config, or public simulation layer.
+from TensorCore; the current implementation has no `readout/_random.py` or
+replacement `_rng.py`. Product Runtime modules never import the cross-product
+collection, config, or public simulation layer.
 
 `SamplingRuntime` is a private dependency-leaf record containing Python
 sample count, period, and dimension values. `prepare_readout` constructs it
@@ -685,10 +685,11 @@ passed and 12 conditional CUDA tests skipped. Pyright `1.1.411` reported zero
 diagnostics in both forms. CUDA was unavailable, so this decision establishes
 no GPU execution, cross-backend, fusion, allocation, or performance claim.
 
-### Maintenance 4 Runtime Action Ownership Is Accepted But Undispatched
+### Maintenance 4 Runtime Action Ownership Is Merged / Closed
 
 [Maintenance 4](implementation/maintenance_4_runtime_action_ownership.md) is
-**Design-complete / User-authorized / Undispatched**. It accepts a focused,
+**Merged / Closed** through exact Review-cleared supplemental candidate
+`b3c7c907004741ba67b8b92a54bbdc8c85216dda`. It implements a focused,
 behavior-preserving internal refactor from product-local `_produce.py` bundles
 and `*Plan` records to product-owned Runtime actions:
 
@@ -714,8 +715,9 @@ details. Public facades, `simulate_readout(...)`, product/config/collection
 identities, scientific equations, TensorCore `0.9.0`, RNG addresses and calls,
 storage/autograd contracts, and supported devices remain unchanged. Runtime
 packages do not create an internal facade, and no Runtime/Action framework or
-compatibility shim is accepted. This Design decision is not implementation
-evidence and does not authorize the deferred renderer.
+compatibility shim is accepted. Fixed-commit Validation and independent Review
+cleared the exact source and archive forms locally and in separate fresh
+full-A100 allocations. This decision does not authorize the deferred renderer.
 
 ### Completed Stochastic Literals Are Numerical-Stack Qualified
 
@@ -738,7 +740,7 @@ scientific equation, production code, TensorCore dependency, or historical
 literal. The first Stage 8 executable correctly stopped before accepted
 measurement when its work order over-applied the macOS literals on Della. That
 authority and executable input remain immutable stopped evidence; a later
-Stage 8 restart requires a new authority from the merged Maintenance 3
+Stage 8 restart requires a new authority from the closed Maintenance 4
 baseline.
 
 ## Superseded

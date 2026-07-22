@@ -284,8 +284,8 @@ tensor_dslab/
 ```
 
 This product-centered tree combines the Maintenance 2 public ownership target,
-the Stage 7 public orchestration module, and the Design-complete but
-undispatched Maintenance 4 internal Runtime/action split. Maintenance 2
+the Stage 7 public orchestration module, and the merged Maintenance 4 internal
+Runtime/action split. Maintenance 2
 realized the public product/module ownership migration; Stage 7 completed
 `readout/simulation.py`. Closed Stage 5/6 production used `types.py`,
 `_RngStream`, and `readout/_random.py`. TensorCore has
@@ -471,8 +471,8 @@ also Merged / Closed through exact Review-cleared candidate
 `6dd55024685013fb9412a7247d3ddde7be1a3177` under its focused work order. Its
 accepted evidence is eager CPU-only because CUDA was unavailable; measured GPU
 characterization remains later work. Maintenance 4 Runtime Action Ownership is
-**Design-complete / User-authorized / Undispatched** under
+**Merged / Closed** through exact Review-cleared supplemental candidate
+`b3c7c907004741ba67b8b92a54bbdc8c85216dda` under
 [`implementation/maintenance_4_runtime_action_ownership.md`](implementation/maintenance_4_runtime_action_ownership.md).
-It authorizes only the behavior-preserving internal action/tree refactor
-described above; it does not yet constitute implementation evidence and it
-does not authorize the deferred renderer.
+It implements only the behavior-preserving internal action/tree refactor
+described above and does not authorize the deferred renderer.
