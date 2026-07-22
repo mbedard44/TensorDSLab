@@ -6,20 +6,20 @@ import torch
 from tensor_core import CounterRng, RngKey, logical_positions
 
 
-_MAX_COUNT = (1 << 53) - 1
-_MAX_POISSON_MEAN = 1.0e8
+MAX_COUNT = (1 << 53) - 1
+MAX_POISSON_MEAN = 1.0e8
 
 
-def _require_count_domain(counts: torch.Tensor, *, field: str) -> None:
+def require_count_domain(counts: torch.Tensor, *, field: str) -> None:
     if counts.dtype is not torch.int64:
         raise TypeError(f"{field} must have dtype torch.int64")
     if bool(torch.any(counts < 0).item()) or bool(
-        torch.any(counts > _MAX_COUNT).item()
+        torch.any(counts > MAX_COUNT).item()
     ):
         raise ValueError(f"{field} exceeds the accepted Charge count domain")
 
 
-def _checked_add(
+def checked_add(
     left: torch.Tensor,
     right: torch.Tensor,
     *,
@@ -31,12 +31,12 @@ def _checked_add(
         raise ValueError(f"{field} count additions require equal representations")
     if bool(torch.any(right < 0).item()):
         raise RuntimeError(f"{field} received a negative count contribution")
-    if bool(torch.any(right > (_MAX_COUNT - left)).item()):
+    if bool(torch.any(right > (MAX_COUNT - left)).item()):
         raise RuntimeError(f"{field} exceeds the Charge count ceiling")
     return left + right
 
 
-def _checked_subtract(
+def checked_subtract(
     left: torch.Tensor,
     right: torch.Tensor,
     *,
@@ -53,7 +53,7 @@ def _checked_subtract(
     return left - right
 
 
-def _require_tensor_allocation(
+def require_tensor_allocation(
     shape: tuple[int, ...],
     *,
     element_size: int,
@@ -67,7 +67,7 @@ def _require_tensor_allocation(
     return count
 
 
-def _original_positions(
+def original_positions(
     shape: tuple[int, ...],
     *,
     sample_dimension: int,
@@ -76,7 +76,7 @@ def _original_positions(
     return logical_positions(shape, device=device).movedim(sample_dimension, -1)
 
 
-def _checked_rate_product(
+def checked_rate_product(
     basis: torch.Tensor,
     mean: float,
     *,
@@ -86,7 +86,7 @@ def _checked_rate_product(
         raise TypeError(f"{field} basis must have dtype torch.float64")
     if not bool(torch.all(torch.isfinite(basis) & (basis >= 0.0)).item()):
         raise RuntimeError(f"{field} basis is invalid")
-    threshold = _MAX_POISSON_MEAN / mean
+    threshold = MAX_POISSON_MEAN / mean
     if math.isinf(threshold):
         if not math.isfinite(mean) or mean <= 0.0:
             raise RuntimeError(f"{field} mean is invalid")
@@ -97,14 +97,14 @@ def _checked_rate_product(
         torch.all(
             torch.isfinite(rate)
             & (rate >= 0.0)
-            & (rate <= _MAX_POISSON_MEAN)
+            & (rate <= MAX_POISSON_MEAN)
         ).item()
     ):
         raise RuntimeError(f"{field} rate exceeds the Poisson domain")
     return rate
 
 
-def _draw_ordered_categories(
+def draw_ordered_categories(
     counts: torch.Tensor,
     *,
     success_masses: tuple[float | torch.Tensor, ...],
@@ -118,7 +118,7 @@ def _draw_ordered_categories(
         len(success_masses) == len(failure_masses) == len(positions)
     ):
         raise ValueError(f"{field} category plans must have equal lengths")
-    _require_count_domain(counts, field=f"{field} input")
+    require_count_domain(counts, field=f"{field} input")
     remaining = counts.clone()
     categories: list[torch.Tensor] = []
     for success_mass, failure_mass, category_positions in zip(
@@ -135,7 +135,7 @@ def _draw_ordered_categories(
             positions=category_positions,
             quantum=0,
         )
-        remaining = _checked_subtract(
+        remaining = checked_subtract(
             remaining,
             category,
             field=field,

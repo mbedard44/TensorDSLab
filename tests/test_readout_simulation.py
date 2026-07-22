@@ -57,13 +57,21 @@ from tensor_dslab import (
     simulate_readout,
 )
 from tensor_dslab.readout import simulation
-from tensor_dslab.readout.analog_waveform import _produce as analog_producer
-from tensor_dslab.readout.charge import _produce as charge_producer
-from tensor_dslab.readout.digitized_waveform import (
-    _produce as digitized_producer,
-)
-from tensor_dslab.readout.noise_waveform import _produce as noise_producer
-from tensor_dslab.readout.pure_waveform import _produce as pure_producer
+import tensor_dslab.readout.analog_waveform.runtime.produce as analog_producer
+import tensor_dslab.readout.analog_waveform.runtime.validate as analog_validator
+import tensor_dslab.readout.charge.runtime.prepare as charge_preparer
+import tensor_dslab.readout.charge.runtime.produce as charge_producer
+import tensor_dslab.readout.charge.runtime.validate as charge_validator
+import tensor_dslab.readout.digitized_waveform.runtime.produce as digitized_producer
+import tensor_dslab.readout.digitized_waveform.runtime.validate as digitized_validator
+import tensor_dslab.readout.noise_waveform.runtime.prepare as noise_preparer
+import tensor_dslab.readout.noise_waveform.runtime.produce as noise_producer
+import tensor_dslab.readout.noise_waveform.runtime.validate as noise_validator
+import tensor_dslab.readout.pure_waveform.runtime.produce as pure_producer
+import tensor_dslab.readout.pure_waveform.runtime.validate as pure_validator
+import tensor_dslab.readout.runtime.prepare as readout_preparer
+from tensor_dslab.readout.runtime.prepare import ReadoutRuntime
+from tensor_dslab.readout.runtime.sampling import prepare_sampling
 from tests.readout_fixtures import ForeignField
 
 
@@ -77,18 +85,18 @@ PRODUCT_TYPES: tuple[type[TensorField], ...] = (
 )
 GENERATED_TYPES: tuple[type[TensorField], ...] = PRODUCT_TYPES[1:]
 PREPARERS: tuple[tuple[str, str], ...] = (
-    ("_prepare_charge", "charge"),
-    ("_prepare_pure_waveform", "pure"),
-    ("_prepare_noise_waveform", "noise"),
-    ("_prepare_analog_waveform", "analog"),
-    ("_prepare_digitized_waveform", "digitized"),
+    ("prepare_charge", "charge"),
+    ("prepare_pure_waveform", "pure"),
+    ("prepare_noise_waveform", "noise"),
+    ("prepare_analog_waveform", "analog"),
+    ("prepare_digitized_waveform", "digitized"),
 )
 PRODUCERS: tuple[tuple[str, str], ...] = (
-    ("_produce_charge", "charge"),
-    ("_produce_pure_waveform", "pure"),
-    ("_produce_noise_waveform", "noise"),
-    ("_produce_analog_waveform", "analog"),
-    ("_produce_digitized_waveform", "digitized"),
+    ("produce_charge", "charge"),
+    ("produce_pure_waveform", "pure"),
+    ("produce_noise_waveform", "noise"),
+    ("produce_analog_waveform", "analog"),
+    ("produce_digitized_waveform", "digitized"),
 )
 
 
@@ -369,35 +377,54 @@ def _run_recorded(
     *,
     products: tuple[type[TensorField], ...],
     config: ReadoutConfig,
-) -> tuple[ReadoutCollection, simulation._ReadoutPlan, tuple[str, ...]]:
+) -> tuple[
+    ReadoutCollection,
+    frozenset[type[TensorField]],
+    ReadoutRuntime,
+    tuple[str, ...],
+]:
     events: list[str] = []
-    plans: list[simulation._ReadoutPlan] = []
-    actual_prepare_readout = simulation._prepare_readout
+    prepared: list[tuple[frozenset[type[TensorField]], ReadoutRuntime]] = []
+    actual_prepare_readout = simulation.prepare_readout
 
-    def capture_plan(*args, **kwargs):  # type: ignore[no-untyped-def]
-        plan = actual_prepare_readout(*args, **kwargs)
-        plans.append(plan)
-        return plan
+    def capture_runtime(*args, **kwargs):  # type: ignore[no-untyped-def]
+        result = actual_prepare_readout(*args, **kwargs)
+        prepared.append(result)
+        return result
 
     with ExitStack() as stack:
-        for function_name, label in PREPARERS + PRODUCERS:
-            actual = getattr(simulation, function_name)
+        for function_name, label in PREPARERS:
+            actual = getattr(readout_preparer, function_name)
 
             def record_call(
                 *args,
                 _actual=actual,
                 _label=label,
-                _kind="prepare" if function_name.startswith("_prepare") else "produce",
                 **kwargs,
             ):  # type: ignore[no-untyped-def]
-                events.append(f"{_kind}:{_label}")
+                events.append(f"prepare:{_label}")
                 return _actual(*args, **kwargs)
 
             stack.enter_context(
-                patch.object(simulation, function_name, side_effect=record_call)
+                patch.object(readout_preparer, function_name, side_effect=record_call)
+            )
+        for function_name, label in PRODUCERS:
+            actual = getattr(simulation, function_name)
+
+            def record_produce(
+                *args,
+                _actual=actual,
+                _label=label,
+                **kwargs,
+            ):  # type: ignore[no-untyped-def]
+                events.append(f"produce:{_label}")
+                return _actual(*args, **kwargs)
+
+            stack.enter_context(
+                patch.object(simulation, function_name, side_effect=record_produce)
             )
         stack.enter_context(
-            patch.object(simulation, "_prepare_readout", side_effect=capture_plan)
+            patch.object(simulation, "prepare_readout", side_effect=capture_runtime)
         )
         result = simulate_readout(
             source,
@@ -405,9 +432,10 @@ def _run_recorded(
             config=config,
             rng=_FailingRng(seed=0),
         )
-    if len(plans) != 1:
-        raise AssertionError("simulate_readout must prepare exactly one readout plan")
-    return result, plans[0], tuple(events)
+    if len(prepared) != 1:
+        raise AssertionError("simulate_readout must prepare exactly one readout runtime")
+    requested, runtime = prepared[0]
+    return result, requested, runtime, tuple(events)
 
 
 class ReadoutRequestAndClosureTest(unittest.TestCase):
@@ -436,29 +464,47 @@ class ReadoutRequestAndClosureTest(unittest.TestCase):
                 with self.subTest(
                     subset=tuple(field_type.__name__ for field_type in subset)
                 ):
-                    forward, plan, events = _run_recorded(
+                    forward, prepared_requested, runtime, events = _run_recorded(
                         source,
                         products=subset,
                         config=config,
                     )
-                    reverse, reverse_plan, reverse_events = _run_recorded(
+                    (
+                        reverse,
+                        reverse_requested,
+                        reverse_runtime,
+                        reverse_events,
+                    ) = _run_recorded(
                         source,
                         products=tuple(reversed(subset)),
                         config=config,
                     )
 
-                    self.assertEqual(plan.requested, requested)
+                    self.assertEqual(prepared_requested, requested)
                     self.assertEqual(
                         (
-                            plan.need_charge,
-                            plan.need_pure,
-                            plan.need_noise,
-                            plan.need_analog,
-                            plan.need_digitized,
+                            runtime.charge is not None,
+                            runtime.pure_waveform is not None,
+                            runtime.noise_waveform is not None,
+                            runtime.analog_waveform is not None,
+                            runtime.digitized_waveform is not None,
                         ),
                         expected_closure,
                     )
-                    self.assertEqual(reverse_plan.requested, requested)
+                    self.assertEqual(reverse_requested, requested)
+                    self.assertEqual(
+                        tuple(
+                            value is not None
+                            for value in (
+                                reverse_runtime.charge,
+                                reverse_runtime.pure_waveform,
+                                reverse_runtime.noise_waveform,
+                                reverse_runtime.analog_waveform,
+                                reverse_runtime.digitized_waveform,
+                            )
+                        ),
+                        expected_closure,
+                    )
                     self.assertEqual(events, expected_events)
                     self.assertEqual(reverse_events, expected_events)
                     self.assertEqual(forward.field_types, requested)
@@ -630,7 +676,7 @@ class ReadoutRequestAndClosureTest(unittest.TestCase):
                 rng = _FailingRng(seed=0)
                 with ExitStack() as stack:
                     preparation_mocks = tuple(
-                        stack.enter_context(patch.object(simulation, name))
+                        stack.enter_context(patch.object(readout_preparer, name))
                         for name, _ in PREPARERS
                     )
                     producer_mocks = tuple(
@@ -949,22 +995,22 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
         source = _photoelectrons(sampling)
         config = _config(sampling)
         validators = (
-            charge_producer,
-            pure_producer,
-            noise_producer,
-            analog_producer,
-            digitized_producer,
+            ("validate_charge", Charge),
+            ("validate_pure_waveform", PureWaveform),
+            ("validate_noise_waveform", NoiseWaveform),
+            ("validate_analog_waveform", AnalogWaveform),
+            ("validate_digitized_waveform", DigitizedWaveform),
         )
         with ExitStack() as stack:
             validator_mocks = tuple(
                 stack.enter_context(
                     patch.object(
-                        module,
-                        "_require_valid_values",
-                        wraps=module._require_valid_values,
+                        simulation,
+                        function_name,
+                        wraps=getattr(simulation, function_name),
                     )
                 )
-                for module in validators
+                for function_name, _ in validators
             )
             result = simulate_readout(
                 source,
@@ -972,23 +1018,16 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
                 config=config,
                 rng=_FailingRng(seed=0),
             )
-        digitized_config = config.digitized_waveform
-        assert digitized_config is not None
-        for validator_mock, field_type in zip(
+        for validator_mock, (_, field_type) in zip(
             validator_mocks,
-            GENERATED_TYPES,
+            validators,
             strict=True,
         ):
             validator_mock.assert_called_once()
             validator_call = validator_mock.call_args
             assert validator_call is not None
             self.assertIs(validator_call.args[0], result.field(field_type))
-            self.assertEqual(validator_call.kwargs, {})
-            if field_type is DigitizedWaveform:
-                self.assertEqual(len(validator_call.args), 2)
-                self.assertIs(validator_call.args[1], digitized_config)
-            else:
-                self.assertEqual(len(validator_call.args), 1)
+            self.assertEqual(len(validator_call.args), 1)
         self.assertTrue(torch.all(torch.isfinite(result.tensor(Charge))).item())
         self.assertTrue(torch.all(result.tensor(Charge) >= 0.0).item())
         for field_type in (PureWaveform, NoiseWaveform, AnalogWaveform):
@@ -1004,27 +1043,27 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
         source = _photoelectrons(sampling)
         cases = (
             (
-                pure_producer,
+                "validate_pure_waveform",
                 (
-                    "_produce_noise_waveform",
-                    "_produce_analog_waveform",
-                    "_produce_digitized_waveform",
+                    "produce_noise_waveform",
+                    "produce_analog_waveform",
+                    "produce_digitized_waveform",
                 ),
             ),
             (
-                noise_producer,
-                ("_produce_analog_waveform", "_produce_digitized_waveform"),
+                "validate_noise_waveform",
+                ("produce_analog_waveform", "produce_digitized_waveform"),
             ),
-            (analog_producer, ("_produce_digitized_waveform",)),
-            (digitized_producer, ()),
+            ("validate_analog_waveform", ("produce_digitized_waveform",)),
+            ("validate_digitized_waveform", ()),
         )
-        for validator_module, downstream_names in cases:
-            with self.subTest(module=validator_module.__name__):
+        for validator_name, downstream_names in cases:
+            with self.subTest(validator=validator_name):
                 with ExitStack() as stack:
                     stack.enter_context(
                         patch.object(
-                            validator_module,
-                            "_require_valid_values",
+                            simulation,
+                            validator_name,
                             side_effect=ValueError("forced deep postcondition"),
                         )
                     )
@@ -1179,10 +1218,11 @@ class ReadoutRngContractTest(unittest.TestCase):
         charge_config = ChargeConfig(
             dark_count=DarkCountConfig(rate_hz=NonnegativeFloat(2.5e8))
         )
-        charge_plan = charge_producer._prepare_charge(
-            source,
-            sampling=sampling,
-            config=charge_config,
+        sampling_runtime = prepare_sampling(source, config=sampling)
+        charge_runtime = charge_preparer.prepare_charge(
+            charge_config,
+            photoelectrons=source,
+            sampling=sampling_runtime,
             floating_dtype=dtype,
         )
         public_charge_calls = _capture_rng_calls(
@@ -1196,9 +1236,9 @@ class ReadoutRngContractTest(unittest.TestCase):
             seed=seed,
         )
         direct_charge_calls = _capture_rng_calls(
-            lambda rng: charge_producer._produce_charge(
+            lambda rng: charge_producer.produce_charge(
                 source,
-                plan=charge_plan,
+                runtime=charge_runtime,
                 rng=rng,
             ),
             seed=seed,
@@ -1230,11 +1270,12 @@ class ReadoutRngContractTest(unittest.TestCase):
         )
         for name, noise_config in noise_cases:
             with self.subTest(noise=name):
-                noise_plan = noise_producer._prepare_noise_waveform(
-                    source,
-                    sampling=sampling,
-                    config=noise_config,
+                noise_runtime = noise_preparer.prepare_noise_waveform(
+                    noise_config,
+                    sampling=sampling_runtime,
+                    shape=source.shape,
                     floating_dtype=dtype,
+                    device=source.tensor.device,
                 )
                 public_noise_calls = _capture_rng_calls(
                     lambda rng: simulate_readout(
@@ -1247,9 +1288,9 @@ class ReadoutRngContractTest(unittest.TestCase):
                     seed=seed,
                 )
                 direct_noise_calls = _capture_rng_calls(
-                    lambda rng: noise_producer._produce_noise_waveform(
+                    lambda rng: noise_producer.produce_noise_waveform(
                         source,
-                        plan=noise_plan,
+                        runtime=noise_runtime,
                         rng=rng,
                     ),
                     seed=seed,
@@ -1389,13 +1430,14 @@ class ReadoutRngContractTest(unittest.TestCase):
             )
         )
         zero = NoiseWaveformConfig(model=ZeroNoiseConfig())
-        zero_plan = simulation._prepare_noise_waveform(
-            source,
-            sampling=sampling,
-            config=zero,
+        zero_runtime = noise_preparer.prepare_noise_waveform(
+            zero,
+            sampling=prepare_sampling(source, config=sampling),
+            shape=source.shape,
             floating_dtype=torch.float32,
+            device=source.tensor.device,
         )
-        self.assertEqual(zero_plan.rng_roles, ())
+        self.assertEqual(zero_runtime.rng_roles, ())
 
         rng = _FailingRng(seed=0)
         result = simulate_readout(
@@ -1550,26 +1592,28 @@ class ReadoutCompositionAndStorageTest(unittest.TestCase):
             rng=Threefry4x32(seed=seed),
             floating_dtype=dtype,
         )
-        charge_plan = charge_producer._prepare_charge(
-            source,
-            sampling=sampling,
-            config=charge_config,
+        sampling_runtime = prepare_sampling(source, config=sampling)
+        charge_runtime = charge_preparer.prepare_charge(
+            charge_config,
+            photoelectrons=source,
+            sampling=sampling_runtime,
             floating_dtype=dtype,
         )
-        direct_charge = charge_producer._produce_charge(
+        direct_charge = charge_producer.produce_charge(
             source,
-            plan=charge_plan,
+            runtime=charge_runtime,
             rng=Threefry4x32(seed=seed),
         )
-        noise_plan = noise_producer._prepare_noise_waveform(
-            source,
-            sampling=sampling,
-            config=noise_config,
+        noise_runtime = noise_preparer.prepare_noise_waveform(
+            noise_config,
+            sampling=sampling_runtime,
+            shape=source.shape,
             floating_dtype=dtype,
+            device=source.tensor.device,
         )
-        direct_noise = noise_producer._produce_noise_waveform(
+        direct_noise = noise_producer.produce_noise_waveform(
             source,
-            plan=noise_plan,
+            runtime=noise_runtime,
             rng=Threefry4x32(seed=seed),
         )
         self.assertTrue(
@@ -1781,7 +1825,7 @@ class ReadoutCompositionAndStorageTest(unittest.TestCase):
         differentiable_charge = Charge(tensor=charge_values, axes=source.axes)
         with patch.object(
             simulation,
-            "_produce_charge",
+            "produce_charge",
             return_value=differentiable_charge,
         ) as charge_call:
             result = simulate_readout(

@@ -7,14 +7,14 @@ import unittest
 import torch
 from tensor_core import CounterRng, RngKey, Threefry4x32, logical_positions
 
-from tensor_dslab.readout.charge.effects._counts import (
-    _MAX_COUNT,
-    _checked_add,
-    _checked_subtract,
-    _draw_ordered_categories,
-    _original_positions,
-    _require_count_domain,
-    _require_tensor_allocation,
+from tensor_dslab.readout.charge.runtime.effects.counts import (
+    MAX_COUNT,
+    checked_add,
+    checked_subtract,
+    draw_ordered_categories,
+    original_positions,
+    require_count_domain,
+    require_tensor_allocation,
 )
 
 
@@ -118,7 +118,7 @@ def _draw_q32(
     total = torch.full((examples,), 32, dtype=torch.int64, device=device)
     basis = logical_positions(tuple(total.shape), device=total.device)
     masses = ((0.10, 0.90), (0.15, 0.75), (0.20, 0.55))
-    categories = _draw_ordered_categories(
+    categories = draw_ordered_categories(
         total,
         success_masses=tuple(
             torch.full(total.shape, current, dtype=torch.float64, device=device)
@@ -140,41 +140,41 @@ def _draw_q32(
 
 
 class ChargeCountDomainTest(unittest.TestCase):
-    def test_count_domain_and_checked_add_subtract_boundaries(self) -> None:
-        accepted = torch.tensor((0, _MAX_COUNT), dtype=torch.int64)
-        _require_count_domain(accepted, field="accepted")
+    def test_count_domain_andchecked_add_subtract_boundaries(self) -> None:
+        accepted = torch.tensor((0, MAX_COUNT), dtype=torch.int64)
+        require_count_domain(accepted, field="accepted")
         with self.assertRaises(TypeError):
-            _require_count_domain(accepted.to(torch.int32), field="dtype")
+            require_count_domain(accepted.to(torch.int32), field="dtype")
         with self.assertRaises(ValueError):
-            _require_count_domain(torch.tensor((-1,), dtype=torch.int64), field="low")
+            require_count_domain(torch.tensor((-1,), dtype=torch.int64), field="low")
         with self.assertRaises(ValueError):
-            _require_count_domain(
-                torch.tensor((_MAX_COUNT + 1,), dtype=torch.int64),
+            require_count_domain(
+                torch.tensor((MAX_COUNT + 1,), dtype=torch.int64),
                 field="high",
             )
 
-        left = torch.tensor((0, _MAX_COUNT - 1), dtype=torch.int64)
+        left = torch.tensor((0, MAX_COUNT - 1), dtype=torch.int64)
         right = torch.ones(2, dtype=torch.int64)
         self.assertTrue(
             torch.equal(
-                _checked_add(left, right, field="endpoint"),
-                torch.tensor((1, _MAX_COUNT), dtype=torch.int64),
+                checked_add(left, right, field="endpoint"),
+                torch.tensor((1, MAX_COUNT), dtype=torch.int64),
             )
         )
         with self.assertRaises(RuntimeError):
-            _checked_add(
-                torch.tensor((_MAX_COUNT,), dtype=torch.int64),
+            checked_add(
+                torch.tensor((MAX_COUNT,), dtype=torch.int64),
                 torch.ones(1, dtype=torch.int64),
                 field="overflow",
             )
         self.assertTrue(
             torch.equal(
-                _checked_subtract(right, right, field="remainder"),
+                checked_subtract(right, right, field="remainder"),
                 torch.zeros_like(right),
             )
         )
         with self.assertRaises(RuntimeError):
-            _checked_subtract(
+            checked_subtract(
                 torch.zeros(1, dtype=torch.int64),
                 torch.ones(1, dtype=torch.int64),
                 field="underflow",
@@ -182,24 +182,24 @@ class ChargeCountDomainTest(unittest.TestCase):
 
     def test_allocation_and_original_position_boundaries(self) -> None:
         self.assertEqual(
-            _require_tensor_allocation((2, 3, 4), element_size=8, field="small"),
+            require_tensor_allocation((2, 3, 4), element_size=8, field="small"),
             24,
         )
         with self.assertRaises(ValueError):
-            _require_tensor_allocation(
+            require_tensor_allocation(
                 (1 << 62,),
                 element_size=8,
                 field="bytes",
             )
         with self.assertRaises(ValueError):
-            _require_tensor_allocation(
+            require_tensor_allocation(
                 (1 << 62, 2),
                 element_size=1,
                 field="elements",
             )
 
         expected = logical_positions((2, 3, 4), device="cpu").movedim(1, -1)
-        actual = _original_positions(
+        actual = original_positions(
             (2, 3, 4),
             sample_dimension=1,
             device=torch.device("cpu"),
@@ -212,7 +212,7 @@ class OrderedMultinomialOrchestrationTest(unittest.TestCase):
         positions = (torch.arange(8, dtype=torch.int64),)
         failing = _FailingRng(seed=0)
         zeros = torch.zeros(8, dtype=torch.int64)
-        zero_category, zero_remainder = _draw_ordered_categories(
+        zero_category, zero_remainder = draw_ordered_categories(
             zeros,
             success_masses=(0.25,),
             failure_masses=(0.75,),
@@ -225,7 +225,7 @@ class OrderedMultinomialOrchestrationTest(unittest.TestCase):
         self.assertTrue(torch.equal(zero_remainder, zeros))
 
         counts = torch.full((8,), 32, dtype=torch.int64)
-        absent, unchanged = _draw_ordered_categories(
+        absent, unchanged = draw_ordered_categories(
             counts,
             success_masses=(0.0,),
             failure_masses=(1.0,),
@@ -236,7 +236,7 @@ class OrderedMultinomialOrchestrationTest(unittest.TestCase):
         )
         self.assertTrue(torch.equal(absent, torch.zeros_like(counts)))
         self.assertTrue(torch.equal(unchanged, counts))
-        all_success, exhausted = _draw_ordered_categories(
+        all_success, exhausted = draw_ordered_categories(
             counts,
             success_masses=(1.0,),
             failure_masses=(0.0,),
@@ -253,7 +253,7 @@ class OrderedMultinomialOrchestrationTest(unittest.TestCase):
         counts = torch.full((5,), 5, dtype=torch.int64)
         basis = torch.tensor((11, 13, 17, 19, 23), dtype=torch.int64)
         positions = tuple(basis + category * 100 for category in range(3))
-        categories = _draw_ordered_categories(
+        categories = draw_ordered_categories(
             counts,
             success_masses=(0.2, 0.3, 0.1),
             failure_masses=(0.8, 0.5, 0.4),

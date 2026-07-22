@@ -2,23 +2,20 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import math
+from typing import final
 
 import torch
 
-from tensor_dslab.readout._requirements import _require_representable_float
-from tensor_dslab.readout.analog_waveform.field import AnalogWaveform
 from tensor_dslab.readout.digitized_waveform.config import (
     DigitizedWaveformConfig,
 )
-from tensor_dslab.readout.digitized_waveform.field import (
-    DigitizedWaveform,
-    _require_valid_values,
-)
+from tensor_dslab.readout.requirements import require_representable_float
 
 
+@final
 @dataclass(frozen=True, slots=True)
-class _DigitizedWaveformPlan:
-    config: DigitizedWaveformConfig
+class DigitizedWaveformRuntime:
+    maximum_code: int
     zero: torch.Tensor
     maximum: torch.Tensor
     slope: torch.Tensor
@@ -27,12 +24,12 @@ class _DigitizedWaveformPlan:
     upper_input: torch.Tensor
 
 
-def _prepare_digitized_waveform(
-    *,
+def prepare_digitized_waveform(
     config: DigitizedWaveformConfig,
+    *,
     floating_dtype: torch.dtype,
     device: torch.device,
-) -> _DigitizedWaveformPlan:
+) -> DigitizedWaveformRuntime:
     if type(config) is not DigitizedWaveformConfig:
         raise TypeError("config must be exactly DigitizedWaveformConfig")
     if floating_dtype not in (torch.float32, torch.float64):
@@ -62,37 +59,37 @@ def _prepare_digitized_waveform(
     if span <= 0.0 or slope <= 0.0:
         raise ValueError("ADC span and slope must be positive in binary64")
 
-    rounded_maximum_code = _require_representable_float(
+    rounded_maximum_code = require_representable_float(
         maximum_code,
         dtype=floating_dtype,
         field="ADC maximum code",
     )
-    rounded_gain = _require_representable_float(
+    rounded_gain = require_representable_float(
         gain,
         dtype=floating_dtype,
         field="ADC gain",
     )
-    rounded_span = _require_representable_float(
+    rounded_span = require_representable_float(
         span,
         dtype=floating_dtype,
         field="ADC span",
     )
-    rounded_slope = _require_representable_float(
+    rounded_slope = require_representable_float(
         slope,
         dtype=floating_dtype,
         field="ADC slope",
     )
-    rounded_intercept = _require_representable_float(
+    rounded_intercept = require_representable_float(
         intercept,
         dtype=floating_dtype,
         field="ADC intercept",
     )
-    rounded_lower_input = _require_representable_float(
+    rounded_lower_input = require_representable_float(
         lower_input_mv,
         dtype=floating_dtype,
         field="ADC lower input threshold",
     )
-    rounded_upper_input = _require_representable_float(
+    rounded_upper_input = require_representable_float(
         upper_input_mv,
         dtype=floating_dtype,
         field="ADC upper input threshold",
@@ -123,8 +120,8 @@ def _prepare_digitized_waveform(
         torch.tensor(value, dtype=floating_dtype, device=device)
         for value in scalar_values
     )
-    return _DigitizedWaveformPlan(
-        config=config,
+    return DigitizedWaveformRuntime(
+        maximum_code=maximum_code,
         zero=zero,
         maximum=maximum,
         slope=slope_tensor,
@@ -132,27 +129,3 @@ def _prepare_digitized_waveform(
         lower_input=lower_input,
         upper_input=upper_input,
     )
-
-
-def _produce_digitized_waveform(
-    analog: AnalogWaveform,
-    *,
-    plan: _DigitizedWaveformPlan,
-) -> DigitizedWaveform:
-    interior = torch.clamp(
-        torch.add(
-            torch.mul(analog.tensor, plan.slope),
-            plan.intercept,
-        ),
-        min=plan.zero,
-        max=plan.maximum,
-    )
-    code_float = torch.where(
-        analog.tensor <= plan.lower_input,
-        plan.zero,
-        torch.where(analog.tensor >= plan.upper_input, plan.maximum, interior),
-    )
-    values = code_float.to(dtype=torch.int32)
-    result = DigitizedWaveform(tensor=values, axes=analog.axes)
-    _require_valid_values(result, plan.config)
-    return result

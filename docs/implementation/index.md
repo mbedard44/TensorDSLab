@@ -406,7 +406,12 @@ itself dispatch or complete Stage 8.
 
 ### [Maintenance 4: Runtime Action Ownership](maintenance_4_runtime_action_ownership.md)
 
-Status: **Design-complete / User-authorized / Undispatched**.
+Status: **Implementation candidate / Validation pending at issuance**. While
+the candidate bytes are absent from `main`, their exact current gate
+disposition is carried by the fixed-commit role handoff. If they later appear
+unchanged on `main`, Review's clean fast-forward has completed and final
+Design acceptance remains pending until this index and the work order record
+**Merged / Closed**.
 
 Maintenance 4 is a focused, behavior-preserving internal refactor from exact
 clean package baseline `5fdd3fafe2c44357b09df2a04b88cb121f2d3638` while
@@ -427,6 +432,15 @@ runtime actions use clean internal names but appear in no supported facade.
 The old private paths are removed without shims. The maintenance authorizes no
 renderer, IO/artifact, integration, workspace, optimization, Stage 8 restart,
 dependency change, compatibility claim, or push.
+
+Implementation produced Candidate 1 as one direct child of exact Design
+authority `36b9cd8338a0a5dad7e6c005d25e70c067a7e66d`; its exact candidate hash is
+named in the handoff. Against independently reconstructed exact TensorCore
+source and canonical-archive forms, the local focused matrix ran 97 tests
+(88 passed, 9 conditional CUDA skips) and full discovery ran 198 tests
+(185 passed, 13 conditional CUDA skips) in each form. Pyright 1.1.411 reported
+zero diagnostics against each. Local CUDA and MPS were unavailable;
+Validation and Review still own separate mandatory fresh full-A100 evidence.
 
 ### Later Integration And Artifact Stages
 

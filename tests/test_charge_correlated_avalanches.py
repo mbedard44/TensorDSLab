@@ -27,15 +27,15 @@ from tensor_dslab import (
     DirectCrosstalkConfig,
     ExponentialDelayConfig,
     FixedDelayConfig,
-    SamplingConfig,
 )
-from tensor_dslab.readout.charge.effects import (
-    _correlated_avalanches as correlated_effect,
+from tensor_dslab.readout.charge.runtime.effects import (
+    correlated_avalanches as correlated_effect,
 )
-from tensor_dslab.readout.charge.effects import _counts as count_effect
-from tensor_dslab.readout.charge.effects._correlated_avalanches import (
-    _simulate_correlated_avalanches,
+from tensor_dslab.readout.charge.runtime.effects import counts as count_effect
+from tensor_dslab.readout.charge.runtime.effects.correlated_avalanches import (
+    simulate_correlated_avalanches,
 )
+from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 
 
 _STATISTICAL_SEEDS = (0, 1, 0x0123456789ABCDEF, 0xFFFFFFFFFFFFFFFF)
@@ -395,10 +395,11 @@ def _category_sum_cross_moment(
     return covariance, cross_fourth
 
 
-def _sampling(*, count: int = 4) -> SamplingConfig:
-    return SamplingConfig(
-        sample_period_ps=PositiveInteger(2000),
-        sample_count=PositiveInteger(count),
+def _sampling(*, count: int = 4) -> SamplingRuntime:
+    return SamplingRuntime(
+        sample_period_ps=2000,
+        sample_count=count,
+        sample_dimension=2,
     )
 
 
@@ -436,17 +437,17 @@ def _simulate(
     rng: CounterRng | None = None,
 ) -> correlated_effect._CorrelatedAvalancheResult:
     sampling = _sampling(count=roots.shape[-1])
-    plan = correlated_effect._prepare_correlated_plan(
+    plan = correlated_effect.prepare_correlated_avalanches(
         config,
         sampling=sampling,
         floating_dtype=dtype,
         tensor_numel=roots.numel(),
     )
-    return _simulate_correlated_avalanches(
+    return simulate_correlated_avalanches(
         roots,
         sample_dimension=roots.ndim - 1,
         floating_dtype=dtype,
-        plan=plan,
+        runtime=plan,
         rng=Threefry4x32(seed=1234) if rng is None else rng,
     )
 
@@ -508,25 +509,25 @@ class CorrelatedAvalancheIdentityTest(unittest.TestCase):
         roots[0, 0, 0] = 1
         with patch.object(
             correlated_effect,
-            "_prepare_delay",
+            "prepare_delay",
             side_effect=AssertionError("K=0 must not prepare crosstalk"),
         ), patch.object(
             correlated_effect,
-            "_prepare_exponential_delay",
+            "prepare_exponential_delay",
             side_effect=AssertionError("K=0 must not prepare afterpulsing"),
         ):
             sampling = _sampling(count=8193)
-            plan = correlated_effect._prepare_correlated_plan(
+            plan = correlated_effect.prepare_correlated_avalanches(
                 k_zero,
                 sampling=sampling,
                 floating_dtype=torch.float32,
                 tensor_numel=roots.numel(),
             )
-            result = _simulate_correlated_avalanches(
+            result = simulate_correlated_avalanches(
                 roots,
                 sample_dimension=2,
                 floating_dtype=torch.float32,
-                plan=plan,
+                runtime=plan,
                 rng=_FailingRng(seed=0),
             )
         self.assertTrue(torch.equal(result.total_count, roots))
@@ -550,29 +551,29 @@ class CorrelatedAvalancheIdentityTest(unittest.TestCase):
         small_roots = torch.tensor((1, 0), dtype=torch.int64).reshape(1, 1, 2)
         with patch.object(
             correlated_effect,
-            "_prepare_delay",
+            "prepare_delay",
             side_effect=AssertionError("zero crosstalk must not prepare delay"),
         ), patch.object(
             correlated_effect,
-            "_prepare_exponential_delay",
+            "prepare_exponential_delay",
             side_effect=AssertionError("zero afterpulsing must not prepare delay"),
         ), patch.object(
             correlated_effect,
-            "_prepare_afterpulse_recovery",
+            "prepare_afterpulse_recovery",
             side_effect=AssertionError("zero afterpulsing must not prepare recovery"),
         ):
             sampling = _sampling(count=2)
-            plan = correlated_effect._prepare_correlated_plan(
+            plan = correlated_effect.prepare_correlated_avalanches(
                 zero_effect,
                 sampling=sampling,
                 floating_dtype=torch.float64,
                 tensor_numel=small_roots.numel(),
             )
-            result = _simulate_correlated_avalanches(
+            result = simulate_correlated_avalanches(
                 small_roots,
                 sample_dimension=2,
                 floating_dtype=torch.float64,
-                plan=plan,
+                runtime=plan,
                 rng=_FailingRng(seed=0),
             )
         self.assertTrue(torch.equal(result.total_count, small_roots))
@@ -634,17 +635,17 @@ class CorrelatedAvalancheMechanismTest(unittest.TestCase):
             afterpulse=_afterpulse(probability=0.5),
         )
         _RecordingRng.calls = []
-        plan = correlated_effect._prepare_correlated_plan(
+        plan = correlated_effect.prepare_correlated_avalanches(
             config,
             sampling=_sampling(),
             floating_dtype=torch.float64,
             tensor_numel=roots.numel(),
         )
-        result = _simulate_correlated_avalanches(
+        result = simulate_correlated_avalanches(
             roots,
             sample_dimension=2,
             floating_dtype=torch.float64,
-            plan=plan,
+            runtime=plan,
             rng=_RecordingRng(seed=0),
         )
         streams: list[int] = []
@@ -737,7 +738,7 @@ class CorrelatedAvalancheMechanismTest(unittest.TestCase):
 
         with patch.object(
             correlated_effect,
-            "_draw_ordered_categories",
+            "draw_ordered_categories",
             side_effect=schedule_to_last_sample,
         ):
             result = _simulate(
@@ -796,12 +797,12 @@ class CorrelatedAvalancheMechanismTest(unittest.TestCase):
 
                 with patch.object(
                     correlated_effect,
-                    "_draw_ordered_categories",
+                    "draw_ordered_categories",
                     side_effect=retain_first_category,
                 ):
                     result = _simulate(roots, config, dtype=dtype)
 
-                plan = correlated_effect._prepare_correlated_plan(
+                plan = correlated_effect.prepare_correlated_avalanches(
                     config,
                     sampling=_sampling(),
                     floating_dtype=dtype,
@@ -829,7 +830,7 @@ class CorrelatedAvalancheMechanismTest(unittest.TestCase):
 
     def test_exact_integer_count_identity_is_checked_before_return(self) -> None:
         roots = torch.tensor((1, 0, 0, 0), dtype=torch.int64).reshape(1, 1, 4)
-        original = correlated_effect._checked_add
+        original = correlated_effect.checked_add
 
         def corrupt_total(
             left: torch.Tensor,
@@ -842,7 +843,7 @@ class CorrelatedAvalancheMechanismTest(unittest.TestCase):
                 return result + 1
             return result
 
-        with patch.object(correlated_effect, "_checked_add", side_effect=corrupt_total):
+        with patch.object(correlated_effect, "checked_add", side_effect=corrupt_total):
             with self.assertRaisesRegex(RuntimeError, "integer count identity"):
                 _simulate(
                     roots,
@@ -857,7 +858,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
     def test_proved_bound_uses_greatest_represented_ledger_at_most_real_bound(
         self,
     ) -> None:
-        _, bound = correlated_effect._ledger_envelope(
+        _, bound = correlated_effect.prepare_ledger_envelope(
             floating_dtype=torch.float32,
             maximum_generations=0,
             retained_mechanisms=0,
@@ -896,7 +897,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
             maximum_generations=NonnegativeInteger(2),
             direct_crosstalk=_direct(mean=0.1),
         )
-        accepted = correlated_effect._prepare_correlated_plan(
+        accepted = correlated_effect.prepare_correlated_avalanches(
             crosstalk,
             sampling=_sampling(count=2),
             floating_dtype=torch.float64,
@@ -904,7 +905,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
         )
         self.assertIsNotNone(accepted.direct_crosstalk)
         with self.assertRaisesRegex(ValueError, "crosstalk address lattice"):
-            correlated_effect._prepare_correlated_plan(
+            correlated_effect.prepare_correlated_avalanches(
                 crosstalk,
                 sampling=_sampling(count=2),
                 floating_dtype=torch.float64,
@@ -915,7 +916,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
             maximum_generations=NonnegativeInteger(2),
             afterpulse=_afterpulse(probability=0.25),
         )
-        accepted = correlated_effect._prepare_correlated_plan(
+        accepted = correlated_effect.prepare_correlated_avalanches(
             afterpulse,
             sampling=_sampling(count=3),
             floating_dtype=torch.float64,
@@ -923,7 +924,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
         )
         self.assertIsNotNone(accepted.afterpulse)
         with self.assertRaisesRegex(ValueError, "afterpulse address lattice"):
-            correlated_effect._prepare_correlated_plan(
+            correlated_effect.prepare_correlated_avalanches(
                 afterpulse,
                 sampling=_sampling(count=3),
                 floating_dtype=torch.float64,
@@ -932,7 +933,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
 
     def test_allocation_byte_and_element_products_have_exact_boundaries(self) -> None:
         self.assertEqual(
-            count_effect._require_tensor_allocation(
+            count_effect.require_tensor_allocation(
                 ((1 << 63) - 1,),
                 element_size=1,
                 field="test",
@@ -940,13 +941,13 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
             (1 << 63) - 1,
         )
         with self.assertRaises(ValueError):
-            count_effect._require_tensor_allocation(
+            count_effect.require_tensor_allocation(
                 (1 << 63,),
                 element_size=1,
                 field="test",
             )
         self.assertEqual(
-            count_effect._require_tensor_allocation(
+            count_effect.require_tensor_allocation(
                 ((1 << 60) - 1,),
                 element_size=8,
                 field="test",
@@ -954,7 +955,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
             (1 << 60) - 1,
         )
         with self.assertRaises(ValueError):
-            count_effect._require_tensor_allocation(
+            count_effect.require_tensor_allocation(
                 (1 << 60,),
                 element_size=8,
                 field="test",
@@ -964,7 +965,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
         for dtype, precision in ((torch.float32, 24), (torch.float64, 53)):
             with self.subTest(dtype=dtype, recovered=False):
                 maximum_generations = (1 << precision) - 2
-                depth, bound = correlated_effect._ledger_envelope(
+                depth, bound = correlated_effect.prepare_ledger_envelope(
                     floating_dtype=dtype,
                     maximum_generations=maximum_generations,
                     retained_mechanisms=1,
@@ -979,7 +980,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
                 expected = ((1 << 53) - 1) * (1.0 + gamma) + depth * subnormal
                 self.assertEqual(bound, expected)
                 with self.assertRaisesRegex(ValueError, "ledger depth"):
-                    correlated_effect._ledger_envelope(
+                    correlated_effect.prepare_ledger_envelope(
                         floating_dtype=dtype,
                         maximum_generations=maximum_generations + 1,
                         retained_mechanisms=1,
@@ -989,7 +990,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
 
             with self.subTest(dtype=dtype, recovered=True):
                 maximum_generations = (1 << precision) - 6
-                depth, _ = correlated_effect._ledger_envelope(
+                depth, _ = correlated_effect.prepare_ledger_envelope(
                     floating_dtype=dtype,
                     maximum_generations=maximum_generations,
                     retained_mechanisms=1,
@@ -998,7 +999,7 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
                 )
                 self.assertEqual(depth, (1 << precision) - 1)
                 with self.assertRaisesRegex(ValueError, "ledger depth"):
-                    correlated_effect._ledger_envelope(
+                    correlated_effect.prepare_ledger_envelope(
                         floating_dtype=dtype,
                         maximum_generations=maximum_generations + 1,
                         retained_mechanisms=1,
@@ -1158,7 +1159,7 @@ class CorrelatedAvalancheStatisticalTest(unittest.TestCase):
             maximum_generations=NonnegativeInteger(1),
             afterpulse=recovered_afterpulse,
         )
-        prepared = correlated_effect._prepare_correlated_plan(
+        prepared = correlated_effect.prepare_correlated_avalanches(
             recovered_config,
             sampling=_sampling(),
             floating_dtype=torch.float64,

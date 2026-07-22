@@ -30,11 +30,17 @@ from tensor_dslab import (
     WhiteNoiseConfig,
     ZeroNoiseConfig,
 )
-from tensor_dslab.readout.noise_waveform._produce import (
-    _prepare_psd_powers,
-    _prepare_noise_waveform,
-    _produce_noise_waveform as _produce_noise_waveform_prepared,
+from tensor_dslab.readout.noise_waveform.runtime.prepare import (
+    _prepare_psd_powers as _prepare_psd_powers_prepared,
+    prepare_noise_waveform,
 )
+from tensor_dslab.readout.noise_waveform.runtime.produce import (
+    produce_noise_waveform as _produce_noise_waveform_prepared,
+)
+from tensor_dslab.readout.noise_waveform.runtime.validate import (
+    validate_noise_waveform,
+)
+from tensor_dslab.readout.runtime.sampling import SamplingRuntime, prepare_sampling
 
 
 SEEDS = (0, 1, 0x0123456789ABCDEF, 0xFFFFFFFFFFFFFFFF)
@@ -66,6 +72,23 @@ def _sampling(*, count: int, period_ps: int = 1_000) -> SamplingConfig:
     )
 
 
+def _prepare_psd_powers(
+    config: PsdNoiseConfig,
+    *,
+    sampling: SamplingConfig,
+    dtype: torch.dtype,
+) -> tuple[float, ...]:
+    return _prepare_psd_powers_prepared(
+        config,
+        sampling=SamplingRuntime(
+            sample_count=sampling.sample_count.value,
+            sample_period_ps=sampling.sample_period_ps.value,
+            sample_dimension=2,
+        ),
+        dtype=dtype,
+    )
+
+
 def _produce_noise_waveform(
     photoelectrons: Photoelectrons,
     *,
@@ -74,17 +97,21 @@ def _produce_noise_waveform(
     rng: CounterRng,
     floating_dtype: torch.dtype,
 ) -> NoiseWaveform:
-    plan = _prepare_noise_waveform(
-        photoelectrons,
-        sampling=sampling,
-        config=config,
+    sampling_runtime = prepare_sampling(photoelectrons, config=sampling)
+    runtime = prepare_noise_waveform(
+        config,
+        sampling=sampling_runtime,
+        shape=photoelectrons.shape,
         floating_dtype=floating_dtype,
+        device=photoelectrons.tensor.device,
     )
-    return _produce_noise_waveform_prepared(
+    result = _produce_noise_waveform_prepared(
         photoelectrons,
-        plan=plan,
+        runtime=runtime,
         rng=rng,
     )
+    validate_noise_waveform(result, source=photoelectrons, runtime=runtime)
+    return result
 
 
 def _axes(
@@ -298,7 +325,7 @@ class NoiseProductBranchTest(unittest.TestCase):
         source = _photoelectrons(sampling)
         state = torch.random.get_rng_state().clone()
         with patch(
-            "tensor_dslab.readout.noise_waveform._produce.logical_positions",
+            "tensor_dslab.readout.noise_waveform.runtime.produce.logical_positions",
             side_effect=AssertionError("zero noise must not build positions"),
         ) as positions:
             first = _produce_noise_waveform(
@@ -321,23 +348,9 @@ class NoiseProductBranchTest(unittest.TestCase):
         self.assertTrue(_independent_storage(first.tensor, second.tensor))
         self.assertTrue(torch.equal(torch.random.get_rng_state(), state))
 
-    def test_rng_dtype_sampling_and_device_fail_before_rng(self) -> None:
+    def test_dtype_sampling_and_device_fail_before_rng(self) -> None:
         sampling = _sampling(count=8)
         source = _photoelectrons(sampling)
-        for config in (_zero_config(), _white_config(), _flat_psd_config()):
-            for invalid_rng in (None, object(), True):
-                with self.subTest(
-                    model=type(config.model),
-                    invalid_rng=invalid_rng,
-                ):
-                    with self.assertRaises(TypeError):
-                        _produce_noise_waveform(
-                            source,
-                            sampling=sampling,
-                            config=config,
-                            rng=invalid_rng,  # type: ignore[arg-type]
-                            floating_dtype=torch.float32,
-                        )
         failing_rng = _FailingRng(seed=0)
         with self.assertRaises(TypeError):
             _produce_noise_waveform(
@@ -627,7 +640,7 @@ class PsdPreparationTest(unittest.TestCase):
             return original_fsum(materialized)
 
         with patch(
-            "tensor_dslab.readout.noise_waveform._produce.math.fsum",
+            "tensor_dslab.readout.noise_waveform.runtime.prepare.math.fsum",
             side_effect=fail_final_fsum,
         ):
             with self.assertRaises(ValueError):
@@ -676,7 +689,7 @@ class PsdPreparationTest(unittest.TestCase):
                     return original_fsum(materialized)
 
                 with patch(
-                    "tensor_dslab.readout.noise_waveform._produce.math.fsum",
+                    "tensor_dslab.readout.noise_waveform.runtime.prepare.math.fsum",
                     side_effect=fsum_at_limit,
                 ):
                     accepted = _produce_noise_waveform(
@@ -700,7 +713,7 @@ class PsdPreparationTest(unittest.TestCase):
                     return original_fsum(materialized)
 
                 with patch(
-                    "tensor_dslab.readout.noise_waveform._produce.math.fsum",
+                    "tensor_dslab.readout.noise_waveform.runtime.prepare.math.fsum",
                     side_effect=fsum_above_limit,
                 ):
                     with self.assertRaises(ValueError):
@@ -757,7 +770,7 @@ class PsdSynthesisTest(unittest.TestCase):
                     return original_irfft(input, **kwargs)
 
                 with patch(
-                    "tensor_dslab.readout.noise_waveform._produce.torch.fft.irfft",
+                    "tensor_dslab.readout.noise_waveform.runtime.produce.torch.fft.irfft",
                     side_effect=capture_irfft,
                 ):
                     result = _produce_noise_waveform(
@@ -962,7 +975,7 @@ class PsdSynthesisTest(unittest.TestCase):
                     return original_irfft(input, **kwargs)
 
                 with patch(
-                    "tensor_dslab.readout.noise_waveform._produce.torch.fft.irfft",
+                    "tensor_dslab.readout.noise_waveform.runtime.produce.torch.fft.irfft",
                     side_effect=capture_irfft,
                 ):
                     result = _produce_noise_waveform(

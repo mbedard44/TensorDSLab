@@ -330,11 +330,19 @@ class PackageContractTest(unittest.TestCase):
             "tensor_dslab/readout/noise_waveform/_product.py",
             "tensor_dslab/readout/analog_waveform/_product.py",
             "tensor_dslab/readout/digitized_waveform/_product.py",
+            "tensor_dslab/readout/_requirements.py",
+            "tensor_dslab/readout/photoelectrons/_produce.py",
+            "tensor_dslab/readout/charge/_produce.py",
+            "tensor_dslab/readout/pure_waveform/_produce.py",
+            "tensor_dslab/readout/noise_waveform/_produce.py",
+            "tensor_dslab/readout/analog_waveform/_produce.py",
+            "tensor_dslab/readout/digitized_waveform/_produce.py",
+            "tensor_dslab/readout/charge/effects",
         )
         for path in absent:
             self.assertFalse(Path(path).exists(), path)
 
-    def test_producers_rng_and_sampling_helper_remain_private(
+    def test_runtime_actions_records_and_sampling_remain_private(
         self,
     ) -> None:
         private_names = (
@@ -358,6 +366,31 @@ class PackageContractTest(unittest.TestCase):
             "_prepare_noise_waveform",
             "_prepare_analog_waveform",
             "_prepare_digitized_waveform",
+            "SamplingRuntime",
+            "ReadoutRuntime",
+            "ChargeRuntime",
+            "PureWaveformRuntime",
+            "NoiseWaveformRuntime",
+            "AnalogWaveformRuntime",
+            "DigitizedWaveformRuntime",
+            "prepare_readout",
+            "prepare_sampling",
+            "prepare_charge",
+            "prepare_pure_waveform",
+            "prepare_noise_waveform",
+            "prepare_analog_waveform",
+            "prepare_digitized_waveform",
+            "produce_charge",
+            "produce_pure_waveform",
+            "produce_noise_waveform",
+            "produce_analog_waveform",
+            "produce_digitized_waveform",
+            "validate_photoelectrons",
+            "validate_charge",
+            "validate_pure_waveform",
+            "validate_noise_waveform",
+            "validate_analog_waveform",
+            "validate_digitized_waveform",
         )
         public_modules = (
             tensor_dslab,
@@ -423,55 +456,11 @@ class PackageContractTest(unittest.TestCase):
             ):
                 self.assertNotIn(composition_module, imported, str(path))
 
-    def test_product_producer_imports_are_private_and_acyclic(self) -> None:
-        producer_paths = (
-            Path("tensor_dslab/readout/charge/_produce.py"),
-            Path("tensor_dslab/readout/pure_waveform/_produce.py"),
-            Path("tensor_dslab/readout/noise_waveform/_produce.py"),
-            Path("tensor_dslab/readout/analog_waveform/_produce.py"),
-            Path("tensor_dslab/readout/digitized_waveform/_produce.py"),
+    def test_product_runtime_imports_are_private_and_acyclic(self) -> None:
+        runtime_paths = tuple(
+            sorted(Path("tensor_dslab/readout").glob("*/runtime/*.py"))
         )
-        accepted_tensor_dslab_imports = {
-            producer_paths[0]: {
-                "tensor_dslab.common",
-                "tensor_dslab.readout._requirements",
-                "tensor_dslab.readout.charge.config",
-                "tensor_dslab.readout.charge.effects._correlated_avalanches",
-                "tensor_dslab.readout.charge.effects._counts",
-                "tensor_dslab.readout.charge.effects._dark_counts",
-                "tensor_dslab.readout.charge.effects._smearing",
-                "tensor_dslab.readout.charge.effects._timing_jitter",
-                "tensor_dslab.readout.charge.field",
-                "tensor_dslab.readout.photoelectrons",
-            },
-            producer_paths[1]: {
-                "tensor_dslab.common",
-                "tensor_dslab.readout._requirements",
-                "tensor_dslab.readout.charge.field",
-                "tensor_dslab.readout.pure_waveform.config",
-                "tensor_dslab.readout.pure_waveform.field",
-            },
-            producer_paths[2]: {
-                "tensor_dslab.common",
-                "tensor_dslab.readout._requirements",
-                "tensor_dslab.readout.noise_waveform.config",
-                "tensor_dslab.readout.noise_waveform.field",
-                "tensor_dslab.readout.photoelectrons",
-            },
-            producer_paths[3]: {
-                "tensor_dslab.readout._requirements",
-                "tensor_dslab.readout.analog_waveform.config",
-                "tensor_dslab.readout.analog_waveform.field",
-                "tensor_dslab.readout.noise_waveform.field",
-                "tensor_dslab.readout.pure_waveform.field",
-            },
-            producer_paths[4]: {
-                "tensor_dslab.readout._requirements",
-                "tensor_dslab.readout.analog_waveform.field",
-                "tensor_dslab.readout.digitized_waveform.config",
-                "tensor_dslab.readout.digitized_waveform.field",
-            },
-        }
+        self.assertEqual(len(runtime_paths), 22)
         forbidden_prefixes = (
             "dag",
             "dask",
@@ -495,7 +484,7 @@ class PackageContractTest(unittest.TestCase):
             "tensor_dslab.readout.collection",
             "tensor_dslab.readout.types",
         }
-        for path in producer_paths:
+        for path in runtime_paths:
             tree = ast.parse(path.read_text(), filename=str(path))
             imports: list[str] = []
             for node in ast.walk(tree):
@@ -513,29 +502,29 @@ class PackageContractTest(unittest.TestCase):
                             for prefix in forbidden_prefixes
                         )
                     )
-            self.assertEqual(
-                {
-                    imported
-                    for imported in imports
-                    if imported == "tensor_dslab"
-                    or imported.startswith("tensor_dslab.")
-                },
-                accepted_tensor_dslab_imports[path],
-            )
-
-    def test_charge_effects_are_empty_export_and_do_not_import_producer(self) -> None:
-        effects = __import__(
-            "tensor_dslab.readout.charge.effects",
-            fromlist=("__all__",),
+    def test_runtime_packages_are_empty_and_effects_do_not_import_producer(
+        self,
+    ) -> None:
+        runtime_packages = (
+            "tensor_dslab.readout.runtime",
+            "tensor_dslab.readout.photoelectrons.runtime",
+            "tensor_dslab.readout.charge.runtime",
+            "tensor_dslab.readout.charge.runtime.effects",
+            "tensor_dslab.readout.pure_waveform.runtime",
+            "tensor_dslab.readout.noise_waveform.runtime",
+            "tensor_dslab.readout.analog_waveform.runtime",
+            "tensor_dslab.readout.digitized_waveform.runtime",
         )
-        self.assertEqual(effects.__all__, ())
-        self.assertEqual(
-            {name for name in vars(effects) if not name.startswith("_")},
-            set(),
-        )
-
+        for module_name in runtime_packages:
+            with self.subTest(module=module_name):
+                module = __import__(module_name, fromlist=("__name__",))
+                self.assertFalse(hasattr(module, "__all__"))
+                package_path = Path(*module_name.split("."), "__init__.py")
+                self.assertEqual(package_path.read_text(), "")
         effect_paths = tuple(
-            sorted(Path("tensor_dslab/readout/charge/effects").glob("_*.py"))
+            sorted(
+                Path("tensor_dslab/readout/charge/runtime/effects").glob("*.py")
+            )
         )
         self.assertEqual(len(effect_paths), 7)
         for path in effect_paths:
@@ -545,7 +534,10 @@ class PackageContractTest(unittest.TestCase):
                 for node in ast.walk(tree)
                 if isinstance(node, ast.ImportFrom) and node.module is not None
             }
-            self.assertNotIn("tensor_dslab.readout.charge._produce", imported)
+            self.assertNotIn(
+                "tensor_dslab.readout.charge.runtime.produce",
+                imported,
+            )
             self.assertNotIn("tensor_dslab.readout.config", imported)
             self.assertNotIn("tensor_dslab.readout.collection", imported)
 
@@ -556,35 +548,56 @@ class PackageContractTest(unittest.TestCase):
             "tensor_dslab.common",
             "tensor_dslab.readout.photoelectrons",
             "tensor_dslab.readout.photoelectrons.field",
+            "tensor_dslab.readout.photoelectrons.runtime",
+            "tensor_dslab.readout.photoelectrons.runtime.validate",
             "tensor_dslab.readout.charge",
             "tensor_dslab.readout.charge.config",
             "tensor_dslab.readout.charge.field",
-            "tensor_dslab.readout.charge.effects",
-            "tensor_dslab.readout.charge.effects._counts",
-            "tensor_dslab.readout.charge.effects._delays",
-            "tensor_dslab.readout.charge.effects._dark_counts",
-            "tensor_dslab.readout.charge.effects._timing_jitter",
-            "tensor_dslab.readout.charge.effects._correlated_avalanches",
-            "tensor_dslab.readout.charge.effects._smearing",
+            "tensor_dslab.readout.charge.runtime",
+            "tensor_dslab.readout.charge.runtime.prepare",
+            "tensor_dslab.readout.charge.runtime.produce",
+            "tensor_dslab.readout.charge.runtime.validate",
+            "tensor_dslab.readout.charge.runtime.effects",
+            "tensor_dslab.readout.charge.runtime.effects.counts",
+            "tensor_dslab.readout.charge.runtime.effects.delays",
+            "tensor_dslab.readout.charge.runtime.effects.dark_counts",
+            "tensor_dslab.readout.charge.runtime.effects.timing_jitter",
+            "tensor_dslab.readout.charge.runtime.effects.correlated_avalanches",
+            "tensor_dslab.readout.charge.runtime.effects.smearing",
             "tensor_dslab.readout.pure_waveform",
             "tensor_dslab.readout.pure_waveform.config",
             "tensor_dslab.readout.pure_waveform.field",
+            "tensor_dslab.readout.pure_waveform.runtime",
+            "tensor_dslab.readout.pure_waveform.runtime.prepare",
+            "tensor_dslab.readout.pure_waveform.runtime.produce",
+            "tensor_dslab.readout.pure_waveform.runtime.validate",
             "tensor_dslab.readout.noise_waveform",
             "tensor_dslab.readout.noise_waveform.config",
             "tensor_dslab.readout.noise_waveform.field",
+            "tensor_dslab.readout.noise_waveform.runtime",
+            "tensor_dslab.readout.noise_waveform.runtime.prepare",
+            "tensor_dslab.readout.noise_waveform.runtime.produce",
+            "tensor_dslab.readout.noise_waveform.runtime.validate",
             "tensor_dslab.readout.analog_waveform",
             "tensor_dslab.readout.analog_waveform.config",
             "tensor_dslab.readout.analog_waveform.field",
+            "tensor_dslab.readout.analog_waveform.runtime",
+            "tensor_dslab.readout.analog_waveform.runtime.prepare",
+            "tensor_dslab.readout.analog_waveform.runtime.produce",
+            "tensor_dslab.readout.analog_waveform.runtime.validate",
             "tensor_dslab.readout.digitized_waveform",
             "tensor_dslab.readout.digitized_waveform.config",
             "tensor_dslab.readout.digitized_waveform.field",
-            "tensor_dslab.readout.charge._produce",
-            "tensor_dslab.readout.pure_waveform._produce",
-            "tensor_dslab.readout.noise_waveform._produce",
-            "tensor_dslab.readout.analog_waveform._produce",
-            "tensor_dslab.readout.digitized_waveform._produce",
+            "tensor_dslab.readout.digitized_waveform.runtime",
+            "tensor_dslab.readout.digitized_waveform.runtime.prepare",
+            "tensor_dslab.readout.digitized_waveform.runtime.produce",
+            "tensor_dslab.readout.digitized_waveform.runtime.validate",
             "tensor_dslab.readout.config",
             "tensor_dslab.readout.collection",
+            "tensor_dslab.readout.requirements",
+            "tensor_dslab.readout.runtime",
+            "tensor_dslab.readout.runtime.sampling",
+            "tensor_dslab.readout.runtime.prepare",
             "tensor_dslab.readout.simulation",
             "tensor_dslab.readout",
             "tensor_dslab",
@@ -615,6 +628,14 @@ class PackageContractTest(unittest.TestCase):
             "tensor_dslab.readout.noise_waveform.types",
             "tensor_dslab.readout.analog_waveform.types",
             "tensor_dslab.readout.digitized_waveform.types",
+            "tensor_dslab.readout._requirements",
+            "tensor_dslab.readout.charge.effects",
+            "tensor_dslab.readout.photoelectrons._produce",
+            "tensor_dslab.readout.charge._produce",
+            "tensor_dslab.readout.pure_waveform._produce",
+            "tensor_dslab.readout.noise_waveform._produce",
+            "tensor_dslab.readout.analog_waveform._produce",
+            "tensor_dslab.readout.digitized_waveform._produce",
         )
         for module_name in retired_modules:
             with self.subTest(retired=module_name):

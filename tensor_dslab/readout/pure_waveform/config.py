@@ -5,7 +5,7 @@ from typing import final
 
 from tensor_core import FiniteFloat, PositiveFloat
 
-from tensor_dslab.readout._requirements import _require_exact, _require_one_of_exact
+from tensor_dslab.readout.requirements import require_exact, require_one_of_exact
 
 
 @final
@@ -17,22 +17,22 @@ class TpcFebSnrPulseConfig:
     peak_voltage_mv_per_pe: FiniteFloat
 
     def __post_init__(self) -> None:
-        _require_exact(
+        require_exact(
             self.fast_time_constant_ns,
             PositiveFloat,
             "TpcFebSnrPulseConfig.fast_time_constant_ns",
         )
-        _require_exact(
+        require_exact(
             self.slow_time_constant_ns,
             PositiveFloat,
             "TpcFebSnrPulseConfig.slow_time_constant_ns",
         )
-        _require_exact(
+        require_exact(
             self.support_time_ns,
             PositiveFloat,
             "TpcFebSnrPulseConfig.support_time_ns",
         )
-        _require_exact(
+        require_exact(
             self.peak_voltage_mv_per_pe,
             FiniteFloat,
             "TpcFebSnrPulseConfig.peak_voltage_mv_per_pe",
@@ -56,42 +56,42 @@ class VetoPduPulseConfig:
     peak_voltage_mv_per_pe: FiniteFloat
 
     def __post_init__(self) -> None:
-        _require_exact(
+        require_exact(
             self.gaussian_center_ns,
             FiniteFloat,
             "VetoPduPulseConfig.gaussian_center_ns",
         )
-        _require_exact(
+        require_exact(
             self.gaussian_width_ns,
             PositiveFloat,
             "VetoPduPulseConfig.gaussian_width_ns",
         )
-        _require_exact(
+        require_exact(
             self.edge_offset_1_ns,
             FiniteFloat,
             "VetoPduPulseConfig.edge_offset_1_ns",
         )
-        _require_exact(
+        require_exact(
             self.edge_width_1_ns,
             PositiveFloat,
             "VetoPduPulseConfig.edge_width_1_ns",
         )
-        _require_exact(
+        require_exact(
             self.edge_offset_2_ns,
             FiniteFloat,
             "VetoPduPulseConfig.edge_offset_2_ns",
         )
-        _require_exact(
+        require_exact(
             self.edge_width_2_ns,
             PositiveFloat,
             "VetoPduPulseConfig.edge_width_2_ns",
         )
-        _require_exact(
+        require_exact(
             self.support_time_ns,
             PositiveFloat,
             "VetoPduPulseConfig.support_time_ns",
         )
-        _require_exact(
+        require_exact(
             self.peak_voltage_mv_per_pe,
             FiniteFloat,
             "VetoPduPulseConfig.peak_voltage_mv_per_pe",
@@ -106,7 +106,7 @@ class PureWaveformConfig:
     model: TpcFebSnrPulseConfig | VetoPduPulseConfig
 
     def __post_init__(self) -> None:
-        _require_one_of_exact(
+        require_one_of_exact(
             self.model,
             (TpcFebSnrPulseConfig, VetoPduPulseConfig),
             "PureWaveformConfig.model",

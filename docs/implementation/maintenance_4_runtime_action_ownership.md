@@ -1,6 +1,14 @@
 # Maintenance 4 Runtime Action Ownership Work Order
 
-Status: **Design-complete / User-authorized / Undispatched**.
+Status: **Implementation candidate / Validation pending at issuance**.
+
+While these exact bytes are absent from `main`, they describe Candidate 1
+under the fixed-commit Validation and Review gates; the current gate
+disposition is carried by the role handoff rather than inferred from this
+snapshot. If these bytes later appear unchanged on `main`, Review's clean
+fast-forward has completed and final Design acceptance remains pending unless
+and until this work order and the implementation index record
+**Merged / Closed**.
 
 Stable work-order key:
 `TensorDSLab/maintenance-4-runtime-action-ownership`.
@@ -99,6 +107,14 @@ Implementation creates that branch from the exact committed Design authority.
 Raw platform route identifiers remain private and must not enter committed
 files.
 
+Design committed exact authority
+`36b9cd8338a0a5dad7e6c005d25e70c067a7e66d` as the direct child of starting
+`main`, reverified the persistent package-owned execution routes, and
+explicitly dispatched the fixed Implementation branch. Candidate 1 is one
+direct child of that authority; its exact self-referential commit identity is
+recorded in the Implementation handoff because a commit cannot contain its
+own hash.
+
 Package state remains:
 
 ```text
@@ -107,7 +123,7 @@ conformance_finding:       Not evaluated
 coordination_status:       Deferred
 registry_storage_profile:  Disabled
 maintenance_3:             Merged / Closed
-maintenance_4:             Design-complete / User-authorized / Undispatched
+maintenance_4:             Implementation candidate / Validation pending
 stage_8:                   Stopped / superseding authority required
 ```
 
@@ -1333,6 +1349,60 @@ but may not substitute it for Validation or Review's independent allocations.
 If the accepted Della environment is unavailable or differs materially, stop
 and return the exact environment evidence to Design. Do not weaken the gate to
 conditional skips or reuse Maintenance 3 output.
+
+## Candidate 1 Implementation Evidence
+
+Implementation completed the bounded runtime-action refactor on the fixed
+`codex/maintenance-4-runtime-action-ownership` branch as one direct child of
+Design authority `36b9cd8338a0a5dad7e6c005d25e70c067a7e66d`. The exact
+candidate commit is named in the role handoff. Its cumulative delta is limited
+to the production, test, typing, work-order, and index allowlists above; all
+other authority bytes remain protected.
+
+The local evidence environment was macOS 15.7.4 arm64, Python 3.13.11,
+PyTorch 2.12.1 eager CPU, with neither CUDA nor MPS available. The dependency
+was independently reconstructed in both required forms: clean TensorCore
+source at exact commit `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`,
+parent `0e72f0e69cf9140b692d408e49a504cbdcb101b7`, tree
+`1012acf512933f4077fd63267d95fc97f9ee8842`, version `0.9.0`; and the
+canonical no-prefix archive with SHA-256
+`f793ef3645ab44175e445feb94444a90e01ccc34d01fc467db36bd81ad0606bd`.
+
+Against each dependency form, the five required focused modules, including
+the new runtime-ownership module, ran 97 tests: 88 passed and 9 conditional
+CUDA tests skipped. Full discovery ran 198 tests: 185 passed and 13 conditional
+CUDA tests skipped. Pyright 1.1.411 in standard mode reported zero errors,
+zero warnings, and zero informations against each form. The tests preserve all
+63 nonempty request subsets, exact stochastic call continuity, Maintenance 3
+same-stack qualification, storage/autograd behavior, and public facade
+identity while adding direct proof of action ownership, one sample-dimension
+lookup, shared `SamplingRuntime` identity, prepared-tensor immutability,
+validator-owned relationships, and the single Charge terminal scan.
+
+The duplicate-logic audit extracted only genuinely shared ownership:
+
+- exact type/dtype/structure/scalar requirements moved under the clean
+  `readout.requirements` names without changing their behavior;
+- sampling relationship validation and dimension binding moved into one
+  request-owned `SamplingRuntime` preparation;
+- each product's prior mixed bundle was split into its own preparation,
+  execution, and completed-product validation actions; and
+- Charge's scientific effects moved together under `charge/runtime/effects`
+  with clean cross-module names.
+
+Product-specific pulse, PSD, ADC, saturation, delay, jitter, correlated-
+avalanche, smearing, count, ledger, and relationship rules remain local
+because their equations, prerequisites, error categories, or execution
+semantics differ. No `utils.py`, `helpers.py`, ABC, registry, reflection,
+decorator framework, string dispatch, or untyped action mapping was added.
+
+Implementation collected no Della evidence because that evidence is optional
+for this role and cannot replace the mandatory independent fresh full-A100
+source/archive runs owned by Validation and Review. The local skips therefore
+make no new CUDA claim. Candidate 1 changes no public API, class identity,
+scientific equation, stochastic key/address/call order, dependency, metadata,
+governance, parity boundary, integration surface, optimization contract,
+release posture, or stopped Stage 8 state. It was not merged or pushed.
 
 ## Documentation And Historical Records
 

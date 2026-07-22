@@ -2,17 +2,18 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import final
 
 import torch
 from tensor_core import CounterRng, RngKey
 
-from tensor_dslab.common import SamplingConfig
+from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 from tensor_dslab.readout.charge.config import TimingJitterConfig
-from tensor_dslab.readout.charge.effects._counts import (
-    _checked_add,
-    _draw_ordered_categories,
-    _original_positions,
-    _require_count_domain,
+from tensor_dslab.readout.charge.runtime.effects.counts import (
+    checked_add,
+    draw_ordered_categories,
+    original_positions,
+    require_count_domain,
 )
 
 
@@ -21,8 +22,9 @@ _LOCAL_PROBABILITY_TOLERANCE = 1.0e-12
 _COMPLETE_LAW_TOLERANCE = 1.0e-11
 
 
+@final
 @dataclass(frozen=True, slots=True)
-class _TimingJitterPlan:
+class TimingJitterRuntime:
     probabilities: tuple[float, ...]
     left_tails: tuple[float, ...]
     rng_key: RngKey
@@ -57,21 +59,21 @@ def _log_jitter_g(value: float) -> float:
     return log_phi + math.log(total)
 
 
-def _prepare_timing_jitter(
+def prepare_timing_jitter(
     config: TimingJitterConfig,
     *,
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
     tensor_numel: int,
-) -> _TimingJitterPlan:
+) -> TimingJitterRuntime:
     sigma_ns = config.sigma_ns.value
     if sigma_ns == 0.0:
         raise ValueError("zero timing jitter uses the exact identity path")
-    sample_count = sampling.sample_count.value
+    sample_count = sampling.sample_count
     if sample_count > _MAX_SAMPLE_COUNT:
         raise ValueError("active timing jitter supports at most 8192 samples")
     if sample_count * tensor_numel > 1 << 63:
         raise ValueError("timing-jitter address lattice exceeds its domain")
-    period_ps = float(sampling.sample_period_ps.value)
+    period_ps = float(sampling.sample_period_ps)
     if not (
         period_ps * 2.0**-52 * 1.0e-3
         <= sigma_ns
@@ -136,30 +138,30 @@ def _prepare_timing_jitter(
         - 1.0
     ) > _COMPLETE_LAW_TOLERANCE:
         raise ValueError("timing-jitter complete-law identity failed")
-    return _TimingJitterPlan(
+    return TimingJitterRuntime(
         tuple(probabilities),
         tuple(left_tails),
         config.rng_key,
     )
 
 
-def _simulate_timing_jitter(
+def simulate_timing_jitter(
     counts: torch.Tensor,
     *,
     sample_dimension: int,
-    plan: _TimingJitterPlan,
+    runtime: TimingJitterRuntime,
     rng: CounterRng,
 ) -> torch.Tensor:
-    if type(plan) is not _TimingJitterPlan:
-        raise TypeError("plan must be exactly _TimingJitterPlan")
-    _require_count_domain(counts, field="timing-jitter input")
+    if type(runtime) is not TimingJitterRuntime:
+        raise TypeError("runtime must be exactly TimingJitterRuntime")
+    require_count_domain(counts, field="timing-jitter input")
     if type(sample_dimension) is not int:
         raise TypeError("sample_dimension must be exactly an integer")
     if sample_dimension < 0 or sample_dimension >= counts.ndim:
         raise ValueError("sample_dimension is outside the count rank")
-    sample_count = len(plan.probabilities)
+    sample_count = len(runtime.probabilities)
     if counts.shape[sample_dimension] != sample_count:
-        raise ValueError("sample dimension disagrees with the prepared plan")
+        raise ValueError("sample dimension disagrees with the prepared runtime")
     if not bool(torch.any(counts != 0).item()):
         return counts.clone()
 
@@ -167,7 +169,7 @@ def _simulate_timing_jitter(
     sample_last = counts.movedim(sample_dimension, -1)
     remaining = sample_last.clone()
     result = torch.zeros_like(sample_last)
-    positions = _original_positions(
+    positions = original_positions(
         tuple(counts.shape),
         sample_dimension=sample_dimension,
         device=counts.device,
@@ -179,14 +181,18 @@ def _simulate_timing_jitter(
             offset = target - source
             if offset < 0:
                 distance = -offset
-                success = plan.probabilities[distance]
-                later = 1.0 - plan.left_tails[distance - 1] + plan.left_tails[source]
+                success = runtime.probabilities[distance]
+                later = (
+                    1.0
+                    - runtime.left_tails[distance - 1]
+                    + runtime.left_tails[source]
+                )
             elif offset == 0:
-                success = plan.probabilities[0]
-                later = plan.left_tails[source] + plan.left_tails[0]
+                success = runtime.probabilities[0]
+                later = runtime.left_tails[source] + runtime.left_tails[0]
             else:
-                success = plan.probabilities[offset]
-                later = plan.left_tails[source] + plan.left_tails[offset]
+                success = runtime.probabilities[offset]
+                later = runtime.left_tails[source] + runtime.left_tails[offset]
             source_remaining = remaining[..., source]
             shape = tuple(source_remaining.shape)
             success_mass = torch.full(
@@ -201,17 +207,17 @@ def _simulate_timing_jitter(
                 dtype=torch.float64,
                 device=counts.device,
             )
-            category, source_remainder = _draw_ordered_categories(
+            category, source_remainder = draw_ordered_categories(
                 source_remaining,
                 success_masses=(success_mass,),
                 failure_masses=(later_mass,),
                 positions=(positions[..., source] + target * total_count,),
                 rng=rng,
-                key=plan.rng_key,
+                key=runtime.rng_key,
                 field="timing jitter",
             )
             remaining[..., source] = source_remainder
-            destination = _checked_add(
+            destination = checked_add(
                 destination,
                 category,
                 field="timing-jitter destination",

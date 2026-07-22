@@ -3,8 +3,9 @@ from __future__ import annotations
 import math
 from dataclasses import dataclass
 from fractions import Fraction
+from typing import final
 
-from tensor_dslab.common import SamplingConfig
+from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 from tensor_dslab.readout.charge.config import (
     AfterpulseConfig,
     AfterpulseRecoveryConfig,
@@ -18,15 +19,17 @@ _LOCAL_PROBABILITY_TOLERANCE = 1.0e-12
 _COMPLETE_LAW_TOLERANCE = 1.0e-11
 
 
+@final
 @dataclass(frozen=True, slots=True)
-class _DelayPlan:
+class DelayRuntime:
     probabilities: tuple[float, ...]
     right_tails: tuple[float, ...]
 
 
+@final
 @dataclass(frozen=True, slots=True)
-class _AfterpulsePlan:
-    delay: _DelayPlan
+class AfterpulseRuntime:
+    delay: DelayRuntime
     recovery: tuple[float, ...] | None
     overflow_recovery: tuple[float, ...] | None
 
@@ -48,7 +51,7 @@ def _prepare_exponential_from_inverse(
     x: float,
     *,
     sample_count: int,
-) -> _DelayPlan:
+) -> DelayRuntime:
     if not math.isfinite(x) or x <= 0.0:
         raise ValueError("exponential inverse ratio must be finite and positive")
     a = -math.expm1(-x)
@@ -88,19 +91,19 @@ def _prepare_exponential_from_inverse(
         _COMPLETE_LAW_TOLERANCE
     ):
         raise ValueError("exponential complete-law identity failed")
-    return _DelayPlan(tuple(probabilities), tuple(tails))
+    return DelayRuntime(tuple(probabilities), tuple(tails))
 
 
-def _prepare_exponential_delay(
+def prepare_exponential_delay(
     mean_delay_ns: float,
     *,
-    sampling: SamplingConfig,
-) -> _DelayPlan:
-    sample_count = sampling.sample_count.value
+    sampling: SamplingRuntime,
+) -> DelayRuntime:
+    sample_count = sampling.sample_count
     if sample_count > _MAX_SAMPLE_COUNT:
         raise ValueError("active exponential delay supports at most 8192 samples")
     mean_numerator, mean_denominator = mean_delay_ns.as_integer_ratio()
-    period = sampling.sample_period_ps.value
+    period = sampling.sample_period_ps
     if mean_numerator * 1000 * (1 << 52) < mean_denominator * period:
         raise ValueError("exponential delay ratio is below the accepted domain")
     if mean_numerator * 1000 > mean_denominator * period * (1 << 52):
@@ -115,13 +118,15 @@ def _prepare_exponential_delay(
 def _prepare_fixed_delay(
     delay_ns: float,
     *,
-    sampling: SamplingConfig,
-) -> _DelayPlan:
-    sample_count = sampling.sample_count.value
+    sampling: SamplingRuntime,
+) -> DelayRuntime:
+    sample_count = sampling.sample_count
     numerator, denominator = delay_ns.as_integer_ratio()
-    period = sampling.sample_period_ps.value
-    if numerator * 1000 >= denominator * sampling.window_stop_ps:
-        return _DelayPlan(
+    period = sampling.sample_period_ps
+    if numerator * 1000 >= denominator * (
+        sampling.sample_count * sampling.sample_period_ps
+    ):
+        return DelayRuntime(
             probabilities=(0.0,) * sample_count,
             right_tails=(1.0,) * (sample_count + 1),
         )
@@ -148,18 +153,18 @@ def _prepare_fixed_delay(
             tails.append(fraction)
         else:
             tails.append(0.0)
-    return _DelayPlan(tuple(probabilities), tuple(tails))
+    return DelayRuntime(tuple(probabilities), tuple(tails))
 
 
-def _prepare_delay(
+def prepare_delay(
     config: FixedDelayConfig | ExponentialDelayConfig,
     *,
-    sampling: SamplingConfig,
-) -> _DelayPlan:
+    sampling: SamplingRuntime,
+) -> DelayRuntime:
     if type(config) is FixedDelayConfig:
         return _prepare_fixed_delay(config.delay_ns.value, sampling=sampling)
     if type(config) is ExponentialDelayConfig:
-        return _prepare_exponential_delay(
+        return prepare_exponential_delay(
             config.mean_delay_ns.value,
             sampling=sampling,
         )
@@ -243,14 +248,14 @@ def _g_difference(x: float, y: float) -> float:
     return math.log(_q_exp_zero(x + y) / _q_exp_zero(x)) - math.log1p(y / x)
 
 
-def _prepare_afterpulse_recovery(
+def prepare_afterpulse_recovery(
     afterpulse: AfterpulseConfig,
     recovery: AfterpulseRecoveryConfig,
     *,
-    sampling: SamplingConfig,
-    delay: _DelayPlan,
+    sampling: SamplingRuntime,
+    delay: DelayRuntime,
 ) -> tuple[tuple[float, ...], tuple[float, ...]]:
-    period = sampling.sample_period_ps.value
+    period = sampling.sample_period_ps
     recovery_value = recovery.time_constant_ns.value
     numerator, denominator = recovery_value.as_integer_ratio()
     if numerator * 1000 * (1 << 52) < denominator * period:
@@ -270,7 +275,7 @@ def _prepare_afterpulse_recovery(
 
     effective = _prepare_exponential_from_inverse(
         combined,
-        sample_count=sampling.sample_count.value,
+        sample_count=sampling.sample_count,
     )
     c = x / combined
     f_difference = _f_difference(x, y)
@@ -299,7 +304,7 @@ def _prepare_afterpulse_recovery(
         recovery_weights.append(weight)
 
     overflow_weights = [0.0]
-    for first_outside in range(1, sampling.sample_count.value + 1):
+    for first_outside in range(1, sampling.sample_count + 1):
         probability = delay.right_tails[first_outside]
         if probability == 0.0:
             overflow_weights.append(0.0)

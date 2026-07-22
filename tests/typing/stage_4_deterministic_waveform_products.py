@@ -3,7 +3,12 @@ from __future__ import annotations
 from typing import assert_type
 
 import torch
-from tensor_core import FiniteFloat, NonnegativeFloat, PositiveFloat, PositiveInteger
+from tensor_core import (
+    FiniteFloat,
+    NonnegativeFloat,
+    PositiveFloat,
+    PositiveInteger,
+)
 
 from tensor_dslab import (
     AnalogWaveform,
@@ -19,18 +24,25 @@ from tensor_dslab import (
     SamplingConfig,
     TpcFebSnrPulseConfig,
 )
-from tensor_dslab.readout.analog_waveform._produce import (
-    _prepare_analog_waveform,
-    _produce_analog_waveform,
+from tensor_dslab.readout.analog_waveform.runtime.prepare import (
+    prepare_analog_waveform,
 )
-from tensor_dslab.readout.digitized_waveform._produce import (
-    _prepare_digitized_waveform,
-    _produce_digitized_waveform,
+from tensor_dslab.readout.analog_waveform.runtime.produce import (
+    produce_analog_waveform,
 )
-from tensor_dslab.readout.pure_waveform._produce import (
-    _prepare_pure_waveform,
-    _produce_pure_waveform,
+from tensor_dslab.readout.digitized_waveform.runtime.prepare import (
+    prepare_digitized_waveform,
 )
+from tensor_dslab.readout.digitized_waveform.runtime.produce import (
+    produce_digitized_waveform,
+)
+from tensor_dslab.readout.pure_waveform.runtime.prepare import (
+    prepare_pure_waveform,
+)
+from tensor_dslab.readout.pure_waveform.runtime.produce import (
+    produce_pure_waveform,
+)
+from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 
 
 sampling = SamplingConfig(
@@ -55,42 +67,46 @@ pure_config = PureWaveformConfig(
         peak_voltage_mv_per_pe=FiniteFloat(-7.0),
     )
 )
-pure_plan = _prepare_pure_waveform(
-    charge,
-    sampling=sampling,
-    config=pure_config,
+sampling_runtime = SamplingRuntime(
+    sample_count=4,
+    sample_period_ps=2_000,
+    sample_dimension=2,
+)
+pure_runtime = prepare_pure_waveform(
+    pure_config,
+    sampling=sampling_runtime,
     floating_dtype=charge.tensor.dtype,
     device=charge.tensor.device,
 )
-pure = _produce_pure_waveform(charge, plan=pure_plan)
+pure = produce_pure_waveform(charge, runtime=pure_runtime)
 assert_type(pure, PureWaveform)
 
 noise = NoiseWaveform(
     tensor=torch.zeros((1, 1, 4), dtype=torch.float64),
     axes=axes,
 )
-analog_plan = _prepare_analog_waveform(
+analog_runtime = prepare_analog_waveform(
     config=AnalogWaveformConfig(),
     floating_dtype=pure.tensor.dtype,
     device=pure.tensor.device,
 )
-analog = _produce_analog_waveform(
+analog = produce_analog_waveform(
     pure,
     noise,
-    plan=analog_plan,
+    runtime=analog_runtime,
 )
 assert_type(analog, AnalogWaveform)
 
 digitized_config = DigitizedWaveformConfig(
-        bit_depth=PositiveInteger(12),
-        input_min_mv=FiniteFloat(-20.0),
-        input_max_mv=FiniteFloat(2.0),
-        analog_gain_db=NonnegativeFloat(0.0),
+    bit_depth=PositiveInteger(12),
+    input_min_mv=FiniteFloat(-20.0),
+    input_max_mv=FiniteFloat(2.0),
+    analog_gain_db=NonnegativeFloat(0.0),
 )
-digitized_plan = _prepare_digitized_waveform(
+digitized_runtime = prepare_digitized_waveform(
     config=digitized_config,
     floating_dtype=analog.tensor.dtype,
     device=analog.tensor.device,
 )
-digitized = _produce_digitized_waveform(analog, plan=digitized_plan)
+digitized = produce_digitized_waveform(analog, runtime=digitized_runtime)
 assert_type(digitized, DigitizedWaveform)

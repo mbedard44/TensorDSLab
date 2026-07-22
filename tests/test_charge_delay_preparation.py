@@ -11,17 +11,64 @@ from tensor_dslab import (
     AfterpulseRecoveryConfig,
     SamplingConfig,
 )
-from tensor_dslab.readout.charge.effects._delays import (
-    _prepare_afterpulse_recovery,
-    _prepare_exponential_delay,
-    _prepare_fixed_delay,
+from tensor_dslab.readout.charge.runtime.effects.delays import (
+    DelayRuntime,
+    prepare_afterpulse_recovery as _prepare_afterpulse_recovery_prepared,
+    prepare_exponential_delay as _prepare_exponential_delay_prepared,
+    _prepare_fixed_delay as _prepare_fixed_delay_prepared,
 )
+from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 
 
 def _sampling(*, period_ps: int = 2000, count: int = 8) -> SamplingConfig:
     return SamplingConfig(
         sample_period_ps=PositiveInteger(period_ps),
         sample_count=PositiveInteger(count),
+    )
+
+
+def _sampling_runtime(sampling: SamplingConfig) -> SamplingRuntime:
+    return SamplingRuntime(
+        sample_count=sampling.sample_count.value,
+        sample_period_ps=sampling.sample_period_ps.value,
+        sample_dimension=2,
+    )
+
+
+def _prepare_fixed_delay(
+    delay_ns: float,
+    *,
+    sampling: SamplingConfig,
+) -> DelayRuntime:
+    return _prepare_fixed_delay_prepared(
+        delay_ns,
+        sampling=_sampling_runtime(sampling),
+    )
+
+
+def prepare_exponential_delay(
+    mean_delay_ns: float,
+    *,
+    sampling: SamplingConfig,
+) -> DelayRuntime:
+    return _prepare_exponential_delay_prepared(
+        mean_delay_ns,
+        sampling=_sampling_runtime(sampling),
+    )
+
+
+def prepare_afterpulse_recovery(
+    afterpulse: AfterpulseConfig,
+    recovery: AfterpulseRecoveryConfig,
+    *,
+    sampling: SamplingConfig,
+    delay: DelayRuntime,
+) -> tuple[tuple[float, ...], tuple[float, ...]]:
+    return _prepare_afterpulse_recovery_prepared(
+        afterpulse,
+        recovery,
+        sampling=_sampling_runtime(sampling),
+        delay=delay,
     )
 
 
@@ -110,7 +157,7 @@ class ExponentialDelayPreparationTest(unittest.TestCase):
     ) -> None:
         sampling = _sampling(count=sample_count)
         mean_ns = sampling.sample_period_ps.value * 1.0e-3 * ratio
-        plan = _prepare_exponential_delay(mean_ns, sampling=sampling)
+        plan = prepare_exponential_delay(mean_ns, sampling=sampling)
         with localcontext() as context:
             context.prec = 110
             inverse_mean = Decimal(sampling.sample_period_ps.value) / (
@@ -188,7 +235,7 @@ class ExponentialDelayPreparationTest(unittest.TestCase):
             with self.subTest(ratio=ratio):
                 self._assert_high_precision_law(ratio=ratio, sample_count=8)
 
-        underflow = _prepare_exponential_delay(
+        underflow = prepare_exponential_delay(
             2.0 * 2.0**-52,
             sampling=_sampling(count=8),
         )
@@ -202,23 +249,23 @@ class ExponentialDelayPreparationTest(unittest.TestCase):
         period_ns = sampling.sample_period_ps.value * 1.0e-3
         for ratio in (2.0**-52, 1.0, 2.0**52):
             with self.subTest(ratio=ratio):
-                plan = _prepare_exponential_delay(
+                plan = prepare_exponential_delay(
                     period_ns * ratio,
                     sampling=sampling,
                 )
                 self.assertEqual(len(plan.probabilities), 8)
         with self.assertRaises(ValueError):
-            _prepare_exponential_delay(
+            prepare_exponential_delay(
                 period_ns * math.nextafter(2.0**-52, 0.0),
                 sampling=sampling,
             )
         with self.assertRaises(ValueError):
-            _prepare_exponential_delay(
+            prepare_exponential_delay(
                 period_ns * math.nextafter(2.0**52, math.inf),
                 sampling=sampling,
             )
         with self.assertRaises(ValueError):
-            _prepare_exponential_delay(10.0, sampling=_sampling(count=8193))
+            prepare_exponential_delay(10.0, sampling=_sampling(count=8193))
 
 
 class AfterpulseRecoveryPreparationTest(unittest.TestCase):
@@ -244,11 +291,11 @@ class AfterpulseRecoveryPreparationTest(unittest.TestCase):
                     mean_delay_ns=PositiveFloat(mean_delay_ns),
                     recovery=recovery_config,
                 )
-                delay = _prepare_exponential_delay(
+                delay = prepare_exponential_delay(
                     mean_delay_ns,
                     sampling=sampling,
                 )
-                recovery, overflow = _prepare_afterpulse_recovery(
+                recovery, overflow = prepare_afterpulse_recovery(
                     afterpulse,
                     recovery_config,
                     sampling=sampling,
@@ -416,8 +463,8 @@ class AfterpulseRecoveryPreparationTest(unittest.TestCase):
             mean_delay_ns=PositiveFloat(10.0),
             recovery=recovery_config,
         )
-        delay = _prepare_exponential_delay(10.0, sampling=sampling)
-        recovery, overflow = _prepare_afterpulse_recovery(
+        delay = prepare_exponential_delay(10.0, sampling=sampling)
+        recovery, overflow = prepare_afterpulse_recovery(
             afterpulse,
             recovery_config,
             sampling=sampling,

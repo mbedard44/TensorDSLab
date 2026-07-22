@@ -5,7 +5,7 @@ from typing import final
 
 from tensor_core import FiniteFloat
 
-from tensor_dslab.readout._requirements import _require_optional_exact
+from tensor_dslab.readout.requirements import require_optional_exact
 
 
 @final
@@ -15,12 +15,12 @@ class AnalogSaturationConfig:
     maximum_mv: FiniteFloat | None = None
 
     def __post_init__(self) -> None:
-        _require_optional_exact(
+        require_optional_exact(
             self.minimum_mv,
             FiniteFloat,
             "AnalogSaturationConfig.minimum_mv",
         )
-        _require_optional_exact(
+        require_optional_exact(
             self.maximum_mv,
             FiniteFloat,
             "AnalogSaturationConfig.maximum_mv",
@@ -41,7 +41,7 @@ class AnalogWaveformConfig:
     saturation: AnalogSaturationConfig | None = None
 
     def __post_init__(self) -> None:
-        _require_optional_exact(
+        require_optional_exact(
             self.saturation,
             AnalogSaturationConfig,
             "AnalogWaveformConfig.saturation",

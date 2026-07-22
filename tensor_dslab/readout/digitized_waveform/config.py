@@ -5,7 +5,7 @@ from typing import final
 
 from tensor_core import FiniteFloat, NonnegativeFloat, PositiveInteger
 
-from tensor_dslab.readout._requirements import _require_exact
+from tensor_dslab.readout.requirements import require_exact
 
 
 @final
@@ -17,22 +17,22 @@ class DigitizedWaveformConfig:
     analog_gain_db: NonnegativeFloat
 
     def __post_init__(self) -> None:
-        _require_exact(
+        require_exact(
             self.bit_depth,
             PositiveInteger,
             "DigitizedWaveformConfig.bit_depth",
         )
-        _require_exact(
+        require_exact(
             self.input_min_mv,
             FiniteFloat,
             "DigitizedWaveformConfig.input_min_mv",
         )
-        _require_exact(
+        require_exact(
             self.input_max_mv,
             FiniteFloat,
             "DigitizedWaveformConfig.input_max_mv",
         )
-        _require_exact(
+        require_exact(
             self.analog_gain_db,
             NonnegativeFloat,
             "DigitizedWaveformConfig.analog_gain_db",

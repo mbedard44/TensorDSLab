@@ -2,16 +2,18 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
+from typing import final
 
 import torch
 from tensor_core import CounterRng, RngKey, logical_positions
 
-from tensor_dslab.readout._requirements import _require_representable_float
+from tensor_dslab.readout.requirements import require_representable_float
 from tensor_dslab.readout.charge.config import ChargeSmearingConfig
 
 
+@final
 @dataclass(frozen=True, slots=True)
-class _ChargeSmearingPlan:
+class ChargeSmearingRuntime:
     represented_sigma: float
     rng_key: RngKey
 
@@ -26,7 +28,7 @@ def _prepare_smearing_sigma(
     requested = config.relative_sigma.value
     if requested == 0.0:
         return 0.0
-    represented = _require_representable_float(
+    represented = require_representable_float(
         requested,
         dtype=floating_dtype,
         field="ChargeSmearingConfig.relative_sigma",
@@ -82,14 +84,14 @@ def _prepare_smearing_sigma(
     return represented
 
 
-def _prepare_charge_smearing(
+def prepare_charge_smearing(
     config: ChargeSmearingConfig,
     *,
     floating_dtype: torch.dtype,
     ledger_bound: float,
     device: torch.device,
-) -> _ChargeSmearingPlan:
-    return _ChargeSmearingPlan(
+) -> ChargeSmearingRuntime:
+    return ChargeSmearingRuntime(
         represented_sigma=_prepare_smearing_sigma(
             config,
             floating_dtype=floating_dtype,
@@ -100,15 +102,15 @@ def _prepare_charge_smearing(
     )
 
 
-def _simulate_charge_smearing(
+def simulate_charge_smearing(
     charge_pe: torch.Tensor,
     charge_square_sum: torch.Tensor,
     *,
-    plan: _ChargeSmearingPlan,
+    runtime: ChargeSmearingRuntime,
     rng: CounterRng,
 ) -> torch.Tensor:
-    if type(plan) is not _ChargeSmearingPlan:
-        raise TypeError("plan must be exactly _ChargeSmearingPlan")
+    if type(runtime) is not ChargeSmearingRuntime:
+        raise TypeError("runtime must be exactly ChargeSmearingRuntime")
     if charge_pe.dtype not in (torch.float32, torch.float64):
         raise TypeError("charge_pe must use a supported floating dtype")
     if charge_square_sum.dtype is not charge_pe.dtype:
@@ -120,13 +122,13 @@ def _simulate_charge_smearing(
     for field, value in (("S1", charge_pe), ("S2", charge_square_sum)):
         if not bool(torch.all(torch.isfinite(value) & (value >= 0.0)).item()):
             raise ValueError(f"charge-smearing {field} must be finite and nonnegative")
-    if plan.represented_sigma == 0.0:
+    if runtime.represented_sigma == 0.0:
         return charge_pe
-    if plan.represented_sigma <= 0.0:
+    if runtime.represented_sigma <= 0.0:
         raise ValueError("charge-smearing width is invalid in the Charge dtype")
     positions = logical_positions(tuple(charge_pe.shape), device=charge_pe.device)
     sigma = torch.tensor(
-        plan.represented_sigma,
+        runtime.represented_sigma,
         dtype=charge_pe.dtype,
         device=charge_pe.device,
     )
@@ -136,7 +138,7 @@ def _simulate_charge_smearing(
     draw = rng.gaussian(
         mean=charge_pe,
         standard_deviation=scale,
-        key=plan.rng_key,
+        key=runtime.rng_key,
         positions=positions,
         dtype=charge_pe.dtype,
         quantum=0,

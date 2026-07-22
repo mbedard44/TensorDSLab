@@ -24,6 +24,7 @@ from tensor_dslab import (
     DigitizedWaveformConfig,
     ExampleAxis,
     NoiseWaveform,
+    Photoelectrons,
     PureWaveform,
     PureWaveformConfig,
     SampleAxis,
@@ -31,27 +32,34 @@ from tensor_dslab import (
     TpcFebSnrPulseConfig,
     VetoPduPulseConfig,
 )
-from tensor_dslab.readout.analog_waveform._produce import (
-    _prepare_analog_waveform,
-    _produce_analog_waveform as _produce_analog_waveform_prepared,
+from tensor_dslab.readout.analog_waveform.runtime.prepare import (
+    prepare_analog_waveform,
 )
-from tensor_dslab.readout.analog_waveform.field import (
-    _require_valid_values as require_valid_analog,
+from tensor_dslab.readout.analog_waveform.runtime.produce import (
+    produce_analog_waveform as _produce_analog_waveform_prepared,
 )
-from tensor_dslab.readout.digitized_waveform._produce import (
-    _prepare_digitized_waveform,
-    _produce_digitized_waveform as _produce_digitized_waveform_prepared,
+from tensor_dslab.readout.analog_waveform.runtime.validate import (
+    validate_analog_waveform as require_valid_analog,
 )
-from tensor_dslab.readout.digitized_waveform.field import (
-    _require_valid_values as require_valid_digitized,
+from tensor_dslab.readout.digitized_waveform.runtime.prepare import (
+    prepare_digitized_waveform,
 )
-from tensor_dslab.readout.pure_waveform._produce import (
-    _prepare_pure_waveform,
-    _produce_pure_waveform as _produce_pure_waveform_prepared,
+from tensor_dslab.readout.digitized_waveform.runtime.produce import (
+    produce_digitized_waveform as _produce_digitized_waveform_prepared,
 )
-from tensor_dslab.readout.pure_waveform.field import (
-    _require_valid_values as require_valid_pure,
+from tensor_dslab.readout.digitized_waveform.runtime.validate import (
+    validate_digitized_waveform as require_valid_digitized,
 )
+from tensor_dslab.readout.pure_waveform.runtime.prepare import (
+    prepare_pure_waveform,
+)
+from tensor_dslab.readout.pure_waveform.runtime.produce import (
+    produce_pure_waveform as _produce_pure_waveform_prepared,
+)
+from tensor_dslab.readout.pure_waveform.runtime.validate import (
+    validate_pure_waveform as require_valid_pure,
+)
+from tensor_dslab.readout.runtime.sampling import SamplingRuntime, prepare_sampling
 
 
 PulseModel = TpcFebSnrPulseConfig | VetoPduPulseConfig
@@ -391,14 +399,19 @@ def _produce_pure_waveform(
     sampling: SamplingConfig,
     config: PureWaveformConfig,
 ) -> PureWaveform:
-    plan = _prepare_pure_waveform(
-        charge,
-        sampling=sampling,
-        config=config,
+    runtime = prepare_pure_waveform(
+        config,
+        sampling=SamplingRuntime(
+            sample_count=sampling.sample_count.value,
+            sample_period_ps=sampling.sample_period_ps.value,
+            sample_dimension=charge.dimension_of(SampleAxis),
+        ),
         floating_dtype=charge.tensor.dtype,
         device=charge.tensor.device,
     )
-    return _produce_pure_waveform_prepared(charge, plan=plan)
+    result = _produce_pure_waveform_prepared(charge, runtime=runtime)
+    require_valid_pure(result, source=charge)
+    return result
 
 
 def _produce_analog_waveform(
@@ -407,12 +420,14 @@ def _produce_analog_waveform(
     *,
     config: AnalogWaveformConfig,
 ) -> AnalogWaveform:
-    plan = _prepare_analog_waveform(
+    runtime = prepare_analog_waveform(
         config=config,
         floating_dtype=pure.tensor.dtype,
         device=pure.tensor.device,
     )
-    return _produce_analog_waveform_prepared(pure, noise, plan=plan)
+    result = _produce_analog_waveform_prepared(pure, noise, runtime=runtime)
+    require_valid_analog(result, pure=pure, noise=noise)
+    return result
 
 
 def _produce_digitized_waveform(
@@ -420,12 +435,18 @@ def _produce_digitized_waveform(
     *,
     config: DigitizedWaveformConfig,
 ) -> DigitizedWaveform:
-    plan = _prepare_digitized_waveform(
+    runtime = prepare_digitized_waveform(
         config=config,
         floating_dtype=analog.tensor.dtype,
         device=analog.tensor.device,
     )
-    return _produce_digitized_waveform_prepared(analog, plan=plan)
+    result = _produce_digitized_waveform_prepared(analog, runtime=runtime)
+    require_valid_digitized(
+        result,
+        source=analog,
+        maximum_code=runtime.maximum_code,
+    )
+    return result
 
 
 class DeterministicWaveformProductsTest(unittest.TestCase):
@@ -683,7 +704,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                 self.assertTrue(_independent_storage(result.tensor, charge.tensor))
                 self.assertEqual(charge.tensor._version, version)
                 torch.testing.assert_close(charge.tensor, original)
-                self.assertIsNone(require_valid_pure(result))
+                self.assertIsNone(require_valid_pure(result, source=charge))
                 saved_result = result.tensor.clone()
                 _produce_pure_waveform(charge, sampling=sampling, config=config)
                 torch.testing.assert_close(result.tensor, saved_result)
@@ -735,7 +756,6 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
     def test_sampling_relationship_rejects_size_start_and_period_mismatch(
         self,
     ) -> None:
-        config = _tpc_config(support_time_ns=32.0)
         sampling = _sampling(count=4)
         mismatch_cases = (
             (
@@ -768,10 +788,15 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         for charge, expected_sampling in mismatch_cases:
             with self.subTest(axis=charge.axis(SampleAxis).coordinates):
                 with self.assertRaises(ValueError):
-                    _produce_pure_waveform(
-                        charge,
-                        sampling=expected_sampling,
-                        config=config,
+                    prepare_sampling(
+                        Photoelectrons(
+                            tensor=torch.zeros_like(
+                                charge.tensor,
+                                dtype=torch.int64,
+                            ),
+                            axes=charge.axes,
+                        ),
+                        config=expected_sampling,
                     )
 
     def test_pure_waveform_rejects_out_of_range_support_before_convolution(
@@ -782,7 +807,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         before = charge.tensor.clone()
         version = charge.tensor._version
         with patch(
-            "tensor_dslab.readout.pure_waveform._produce.functional.conv1d",
+            "tensor_dslab.readout.pure_waveform.runtime.produce.functional.conv1d",
             side_effect=AssertionError("payload convolution started"),
         ):
             with self.assertRaises(ValueError):
@@ -804,7 +829,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         for peak_mv in (3.5e38, 1e-50):
             with self.subTest(peak_mv=peak_mv):
                 with patch(
-                    "tensor_dslab.readout.pure_waveform._produce.functional.conv1d",
+                    "tensor_dslab.readout.pure_waveform.runtime.produce.functional.conv1d",
                     side_effect=AssertionError("payload convolution started"),
                 ):
                     with self.assertRaises(ValueError):
@@ -901,14 +926,16 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                     self.assertEqual(result.shape, pure.shape)
                     self.assertIs(result.tensor.dtype, dtype)
                     self.assertEqual(result.tensor.device, pure.tensor.device)
-                    self.assertIsNone(require_valid_analog(result))
+                    self.assertIsNone(
+                        require_valid_analog(result, pure=pure, noise=noise)
+                    )
 
         pure = _pure(pure_samples, sampling, dtype=torch.float32)
         noise = _noise(noise_samples, sampling, dtype=torch.float32)
         bounded = configs[-1]
         real_clamp = torch.clamp
         with patch(
-            "tensor_dslab.readout.analog_waveform._produce.torch.clamp",
+            "tensor_dslab.readout.analog_waveform.runtime.produce.torch.clamp",
             wraps=real_clamp,
         ) as clamp_call:
             _produce_analog_waveform(pure, noise, config=bounded)
@@ -929,7 +956,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         pure = _pure([1.0, 2.0, 3.0, 4.0], sampling, dtype=torch.float64)
         noise = _noise([0.5, 0.25, 0.0, -0.25], sampling, dtype=torch.float64)
         with patch(
-            "tensor_dslab.readout.analog_waveform._produce.require_same_dtype",
+            "tensor_dslab.readout.analog_waveform.runtime.validate.require_same_dtype",
             wraps=require_same_dtype,
         ) as delegated:
             result = _produce_analog_waveform(
@@ -937,7 +964,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                 noise,
                 config=AnalogWaveformConfig(),
             )
-        delegated.assert_called_once_with(pure, noise)
+        delegated.assert_called_once_with(pure, noise, result)
         torch.testing.assert_close(
             result.tensor,
             pure.tensor + noise.tensor,
@@ -945,41 +972,45 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
             atol=0.0,
         )
 
-    def test_analog_waveform_rejects_axis_device_or_dtype_disagreement(self) -> None:
+    def test_analog_validator_rejects_axis_device_or_dtype_disagreement(self) -> None:
         sampling = _sampling(count=4)
         pure = _pure([0.0] * 4, sampling, dtype=torch.float32)
+        analog = AnalogWaveform(
+            tensor=torch.ones_like(pure.tensor),
+            axes=pure.axes,
+        )
         mismatched_axes = _axes(
             sampling,
             start_ps=0,
             period_ps=4_000,
         )
         with self.assertRaises(ValueError):
-            _produce_analog_waveform(
-                pure,
-                _noise(
+            require_valid_analog(
+                analog,
+                pure=pure,
+                noise=_noise(
                     [0.0] * 4,
                     sampling,
                     dtype=torch.float32,
                     axes=mismatched_axes,
                 ),
-                config=AnalogWaveformConfig(),
             )
         with self.assertRaises(ValueError):
-            _produce_analog_waveform(
-                pure,
-                _noise([0.0] * 4, sampling, dtype=torch.float64),
-                config=AnalogWaveformConfig(),
+            require_valid_analog(
+                analog,
+                pure=pure,
+                noise=_noise([0.0] * 4, sampling, dtype=torch.float64),
             )
         with self.assertRaises(ValueError):
-            _produce_analog_waveform(
-                pure,
-                _noise(
+            require_valid_analog(
+                analog,
+                pure=pure,
+                noise=_noise(
                     [0.0] * 4,
                     sampling,
                     dtype=torch.float32,
                     device="meta",
                 ),
-                config=AnalogWaveformConfig(),
             )
 
     def test_analog_waveform_rejects_nonfinite_or_collapsed_dtype_bounds_before_addition(
@@ -1004,7 +1035,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         for config in bad_configs:
             with self.subTest(config=config):
                 with patch(
-                    "tensor_dslab.readout.analog_waveform._produce.torch.add",
+                    "tensor_dslab.readout.analog_waveform.runtime.produce.torch.add",
                     side_effect=AssertionError("payload addition started"),
                 ):
                     with self.assertRaises(ValueError):
@@ -1154,7 +1185,13 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
             self.assertEqual(result.tensor.device, analog.tensor.device)
             for result_axis, source_axis in zip(result.axes, analog.axes):
                 self.assertIs(result_axis, source_axis)
-            self.assertIsNone(require_valid_digitized(result, config))
+            self.assertIsNone(
+                require_valid_digitized(
+                    result,
+                    source=analog,
+                    maximum_code=(1 << config.bit_depth.value) - 1,
+                )
+            )
 
     def test_digitized_waveform_endpoints_zero_code_and_gain(self) -> None:
         sampling = _sampling(count=5)
@@ -1227,7 +1264,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         for config in configs:
             with self.subTest(config=config):
                 with patch(
-                    "tensor_dslab.readout.digitized_waveform._produce.torch.mul",
+                    "tensor_dslab.readout.digitized_waveform.runtime.produce.torch.mul",
                     side_effect=AssertionError("payload mapping started"),
                 ):
                     with self.assertRaises(ValueError):
@@ -1308,7 +1345,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
             return result
 
         with patch(
-            "tensor_dslab.readout.digitized_waveform._produce.torch.tensor",
+            "tensor_dslab.readout.digitized_waveform.runtime.prepare.torch.tensor",
             side_effect=tensor_spy,
         ):
             result = _produce_digitized_waveform(analog, config=config)
@@ -1406,9 +1443,17 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                 self.assertEqual(pure.tensor.device.type, "cuda")
                 self.assertEqual(analog.tensor.device.type, "cuda")
                 self.assertEqual(digitized.tensor.device.type, "cuda")
-                self.assertIsNone(require_valid_pure(pure))
-                self.assertIsNone(require_valid_analog(analog))
-                self.assertIsNone(require_valid_digitized(digitized, _adc_config()))
+                self.assertIsNone(require_valid_pure(pure, source=charge))
+                self.assertIsNone(
+                    require_valid_analog(analog, pure=pure, noise=noise)
+                )
+                self.assertIsNone(
+                    require_valid_digitized(
+                        digitized,
+                        source=analog,
+                        maximum_code=(1 << _adc_config().bit_depth.value) - 1,
+                    )
+                )
 
 
 if __name__ == "__main__":

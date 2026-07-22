@@ -4,9 +4,9 @@ from dataclasses import dataclass
 from typing import final
 
 from tensor_dslab.common import SamplingConfig
-from tensor_dslab.readout._requirements import (
-    _require_exact,
-    _require_optional_exact,
+from tensor_dslab.readout.requirements import (
+    require_exact,
+    require_optional_exact,
 )
 from tensor_dslab.readout.analog_waveform.config import AnalogWaveformConfig
 from tensor_dslab.readout.charge.config import ChargeConfig
@@ -28,28 +28,28 @@ class ReadoutConfig:
     digitized_waveform: DigitizedWaveformConfig | None = None
 
     def __post_init__(self) -> None:
-        _require_exact(self.sampling, SamplingConfig, "ReadoutConfig.sampling")
-        _require_optional_exact(
+        require_exact(self.sampling, SamplingConfig, "ReadoutConfig.sampling")
+        require_optional_exact(
             self.charge,
             ChargeConfig,
             "ReadoutConfig.charge",
         )
-        _require_optional_exact(
+        require_optional_exact(
             self.pure_waveform,
             PureWaveformConfig,
             "ReadoutConfig.pure_waveform",
         )
-        _require_optional_exact(
+        require_optional_exact(
             self.noise_waveform,
             NoiseWaveformConfig,
             "ReadoutConfig.noise_waveform",
         )
-        _require_optional_exact(
+        require_optional_exact(
             self.analog_waveform,
             AnalogWaveformConfig,
             "ReadoutConfig.analog_waveform",
         )
-        _require_optional_exact(
+        require_optional_exact(
             self.digitized_waveform,
             DigitizedWaveformConfig,
             "ReadoutConfig.digitized_waveform",

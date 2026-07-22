@@ -5,9 +5,9 @@ from typing import final
 
 from tensor_core import NonnegativeFloat, PositiveFloat, RngKey
 
-from tensor_dslab.readout._requirements import (
-    _require_exact,
-    _require_one_of_exact,
+from tensor_dslab.readout.requirements import (
+    require_exact,
+    require_one_of_exact,
 )
 
 
@@ -27,8 +27,8 @@ class WhiteNoiseConfig:
     rng_key: RngKey = RngKey(namespace=_RNG_NAMESPACE, stream=0x0000_0001)
 
     def __post_init__(self) -> None:
-        _require_exact(self.rms_mv, PositiveFloat, "WhiteNoiseConfig.rms_mv")
-        _require_exact(self.rng_key, RngKey, "WhiteNoiseConfig.rng_key")
+        require_exact(self.rms_mv, PositiveFloat, "WhiteNoiseConfig.rms_mv")
+        require_exact(self.rng_key, RngKey, "WhiteNoiseConfig.rng_key")
 
 
 @final
@@ -55,12 +55,12 @@ class PsdNoiseConfig:
         ):
             raise ValueError("PSD left-edge and density counts must match")
         for edge in self.frequency_left_edges_hz:
-            _require_exact(
+            require_exact(
                 edge,
                 NonnegativeFloat,
                 "PsdNoiseConfig.frequency_left_edges_hz",
             )
-        _require_exact(
+        require_exact(
             self.frequency_stop_hz,
             PositiveFloat,
             "PsdNoiseConfig.frequency_stop_hz",
@@ -81,7 +81,7 @@ class PsdNoiseConfig:
         ):
             raise ValueError("PSD frequency stop must exceed its final left edge")
         for density in self.power_density_mv2_per_hz:
-            _require_exact(
+            require_exact(
                 density,
                 NonnegativeFloat,
                 "PsdNoiseConfig.power_density_mv2_per_hz",
@@ -90,7 +90,7 @@ class PsdNoiseConfig:
             density.value > 0.0 for density in self.power_density_mv2_per_hz
         ):
             raise ValueError("use ZeroNoiseConfig for an all-zero PSD")
-        _require_exact(self.rng_key, RngKey, "PsdNoiseConfig.rng_key")
+        require_exact(self.rng_key, RngKey, "PsdNoiseConfig.rng_key")
 
 
 @final
@@ -99,7 +99,7 @@ class NoiseWaveformConfig:
     model: ZeroNoiseConfig | WhiteNoiseConfig | PsdNoiseConfig
 
     def __post_init__(self) -> None:
-        _require_one_of_exact(
+        require_one_of_exact(
             self.model,
             (ZeroNoiseConfig, WhiteNoiseConfig, PsdNoiseConfig),
             "NoiseWaveformConfig.model",

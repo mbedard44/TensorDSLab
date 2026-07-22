@@ -39,13 +39,16 @@ from tensor_dslab import (
     SamplingConfig,
     TimingJitterConfig,
 )
-from tensor_dslab.readout.charge.effects import (
-    _correlated_avalanches as correlated_effect,
+import tensor_dslab.readout.charge.runtime.produce as charge_producer
+from tensor_dslab.readout.charge.runtime.effects import (
+    correlated_avalanches as correlated_effect,
 )
-from tensor_dslab.readout.charge.effects import _counts as count_effect
-from tensor_dslab.readout.charge.effects import _dark_counts as dark_effect
-from tensor_dslab.readout.charge.effects import _smearing as smearing_effect
-from tensor_dslab.readout.charge import _produce as charge_producer
+from tensor_dslab.readout.charge.runtime.effects import counts as count_effect
+from tensor_dslab.readout.charge.runtime.effects import dark_counts as dark_effect
+from tensor_dslab.readout.charge.runtime.effects import smearing as smearing_effect
+from tensor_dslab.readout.charge.runtime.prepare import prepare_charge
+from tensor_dslab.readout.charge.runtime.validate import validate_charge
+from tensor_dslab.readout.runtime.sampling import SamplingRuntime, prepare_sampling
 
 
 def _produce_charge(
@@ -56,17 +59,20 @@ def _produce_charge(
     rng: CounterRng,
     floating_dtype: torch.dtype,
 ) -> Charge:
-    plan = charge_producer._prepare_charge(
-        photoelectrons,
-        sampling=sampling,
-        config=config,
+    sampling_runtime = prepare_sampling(photoelectrons, config=sampling)
+    runtime = prepare_charge(
+        config,
+        photoelectrons=photoelectrons,
+        sampling=sampling_runtime,
         floating_dtype=floating_dtype,
     )
-    return charge_producer._produce_charge(
+    result = charge_producer.produce_charge(
         photoelectrons,
-        plan=plan,
+        runtime=runtime,
         rng=rng,
     )
+    validate_charge(result, source=photoelectrons, runtime=runtime)
+    return result
 
 
 class _FailingRng(CounterRng):
@@ -141,6 +147,14 @@ def _sampling() -> SamplingConfig:
     return SamplingConfig(
         sample_period_ps=PositiveInteger(2000),
         sample_count=PositiveInteger(4),
+    )
+
+
+def _sampling_runtime(sampling: SamplingConfig) -> SamplingRuntime:
+    return SamplingRuntime(
+        sample_count=sampling.sample_count.value,
+        sample_period_ps=sampling.sample_period_ps.value,
+        sample_dimension=2,
     )
 
 
@@ -300,29 +314,9 @@ class ChargeProductStructureTest(unittest.TestCase):
 
 
 class ChargeProductPreflightTest(unittest.TestCase):
-    def test_rng_is_required_and_zero_population_paths_request_no_words(
+    def test_zero_population_paths_request_no_words(
         self,
     ) -> None:
-        nonzero = torch.zeros((2, 2, 4), dtype=torch.int64)
-        nonzero[0, 0, 0] = 1
-        source = _field(nonzero)
-        for config in (
-            ChargeConfig(),
-            _config(True, False, False, False),
-            _config(False, True, False, False),
-            _config(False, False, True, False),
-            _config(False, False, False, True),
-        ):
-            with self.subTest(config=config):
-                with self.assertRaises(TypeError):
-                    _produce_charge(
-                        source,
-                        sampling=_sampling(),
-                        config=config,
-                        rng=None,  # type: ignore[arg-type]
-                        floating_dtype=torch.float32,
-                    )
-
         zeros = _field(torch.zeros((2, 2, 4), dtype=torch.int64))
         draw_free = ChargeConfig(
             timing_jitter=TimingJitterConfig(sigma_ns=NonnegativeFloat(1.0)),
@@ -343,14 +337,14 @@ class ChargeProductPreflightTest(unittest.TestCase):
         )
         self.assertTrue(torch.equal(result.tensor, torch.zeros_like(result.tensor)))
 
-    def test_source_and_checked_add_count_boundaries(self) -> None:
+    def test_source_andchecked_add_count_boundaries(self) -> None:
         source_values = torch.zeros((2, 2, 4), dtype=torch.int64)
         source_values[0, 0, 0] = (1 << 53) - 2
         source = _field(source_values)
         one = torch.zeros_like(source.tensor)
         one[0, 0, 0] = 1
         two = one * 2
-        accepted_counts = count_effect._checked_add(
+        accepted_counts = count_effect.checked_add(
             source.tensor,
             one,
             field="test count result",
@@ -364,7 +358,7 @@ class ChargeProductPreflightTest(unittest.TestCase):
         )
         self.assertEqual(accepted.tensor[0, 0, 0].item(), float((1 << 53) - 1))
         with self.assertRaises(RuntimeError):
-            count_effect._checked_add(
+            count_effect.checked_add(
                 source.tensor,
                 two,
                 field="test count result",
@@ -433,7 +427,7 @@ class ChargeProductPreflightTest(unittest.TestCase):
         self.assertEqual(
             dark_effect._prepare_dark_mean(
                 endpoint_config,
-                sampling=sampling,
+                sampling=_sampling_runtime(sampling),
             ),
             100_000_000.0,
         )
@@ -505,11 +499,11 @@ class DarkCountStatisticalTest(unittest.TestCase):
         observations: list[torch.Tensor] = []
         for seed in seeds:
             counts = torch.zeros((per_seed, 1, 2), dtype=torch.int64)
-            dark = dark_effect._simulate_dark_counts(
+            dark = dark_effect.simulate_dark_counts(
                 counts,
-                plan=dark_effect._prepare_dark_counts(
+                runtime=dark_effect.prepare_dark_counts(
                     config,
-                    sampling=sampling,
+                    sampling=_sampling_runtime(sampling),
                 ),
                 rng=Threefry4x32(seed=seed),
             )
@@ -608,7 +602,7 @@ class ChargeSmearingTest(unittest.TestCase):
             negative_words,
         ) in cases:
             with self.subTest(dtype=dtype):
-                _, ledger_bound = correlated_effect._ledger_envelope(
+                _, ledger_bound = correlated_effect.prepare_ledger_envelope(
                     floating_dtype=dtype,
                     maximum_generations=0,
                     retained_mechanisms=0,
@@ -662,10 +656,10 @@ class ChargeSmearingTest(unittest.TestCase):
                 ):
                     with self.subTest(dtype=dtype, words=words):
                         _FixedBlockRng.use(words)
-                        result = smearing_effect._simulate_charge_smearing(
+                        result = smearing_effect.simulate_charge_smearing(
                             ledgers,
                             ledgers,
-                            plan=smearing_effect._prepare_charge_smearing(
+                            runtime=smearing_effect.prepare_charge_smearing(
                                 ChargeSmearingConfig(
                                     relative_sigma=NonnegativeFloat(accepted)
                                 ),
@@ -684,7 +678,7 @@ class ChargeSmearingTest(unittest.TestCase):
 
         for requested in (2.0**-150, 2.0**128):
             with self.subTest(float32_requested=requested):
-                _, ledger_bound = correlated_effect._ledger_envelope(
+                _, ledger_bound = correlated_effect.prepare_ledger_envelope(
                     floating_dtype=torch.float32,
                     maximum_generations=0,
                     retained_mechanisms=0,
@@ -702,7 +696,7 @@ class ChargeSmearingTest(unittest.TestCase):
                     )
 
     def test_contextual_envelope_rejects_before_any_charge_effect(self) -> None:
-        _, ledger_bound = correlated_effect._ledger_envelope(
+        _, ledger_bound = correlated_effect.prepare_ledger_envelope(
             floating_dtype=torch.float32,
             maximum_generations=23,
             retained_mechanisms=1,
@@ -748,17 +742,17 @@ class ChargeSmearingTest(unittest.TestCase):
         with (
             mock.patch.object(
                 charge_producer,
-                "_simulate_dark_counts",
+                "simulate_dark_counts",
                 side_effect=AssertionError("dark-count effect reached"),
             ) as dark,
             mock.patch.object(
                 charge_producer,
-                "_simulate_timing_jitter",
+                "simulate_timing_jitter",
                 side_effect=AssertionError("timing-jitter effect reached"),
             ) as jitter,
             mock.patch.object(
                 charge_producer,
-                "_simulate_correlated_avalanches",
+                "simulate_correlated_avalanches",
                 side_effect=AssertionError("correlated-avalanche effect reached"),
             ) as correlated,
             self.assertRaisesRegex(ValueError, "finite envelope"),
@@ -888,7 +882,7 @@ class ChargeSmearingTest(unittest.TestCase):
 @unittest.skipUnless(torch.cuda.is_available(), "CUDA is unavailable")
 class CudaChargeProductTest(unittest.TestCase):
     def test_smearing_compatibility_guard_uses_cuda_dtype_arithmetic(self) -> None:
-        _, k_zero_bound = correlated_effect._ledger_envelope(
+        _, k_zero_bound = correlated_effect.prepare_ledger_envelope(
             floating_dtype=torch.float32,
             maximum_generations=0,
             retained_mechanisms=0,
@@ -908,7 +902,7 @@ class CudaChargeProductTest(unittest.TestCase):
             accepted,
         )
 
-        _, contextual_bound = correlated_effect._ledger_envelope(
+        _, contextual_bound = correlated_effect.prepare_ledger_envelope(
             floating_dtype=torch.float32,
             maximum_generations=23,
             retained_mechanisms=1,

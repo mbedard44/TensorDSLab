@@ -23,11 +23,15 @@ from tensor_dslab import (
     SamplingConfig,
     WhiteNoiseConfig,
 )
-from tensor_dslab.readout.charge._produce import _prepare_charge, _produce_charge
-from tensor_dslab.readout.noise_waveform._produce import (
-    _prepare_noise_waveform,
-    _produce_noise_waveform,
+from tensor_dslab.readout.charge.runtime.prepare import prepare_charge
+from tensor_dslab.readout.charge.runtime.produce import produce_charge
+from tensor_dslab.readout.noise_waveform.runtime.prepare import (
+    prepare_noise_waveform,
 )
+from tensor_dslab.readout.noise_waveform.runtime.produce import (
+    produce_noise_waveform,
+)
+from tensor_dslab.readout.runtime.sampling import prepare_sampling
 
 
 sampling = SamplingConfig(
@@ -46,32 +50,34 @@ source = Photoelectrons(
 rng = Threefry4x32(seed=17)
 key = RngKey(namespace=0x54445331, stream=101)
 
-noise_plan = _prepare_noise_waveform(
-    source,
-    sampling=sampling,
-    config=NoiseWaveformConfig(
+sampling_runtime = prepare_sampling(source, config=sampling)
+noise_runtime = prepare_noise_waveform(
+    NoiseWaveformConfig(
         model=WhiteNoiseConfig(
             rms_mv=PositiveFloat(1.0),
             rng_key=key,
         )
     ),
+    sampling=sampling_runtime,
+    shape=source.shape,
     floating_dtype=torch.float32,
+    device=source.tensor.device,
 )
-noise = _produce_noise_waveform(source, plan=noise_plan, rng=rng)
+noise = produce_noise_waveform(source, runtime=noise_runtime, rng=rng)
 assert_type(noise, NoiseWaveform)
 assert_type(noise.tensor, torch.Tensor)
 
-charge_plan = _prepare_charge(
-    source,
-    sampling=sampling,
-    config=ChargeConfig(
+charge_runtime = prepare_charge(
+    ChargeConfig(
         smearing=ChargeSmearingConfig(
             relative_sigma=NonnegativeFloat(0.1),
             rng_key=key,
         )
     ),
+    photoelectrons=source,
+    sampling=sampling_runtime,
     floating_dtype=torch.float64,
 )
-charge = _produce_charge(source, plan=charge_plan, rng=rng)
+charge = produce_charge(source, runtime=charge_runtime, rng=rng)
 assert_type(charge, Charge)
 assert_type(charge.tensor, torch.Tensor)

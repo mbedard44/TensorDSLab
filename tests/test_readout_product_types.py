@@ -16,32 +16,38 @@ from tensor_dslab.readout import (
     Photoelectrons,
     PureWaveform,
 )
-from tensor_dslab.readout._requirements import (
-    _require_dtype,
-    _require_exact,
-    _require_floating_dtype,
-    _require_one_of_exact,
-    _require_optional_exact,
-    _require_representable_float,
+from tensor_dslab.readout.requirements import (
+    require_dtype,
+    require_exact,
+    require_floating_dtype,
+    require_one_of_exact,
+    require_optional_exact,
+    require_representable_float,
 )
-from tensor_dslab.readout.analog_waveform.field import (
-    _require_valid_values as require_valid_analog,
+from tensor_dslab.readout.analog_waveform.runtime.validate import (
+    validate_analog_waveform as require_valid_analog,
 )
-from tensor_dslab.readout.charge.field import (
-    _require_valid_values as require_valid_charge,
+from tensor_dslab.readout.charge.runtime.prepare import ChargeRuntime
+from tensor_dslab.readout.charge.runtime.validate import (
+    validate_charge as require_valid_charge,
 )
-from tensor_dslab.readout.digitized_waveform.field import (
-    _require_valid_values as require_valid_digitized,
+from tensor_dslab.readout.digitized_waveform.runtime.validate import (
+    validate_digitized_waveform as require_valid_digitized,
 )
-from tensor_dslab.readout.noise_waveform.field import (
-    _require_valid_values as require_valid_noise,
+from tensor_dslab.readout.noise_waveform.runtime.prepare import (
+    NoiseWaveformRuntime,
+    ZeroNoiseRuntime,
 )
-from tensor_dslab.readout.photoelectrons.field import (
-    _require_valid_values as require_valid_photoelectrons,
+from tensor_dslab.readout.noise_waveform.runtime.validate import (
+    validate_noise_waveform as require_valid_noise,
 )
-from tensor_dslab.readout.pure_waveform.field import (
-    _require_valid_values as require_valid_pure,
+from tensor_dslab.readout.photoelectrons.runtime.validate import (
+    validate_photoelectrons as require_valid_photoelectrons,
 )
+from tensor_dslab.readout.pure_waveform.runtime.validate import (
+    validate_pure_waveform as require_valid_pure,
+)
+from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 from tensor_core import FiniteFloat, NonnegativeFloat, PositiveInteger
 from tests.readout_fixtures import (
     ALTERNATE_AXIS_ORDER,
@@ -53,6 +59,40 @@ from tests.readout_fixtures import (
     make_product,
     make_tensor,
 )
+
+
+def _sampling_runtime(field: TensorField) -> SamplingRuntime:
+    return SamplingRuntime(
+        sample_count=field.axis(SampleAxis).size,
+        sample_period_ps=1,
+        sample_dimension=field.dimension_of(SampleAxis),
+    )
+
+
+def _charge_runtime(source: Photoelectrons, dtype: torch.dtype) -> ChargeRuntime:
+    return ChargeRuntime(
+        sampling=_sampling_runtime(source),
+        floating_dtype=dtype,
+        rng_roles=(),
+        dark=None,
+        timing_jitter=None,
+        correlated_avalanches=None,
+        smearing=None,
+    )
+
+
+def _noise_runtime(
+    source: Photoelectrons,
+    dtype: torch.dtype,
+) -> NoiseWaveformRuntime:
+    return NoiseWaveformRuntime(
+        shape=source.shape,
+        device=source.tensor.device,
+        floating_dtype=dtype,
+        sampling=_sampling_runtime(source),
+        model=ZeroNoiseRuntime(),
+        rng_roles=(),
+    )
 
 
 class ReadoutProductTypesTest(unittest.TestCase):
@@ -67,7 +107,7 @@ class ReadoutProductTypesTest(unittest.TestCase):
                     self.assertEqual(field.dimension_of(SampleAxis), order.index(SampleAxis))
                     self.assertIs(field.axis(SampleAxis), axes[order.index(SampleAxis)])
 
-    def test_products_require_exact_three_readout_axes(self) -> None:
+    def test_productsrequire_exact_three_readout_axes(self) -> None:
         invalid_orders = (
             (ExampleAxis, ChannelAxis),
             (ExampleAxis, ChannelAxis, OtherAxis),
@@ -125,7 +165,7 @@ class ReadoutProductTypesTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             PureWaveform(tensor=sparse, axes=axes)
 
-    def test_photoelectrons_and_digitized_require_exact_integer_dtypes(self) -> None:
+    def test_photoelectrons_and_digitizedrequire_exact_integer_dtypes(self) -> None:
         axes = make_axes()
         for dtype in (torch.int32, torch.float32, torch.float64):
             with self.subTest(field="Photoelectrons", dtype=dtype):
@@ -168,20 +208,41 @@ class ReadoutProductTypesTest(unittest.TestCase):
             require_valid_photoelectrons(field)
 
     def test_product_deep_validators_accept_valid_values(self) -> None:
-        self.assertIsNone(require_valid_photoelectrons(make_product(Photoelectrons)))
-        self.assertIsNone(require_valid_charge(make_product(Charge)))
-        self.assertIsNone(require_valid_pure(make_product(PureWaveform)))
-        self.assertIsNone(require_valid_noise(make_product(NoiseWaveform)))
-        self.assertIsNone(require_valid_analog(make_product(AnalogWaveform)))
+        photoelectrons = make_product(Photoelectrons)
+        charge = make_product(Charge, axes=photoelectrons.axes)
+        pure = make_product(PureWaveform, axes=photoelectrons.axes)
+        noise = make_product(NoiseWaveform, axes=photoelectrons.axes)
+        analog = make_product(AnalogWaveform, axes=photoelectrons.axes)
+        digitized = make_product(DigitizedWaveform, axes=photoelectrons.axes)
+        charge_runtime = _charge_runtime(photoelectrons, charge.tensor.dtype)
+        noise_runtime = _noise_runtime(photoelectrons, noise.tensor.dtype)
 
-        digitized = make_product(DigitizedWaveform)
-        config = DigitizedWaveformConfig(
-            bit_depth=PositiveInteger(12),
-            input_min_mv=FiniteFloat(-1000.0),
-            input_max_mv=FiniteFloat(1000.0),
-            analog_gain_db=NonnegativeFloat(0.0),
+        self.assertIsNone(require_valid_photoelectrons(photoelectrons))
+        self.assertIsNone(
+            require_valid_charge(
+                charge,
+                source=photoelectrons,
+                runtime=charge_runtime,
+            )
         )
-        self.assertIsNone(require_valid_digitized(digitized, config))
+        self.assertIsNone(require_valid_pure(pure, source=charge))
+        self.assertIsNone(
+            require_valid_noise(
+                noise,
+                source=photoelectrons,
+                runtime=noise_runtime,
+            )
+        )
+        self.assertIsNone(
+            require_valid_analog(analog, pure=pure, noise=noise)
+        )
+        self.assertIsNone(
+            require_valid_digitized(
+                digitized,
+                source=analog,
+                maximum_code=(1 << 12) - 1,
+            )
+        )
 
     def test_product_deep_validators_reject_invalid_values(self) -> None:
         axes = make_axes(
@@ -189,46 +250,62 @@ class ReadoutProductTypesTest(unittest.TestCase):
             channel_coordinates=("c0",),
             sample_coordinates=("0ps", "1ps"),
         )
-        with self.assertRaises(ValueError):
+        source = Photoelectrons(
+            tensor=torch.zeros((1, 1, 2), dtype=torch.int64),
+            axes=axes,
+        )
+        charge_runtime = _charge_runtime(source, torch.float32)
+        with self.assertRaises(RuntimeError):
             require_valid_charge(
                 Charge(
                     tensor=torch.tensor([[[0.0, -1.0]]]),
                     axes=axes,
-                )
+                ),
+                source=source,
+                runtime=charge_runtime,
             )
+        valid_charge = Charge(tensor=torch.zeros((1, 1, 2)), axes=axes)
+        valid_pure = PureWaveform(tensor=torch.zeros((1, 1, 2)), axes=axes)
+        valid_noise = NoiseWaveform(tensor=torch.zeros((1, 1, 2)), axes=axes)
+        noise_runtime = _noise_runtime(source, torch.float32)
         for bad in (float("nan"), float("inf"), float("-inf")):
             with self.subTest(field=Charge.__name__, value=bad):
-                with self.assertRaises(ValueError):
+                with self.assertRaises(RuntimeError):
                     require_valid_charge(
-                        Charge(tensor=torch.tensor([[[0.0, bad]]]), axes=axes)
+                        Charge(tensor=torch.tensor([[[0.0, bad]]]), axes=axes),
+                        source=source,
+                        runtime=charge_runtime,
                     )
             with self.subTest(field=PureWaveform.__name__, value=bad):
                 with self.assertRaises(ValueError):
                     require_valid_pure(
                         PureWaveform(
                             tensor=torch.tensor([[[0.0, bad]]]), axes=axes
-                        )
+                        ),
+                        source=valid_charge,
                     )
             with self.subTest(field=NoiseWaveform.__name__, value=bad):
                 with self.assertRaises(ValueError):
                     require_valid_noise(
                         NoiseWaveform(
                             tensor=torch.tensor([[[0.0, bad]]]), axes=axes
-                        )
+                        ),
+                        source=source,
+                        runtime=noise_runtime,
                     )
             with self.subTest(field=AnalogWaveform.__name__, value=bad):
                 with self.assertRaises(ValueError):
                     require_valid_analog(
                         AnalogWaveform(
                             tensor=torch.tensor([[[0.0, bad]]]), axes=axes
-                        )
+                        ),
+                        pure=valid_pure,
+                        noise=valid_noise,
                     )
 
-        config = DigitizedWaveformConfig(
-            bit_depth=PositiveInteger(2),
-            input_min_mv=FiniteFloat(-1.0),
-            input_max_mv=FiniteFloat(1.0),
-            analog_gain_db=NonnegativeFloat(0.0),
+        source_analog = AnalogWaveform(
+            tensor=torch.zeros((1, 1, 2)),
+            axes=axes,
         )
         for values in ((-1, 0), (0, 4)):
             with self.subTest(values=values):
@@ -237,33 +314,37 @@ class ReadoutProductTypesTest(unittest.TestCase):
                     axes=axes,
                 )
                 with self.assertRaises(ValueError):
-                    require_valid_digitized(field, config)
+                    require_valid_digitized(
+                        field,
+                        source=source_analog,
+                        maximum_code=3,
+                    )
 
     def test_shared_private_requirements_have_exact_relationship_behavior(self) -> None:
         photoelectrons = make_product(Photoelectrons)
-        _require_dtype(photoelectrons, torch.int64)
+        require_dtype(photoelectrons, torch.int64)
         with self.assertRaises(ValueError):
-            _require_dtype(photoelectrons, torch.int32)
+            require_dtype(photoelectrons, torch.int32)
         charge = make_product(Charge)
-        _require_floating_dtype(charge)
+        require_floating_dtype(charge)
 
-        _require_exact(photoelectrons, Photoelectrons, "field")
+        require_exact(photoelectrons, Photoelectrons, "field")
         with self.assertRaises(TypeError):
-            _require_exact(photoelectrons, Charge, "field")
-        _require_optional_exact(None, Charge, "field")
-        _require_optional_exact(charge, Charge, "field")
+            require_exact(photoelectrons, Charge, "field")
+        require_optional_exact(None, Charge, "field")
+        require_optional_exact(charge, Charge, "field")
         with self.assertRaises(TypeError):
-            _require_optional_exact(photoelectrons, Charge, "field")
-        _require_one_of_exact(charge, (Charge, PureWaveform), "field")
+            require_optional_exact(photoelectrons, Charge, "field")
+        require_one_of_exact(charge, (Charge, PureWaveform), "field")
         with self.assertRaises(TypeError):
-            _require_one_of_exact(photoelectrons, (Charge, PureWaveform), "field")
+            require_one_of_exact(photoelectrons, (Charge, PureWaveform), "field")
 
         real_tensor = torch.tensor
         with patch(
-            "tensor_dslab.readout._requirements.torch.tensor",
+            "tensor_dslab.readout.requirements.torch.tensor",
             wraps=real_tensor,
         ) as tensor_call:
-            represented = _require_representable_float(
+            represented = require_representable_float(
                 0.1,
                 dtype=torch.float32,
                 field="scalar",
@@ -278,7 +359,7 @@ class ReadoutProductTypesTest(unittest.TestCase):
             float(torch.tensor(0.1, dtype=torch.float32)),
         )
         self.assertEqual(
-            _require_representable_float(
+            require_representable_float(
                 7,
                 dtype=torch.float64,
                 field="scalar",
@@ -286,7 +367,7 @@ class ReadoutProductTypesTest(unittest.TestCase):
             7.0,
         )
         self.assertEqual(
-            _require_representable_float(
+            require_representable_float(
                 16_777_217,
                 dtype=torch.float32,
                 field="scalar",
@@ -297,7 +378,7 @@ class ReadoutProductTypesTest(unittest.TestCase):
             maximum = float(torch.finfo(dtype).max)
             with self.subTest(dtype=dtype, boundary="maximum"):
                 self.assertEqual(
-                    _require_representable_float(
+                    require_representable_float(
                         maximum,
                         dtype=dtype,
                         field="scalar",
@@ -305,7 +386,7 @@ class ReadoutProductTypesTest(unittest.TestCase):
                     maximum,
                 )
                 self.assertEqual(
-                    _require_representable_float(
+                    require_representable_float(
                         -maximum,
                         dtype=dtype,
                         field="scalar",
@@ -315,7 +396,7 @@ class ReadoutProductTypesTest(unittest.TestCase):
         for value in (-1.0, 0.0):
             with self.subTest(value=value, policy="caller-owned"):
                 self.assertEqual(
-                    _require_representable_float(
+                    require_representable_float(
                         value,
                         dtype=torch.float64,
                         field="scalar",
@@ -325,7 +406,7 @@ class ReadoutProductTypesTest(unittest.TestCase):
         for malformed in (True, "1.0", None):
             with self.subTest(malformed=malformed):
                 with self.assertRaises(TypeError):
-                    _require_representable_float(
+                    require_representable_float(
                         malformed,  # pyright: ignore[reportArgumentType]
                         dtype=torch.float32,
                         field="scalar",
@@ -333,7 +414,7 @@ class ReadoutProductTypesTest(unittest.TestCase):
         for dtype in (torch.float16, torch.int64, "torch.float32"):
             with self.subTest(dtype=dtype):
                 with self.assertRaises(TypeError):
-                    _require_representable_float(
+                    require_representable_float(
                         1.0,
                         dtype=dtype,  # type: ignore[arg-type]
                         field="scalar",
@@ -345,7 +426,7 @@ class ReadoutProductTypesTest(unittest.TestCase):
         ):
             with self.subTest(value=value, dtype=dtype):
                 with self.assertRaises(ValueError):
-                    _require_representable_float(
+                    require_representable_float(
                         value,
                         dtype=dtype,
                         field="scalar",

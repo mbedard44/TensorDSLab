@@ -55,23 +55,30 @@ from tensor_dslab import (
     WhiteNoiseConfig,
     ZeroNoiseConfig,
 )
-from tensor_dslab.readout.analog_waveform._produce import (
-    _produce_analog_waveform as _produce_analog_waveform_prepared,
+from tensor_dslab.readout.analog_waveform.runtime.produce import (
+    produce_analog_waveform as _produce_analog_waveform_prepared,
 )
-from tensor_dslab.readout.charge._produce import (
-    _prepare_charge,
-    _produce_charge as _produce_charge_prepared,
+from tensor_dslab.readout.charge.runtime.prepare import prepare_charge
+from tensor_dslab.readout.charge.runtime.produce import (
+    produce_charge as _produce_charge_prepared,
 )
-from tensor_dslab.readout.digitized_waveform._produce import (
-    _produce_digitized_waveform as _produce_digitized_waveform_prepared,
+from tensor_dslab.readout.charge.runtime.validate import validate_charge
+from tensor_dslab.readout.digitized_waveform.runtime.produce import (
+    produce_digitized_waveform as _produce_digitized_waveform_prepared,
 )
-from tensor_dslab.readout.noise_waveform._produce import (
-    _prepare_noise_waveform,
-    _produce_noise_waveform as _produce_noise_waveform_prepared,
+from tensor_dslab.readout.noise_waveform.runtime.prepare import (
+    prepare_noise_waveform,
 )
-from tensor_dslab.readout.pure_waveform._produce import (
-    _produce_pure_waveform as _produce_pure_waveform_prepared,
+from tensor_dslab.readout.noise_waveform.runtime.produce import (
+    produce_noise_waveform as _produce_noise_waveform_prepared,
 )
+from tensor_dslab.readout.noise_waveform.runtime.validate import (
+    validate_noise_waveform,
+)
+from tensor_dslab.readout.pure_waveform.runtime.produce import (
+    produce_pure_waveform as _produce_pure_waveform_prepared,
+)
+from tensor_dslab.readout.runtime.sampling import prepare_sampling
 
 
 _NAMESPACE = 0x54445331
@@ -126,13 +133,16 @@ def _produce_charge(
     rng: CounterRng,
     floating_dtype: torch.dtype,
 ) -> Charge:
-    plan = _prepare_charge(
-        photoelectrons,
-        sampling=sampling,
-        config=config,
+    sampling_runtime = prepare_sampling(photoelectrons, config=sampling)
+    runtime = prepare_charge(
+        config,
+        photoelectrons=photoelectrons,
+        sampling=sampling_runtime,
         floating_dtype=floating_dtype,
     )
-    return _produce_charge_prepared(photoelectrons, plan=plan, rng=rng)
+    result = _produce_charge_prepared(photoelectrons, runtime=runtime, rng=rng)
+    validate_charge(result, source=photoelectrons, runtime=runtime)
+    return result
 
 
 def _produce_noise_waveform(
@@ -143,13 +153,21 @@ def _produce_noise_waveform(
     rng: CounterRng,
     floating_dtype: torch.dtype,
 ) -> NoiseWaveform:
-    plan = _prepare_noise_waveform(
-        photoelectrons,
-        sampling=sampling,
-        config=config,
+    sampling_runtime = prepare_sampling(photoelectrons, config=sampling)
+    runtime = prepare_noise_waveform(
+        config,
+        sampling=sampling_runtime,
+        shape=photoelectrons.shape,
         floating_dtype=floating_dtype,
+        device=photoelectrons.tensor.device,
     )
-    return _produce_noise_waveform_prepared(photoelectrons, plan=plan, rng=rng)
+    result = _produce_noise_waveform_prepared(
+        photoelectrons,
+        runtime=runtime,
+        rng=rng,
+    )
+    validate_noise_waveform(result, source=photoelectrons, runtime=runtime)
+    return result
 
 
 class _RecordingRng(CounterRng):
@@ -323,7 +341,7 @@ class RngOwnershipMigrationTest(unittest.TestCase):
         self.assertIs(calls[1].args[0], source)
         self.assertIs(calls[0].kwargs["rng"], first_rng)
         self.assertIs(calls[1].kwargs["rng"], second_rng)
-        self.assertIsNot(calls[0].kwargs["plan"], calls[1].kwargs["plan"])
+        self.assertIsNot(calls[0].kwargs["runtime"], calls[1].kwargs["runtime"])
 
         self.assertIs(type(first), field_type)
         self.assertIs(type(second), field_type)
@@ -1148,14 +1166,14 @@ class RngOwnershipMigrationTest(unittest.TestCase):
                 count=2,
             )
 
-    def test_public_producer_signatures_and_draw_free_branches(self) -> None:
+    def test_runtime_producer_signatures_and_draw_free_branches(self) -> None:
         for producer in (
             _produce_noise_waveform_prepared,
             _produce_charge_prepared,
         ):
             parameters = signature(producer).parameters
             self.assertIn("rng", parameters)
-            self.assertIn("plan", parameters)
+            self.assertIn("runtime", parameters)
             self.assertNotIn("seed", parameters)
             self.assertNotIn("config", parameters)
             self.assertNotIn("sampling", parameters)
@@ -1168,7 +1186,7 @@ class RngOwnershipMigrationTest(unittest.TestCase):
             _produce_digitized_waveform_prepared,
         ):
             parameters = signature(producer).parameters
-            self.assertIn("plan", parameters)
+            self.assertIn("runtime", parameters)
             self.assertNotIn("rng", parameters)
             self.assertNotIn("seed", parameters)
             self.assertNotIn("config", parameters)
