@@ -926,6 +926,66 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
                     config=ReadoutConfig(sampling=candidate_sampling),
                 )
 
+        above_charge_ceiling_values = source.tensor.clone()
+        above_charge_ceiling_values.reshape(-1)[0] = 1 << 53
+        above_charge_ceiling = Photoelectrons(
+            tensor=above_charge_ceiling_values,
+            axes=source.axes,
+        )
+        source_snapshot = above_charge_ceiling.tensor.clone()
+        rng = _FailingRng(seed=0)
+        with ExitStack() as stack:
+            producer_mocks = tuple(
+                stack.enter_context(patch.object(simulation, function_name))
+                for function_name, _ in PRODUCERS
+            )
+            field_constructor_mocks = tuple(
+                stack.enter_context(
+                    patch.object(
+                        module,
+                        class_name,
+                        side_effect=AssertionError(
+                            "truth-only request constructed a generated field"
+                        ),
+                    )
+                )
+                for module, class_name in (
+                    (charge_producer, "Charge"),
+                    (pure_producer, "PureWaveform"),
+                    (noise_producer, "NoiseWaveform"),
+                    (analog_producer, "AnalogWaveform"),
+                    (digitized_producer, "DigitizedWaveform"),
+                )
+            )
+            truth = simulate_readout(
+                above_charge_ceiling,
+                products=(Photoelectrons,),
+                config=ReadoutConfig(sampling=sampling),
+                rng=rng,
+            )
+        self.assertIs(truth.field(Photoelectrons), above_charge_ceiling)
+        self.assertTrue(
+            torch.equal(above_charge_ceiling.tensor, source_snapshot)
+        )
+        self.assertEqual(rng.calls, 0)
+        for producer_mock in producer_mocks:
+            producer_mock.assert_not_called()
+        for field_constructor_mock in field_constructor_mocks:
+            field_constructor_mock.assert_not_called()
+
+        with patch.object(
+            readout_preparer,
+            "prepare_charge",
+            wraps=readout_preparer.prepare_charge,
+        ) as charge_preparation:
+            self._assert_preflight_failure(
+                ValueError,
+                source=above_charge_ceiling,
+                products=(Charge,),
+                config=_config(sampling),
+            )
+        charge_preparation.assert_called_once()
+
     def test_each_real_product_preparation_failure_precedes_all_producers(self) -> None:
         sampling = _sampling()
         source = _photoelectrons(sampling)
@@ -994,6 +1054,19 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
         sampling = _sampling()
         source = _photoelectrons(sampling)
         config = _config(sampling)
+        rng = _FailingRng(seed=0)
+        requested, runtime = readout_preparer.prepare_readout(
+            source,
+            products=PRODUCT_TYPES,
+            config=config,
+            rng=rng,
+            floating_dtype=torch.float32,
+        )
+        assert runtime.charge is not None
+        assert runtime.pure_waveform is not None
+        assert runtime.noise_waveform is not None
+        assert runtime.analog_waveform is not None
+        assert runtime.digitized_waveform is not None
         validators = (
             ("validate_charge", Charge),
             ("validate_pure_waveform", PureWaveform),
@@ -1002,6 +1075,13 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
             ("validate_digitized_waveform", DigitizedWaveform),
         )
         with ExitStack() as stack:
+            stack.enter_context(
+                patch.object(
+                    simulation,
+                    "prepare_readout",
+                    return_value=(requested, runtime),
+                )
+            )
             validator_mocks = tuple(
                 stack.enter_context(
                     patch.object(
@@ -1016,11 +1096,25 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
                 source,
                 products=PRODUCT_TYPES,
                 config=config,
-                rng=_FailingRng(seed=0),
+                rng=rng,
             )
-        for validator_mock, (_, field_type) in zip(
+        expected_kwargs = (
+            {"source": source, "runtime": runtime.charge},
+            {"source": result.field(Charge)},
+            {"source": source, "runtime": runtime.noise_waveform},
+            {
+                "pure": result.field(PureWaveform),
+                "noise": result.field(NoiseWaveform),
+            },
+            {
+                "source": result.field(AnalogWaveform),
+                "maximum_code": runtime.digitized_waveform.maximum_code,
+            },
+        )
+        for validator_mock, (_, field_type), expected in zip(
             validator_mocks,
             validators,
+            expected_kwargs,
             strict=True,
         ):
             validator_mock.assert_called_once()
@@ -1028,6 +1122,13 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
             assert validator_call is not None
             self.assertIs(validator_call.args[0], result.field(field_type))
             self.assertEqual(len(validator_call.args), 1)
+            self.assertEqual(validator_call.kwargs.keys(), expected.keys())
+            for name, expected_value in expected.items():
+                observed_value = validator_call.kwargs[name]
+                if name == "maximum_code":
+                    self.assertEqual(observed_value, expected_value)
+                else:
+                    self.assertIs(observed_value, expected_value)
         self.assertTrue(torch.all(torch.isfinite(result.tensor(Charge))).item())
         self.assertTrue(torch.all(result.tensor(Charge) >= 0.0).item())
         for field_type in (PureWaveform, NoiseWaveform, AnalogWaveform):

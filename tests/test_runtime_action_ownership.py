@@ -703,6 +703,24 @@ class RuntimeActionOwnershipTest(unittest.TestCase):
             tensor=torch.ones(source.shape, dtype=torch.float32),
             axes=source.axes,
         )
+        wrong_axes_pure = PureWaveform(
+            tensor=torch.zeros(source.shape, dtype=torch.float32),
+            axes=other_axes,
+        )
+        with self.assertRaisesRegex(ValueError, "axes and shape"):
+            validate_pure_waveform(wrong_axes_pure, source=charge)
+        short_pure = PureWaveform(
+            tensor=torch.zeros((1, 1, 2), dtype=torch.float32),
+            axes=short_axes,
+        )
+        with self.assertRaisesRegex(ValueError, "axes and shape"):
+            validate_pure_waveform(short_pure, source=charge)
+        wrong_dtype_pure = PureWaveform(
+            tensor=torch.zeros(source.shape, dtype=torch.float64),
+            axes=source.axes,
+        )
+        with self.assertRaisesRegex(ValueError, "preserve Charge dtype"):
+            validate_pure_waveform(wrong_dtype_pure, source=charge)
         aliased_pure = PureWaveform(tensor=charge.tensor, axes=charge.axes)
         with self.assertRaisesRegex(ValueError, "fresh storage"):
             validate_pure_waveform(aliased_pure, source=charge)
@@ -723,6 +741,26 @@ class RuntimeActionOwnershipTest(unittest.TestCase):
             tensor=torch.zeros(source.shape, dtype=torch.float32),
             axes=source.axes,
         )
+        wrong_axes_digitized = DigitizedWaveform(
+            tensor=torch.zeros(source.shape, dtype=torch.int32),
+            axes=other_axes,
+        )
+        with self.assertRaisesRegex(ValueError, "axes and shape"):
+            validate_digitized_waveform(
+                wrong_axes_digitized,
+                source=source_analog,
+                maximum_code=(1 << 12) - 1,
+            )
+        short_digitized = DigitizedWaveform(
+            tensor=torch.zeros((1, 1, 2), dtype=torch.int32),
+            axes=short_axes,
+        )
+        with self.assertRaisesRegex(ValueError, "axes and shape"):
+            validate_digitized_waveform(
+                short_digitized,
+                source=source_analog,
+                maximum_code=(1 << 12) - 1,
+            )
         aliased_digitized = DigitizedWaveform(
             tensor=source_analog.tensor.view(torch.int32),
             axes=source_analog.axes,
@@ -802,6 +840,30 @@ class RuntimeActionOwnershipTest(unittest.TestCase):
                 cpu_noise,
                 source=source,
                 runtime=runtime.noise_waveform,
+            )
+        cuda_charge = Charge(
+            tensor=torch.zeros(source.shape, dtype=torch.float32, device="cuda"),
+            axes=source.axes,
+        )
+        cpu_pure = PureWaveform(
+            tensor=torch.zeros(source.shape, dtype=torch.float32),
+            axes=source.axes,
+        )
+        with self.assertRaisesRegex(ValueError, "Charge device"):
+            validate_pure_waveform(cpu_pure, source=cuda_charge)
+        cuda_analog = AnalogWaveform(
+            tensor=torch.zeros(source.shape, dtype=torch.float32, device="cuda"),
+            axes=source.axes,
+        )
+        cpu_digitized = DigitizedWaveform(
+            tensor=torch.zeros(source.shape, dtype=torch.int32),
+            axes=source.axes,
+        )
+        with self.assertRaisesRegex(ValueError, "source device"):
+            validate_digitized_waveform(
+                cpu_digitized,
+                source=cuda_analog,
+                maximum_code=(1 << 12) - 1,
             )
 
 
