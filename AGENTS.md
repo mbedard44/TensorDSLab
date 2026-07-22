@@ -245,6 +245,16 @@ Validation and independent Review cleared the unchanged candidate on the
 recorded macOS stack and in separate full-A100 Della allocations. It changes
 no production, dependency, RNG, or scientific contract.
 
+Maintenance 4 Runtime Action Ownership is **Design-complete /
+User-authorized / Undispatched** under
+`docs/implementation/maintenance_4_runtime_action_ownership.md`. Its accepted
+behavior-preserving target replaces product-local `_produce.py` bundles and
+`*Plan` records with non-exported product `runtime/` packages, concrete
+`*Runtime` records, and explicit `prepare_*`, `produce_*`, and `validate_*`
+actions. It changes no public facade, scientific equation, stochastic address,
+result law, dependency, or supported device boundary. No Maintenance 4
+production work has begun.
+
 The first Stage 8 real-CUDA attempt correctly stopped before any accepted
 measurement when its protected-suite gate over-applied those macOS literals to
 the frozen Della Linux/x86_64 stack. Exact Stage 8 authority
@@ -273,7 +283,7 @@ The checkout root is the project folder. The `tensor_dslab/` directory is the
 Python import package. Do not create a
 flat TitleCase Python package that imports as `TensorDSLab`.
 
-The rebuild uses a product-centered readout tree:
+The accepted Maintenance 4 target uses this product-centered readout tree:
 
 ```text
 tensor_dslab/
@@ -283,73 +293,103 @@ tensor_dslab/
   readout/
     config.py
     collection.py
+    requirements.py
     simulation.py
-    _requirements.py
+    runtime/
+      prepare.py
+      sampling.py
     photoelectrons/
       field.py
+      runtime/
+        validate.py
     charge/
       config.py
       field.py
-      _produce.py
-      effects/
-        _counts.py
-        _delays.py
-        _dark_counts.py
-        _timing_jitter.py
-        _correlated_avalanches.py
-        _smearing.py
+      runtime/
+        prepare.py
+        produce.py
+        validate.py
+        effects/
+          counts.py
+          delays.py
+          dark_counts.py
+          timing_jitter.py
+          correlated_avalanches.py
+          smearing.py
     pure_waveform/
       config.py
       field.py
-      _produce.py
+      runtime/{prepare.py,produce.py,validate.py}
     noise_waveform/
       config.py
       field.py
-      _produce.py
+      runtime/{prepare.py,produce.py,validate.py}
     analog_waveform/
       config.py
       field.py
-      _produce.py
+      runtime/{prepare.py,produce.py,validate.py}
     digitized_waveform/
       config.py
       field.py
-      _produce.py
+      runtime/{prepare.py,produce.py,validate.py}
 ```
 
-This is the accepted product-centered ownership tree, not permission to create
-placeholders. Maintenance 2 realized the product/module ownership migration
-without compatibility shims, and Stage 7 completed `readout/simulation.py`;
-closed Stage 5/6 work orders remain historical evidence for the former
-`types.py`, `_RngStream`, and `readout/_random.py` bytes. Maintenance 2 pins
-TensorCore's published generic RNG and `require_same_dtype` surface at exact
-version `0.9.0` commit
+This is an accepted target, not permission to create placeholders before
+Maintenance 4 dispatch. Maintenance 2 realized the current product/module
+ownership migration without compatibility shims, and Stage 7 completed
+`readout/simulation.py`; their private `_produce.py`, `*Plan`,
+`_requirements.py`, and `charge/effects/` paths remain exact historical and
+starting-baseline facts. Maintenance 2 pins TensorCore's published generic RNG
+and `require_same_dtype` surface at exact version `0.9.0` commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The migration is Merged / Closed
 at the exact candidate and Design closeout recorded above.
 
 Materialize only modules with real behavior accepted by the active work order.
-Every generated product owns its final `TensorField` leaf, public configs,
-product validation, and private `_produce_*` builder. `Photoelectrons` remains
-the already-produced truth input and owns no producer. Private `_simulate_*`
-functions implement scientific submodels. `readout.config` contains only
-`ReadoutConfig`; `readout.collection` contains only `ReadoutCollection`;
-implemented Stage 7 `readout.simulation` owns the one public
-`simulate_readout(...)` orchestration function. Shared axes and sampling
-belong in `common`. Charge-specific multinomial/category orchestration,
-count-domain helpers, and scientific effects remain private.
+Every generated product owns its final `TensorField` leaf, public configs, and
+one non-exported `runtime/` package containing explicit preparation,
+production, and deep-validation actions. `Photoelectrons` remains the
+already-produced truth input and owns only its field and runtime deep
+validator. `readout.runtime.prepare` owns whole-request preparation;
+`readout.runtime.sampling` owns the private shared sampling execution facts;
+and `readout.simulation` remains the thin owner of the unchanged public
+`simulate_readout(...)` signature, topological action sequence, exact
+retention, and final collection construction. Shared semantic axes and
+`SamplingConfig` remain in `common`. Charge-specific multinomial/category
+orchestration, count-domain helpers, and scientific effects remain private
+under `charge/runtime/effects/`.
 
-Keep import direction acyclic: TensorCore, common, private shared requirements,
-product configs/fields, product producers plus explicit prerequisite fields,
-readout config/collection, readout simulation, then deliberate package-root
-exports. Product packages must not import `ReadoutConfig`,
-`ReadoutCollection`, or `simulate_readout(...)`. Generic counter generation,
-logical positions, uniforms, parameterized Gaussian draws, Poisson sampling,
-and binomial sampling belong to TensorCore; TensorDSLab must not retain or
-rename `_random.py`.
+Runtime privacy is export-driven. Runtime modules and records remain ordinary
+importable Python implementation details, but no Runtime, action, requirement,
+or effect name is exported by a package facade or carries a compatibility
+promise. Cross-module runtime actions omit a leading underscore; TensorCore's
+semantic-leaf `_require()` hook and genuinely module-local helpers retain their
+established underscore meaning. Runtime `__init__.py` files export nothing.
+
+Every ProductRuntime and `SamplingRuntime` is a concrete final frozen slotted
+dataclass with no Runtime base, Config, semantic product, collection, mutable
+cache, or execution method. Preparation, production, and validation remain
+explicit product-named actions rather than an ABC, registry, reflection layer,
+or generic graph. Extract genuinely identical checks or preparation mechanics
+into the narrowest private owner, while keeping product-specific semantics and
+errors explicit; do not create broad `utils.py` or `helpers.py` modules merely
+to make signatures look uniform.
+
+Keep import direction acyclic: TensorCore, common, shared readout requirements,
+product configs/fields, the source-bound sampling runtime, product runtime
+actions, readout config/collection and whole-request preparation, readout simulation,
+then deliberate package-root exports. Product runtime modules must not import
+`ReadoutConfig`, `ReadoutRuntime`, `ReadoutCollection`, `simulation`, or
+`simulate_readout(...)`. A producer imports no Config or validator. Generic
+counter generation, logical positions, uniforms, parameterized Gaussian
+draws, Poisson sampling, and binomial sampling belong to TensorCore;
+TensorDSLab must not retain or rename `_random.py`.
 
 Stage 6 behavior-neutrally renamed all four transitional waveform modules,
 callables, imports, and tests from `_product.py` / `_product_*` to
-`_produce.py` / `_produce_*`. This is now the implemented producer convention.
-Do not restore a retired name, alias, or compatibility shim.
+`_produce.py` / `_produce_*`. Those paths remain exact closed Stage 6/7 and
+Maintenance 2 evidence. Maintenance 4 supersedes them only for the accepted
+live target, without restoring `_product.py`, adding an alias, or providing a
+compatibility shim for either private convention.
 
 Merged Stage 6 implements the aggregate multinomial and hybrid Poisson
 contracts selected in `docs/architecture/rebuild.md`. The five Poisson roles,
@@ -379,6 +419,9 @@ config-owned TensorCore `RngKey` values, uses TensorCore for generic RNG and
 count-distribution mechanics, keeps Charge multinomial orchestration and count
 bookkeeping in `readout/charge/effects/_counts.py`, and removes `_RngStream`,
 `readout/_random.py`, and any replacement `_rng.py` without shims.
+The accepted Maintenance 4 target moves that Charge-owned behavior intact to
+`readout/charge/runtime/effects/counts.py`; it does not change the historical
+Maintenance 2 record or any RNG behavior.
 
 The active MVP crosstalk delay union is exactly
 `FixedDelayConfig | ExponentialDelayConfig`. Although Stage 3 historically
@@ -411,8 +454,9 @@ or normalize its law, or trade correctness for subquadratic sample-count work
 without a later focused Design decision.
 
 `Photoelectrons` is an already-produced dense truth input. It has no
-`PhotoelectronsConfig`, no TensorDSLab readout producer, and no `_produce.py`.
-Source construction and PE binning remain part of the future TensorG4DS bridge.
+`PhotoelectronsConfig`, no TensorDSLab readout preparer, producer, or Runtime
+record, and only one explicit runtime deep validator. Source construction and
+PE binning remain part of the future TensorG4DS bridge.
 
 Runtime commands launched from the project root should use the project root on
 `PYTHONPATH` so absolute `tensor_dslab.*` imports resolve:
@@ -609,12 +653,15 @@ analog waveform consumed by digitization.
 `simulate_readout(...)` requires an explicit nonempty iterable of exact product
 classes. It consumes the iterable once, rejects duplicates and unknown classes,
 computes the transitive prerequisite closure, and completes one private typed
-preparation plan for every required product before any RNG request, producer
-invocation, or semantic-output write. It then executes each producer at most
-once and retains exactly the requested fields. Product preparers own their
-scientific/contextual equations; `readout.simulation` composes them without
-duplication. Request order has no collection semantics. Unrequested
-prerequisites remain private local values.
+Runtime for every required product before any RNG request, production call, or
+semantic-output write. The accepted Maintenance 4 target prepares one shared
+`SamplingRuntime` and composes the optional product Runtime values in one
+`ReadoutRuntime`; Runtime presence is the execution signal rather than a
+duplicated set of `need_*` flags. It then executes each producer at most once
+and retains exactly the requested fields. Product preparers own their
+scientific/contextual equations; `readout.simulation` composes no scientific
+equation. Request order has no collection semantics. Unrequested prerequisites
+remain private local values.
 
 The accepted Stage 7 signature requires keyword-only `rng: CounterRng`, even
 for deterministic closures; there is no simultaneous `seed=` parameter.
@@ -660,12 +707,15 @@ Stage 7 accepts source devices of exactly CPU or CUDA, including truth-only
 requests. It validates `floating_dtype` only when the closure generates a
 floating product; a truth-only request does not consume that control.
 
-Stage 7 also closes the result trust boundary deferred by Stage 4. Every
-generated producer calls its existing product-specific
-`_require_valid_values(...)` exactly once after constructing its local field
-and before returning it for downstream use or retention. Invalid generated
-fields do not escape and no downstream producer runs; these deep postcondition
-scans may synchronize CUDA.
+Stage 7 closed the result trust boundary deferred by Stage 4. Maintenance 4
+preserves that boundary through explicit product-owned `validate_*` actions:
+`simulate_readout(...)` performs `produce -> validate -> descendant` for each
+generated product, passing the exact result and named direct prerequisites to
+the validator; Photoelectrons deep validation remains in whole-request
+preflight. Product `field.py` modules retain only their cheap intrinsic
+TensorCore `_require()` narrowing. Invalid generated fields do not escape and
+no downstream producer runs; these deep postcondition scans may synchronize
+CUDA.
 
 Every generated dimension-preserving field reuses the source's exact immutable
 axis tuple and axis instances. Axis order may vary semantically; upstream

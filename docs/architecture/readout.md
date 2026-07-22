@@ -21,7 +21,12 @@ Closed through exact candidate `89a188abe330c06aa0b54c27cd61ac32a4fe9f63`
 and
 Design closeout `9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. Stage 2 and
 Maintenance 1 remain historical evidence for the superseded TensorCore `0.6`
-foundation.
+foundation. Maintenance 3 is Merged / Closed through exact Review-cleared
+candidate `dfe45c96f9cc141f91e29a6a3d81bd7a3e8a49f0` and its five-document
+Design closeout. Maintenance 4 Runtime Action Ownership is
+**Design-complete / User-authorized / Undispatched**. Its accepted work order
+defines the next behavior-preserving private ownership refactor; no
+Maintenance 4 production byte exists yet.
 
 ## Scope
 
@@ -91,10 +96,12 @@ assert readout.field_types == frozenset(
 analog = readout.field(AnalogWaveform)
 ```
 
-`simulate_readout` is the one ordinary public
-simulation API. The already-implemented private product producers and
-scientific submodels remain independently testable internal units, not
-alternate supported entry points.
+`simulate_readout` is the one ordinary public simulation API. Product runtime
+actions and scientific submodels remain independently testable internal units,
+not alternate supported entry points. Runtime privacy is defined by deliberate
+facade exports and documentation rather than a leading underscore: a direct
+deep import remains possible Python behavior but is unsupported and carries no
+compatibility promise.
 
 ## Axes And Sampling
 
@@ -138,8 +145,9 @@ The field representation is:
 
 Every product uses ordinary dense `torch.strided` storage and exactly the three
 readout axis types. Cheap structural and dtype facts are intrinsic leaf
-requirements. Full-device value-domain checks occur at untrusted ingress and
-producer postconditions rather than inside every constructor.
+requirements. Full-device value-domain checks occur in explicit product-owned
+runtime validators at untrusted ingress and generated-product publication
+boundaries rather than inside every constructor.
 
 `ReadoutCollection` is a completed immutable result containing any nonempty
 requested subset of those six exact types. It requires equal ordered axes, one
@@ -183,10 +191,10 @@ keys and deterministic planning enforce that independence.
 
 Unknown products, duplicates, missing required config, invalid sampling,
 an invalid `CounterRng`, duplicate role keys, or another request-level problem
-fails before an RNG request, product-producer invocation, or semantic-output
-write. Product-owned private preparation records complete the entire closure
-before execution; the public planner does not duplicate their scientific
-equations.
+fails before an RNG request, product-production invocation, or semantic-output
+write. Product-owned private Runtime records complete the entire closure
+before execution; the private whole-request preparer does not duplicate their
+scientific equations.
 
 The planner is ordinary typed code, not a public dependency registry or
 workflow graph.
@@ -234,103 +242,89 @@ algorithm, mutable state, device stream, or execution policy.
 
 Each product preparer receives only its exact product config and shared
 sampling/source facts when relevant. It returns one private immutable product
-plan. Private submodels receive prepared values or their exact nested config
+Runtime. Private submodels receive prepared values or their exact nested config
 rather than the complete `ReadoutConfig`.
 
-## Private Product Functions
+## Private Product Runtime Actions
 
-Private functions use one three-way naming distinction:
+Maintenance 4 defines one explicit private action triad for every generated
+product:
 
-- `_prepare_*` validates contextual relationships and constructs one typed
-  product execution plan;
-- `_produce_*` constructs one semantic product; and
-- `_simulate_*` implements a scientific submodel inside a product producer.
-
-Stage 7 refactors the private surface into conceptual prepare/produce pairs:
-
-```python
-def _prepare_charge(
-    photoelectrons: Photoelectrons,
-    *,
-    sampling: SamplingConfig,
-    config: ChargeConfig,
-    floating_dtype: torch.dtype,
-) -> _ChargePlan:
-    ...
-
-def _produce_charge(
-    photoelectrons: Photoelectrons,
-    *,
-    plan: _ChargePlan,
-    rng: CounterRng,
-) -> Charge: ...
-
-def _prepare_pure_waveform(
-    *,
-    sampling: SamplingConfig,
-    config: PureWaveformConfig,
-    floating_dtype: torch.dtype,
-) -> _PureWaveformPlan: ...
-
-def _produce_pure_waveform(
-    charge: Charge,
-    *,
-    plan: _PureWaveformPlan,
-) -> PureWaveform: ...
-
-def _prepare_noise_waveform(
-    photoelectrons: Photoelectrons,
-    *,
-    sampling: SamplingConfig,
-    config: NoiseWaveformConfig,
-    floating_dtype: torch.dtype,
-) -> _NoiseWaveformPlan: ...
-
-def _produce_noise_waveform(
-    photoelectrons: Photoelectrons,
-    *,
-    plan: _NoiseWaveformPlan,
-    rng: CounterRng,
-) -> NoiseWaveform: ...
-
-def _prepare_analog_waveform(
-    *,
-    config: AnalogWaveformConfig,
-    floating_dtype: torch.dtype,
-) -> _AnalogWaveformPlan: ...
-
-def _produce_analog_waveform(
-    pure: PureWaveform,
-    noise: NoiseWaveform,
-    *,
-    plan: _AnalogWaveformPlan,
-) -> AnalogWaveform: ...
-
-def _prepare_digitized_waveform(
-    *,
-    config: DigitizedWaveformConfig,
-    floating_dtype: torch.dtype,
-) -> _DigitizedWaveformPlan: ...
-
-def _produce_digitized_waveform(
-    analog: AnalogWaveform,
-    *,
-    plan: _DigitizedWaveformPlan,
-) -> DigitizedWaveform: ...
+```text
+runtime/prepare.py   Config + execution facts -> ProductRuntime
+runtime/produce.py   prerequisites + ProductRuntime (+ RNG) -> Product
+runtime/validate.py  Product + minimal prepared facts -> None
 ```
 
-There is no Photoelectrons producer. Product packages receive explicit
-prerequisites rather than a complete collection as a service locator.
+The cross-module actions and records use clean names such as
+`prepare_charge`, `produce_charge`, `validate_charge`, and `ChargeRuntime`.
+They are private because no product, readout, or package facade exports them.
+Every `runtime/__init__.py` and Charge `runtime/effects/__init__.py` remains
+empty; internal callers import the exact defining module rather than an
+internal facade. TensorCore's inherited `_require()` leaf hook and genuinely
+module-local mathematical helpers may retain their established underscores.
 
-Every config still enters through an exact typed parameter on its owning
-preparer. The producer receives the trusted plan rather than a second config
-that could disagree with it. Private functions may trust complete public
-preparation. They do not reproduce the supported public boundary or defend
-direct unsupported calls.
-Only stochastic-capable `Charge` and `NoiseWaveform` producers receive
-`CounterRng`. Deterministic pure, analog, and digitized producers and
-deterministic preparation helpers do not. An exact-zero or disabled stochastic
-path simply makes no RNG request.
+Each ProductRuntime is a concrete final frozen slotted dataclass with no Runtime
+base, Config, semantic product, mutable cache, method, or hidden device
+movement. It contains only prepared tensors and static Python values required
+by production, request-wide stochastic-role checks, or immediate result
+validation. There is no Runtime ABC, registry, reflection layer, generic graph,
+or action framework.
+
+`readout.runtime.sampling` owns one private `SamplingRuntime` and
+`prepare_sampling(...)`:
+
+```python
+@final
+@dataclass(frozen=True, slots=True)
+class SamplingRuntime:
+    sample_count: int
+    sample_period_ps: int
+    sample_dimension: int
+```
+
+Request preparation constructs it once after validating the source
+`SampleAxis` against `SamplingConfig`. Temporal ProductRuntime values that
+retain sampling facts reference that exact object, so no product independently
+rediscovers the simulation source sample dimension. The values remain Python
+integers because they control dimensions, shapes, FFT lengths, and loop bounds;
+they are not payload tensors.
+
+`readout.runtime.prepare` owns `ReadoutRuntime`, request parsing, typed closure,
+required-config checks, closure-wide key uniqueness, and composition of the
+optional ProductRuntime values. Optional Runtime presence is the execution
+closure signal; no duplicate `need_*` booleans or public dependency registry
+is introduced. Complete closure preparation still precedes the first RNG
+request, production call, or semantic-output write.
+
+Product preparers own config interpretation, units, scientific equations,
+representability proofs, and device-operand materialization. Product producers
+receive only explicit prerequisite products, the exact ProductRuntime, and
+`CounterRng` when stochastic-capable. Production performs tensor/RNG execution,
+narrow dynamic guards that cannot be proved beforehand, and final field
+construction; it imports no Config and performs no deep publication scan.
+Only Charge and NoiseWaveform production receive `CounterRng`. An exact-zero
+or disabled stochastic path simply makes no RNG request.
+
+Product runtime validators are first-class, read-only actions. They neither
+repair nor reconstruct values and run immediately after their product is
+created, before any descendant can consume it. Each generated validator also
+receives its named direct prerequisite product or products and proves the
+completed result's axes, shape, dtype, device, and fresh-storage relationship
+alongside its value domain. `DigitizedWaveformRuntime`
+retains the prepared exact maximum code, so digitized validation receives no
+Config. `validate_charge` owns the single finite/nonnegative terminal scan and
+preserves the accepted `RuntimeError` boundary for an invalid generated
+Charge. `validate_photoelectrons` remains the sole action in the truth
+product's runtime package because Photoelectrons has no config, Runtime, or
+producer. It checks the accepted truth value domain but does not impose
+Charge's `2**53 - 1` per-cell count ceiling; that bound remains conditional
+Charge preparation so a truth-only request is not narrowed by an unrequested
+product.
+
+The runtime layout is a deliberate internal seam for a possible later
+`PureWaveformRenderer`, not its implementation. Maintenance 4 adds no renderer,
+`nn.Module`, public atomic product action, or TensorML surface.
 
 ## Charge Production
 
@@ -342,19 +336,19 @@ charge = photoelectrons.tensor
 charge_square_sum: torch.Tensor | None = None
 
 if dark_effective:
-    charge = _simulate_dark_counts(charge)
+    charge = simulate_dark_counts(charge)
 
 if jitter_effective:
-    charge = _simulate_timing_jitter(charge)
+    charge = simulate_timing_jitter(charge)
 
 if correlated_avalanches_enabled:
-    correlated = _simulate_correlated_avalanches(charge)
+    correlated = simulate_correlated_avalanches(charge)
     charge = correlated.S1
     charge_square_sum = correlated.S2
 
 if smearing_effective:
     charge = charge.to(dtype=floating_dtype)
-    charge = _simulate_charge_smearing(
+    charge = simulate_charge_smearing(
         charge,
         charge if charge_square_sum is None else charge_square_sum,
     )
@@ -679,14 +673,16 @@ Producer writes are initiated or enqueued before constructing and exposing the
 semantic result. TensorDSLab never later writes through an alias to that
 storage. Private scratch and unrequested intermediates never enter the result.
 
-Stage 7 closes the public result trust boundary deferred by Stage 4. Each
-generated producer constructs one local result field after its payload writes,
-then invokes that product's existing private `_require_valid_values(...)`
-before returning it to orchestration. Charge must be finite and nonnegative;
-Pure, Noise, and Analog must be finite; Digitized must be nonnegative and
-bounded by its exact digitizer config. A failed postcondition exposes no field,
-invokes no downstream producer, and returns no partial collection. The scan may
-synchronize CUDA through scalar extraction.
+Stage 7 established the public result trust boundary deferred by Stage 4.
+Maintenance 4 gives that boundary explicit product-owned runtime validators.
+Each producer constructs one local result field after its payload writes and
+returns it to `simulate_readout(...)`; orchestration immediately invokes the
+matching `validate_<product>(...)` before any descendant. Charge must be finite
+and nonnegative; Pure, Noise, and Analog must be finite; Digitized must be
+nonnegative and bounded by its prepared exact maximum code. Charge performs
+one terminal deep scan rather than its former duplicate checks. A failed
+postcondition exposes no field, invokes no downstream producer, and returns no
+partial collection. The scan may synchronize CUDA through scalar extraction.
 
 The initial API has no `out=`, destination collection, public workspace,
 stream lease, pool, or allocation-free claim. Future measured reuse keeps raw
@@ -721,6 +717,22 @@ The accepted Stage 7 public preparation contract covers at least:
 - every statically preparable failure before the first RNG request, producer
   invocation, or semantic-output write.
 
+Maintenance 4 preserves that complete-preparation boundary while making the
+execution order explicit:
+
+```text
+produce Charge -> validate Charge
+  -> produce PureWaveform -> validate PureWaveform
+  -> produce NoiseWaveform -> validate NoiseWaveform
+  -> produce AnalogWaveform -> validate AnalogWaveform
+  -> produce DigitizedWaveform -> validate DigitizedWaveform
+  -> retain requested products -> construct ReadoutCollection
+```
+
+Only actions present in the requested transitive closure run. A Charge or Pure
+validation failure occurs before the NoiseWaveform RNG request; every other
+failure likewise prevents all descendants and final collection construction.
+
 Cross-stage behavioral validation includes:
 
 - all request subsets and prerequisite retention rules;
@@ -745,22 +757,28 @@ private-call misuse, direct tensor mutation, or exotic dispatch hardening.
 
 ## Product-Centered Module Ownership
 
-Shared axes and sampling live in `tensor_dslab.common`. Every generated product
-subpackage now owns its field, configs, validation, and implemented
-`_produce.py`; Photoelectrons owns only its already-produced truth field.
+Shared semantic axes and `SamplingConfig` live in `tensor_dslab.common`.
+Private source-bound sampling execution facts live separately in
+`readout/runtime/sampling.py`. Every generated product owns public `config.py`
+and `field.py`, plus unexported
+`runtime/{prepare,produce,validate}.py`. Photoelectrons owns only its
+already-produced truth field and `runtime/validate.py`. Charge effects live
+beneath `charge/runtime/effects/`.
 
-In the Maintenance 2 implementation, `readout/config.py` contains only
-`ReadoutConfig` and `readout/collection.py` contains only `ReadoutCollection`.
-`_requirements.py` and `charge/effects/_*.py` are private support.
-`readout/_random.py` and `_RngStream` are removed rather than renamed.
-Closed Stage 7 implements `readout/simulation.py`. Product packages never
-import the cross-product orchestration layer. Former Stage 6 paths remain
-closed historical evidence; Maintenance 2 is Merged / Closed at the exact
-candidate and Design closeout recorded above.
+`readout/config.py` contains only `ReadoutConfig`, and
+`readout/collection.py` contains only `ReadoutCollection`.
+`readout/requirements.py` owns only genuinely shared private relationships;
+runtime packages import no cross-product orchestration layer. The old live
+`readout/_requirements.py`, product `_produce.py` bundles, and
+`charge/effects/` paths are retired without shims by Maintenance 4. Closed
+work orders continue to name their historical paths as exact evidence.
+`readout/_random.py` and `_RngStream` remain absent under closed Maintenance 2.
 
 The exact tree and import direction are normative in
-[`rebuild.md`](rebuild.md). Do not add empty placeholders or global
-`configs.py`, `fields.py`, `builders.py`, or `validation.py` modules.
+[`rebuild.md`](rebuild.md). Do not add empty placeholders, a global validation
+layer, or global `configs.py`, `fields.py`, `builders.py`, `utils.py`, or
+`helpers.py` modules. The explicit product-local runtime validators are not a
+generic validation dumping ground.
 
 ## Deferred Boundaries
 
@@ -769,6 +787,7 @@ Deferred work includes:
 - the exact TensorG4DS-to-Photoelectrons bridge;
 - persistence, durable labels, config association, and cache formats;
 - TensorML product selection and model schema;
+- a public reusable `PureWaveformRenderer` and its module-state boundary;
 - Reconstruction products and execution arrangements;
 - public workspace or destination reuse;
 - chunk-stable RNG offsets;
@@ -793,8 +812,13 @@ mechanics. The Maintenance 2 implementation pins selected TensorCore
 ownership, migrates to config-owned keys, and preserves default-key outputs;
 it is Merged / Closed. Stage 7 is also Merged / Closed and implements complete
 request-aware `simulate_readout(...)`; no partial public API implies
-unsupported product closure. Measured GPU characterization remains a separate
-evidence stage; any justified fusion work remains a later optimization stage.
+unsupported product closure. Maintenance 3 is Merged / Closed and qualifies
+completed stochastic literals by their exact numerical stack without changing
+production. Maintenance 4 is Design-complete / User-authorized / Undispatched;
+it defines the behavior-preserving runtime-action ownership target described
+above and authorizes no renderer. Measured GPU characterization remains a
+separate evidence stage; any justified fusion work remains a later
+optimization stage.
 
 ## Return To Design Before
 
@@ -802,6 +826,7 @@ Return to Design before:
 
 - changing product names, meanings, dtypes, axes, or dependency graph;
 - introducing another public simulation entry point;
+- implementing or exporting a reusable renderer before its focused work order;
 - changing Photoelectrons truth or moving its production into readout;
 - changing sampling coordinates or bin conventions;
 - changing the fixed-generation cascade or one of its mechanism laws;

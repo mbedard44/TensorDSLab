@@ -234,6 +234,67 @@ CUDA tests skipped. Pyright `1.1.411` reported zero diagnostics in both forms.
 CUDA was unavailable, so this is eager CPU-only evidence and makes no GPU,
 cross-backend, fusion, allocation, or performance claim.
 
+## Maintenance 4 Runtime Action Ownership Gate
+
+The focused
+[Maintenance 4 work order](implementation/maintenance_4_runtime_action_ownership.md)
+is **Design-complete / User-authorized / Undispatched**. It authorizes a
+behavior-preserving internal ownership refactor from product `_produce.py`
+bundles and `*Plan` records to unexported product
+`runtime/{prepare,produce,validate}.py` actions and `*Runtime` records. This is
+accepted Design authority, not implementation evidence; no Maintenance 4
+production candidate exists yet.
+
+Maintenance 4 Validation must preserve all Stage 7 public, scientific, RNG,
+storage, and autograd evidence while proving the new boundaries:
+
+- public facade exports and `simulate_readout(...)` object identity remain
+  unchanged; Runtime records/actions remain absent from every public
+  `__all__`;
+- runtime and effect `__init__.py` modules import and export nothing, while
+  direct deep imports are treated as unsupported Python implementation access
+  rather than prevented through `hasattr` policing;
+- every generated product owns exactly one `prepare_<product>`,
+  `produce_<product>`, and `validate_<product>` action in its exact defining
+  runtime module; Photoelectrons owns only `validate_photoelectrons`;
+- every Runtime is concrete, final, frozen, slotted, non-inheriting,
+  unexported, and contains no Config, semantic product, collection, stored
+  callable, mutable cache, hidden movement, or generic framework state;
+- `prepare_sampling(...)` discovers the public simulation source sample
+  dimension exactly once, and temporal ProductRuntime values retain the exact
+  same `SamplingRuntime` object where sampling is required;
+- the complete requested Runtime closure is prepared before the first RNG
+  request, production action, or semantic-output write;
+- production modules import no Config or validator, repeat no scientific
+  preparation, and perform no product deep publication scan;
+- `simulate_readout(...)` executes exact
+  `produce -> validate -> descendant` order, so each forced validation failure
+  prevents every later production/RNG action and final collection
+  construction;
+- every generated validator receives the exact produced field and its named
+  direct prerequisite products and proves value, axes, shape, dtype, device,
+  and fresh-storage publication relationships;
+- `validate_charge` performs one terminal deep scan and preserves the accepted
+  invalid-generated-result `RuntimeError`; digitized validation receives the
+  prepared exact maximum code rather than a Config;
+- the convolution-ready PureWaveform kernel is flipped/shaped once during
+  preparation without changing same-stack values or gradients; and
+- old live `_requirements.py`, product `_produce.py`, and `charge/effects/`
+  paths are absent without aliases or shims, while closed work orders remain
+  unchanged historical evidence.
+
+Validation must also audit duplicate logic. It should accept only narrow
+extractions whose exact type, axis, shape, dtype, device, sampling,
+representability, finite/range, freshness, numerical-order, RNG, and autograd
+semantics are genuinely identical. It must reject a Runtime/Action ABC,
+registry, reflection layer, generic dependency graph, decorator framework,
+untyped action mapping, or broad `utils.py` / `helpers.py` dumping ground.
+
+Maintenance 4 deliberately adds no `PureWaveformRenderer`, `nn.Module`, public
+atomic product action, TensorML dependency, IO/artifact surface, workspace,
+optimization, benchmark, or Stage 8 evidence. Renderer validation remains
+deferred to its own focused work order.
+
 Documentation-only Design work remains in Design unless the user requests an
 independent documentation Validation or Review. At minimum, run:
 
@@ -293,17 +354,20 @@ The rebuild follows this order:
 public constructor/config values
   -> TensorCore constrained scalars and semantic roots
   -> TensorDSLab axes and product fields
-  -> ReadoutCollection completed results
-  -> implemented private product producers
-  -> implemented Stage 7 simulate_readout(...)
+  -> complete private request and ProductRuntime preparation
+  -> product production
+  -> immediate product runtime validation
+  -> ReadoutCollection completed result
+  -> public simulate_readout(...)
   -> future TensorG4DS, TensorML, and durable boundaries
 ```
 
 TensorCore validates universal representation invariants before calling a
 leaf's `_require()`. TensorDSLab leaf construction validates cheap intrinsic
 semantics. Full-device finite/nonnegative/bounded scans belong to explicit
-product-specific deep validators at untrusted ingress and producer validation
-boundaries; they do not run invisibly in every field constructor.
+product-owned runtime validators at untrusted ingress and generated-product
+publication boundaries; they do not live in `field.py`, run invisibly in every
+constructor, or remain embedded in production actions.
 
 ## Stage 3 Package And Dependency Checks
 
@@ -409,34 +473,32 @@ underflow and overflow separately when that bridge is implemented.
 
 ## Shared Private Requirement Checks
 
-`tensor_dslab.readout._requirements` contains only these shared private
-helpers:
+`tensor_dslab.readout.requirements` is the unexported shared relationship
+owner selected by Maintenance 4. The old live
+`tensor_dslab.readout._requirements` path is removed without a shim. Focused
+tests should prove retained or narrowly extracted helpers preserve the
+`TypeError` distinction for malformed types and `ValueError` distinction for
+well-typed values that violate a relationship.
 
-- `_require_readout_structure`;
-- `_require_dtype`;
-- `_require_floating_dtype`;
-- `_require_exact`;
-- `_require_optional_exact`;
-- `_require_one_of_exact`; and
-- `_require_sampling`.
+The shared readout-structure behavior still requires exactly one
+`ExampleAxis`, `ChannelAxis`, and `SampleAxis` in any order and
+`torch.strided` storage. It does not require contiguity, a fixed dimension
+order, or an exact base `torch.Tensor` type. Shared floating-dtype behavior
+accepts exactly `torch.float32` or `torch.float64` and rejects
+`torch.float16`, `torch.bfloat16`, and every non-floating dtype.
 
-Focused tests should prove their supported relationship behavior, including
-the `TypeError` distinction for malformed types and `ValueError` distinction
-for well-typed values that violate a relationship. The readout-structure
-helper requires exactly one `ExampleAxis`, `ChannelAxis`, and `SampleAxis` in
-any order and `torch.strided` storage. It does not require contiguity, a fixed
-dimension order, or an exact base `torch.Tensor` type.
+Public `common.sampling` continues to validate `SamplingConfig` directly and
+must not import private readout requirements or Runtime records. Private
+`readout.runtime.sampling.prepare_sampling(...)` validates the realized source
+`SampleAxis` relationship once and returns a frozen slotted `SamplingRuntime`
+containing Python integer count, period, and dimension. Tests must prove one
+sample-dimension discovery per public request and exact SamplingRuntime object
+identity across temporal ProductRuntime values that retain it.
 
-`_require_sampling` requires exact `SamplingConfig`, locates the exact
-`SampleAxis`, and checks its size, zero start, and period against the config
-without rebuilding or scanning the full axis.
-
-`_require_floating_dtype` accepts exactly `torch.float32` or `torch.float64`.
-It rejects `torch.float16`, `torch.bfloat16`, and every non-floating dtype.
-
-`common.sampling` must validate directly and must not import private readout
-requirements. Product-specific value scans remain in their owning product
-modules rather than becoming a shared role registry.
+`requirements.py` may contain only behavior shared with exactly identical
+semantics. Product-specific equations and named validators remain in their
+owning runtime packages rather than becoming a registry, global validation
+layer, scientific dumping ground, or generic product framework.
 
 ## Product Field Checks
 
@@ -449,12 +511,22 @@ Stage 3 defines exactly these direct final leaves:
 | `PureWaveform` | exactly `torch.float32` or `torch.float64`, exact readout axes, `torch.strided` | finite |
 | `NoiseWaveform` | exactly `torch.float32` or `torch.float64`, exact readout axes, `torch.strided` | finite |
 | `AnalogWaveform` | exactly `torch.float32` or `torch.float64`, exact readout axes, `torch.strided` | finite |
-| `DigitizedWaveform` | `torch.int32`, exact readout axes, `torch.strided` | nonnegative and at most `2**bit_depth - 1` for its exact config |
+| `DigitizedWaveform` | `torch.int32`, exact readout axes, `torch.strided` | nonnegative and at most the prepared exact maximum code |
 
-Each product module owns one private `_require_valid_values(...)` function for
-its exact field; the digitized variant also accepts the exact
-`DigitizedWaveformConfig` needed to derive its upper bound. Tests must separate
-cheap constructor validation from these explicit full-value checks.
+Each `field.py` owns only its exact semantic leaf and cheap intrinsic
+`_require()` hook. Explicit full-value checks belong to product
+`runtime/validate.py`: `validate_photoelectrons`, `validate_charge`,
+`validate_pure_waveform`, `validate_noise_waveform`,
+`validate_analog_waveform`, and `validate_digitized_waveform`. The digitized
+validator receives the prepared exact maximum code or its ProductRuntime, not
+`DigitizedWaveformConfig`. Tests must separate cheap constructor validation
+from these explicit runtime-action checks and prove field modules import no
+runtime validator.
+
+Photoelectrons validation owns nonnegativity only. Tests must preserve the
+public distinction that a truth-only request can contain a nonnegative count
+above Charge's per-cell `2**53 - 1` ceiling, while a closure requiring Charge
+rejects that source during Charge preparation before RNG or production.
 
 Test at least two valid axis orders, exact shape/axis agreement, missing,
 duplicate, or foreign axes, sparse/non-strided rejection, noncontiguous
@@ -545,9 +617,13 @@ Verify deliberate `__all__` values and object identity across:
 The top-level package should expose the three axes, `SamplingConfig`, six
 products, all public product configs, `ReadoutConfig`, `ReadoutCollection`, and
 the implemented Stage 7 `simulate_readout`. It must not re-export TensorCore
-generic classes or scalars, private requirements, private validators, retired
-`0.6` names, or another simulation entry point. The readout root and package
-root must export the same `simulate_readout` object exactly once.
+generic classes or scalars, requirements, Runtime records, preparation,
+production, validation, or effect actions, retired `0.6` names, or another
+simulation entry point. The readout root and package root must export the same
+`simulate_readout` object exactly once. Runtime/effect `__init__.py` modules
+must import and export nothing; privacy tests inspect facades and `__all__`
+rather than assuming Python prevents deep imports or parent-package
+attributes.
 
 Closed Stage 6 regression checks proved every former product package,
 `readout.types`, the readout root, and the package root were acyclic. Closed
@@ -557,6 +633,10 @@ root, and the package root, plus absence of the retired `types.py` modules.
 Product packages must not import `ReadoutConfig`, `ReadoutCollection`, or
 the Stage 7 orchestration layer. The complete product graph may be imported
 only by the cross-product composition layer and deliberate export layers.
+Under the Maintenance 4 target, product runtime modules also must not import
+`ReadoutRuntime`, simulation, TensorML, TensorG4DS, DAG, or a private
+TensorCore module. Internal callers import exact defining runtime modules and
+never a runtime-package facade.
 
 ## Static Typing Checks
 
@@ -623,6 +703,14 @@ public result boundary. The remaining acceptance matrix in
 [Rebuild Validation Strategy](architecture/rebuild.md#validation-strategy)
 therefore covers later CUDA and measured optimization evidence, and future
 TensorG4DS, TensorML, Reconstruction, and durable boundaries.
+
+Maintenance 4 is the next accepted but undispatched validation slice. It must
+reprove those Stage 7 results against unchanged scientific behavior while
+moving private ownership to Config-to-Runtime preparation, execution-only
+production, and immediate product runtime validation. It additionally requires
+separate fixed-commit Validation and independent Review full-A100 correctness
+runs on the accepted Maintenance 3 Della environment, but authorizes no Stage 8
+benchmark, profiler, threshold, kernel-count, memory, or performance claim.
 
 Stage 5 does not activate Bernoulli, exponential, Poisson, categorical,
 multinomial, rejection, source-quantum, iterative-generation, Charge-stream,
@@ -843,8 +931,12 @@ Validation and Review should reject accidental introduction of:
   order;
 - durable cache, manifest, IO, scheduler, retry, campaign, or DAG surfaces;
 - TensorML model/training/evaluation or Reconstruction concepts;
-- global config, field, builder, validation, or registry dumping-ground
-  modules;
+- a public renderer or `nn.Module` before its focused work order;
+- global config, field, builder, validation, Runtime, action, or registry
+  dumping-ground modules; explicit product-local `runtime/validate.py` modules
+  are required and are not an exception for a generic layer;
+- Runtime/Action ABCs, protocols, reflection, generic dependency graphs,
+  decorators, untyped action mappings, or broad `utils.py` / `helpers.py`;
 - a `PhotoelectronsConfig`, generic `Config` or product ABC, per-product
   collection subclass, or compatibility shim;
 - placeholder packages or modules;

@@ -80,6 +80,26 @@ whole-request preparation, execute-once prerequisite planning, exact requested
 retention, and the public `simulate_readout(...)` export. Ordinary users should
 import the documented package-root API rather than private product producers.
 
+[Maintenance 3 Environment-Qualified Stochastic Continuity](docs/implementation/maintenance_3_environment_qualified_stochastic_continuity.md)
+is Merged / Closed through exact Review-cleared candidate
+`dfe45c96f9cc141f91e29a6a3d81bd7a3e8a49f0` and its Design closeout. It
+qualifies completed stochastic literals by numerical stack and changes no
+production, dependency, RNG, or scientific contract.
+
+[Maintenance 4 Runtime Action Ownership](docs/implementation/maintenance_4_runtime_action_ownership.md)
+is **Design-complete / User-authorized / Undispatched**. Its accepted
+behavior-preserving target reorganizes each generated product behind a
+non-exported `runtime/` package with explicit `prepare_*`, `produce_*`, and
+`validate_*` actions and concrete prepared `*Runtime` records. Whole-request
+preparation remains before RNG or product execution, and
+`simulate_readout(...)` will continue to run `produce -> validate ->
+descendant` before constructing the final collection. Runtime modules remain
+ordinary importable Python implementation details, but no runtime name is a
+facade export or carries a compatibility promise. Maintenance 4 has not begun
+production implementation and changes no public API, product meaning,
+scientific equation, stochastic address, result law, dependency, or supported
+device boundary.
+
 The historical [TensorCore consumer proposal](docs/implementation/proposed_tensorcore_counter_rng_and_distributions.md)
 is now fulfilled by published TensorCore `0.9.0` commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The
@@ -91,9 +111,9 @@ no GPU or cross-backend claim.
 ## Explicit Exclusions
 
 This package does not yet implement PE binning, TensorG4DS or TensorML
-adapters, IO, caches, public atomic product transforms, `out=`, workspaces,
-movement/selection helpers, or an allocation-free execution path. It makes no
-GPU-execution, release, deployment,
+adapters, IO, caches, `PureWaveformRenderer`, public atomic product transforms,
+`out=`, workspaces, movement/selection helpers, or an allocation-free execution
+path. It makes no GPU-execution, release, deployment,
 backward-compatibility, conformance, or broad cross-package compatibility
 claim. The focused
 [Stage 7 work order](docs/implementation/stage_7_public_readout_orchestration.md)

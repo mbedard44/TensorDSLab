@@ -48,6 +48,15 @@ before accepted measurement on that test-contract conflict; it cannot resume
 without a new authority from the closed Maintenance 3 baseline. Later GPU
 characterization and integration remain Design targets.
 
+[Maintenance 4](implementation/maintenance_4_runtime_action_ownership.md) is
+**Design-complete / User-authorized / Undispatched**. It selects a
+behavior-preserving internal action split—complete request preparation,
+product Runtime construction, tensor production, and immediate product
+validation—without changing `simulate_readout(...)`, scientific behavior,
+RNG addressing, TensorCore `0.9.0`, or the supported device boundary. Its
+target tree and contracts below are accepted Design, not yet production
+evidence.
+
 [Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
 Closed through exact implementation candidate
 `3eb8ad19a36308ca2b73d41d219a7a3b4b46c1da` and Review's clean fast-forward
@@ -171,6 +180,26 @@ law and samples aggregate counts rather than per-PE normal values. The fixed-
 `K` model in `architecture/rebuild.md` is the sole active correlated-avalanche
 baseline.
 
+The selected internal lifecycle is:
+
+```text
+Config + complete-request preflight
+  -> ProductRuntime
+  -> produce_<product>(...)
+  -> Product
+  -> validate_<product>(...)
+  -> next dependent product
+```
+
+Every Runtime required by the transitive closure is prepared before the first
+RNG request, product-production call, or semantic-output write. After that
+boundary, each generated product is produced and validated immediately before
+any descendant may consume it. One private `SamplingRuntime` binds the source
+sample count, period, and dimension once and is shared by temporal product
+Runtimes. Runtime records are final, frozen, and slotted and contain prepared
+execution operands, never configs
+or prerequisite semantic products.
+
 The rebuild begins with a functional simulation path. It does not carry the
 old public `out`, preconstructed destination, `ReadoutWorkspace`, lease,
 allocation-free, partial-snapshot, or descendant-invalidation architecture
@@ -210,41 +239,56 @@ tensor_dslab/
     axes.py
     sampling.py
   readout/
-    config.py                 # implemented Maintenance 2 ownership
-    collection.py             # implemented Maintenance 2 ownership
-    simulation.py             # implemented Stage 7 public orchestration
-    _requirements.py
-    photoelectrons/field.py
+    config.py
+    collection.py
+    requirements.py
+    simulation.py             # sole public orchestration function
+    runtime/
+      prepare.py              # ReadoutRuntime and complete preflight
+      sampling.py             # SamplingRuntime and one-time axis binding
+    photoelectrons/
+      field.py
+      runtime/validate.py
     charge/
       config.py
       field.py
-      _produce.py
-      effects/
-        _counts.py
-        _delays.py
-        _dark_counts.py
-        _timing_jitter.py
-        _correlated_avalanches.py
-        _smearing.py
-    pure_waveform/{config.py,field.py,_produce.py}
-    noise_waveform/{config.py,field.py,_produce.py}
-    analog_waveform/{config.py,field.py,_produce.py}
-    digitized_waveform/{config.py,field.py,_produce.py}
+      runtime/
+        prepare.py
+        produce.py
+        validate.py
+        effects/
+          counts.py
+          delays.py
+          dark_counts.py
+          timing_jitter.py
+          correlated_avalanches.py
+          smearing.py
+    pure_waveform/{config.py,field.py,runtime/{prepare.py,produce.py,validate.py}}
+    noise_waveform/{config.py,field.py,runtime/{prepare.py,produce.py,validate.py}}
+    analog_waveform/{config.py,field.py,runtime/{prepare.py,produce.py,validate.py}}
+    digitized_waveform/{config.py,field.py,runtime/{prepare.py,produce.py,validate.py}}
 ```
 
-Every generated product package owns its field, configs, validation, and
-implemented private `_produce_*` producer. `Photoelectrons` remains the
-producer-less truth input. Closed Stage 7 `readout/simulation.py` owns the one
-public orchestration function. `_requirements.py` and
-Charge effect modules are private. Generic RNG and distribution mechanics
-belong to the selected TensorCore `0.9.0` Maintenance 2 dependency;
-config-owned `RngKey` values select stochastic roles.
-No behavior module is created as an empty placeholder; the complete ownership
-and import rules are in `architecture/rebuild.md`.
+Every generated product package owns its public config and field plus
+non-exported `prepare_<product>`, `produce_<product>`, and
+`validate_<product>` actions. `Photoelectrons` remains the producer-less truth
+input and owns only its field and ingress validator. `readout.simulation`
+keeps the one public orchestration function; `readout.runtime.prepare`
+composes the complete private Runtime closure. Generic RNG and distribution
+mechanics remain in the selected TensorCore `0.9.0` dependency, while
+config-owned `RngKey` values select TensorDSLab stochastic roles.
 
-The product/module ownership portion of the tree above is realized by
-Maintenance 2; Stage 7 completes `readout/simulation.py` and the public
-orchestration surface.
+Privacy is export-driven. Runtime paths remain importable Python
+implementation details, but public facades do not export them and they carry
+no compatibility promise. Runtime and effect `__init__.py` files are empty;
+internal callers import exact defining modules. No behavior module is created
+as a placeholder, no generic Runtime or Action framework is introduced, and
+physical file visibility does not expand the collaborator-facing API.
+
+Maintenance 2 realized the product-centered public ownership and Stage 7
+completed `readout/simulation.py` and the public orchestration surface.
+Maintenance 4 is the undispatched internal ownership refactor that realizes
+the Runtime/action tree above.
 TensorCore RNG/distribution/same-dtype acceptance, publication, and the exact
 TensorDSLab dependency pin are complete at `0.9.0` commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The implementation preserves
@@ -252,10 +296,12 @@ default-key continuity and removes `types.py`, `_RngStream`, and
 `readout/_random.py` without shims; their Stage 5/6 bytes remain closed
 historical evidence. Maintenance 2 and Stage 7 are Merged / Closed.
 
-Stage 6 behavior-neutrally renamed all four transitional Stage 4/5 waveform
-modules, callables, imports, and tests from `_product.py` / `_product_*` to
-`_produce.py` / `_produce_*`. That producer naming convention is implemented;
-no retired producer name or compatibility shim remains.
+Historically, Stage 6 behavior-neutrally renamed the four Stage 4/5 waveform
+families from `_product.py` / `_product_*` to `_produce.py` / `_produce_*`.
+Maintenance 4 deliberately supersedes those live private bundles with
+product-owned `runtime/prepare.py`, `runtime/produce.py`, and
+`runtime/validate.py`, again without compatibility shims. Closed work orders
+retain their original private paths as historical evidence.
 
 ## Documentation Map
 
@@ -287,6 +333,10 @@ no retired producer name or compatibility shim remains.
 - [Maintenance 3 Work Order](implementation/maintenance_3_environment_qualified_stochastic_continuity.md):
   Merged / Closed environment qualification for completed stochastic
   continuity fixtures, with no production or scientific change.
+- [Maintenance 4 Work Order](implementation/maintenance_4_runtime_action_ownership.md):
+  Design-complete / User-authorized / Undispatched internal Runtime/action
+  ownership refactor; public API, science, dependency, and RNG behavior remain
+  unchanged.
 - [Stage 7 Work Order](implementation/stage_7_public_readout_orchestration.md):
   Merged / Closed public request planning, whole-closure
   preparation, execute-once orchestration, and exact-retention contract.

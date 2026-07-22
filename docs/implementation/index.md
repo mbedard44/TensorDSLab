@@ -402,6 +402,32 @@ Stage 8 still requires a new Design authority from this closed Maintenance 3
 baseline and a complete evidence rerun from scratch. Maintenance 3 does not
 itself dispatch or complete Stage 8.
 
+## Maintenance 4 Production Work Order
+
+### [Maintenance 4: Runtime Action Ownership](maintenance_4_runtime_action_ownership.md)
+
+Status: **Design-complete / User-authorized / Undispatched**.
+
+Maintenance 4 is a focused, behavior-preserving internal refactor from exact
+clean package baseline `5fdd3fafe2c44357b09df2a04b88cb121f2d3638` while
+retaining exact TensorCore `0.9.0` commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. It introduces non-exported
+product `runtime/prepare.py`, `runtime/produce.py`, and
+`runtime/validate.py` actions, replaces prepared `*Plan` values with final
+frozen `*Runtime` records, shares one prepared `SamplingRuntime`, moves Charge
+effects below `charge/runtime/effects/`, and makes
+`readout.simulation.simulate_readout(...)` a thin
+`prepare -> produce -> validate -> descendant -> retain` orchestrator.
+
+The exact public API, products, configs, science, stochastic addresses and
+draw order, numerical results at accepted comparison boundaries, source and
+storage contracts, autograd behavior, TensorCore dependency, and Maintenance
+3 environment qualification remain unchanged. Privacy is export-driven:
+runtime actions use clean internal names but appear in no supported facade.
+The old private paths are removed without shims. The maintenance authorizes no
+renderer, IO/artifact, integration, workspace, optimization, Stage 8 restart,
+dependency change, compatibility claim, or push.
+
 ### Later Integration And Artifact Stages
 
 The exact TensorG4DS-to-`Photoelectrons` bridge, TensorML/Reconstruction

@@ -17,12 +17,14 @@ The current identity and maturity are:
 
 ```text
 Project/display name: TensorDSLab
-Python import: tensor_dslab (accepted on main through Stage 7)
+Python import: tensor_dslab (accepted on main through Maintenance 3;
+unchanged by the Maintenance 4 target)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
-Package maturity: Stage 7 Public Readout Orchestration Merged / Closed
-Next production gate: none dispatched; later GPU characterization and
-integration remain Design work
+Package maturity: Maintenance 3 Merged / Closed; Maintenance 4
+Design-complete / User-authorized / Undispatched
+Next production gate: Maintenance 4 exact-authority dispatch; Stage 8 remains
+stopped and requires a superseding Design authority
 ```
 
 Stage 1 is Design-complete, and Stage 2 is Merged / Closed on `main` at
@@ -76,6 +78,19 @@ candidate `6dd55024685013fb9412a7247d3ddde7be1a3177`. Its fixed-commit
 Validation, independent Review, and post-merge verification found no unresolved
 issue. CUDA was unavailable, so its evidence is eager CPU-only; measured GPU
 characterization, optimization, and integration remain later work.
+
+Maintenance 3 Environment-Qualified Stochastic Continuity is Merged / Closed
+through exact Review-cleared candidate
+`dfe45c96f9cc141f91e29a6a3d81bd7a3e8a49f0` and its five-document Design
+closeout. It qualifies completed stochastic literals by numerical stack and
+changes no production, dependency, RNG, or scientific contract. Maintenance 4
+Runtime Action Ownership is **Design-complete / User-authorized /
+Undispatched** under
+`docs/implementation/maintenance_4_runtime_action_ownership.md`. Its accepted
+target is an internal behavior-preserving split into product-owned Runtime,
+prepare, produce, and validate actions; it adds no public surface and has not
+begun production implementation. The first Stage 8 attempt remains stopped
+evidence and is not executable authority.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency
@@ -219,23 +234,43 @@ TensorDSLab/
       config.py               # ReadoutConfig
       collection.py           # ReadoutCollection
       simulation.py           # implemented Stage 7 public orchestration
-      _requirements.py        # private shared readout relationships
-      photoelectrons/field.py
+      requirements.py         # non-exported shared readout relationships
+      runtime/
+        prepare.py            # ReadoutRuntime and prepare_readout
+        sampling.py           # SamplingRuntime and prepare_sampling
+      photoelectrons/
+        field.py
+        runtime/validate.py
       charge/
         config.py
         field.py
-        _produce.py
-        effects/
-          _counts.py
-          _delays.py
-          _dark_counts.py
-          _timing_jitter.py
-          _correlated_avalanches.py
-          _smearing.py
-      pure_waveform/{config,field,_produce}.py
-      noise_waveform/{config,field,_produce}.py
-      analog_waveform/{config,field,_produce}.py
-      digitized_waveform/{config,field,_produce}.py
+        runtime/
+          prepare.py
+          produce.py
+          validate.py
+          effects/
+            counts.py
+            delays.py
+            dark_counts.py
+            timing_jitter.py
+            correlated_avalanches.py
+            smearing.py
+      pure_waveform/
+        config.py
+        field.py
+        runtime/{prepare.py,produce.py,validate.py}
+      noise_waveform/
+        config.py
+        field.py
+        runtime/{prepare.py,produce.py,validate.py}
+      analog_waveform/
+        config.py
+        field.py
+        runtime/{prepare.py,produce.py,validate.py}
+      digitized_waveform/
+        config.py
+        field.py
+        runtime/{prepare.py,produce.py,validate.py}
   tests/
 ```
 
@@ -246,8 +281,11 @@ as `TensorDSLab`; keep semantic subpackages directly below the import root.
 Do not create placeholder modules to reserve architecture. Add a module only
 when there is a real concept, behavior, or contract to house.
 
-This product-centered tree combines the Maintenance 2 ownership target with
-the Stage 7 public orchestration module. Maintenance 2 is Merged / Closed
+This product-centered tree is the accepted Maintenance 4 target. It combines
+the public ownership established by Maintenance 2 and Stage 7 with
+non-exported product runtime actions; Maintenance 4 remains Design-complete /
+User-authorized / Undispatched, so the current production tree stays at its
+exact Maintenance 3 baseline until dispatch. Maintenance 2 is Merged / Closed
 through exact candidate
 `89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
 `9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`; it realizes the product/module
@@ -260,13 +298,16 @@ TensorCore fulfilled the historical consumer proposal in published version
 implementation pins that dependency. Its accepted evidence is eager CPU-only:
 157 tests ran, 148 passed, 9 conditional CUDA tests skipped, and Pyright
 reported no diagnostics against either exact dependency form.
-Product `field.py` modules own final field leaves and validation; product
-`config.py` modules own configs. Product `_produce.py` modules own private
-`_produce_*` construction. Charge's scientific submodels, multinomial/category
-orchestration, and count bookkeeping live under `charge/effects`. There is no
-global `configs/`, `fields.py`,
-`builders.py`, or `validation.py`. `Photoelectrons` is an already-produced
-dense truth input and has neither a config nor a readout producer.
+Product `field.py` modules own final field leaves and their cheap intrinsic
+TensorCore `_require()` narrowing; product `config.py` modules own configs.
+Each generated product's non-exported `runtime/` package owns one concrete
+final frozen ProductRuntime plus explicit `prepare_*`, `produce_*`, and `validate_*`
+actions. Charge's scientific submodels, multinomial/category orchestration,
+and count bookkeeping remain private under `charge/runtime/effects`.
+`Photoelectrons` is already-produced dense truth and has neither a config,
+preparer, producer, nor Runtime record; it owns only its field and runtime deep
+validator. There is no global `configs/`, `fields.py`, `builders.py`, generic
+`validation.py`, Runtime/Action base, registry, or product framework.
 
 ## TensorCore Backbone
 
@@ -444,34 +485,45 @@ recipes are bridges around the domain model, not replacements for it.
 
 The readout domain is organized around products rather than generic layers.
 Each product package owns `field.py` for its final `TensorField` leaf and
-`config.py` for its configs where applicable. Its `_produce.py`, when real,
-owns one private `_produce_*` builder. Charge's focused `_simulate_*`
-submodels, multinomial/category orchestration, and count bookkeeping live
-under private `charge/effects`. Do not create global
+`config.py` for its configs where applicable. Each generated product owns one
+non-exported `runtime/` package with `prepare.py`, `produce.py`, and
+`validate.py`; those modules own the exact Config-to-Runtime,
+Runtime-to-Product, and Product-to-validation actions. Charge's focused
+scientific submodels, multinomial/category orchestration, and count bookkeeping
+live under non-exported `charge/runtime/effects`. Do not create global
 `configs/`, `fields.py`, `builders.py`, `validation.py`, or `tensors.py`
-dumping grounds.
+dumping grounds, or a generic Runtime/Action framework.
 
 `readout/config.py` contains exactly `ReadoutConfig`, and
 `readout/collection.py` contains exactly `ReadoutCollection`. Implemented
-Stage 7 `readout/simulation.py` owns public `simulate_readout(...)`,
-request validation, dependency planning, and orchestration.
-`readout/_requirements.py` and `charge/effects/_*.py` are private
-implementation modules. The accepted target has no `readout/_random.py` or
-replacement `_rng.py`; generic RNG
-mechanics come from TensorCore. `common/axes.py` and `common/sampling.py` own
-shared axis and sampling semantics.
+Stage 7 `readout/simulation.py` continues to own public
+`simulate_readout(...)`; in the accepted Maintenance 4 target it becomes a
+thin owner of the public signature, topological produce/validate sequence,
+exact retention, and final collection construction.
+`readout/runtime/prepare.py` owns request parsing, dependency and config
+closure, key uniqueness, and composition of product Runtime values.
+`readout/runtime/sampling.py` is a small private dependency leaf shared by
+request and product preparation. `readout/requirements.py` and every product
+runtime/effect module are non-exported implementation modules. The accepted
+target has no `readout/_random.py` or replacement `_rng.py`; generic RNG
+mechanics come from TensorCore. `common/axes.py` and `common/sampling.py` retain
+only shared semantic axis and sampling contracts.
 
-Keep import direction acyclic: TensorCore, common, private shared requirements,
-product configs/fields, product producers and explicit prerequisites, readout
-config/collection, readout simulation, then deliberate root exports. Product
-packages do not import `ReadoutConfig`, `ReadoutCollection`, or
-`simulate_readout(...)`.
+Keep import direction acyclic: TensorCore, common, shared readout requirements,
+product configs/fields, the private source-bound sampling runtime, product
+runtime actions, readout config/collection and whole-request preparation,
+readout simulation, then deliberate root exports. Product runtime modules do not
+import `ReadoutConfig`, `ReadoutRuntime`, `ReadoutCollection`, simulation, or
+`simulate_readout(...)`; produce modules import neither Configs nor validators.
 
-Physical module location does not decide public visibility. Stage 3 package
-roots and `__all__` deliberately export the collaborator-facing axes, fields,
-configs, and collection. Closed Stage 7 deliberately adds
-`simulate_readout(...)` at both public export layers. Never create placeholder
-modules merely to reserve the accepted target tree.
+Physical module location does not decide public visibility. Package facades
+and `__all__` deliberately export the collaborator-facing axes, fields,
+configs, collection, and `simulate_readout(...)`. Runtime paths are ordinary
+importable Python modules but are unsupported and carry no compatibility
+promise; runtime `__init__.py` files export nothing. Cross-module runtime names
+therefore omit leading underscores, while TensorCore's semantic-leaf
+`_require()` hook and genuinely module-local helpers retain them. Never create
+placeholder modules merely to reserve the accepted target tree.
 
 ## Target Domain Simulation Surface
 
@@ -490,30 +542,47 @@ The `products` iterable is required, consumed once, semantically unordered,
 and contains exact recognized classes. Reject empty requests, duplicates,
 base/foreign types, and missing transitive configs before any RNG request,
 product-producer invocation, or semantic-output write. Product-owned private
-preparation records must complete the entire closure before the first RNG
-request, producer invocation, or semantic-output write; `simulation.py`
-composes those plans without duplicating scientific equations. Execute each
-prerequisite at most once and retain exactly the requested fields. Each exact
-product config enters its typed preparer; the producer receives the trusted
-plan rather than the config again.
+Runtime records must complete the entire closure before the first RNG request,
+production call, or semantic-output write; `readout.runtime.prepare` composes
+those values without duplicating scientific equations. One shared
+`SamplingRuntime` binds the source sample dimension and sampling facts once.
+Execute each prerequisite at most once and retain exactly the requested
+fields. Each exact product config enters its typed preparer; the producer
+receives the trusted ProductRuntime rather than the config again.
 
 `ReadoutConfig` composes one required `SamplingConfig` with optional
 product-specific configs. Config absence is structural. Product configs use
 exact model types rather than string switches. There is no generic `Config`
 ABC merely for uniformity and no `PhotoelectronsConfig`.
 
-Private `_produce_*` functions build semantic products. Private `_simulate_*`
-functions implement scientific submodels. Their module paths are not public
-APIs, and they may trust preconditions established by the public boundary.
-Charge privately applies enabled dark counts, timing jitter, fixed-generation
-correlated avalanches, and smearing without mutating truth. Pure/noise produce
-zero-referenced components; analog composes them; digitization applies its ADC
-transfer.
+The accepted runtime action lifecycle is explicit:
 
-`_produce_*` and product-owned `_produce.py` modules are the implemented
-convention. Stage 6 behavior-neutrally renamed the four transitional Stage 4/5
-waveform modules, callables, imports, and tests. Do not restore an `_product_*`
-callable, `_product.py` module, alias, or compatibility shim.
+```text
+Config plus execution facts -> prepare_<product> -> ProductRuntime
+prerequisites plus ProductRuntime (+ RNG) -> produce_<product> -> Product
+Product plus minimal prepared facts -> validate_<product> -> None
+```
+
+Preparation interprets config, converts units, derives scientific operands,
+proves bounds, and materializes required device constants. Production performs
+tensor execution, accepted RNG requests, narrow dynamic guards, and exactly
+one semantic-field construction; it imports no Config or validator. Validation
+performs the completed product's deep publication scan without repair,
+construction, movement, or config interpretation. `simulate_readout(...)`
+executes `produce -> validate -> descendant` for every generated product and
+passes the exact result plus named direct prerequisites to its validator.
+Photoelectrons deep validation remains part of whole-request preflight.
+
+Charge's `simulate_*` effect actions privately apply enabled dark counts,
+timing jitter, fixed-generation correlated avalanches, and smearing without
+mutating truth. Pure/noise produce zero-referenced components; analog composes
+them; digitization applies its ADC transfer. Runtime paths are not public APIs
+and may trust preconditions established by the public boundary.
+
+Stage 6's `_produce.py` / `_produce_*` convention remains exact historical
+evidence. The accepted Maintenance 4 target removes those private paths
+without an alias, compatibility shim, or restoration of the earlier
+`_product.py` / `_product_*` names once implemented.
 
 The builder does not load sources, perform IO, move or normalize existing
 inputs, persist products, or own DAG scheduling. A producer's declared fresh
@@ -705,6 +774,11 @@ Package `__init__.py` files should re-export documented public surfaces
 deliberately. They should not expose private representation, persistence,
 normalization, or validation-helper functions by accident.
 
+Privacy for readout runtime actions is defined by these deliberate facades,
+not by making Python submodules inaccessible. Runtime packages import and
+export nothing from their `__init__.py` files; direct deep imports remain
+unsupported implementation use and receive no compatibility promise.
+
 Public names should be stable and intention-revealing. When public names move
 or change:
 
@@ -860,7 +934,11 @@ typed path:
 Once an object has crossed into a valid native record, hot-path functions
 should avoid repeatedly revalidating full object graphs. Product builders may
 still perform narrow function-specific checks, but should not repeat full
-device scans or parse coordinate strings inside kernels.
+device scans or parse coordinate strings inside kernels. Product preparation
+owns statically derivable scientific and relationship checks; production owns
+only tensor/RNG execution and correctness-critical dynamic guards; explicit
+product validation owns the completed-result deep scan before any descendant
+or collection publication consumes it.
 
 Use scalar wrappers at config, source, and artifact boundaries where
 constraints are meaningful. Numeric wrappers should reject bool. Plain `bool`
@@ -873,8 +951,9 @@ Prefer these migration directions as real code is introduced:
   boundary validators;
 - recursive inner-loop object checks become trusted typed inputs plus narrow
   operation preconditions; and
-- semantic leaf construction remains cheap while explicit deep validators own
-  value-domain scans.
+- semantic leaf construction remains cheap while product-owned runtime
+  validators own value-domain scans and `simulate_readout(...)` invokes each
+  validator immediately after production.
 
 Do not add runtime policing for callers who deliberately leave the public API.
 Unsupported final-leaf subclassing, class mutation, constructor bypass,
@@ -901,6 +980,9 @@ Design. Do not patch around it by inventing architecture inside implementation.
   the boundary is intentionally JSON-like or there is a documented reason.
 - Prefer frozen slotted dataclasses for stable configuration records. Do not
   reapply `@dataclass` to TensorCore semantic leaves.
+- Use concrete final frozen slotted product Runtime dataclasses for prepared private
+  execution operands. They must not inherit a Runtime base, retain Configs or
+  semantic products, or expose execution methods or mutable caches.
 - Use `value` for primitive payloads on constrained scalar records.
 - Define semantic axes, fields, and collections as direct final fieldless
   TensorCore leaves with inherited construction.
@@ -908,6 +990,10 @@ Design. Do not patch around it by inventing architecture inside implementation.
   contracts when they make a public boundary clearer.
 - Keep modules cohesive; split a module when it owns more than one meaningful
   boundary.
+- Keep product preparation, production, and deep validation in their exact
+  owning runtime modules; extract only genuinely identical behavior into the
+  narrowest private owner rather than a generic action framework or broad
+  helper module.
 - Keep comments sparse and useful. Explain non-obvious intent, not mechanics.
 - Do not hide cross-domain, TensorCore, cache, or adapter behavior behind broad
   helper modules.
@@ -955,9 +1041,29 @@ Good tests should:
 - prove source `Photoelectrons` exact return and immutability, guaranteed-fresh
   generated fields, pairwise generated-output independence, exact source-axis
   reuse, and no post-exposure TensorDSLab writes;
-- for Stage 7, prove every generated producer runs its exact product-specific
-  deep postcondition before downstream use or retention, and that a failed
-  postcondition exposes no field or partial collection;
+- retain closed Stage 7 evidence that every generated product passes its exact
+  product-specific deep postcondition before downstream use or retention and
+  that a failed postcondition exposes no field or partial collection;
+- for Maintenance 4, prove every requested product Runtime is prepared before
+  the first RNG request or production call, all temporal runtimes share the
+  exact one `SamplingRuntime` where stored, and optional Runtime presence is
+  the closure execution signal rather than duplicated `need_*` flags;
+- for Maintenance 4, prove every generated product follows exact
+  `prepare -> produce -> validate` ownership, Photoelectrons has only its
+  ingress validator, every validator receives the exact produced field and
+  named direct prerequisites once, and a failed validation prevents every
+  descendant and final collection;
+- for Maintenance 4, prove producers import no Config or validator, Runtime
+  records retain no Config, semantic product, collection, stored callable,
+  mutable cache, or framework state, and no Runtime/action/helper enters a
+  public facade export;
+- for Maintenance 4, prove the retired `_requirements.py`, product
+  `_produce.py`, and `charge/effects/` live paths are absent without aliases,
+  while every runtime/effect `__init__.py` imports and exports nothing;
+- preserve exact same-stack product values, TensorCore RNG distribution calls,
+  keys, positions, quanta, ordinals, counts and ordering, no-draw behavior,
+  storage, axes, dtype/device, failure, and autograd contracts across the
+  Maintenance 4 ownership refactor;
 - prove deterministic waveform operations preserve accepted autograd behavior
   and stochastic/digitized paths make only their documented claims;
 - prove complete request preparation precedes RNG consumption, producer

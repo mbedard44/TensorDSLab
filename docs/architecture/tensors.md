@@ -24,6 +24,12 @@ TensorDSLab-hosted consumer proposal is historical evidence only. Maintenance
 Closed Stage 3 through 6 evidence remains pinned to `0.7.0`. No broad
 compatibility result follows from either exact baseline.
 
+Maintenance 3 is Merged / Closed through exact Review-cleared candidate
+`dfe45c96f9cc141f91e29a6a3d81bd7a3e8a49f0`. Maintenance 4 Runtime Action
+Ownership is **Design-complete / User-authorized / Undispatched**. It preserves
+this TensorCore boundary and the exact `0.9.0` dependency while reorganizing
+only unexported TensorDSLab preparation, production, and validation ownership.
+
 The previous TensorCore `0.6` ID/layout/sidecar architecture is historical and
 is intentionally not preserved through aliases.
 
@@ -183,8 +189,10 @@ dtype, and Torch-layout restrictions.
 
 A bare semantic constructor is not proof of a full scientific value domain.
 Full-device finiteness, nonnegativity, or config-dependent ADC-bound scans run
-at untrusted ingress and producer postconditions. This avoids hidden device
-synchronization during every semantic reconstruction.
+through explicit product-owned runtime validators at untrusted ingress and
+generated-product publication boundaries. This avoids hidden device
+synchronization during every semantic reconstruction and keeps `field.py`
+limited to semantic identity plus cheap intrinsic narrowing.
 
 Exact concrete field type is the in-process product identity. There are no
 `TensorFieldId` values, product-name strings, field-role constants, metadata
@@ -221,48 +229,76 @@ collection class and replaces loose field registries and canonical sequences.
 
 ## Construction And Dependency Ownership
 
-Product relationships appear in private producer signatures, not in collection
-membership or TensorCore. Product configuration enters the corresponding typed
-private preparer:
+Product relationships appear in private runtime-action signatures, not in
+collection membership or TensorCore. Product configuration enters the
+corresponding typed private preparer:
 
 ```python
-def _prepare_analog_waveform(
-    *,
+def prepare_analog_waveform(
     config: AnalogWaveformConfig,
+    *,
     floating_dtype: torch.dtype,
-) -> _AnalogWaveformPlan:
+    device: torch.device,
+) -> AnalogWaveformRuntime:
     ...
 
 
-def _produce_analog_waveform(
+def produce_analog_waveform(
     pure: PureWaveform,
     noise: NoiseWaveform,
     *,
-    plan: _AnalogWaveformPlan,
+    runtime: AnalogWaveformRuntime,
 ) -> AnalogWaveform:
+    ...
+
+
+def validate_analog_waveform(
+    analog: AnalogWaveform,
+    *,
+    pure: PureWaveform,
+    noise: NoiseWaveform,
+) -> None:
     ...
 ```
 
-`simulate_readout(...)` owns the complete request and dependency plan. It uses
-one private immutable readout plan composed from product-owned preparation
-records, retains exactly the requested products, then constructs
-`ReadoutCollection` once. Complete preparation precedes every product-producer
-invocation. A prerequisite does not need to be returned merely because it was
-computed.
+`simulate_readout(...)` owns the complete request and dependency sequence. Its
+private `prepare_readout(...)` builds one `ReadoutRuntime` composed from
+optional product-owned Runtime records, retains exactly the requested
+products, then constructs `ReadoutCollection` once. Complete preparation
+precedes every product-production invocation. A prerequisite does not need to
+be returned merely because it was computed.
 
 Product packages do not receive a whole collection as a service locator. Each
 preparer receives its exact config plus the source, sampling, device, shape, or
-floating-dtype facts it needs. Each producer receives explicit prerequisite
-fields and its product-owned typed plan, plus one public TensorCore
-`CounterRng` when that producer is stochastic-capable. Deterministic producers
-and helpers receive no RNG. The stochastic effect uses the exact `RngKey`
-captured from its leaf config during preparation.
+floating-dtype facts it needs. Each ProductRuntime is a concrete final frozen slotted
+data carrier containing no Config, semantic product, mutable cache, method, or
+Runtime base. Each producer receives explicit prerequisite fields and its
+product-owned Runtime, plus one public TensorCore `CounterRng` when that
+producer is stochastic-capable. Deterministic producers and helpers receive no
+RNG. The stochastic effect uses the exact `RngKey` captured from its leaf
+config during preparation.
+
+`readout.runtime.sampling` owns one private `SamplingRuntime` containing Python
+integer sample count, period, and dimension. Request preparation constructs it
+once after validating the source/config relationship; temporal ProductRuntime
+values that retain sampling facts reference that exact object. This is private
+source-bound execution state and therefore does not belong in public
+`common.sampling`.
+
+Production imports no Config, performs no scientific preparation, and owns no
+deep publication scan. Immediately after every generated field is constructed,
+`simulate_readout(...)` invokes its product-owned `validate_<product>(...)`
+before any descendant can consume it. Product runtime packages and their
+`__init__.py` files are deliberately absent from public facades; direct deep
+imports remain unsupported implementation access rather than a public API.
 
 The package tree and dependency direction are fixed in
-[`rebuild.md`](rebuild.md): common axes/sampling, private shared readout
-requirements, product config/field modules, product producers, readout
-config/collection, then public simulation. There is no generic
-field/config/builder/validation layer.
+[`rebuild.md`](rebuild.md): common axes/sampling, unexported shared readout
+requirements, product config/field modules, the source-bound sampling Runtime,
+product runtime actions, readout config/collection, then public simulation.
+There is no
+generic field/config/builder/validation layer, Runtime ABC, action registry, or
+reflection-based dependency graph.
 
 ## Functional Result Contract
 
@@ -297,12 +333,11 @@ no later write through an alias. Private writable scratch remains exclusive
 and unexposed and never enters a returned collection.
 
 Constructing or returning a field is not itself an additional device
-synchronization point. Accepted deep-value validation and producer
-postconditions use scalar reductions that may synchronize CUDA. Outside those
-documented correctness checks, ordinary current-stream PyTorch ordering
-applies; a cross-stream consumer establishes its own event or stream
-dependency. Strong references preserve lifetime, not write safety or stream
-ordering.
+synchronization point. Accepted deep-value runtime validators use scalar
+reductions that may synchronize CUDA. Outside those documented correctness
+checks, ordinary current-stream PyTorch ordering applies; a cross-stream
+consumer establishes its own event or stream dependency. Strong references
+preserve lifetime, not write safety or stream ordering.
 
 ## No Initial Output-Buffer Layer
 
@@ -360,12 +395,25 @@ repeat the whole boundary or defend direct unsupported calls. Cheap
 correctness-critical local assertions remain acceptable when they protect the
 function's own valid-result contract.
 
-Every generated producer does own one explicit result-boundary scan: after it
-constructs its local field, it invokes that product's existing private
-`_require_valid_values(...)` before returning the field for downstream use or
-retention. This is not an intrinsic TensorCore constructor invariant. It is the
-Stage 7 public-operation postcondition and may synchronize CUDA through scalar
-extraction.
+Maintenance 4 preserves the Stage 7 public-operation postcondition through an
+explicit action boundary. A product producer constructs and returns one local
+field without interpreting Config or performing its deep scan. Orchestration
+then invokes the corresponding product-owned runtime validator exactly once
+with the exact generated field and its named direct prerequisite relationship
+before any descendant or returned collection can consume that field. The
+sequence is `produce -> validate -> descendant`, not “produce every field,
+then validate them all.” This is not an intrinsic TensorCore constructor
+invariant and may synchronize CUDA through scalar extraction.
+
+`validate_photoelectrons(...)` remains an untrusted-ingress check during whole-
+request preparation. Generated `validate_charge`,
+`validate_pure_waveform`, `validate_noise_waveform`,
+`validate_analog_waveform`, and `validate_digitized_waveform` own their exact
+value domains. Digitized validation uses the prepared Runtime maximum code
+rather than a Config. Charge performs one terminal finite/nonnegative scan and
+preserves the accepted invalid-generated-result `RuntimeError` boundary. A
+failed validation prevents descendants and final collection construction; the
+failed local field never escapes.
 
 Malformed supported operands use TensorCore's documented `TypeError` boundary;
 unsatisfied well-formed relationships use `ValueError` where applicable.
@@ -384,6 +432,11 @@ casting an upstream object into a downstream leaf. A future TensorML boundary
 selects and orders exact products explicitly rather than relying on collection
 iteration or subclass identity as a model ABI.
 
+Maintenance 4 prepares an internal Config-to-Runtime-to-Product seam but adds
+no public renderer or model component. A reusable `PureWaveformRenderer`, its
+buffer/state behavior, and its synchronization-free trusted forward boundary
+remain a separate focused Design and implementation stage.
+
 ## Return To Design Before
 
 Return to TensorDSLab Design before:
@@ -392,6 +445,8 @@ Return to TensorDSLab Design before:
 - adding stored state or another inheritance layer to semantic leaves;
 - restoring IDs, layouts, constants, sidecars, or compatibility shims;
 - adding another axis or product type;
+- exporting a Runtime action or adding a public renderer without its focused
+  work order;
 - adding generic movement, selection, reconstruction, or metadata locally;
 - introducing a public destination/workspace/lifecycle surface;
 - weakening fresh-result, no-post-exposure-write, device, dtype, or axes
