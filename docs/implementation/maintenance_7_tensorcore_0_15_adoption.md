@@ -357,71 +357,131 @@ magnitudes. Both Configs canonicalize that field in `mV` through
 zero, and negative caller quantities are rejected during Config construction.
 The field name and public `Quantity` representation remain unchanged.
 
-Every flat required scalar-Quantity field in each of those two multi-field
-Configs uses one readable declaration table:
+All Quantity-bearing Configs use one TensorDSLab-private
+`_canonicalize_quantity_fields(...)` mechanism from `common/units.py`.
+Each Config calls that helper exactly once from `__post_init__` and supplies
+two deliberately separate declarations:
+
+- `quantity_fields`: `(name, unit, constraint)` rows that own physical
+  conversion and scalar-domain normalization; and
+- `tuple_fields`: names whose accepted non-`None` representation must be
+  exactly `tuple`.
+
+The helper has this fixed private shape:
 
 ```python
-for name, unit, constraint in (
-    ("fast_time_constant", "ns", PositiveFloat),
-    ("slow_time_constant", "ns", PositiveFloat),
-    ("support_time", "ns", PositiveFloat),
-    ("peak_voltage_per_photoelectron", "mV", PositiveFloat),
-):
-    object.__setattr__(
-        self,
-        name,
-        _canonical_quantity(
-            getattr(self, name),
-            unit=unit,
-            field=f"TpcFebSnrPulseConfig.{name}",
-            constraint=constraint,
-        ),
-    )
+def _canonicalize_quantity_fields(
+    config: object,
+    *,
+    quantity_fields: tuple[
+        tuple[str, str, type[Scalar[float]]],
+        ...,
+    ],
+    tuple_fields: tuple[str, ...] = (),
+) -> None:
+    owner = type(config).__name__
+
+    for name in tuple_fields:
+        parameter = getattr(config, name)
+        if parameter is not None and type(parameter) is not tuple:
+            raise TypeError(f"{owner}.{name} must be a tuple")
+
+    for name, unit, constraint in quantity_fields:
+        parameter = getattr(config, name)
+        if parameter is None:
+            continue
+
+        is_tuple = name in tuple_fields
+        values = parameter if is_tuple else (parameter,)
+        canonical = tuple(
+            _canonical_quantity(
+                value,
+                unit=unit,
+                field=(
+                    f"{owner}.{name}[{index}]"
+                    if is_tuple
+                    else f"{owner}.{name}"
+                ),
+                constraint=constraint,
+            )
+            for index, value in enumerate(values)
+        )
+        object.__setattr__(
+            config,
+            name,
+            canonical if is_tuple else canonical[0],
+        )
+```
+
+The scalar-as-one-item sequence makes `_canonical_quantity(...)` occur in only
+one helper branch. The helper then restores the declared scalar-versus-tuple
+shape. It does not coerce lists or other sequences to tuples. It skips every
+optional `None` value before unpacking or canonicalization and preserves that
+field as `None`. A declared tuple is canonicalized element by element, in
+order, into a newly owned tuple; every failing element uses the exact indexed
+field label. Empty tuples pass this generic mechanics layer so that the owning
+Config can apply its own nonempty relationship if required.
+
+Tuple-valued physical fields remain `tuple[Quantity, ...]`; they do not become
+one array-valued `Quantity`. Under the selected Pint version, constructing a
+Quantity from a tuple may promote its magnitude to a mutable NumPy array when
+NumPy is available, while accepted environments need not contain NumPy.
+Array-valued quantities would therefore weaken frozen-Config storage,
+environment independence, exact built-in scalar validation, independently
+convertible element units, and indexed diagnostics. The helper accepts and
+canonicalizes only scalar-magnitude Quantity elements and reassembles an exact
+immutable tuple.
+
+For example, the TPC Config declaration is:
+
+```python
+_canonicalize_quantity_fields(
+    self,
+    quantity_fields=(
+        ("fast_time_constant", "ns", PositiveFloat),
+        ("slow_time_constant", "ns", PositiveFloat),
+        ("support_time", "ns", PositiveFloat),
+        ("peak_voltage_per_photoelectron", "mV", PositiveFloat),
+    ),
+)
 ```
 
 `VetoPduPulseConfig` uses the same exact `(name, unit, constraint)` shape for
 its eight fields. This removes its field-name-dependent unit conditional.
 `DigitizedWaveformConfig` uses the same declaration-table shape for its two
 required scalar voltage quantities. `AnalogSaturationConfig` uses the same
-table for its two optional scalar voltage quantities while skipping a `None`
-entry before canonicalization. Single-Quantity Configs retain their shorter
-direct call.
+table for its two optional scalar voltage quantities; the helper skips `None`
+without requiring an optional marker in each row. Single-Quantity Configs use
+the same helper with one declaration row rather than retaining a second direct
+canonicalization pattern.
 
 `PsdNoiseConfig` keeps tuple representation separate from element quantity
-semantics. One table owns exact tuple admission:
+semantics. Its one helper call supplies a tuple-admission table:
 
 ```python
-for name in ("frequency_left_edges", "power_density"):
-    if type(getattr(self, name)) is not tuple:
-        raise TypeError(f"PsdNoiseConfig.{name} must be a tuple")
+tuple_fields=(
+    "frequency_left_edges",
+    "power_density",
+),
 ```
 
-A second independent `(name, unit, constraint)` table owns indexed element
-canonicalization:
+A separate `(name, unit, constraint)` table owns both tuple-element and scalar
+quantity canonicalization:
 
 ```python
-for name, unit, constraint in (
+quantity_fields=(
     ("frequency_left_edges", "Hz", NonnegativeFloat),
+    ("frequency_stop", "Hz", PositiveFloat),
     ("power_density", "mV ** 2 / Hz", NonnegativeFloat),
-):
-    object.__setattr__(
-        self,
-        name,
-        tuple(
-            _canonical_quantity(
-                value,
-                unit=unit,
-                field=f"PsdNoiseConfig.{name}[{index}]",
-                constraint=constraint,
-            )
-            for index, value in enumerate(getattr(self, name))
-        ),
-    )
+),
 ```
 
-`frequency_stop` remains a scalar direct call. PSD nonemptiness, equal tuple
-lengths, ordered coverage, exclusive stop, and nonzero-power requirements
-remain explicit relationship checks after the shared representation and
+The helper recognizes the two tuple names, unpacks their elements, applies
+every declared unit and constraint with indexed diagnostics, and reassembles
+fresh tuples. It treats `frequency_stop` as a scalar through the same
+quantity table. PSD nonemptiness, equal tuple lengths, ordered coverage,
+exclusive stop, and nonzero-power requirements remain explicit relationship
+checks in `PsdNoiseConfig.__post_init__` after the shared representation and
 canonicalization mechanics. The tuple table must not be merged with the
 quantity table: immutable sequence representation and physical element
 semantics are distinct Config responsibilities.
@@ -462,6 +522,7 @@ Implementation may change exactly these production/metadata paths:
 
 ```text
 pyproject.toml
+tensor_dslab/common/units.py
 tensor_dslab/readout/rng_keys.py
 tensor_dslab/readout/requirements.py
 tensor_dslab/readout/analog_waveform/config.py
@@ -489,8 +550,8 @@ tensor_dslab/readout/digitized_waveform/runtime/prepare.py
 ```
 
 No other production or metadata path is authorized. The target adds exactly
-one package file and removes no package file. Package-root, common, readout,
-and product-facade bytes are protected.
+one package file and removes no package file. Package-root and product-facade
+bytes are protected; every common/readout path not named above is protected.
 
 Implementation may update only focused tests that exercise the changed
 contracts. The candidate handoff must enumerate their exact paths. Expected
@@ -535,8 +596,9 @@ alter protected scientific fixtures merely to make the migration pass.
 - isolated source and archive imports with no sibling package loaded;
 - unchanged TensorDSLab 35/30/5 facade exports;
 - exactly one new non-exported `readout/rng_keys.py`;
-- no `logical_positions`, local generic helper definition, compatibility
-  alias, wrapper, or private TensorCore import in production; and
+- no `logical_positions`, local duplicate of an adopted TensorCore generic
+  helper, compatibility alias, wrapper, or private TensorCore import in
+  production; and
 - clean wheel/source import and tracked-package topology evidence.
 
 ### Validation ownership
@@ -584,13 +646,21 @@ alter protected scientific fixtures merely to make the migration pass.
   magnitude and contain no duplicate explicit zero check;
 - exact positive quantities are accepted while zero, signed zero, and negative
   quantities are rejected with the canonical field-bearing scalar boundary;
-- every multi-field flat scalar-Quantity Config uses the exact
-  `(name, unit, constraint)` declaration-table shape, optional fields are
-  skipped before canonicalization, and no field-name-dependent unit
-  conditional remains;
-- `PsdNoiseConfig` uses one exact tuple-admission table and a separate indexed
-  `(name, unit, constraint)` element-canonicalization table, with all PSD
-  relationship checks remaining explicit;
+- every Quantity-bearing Config calls the one private helper exactly once with
+  an exact `(name, unit, constraint)` quantity table;
+- Config modules no longer import or call `_canonical_quantity(...)` directly;
+  that singular primitive remains module-local to `common/units.py`;
+- optional scalar or tuple fields skip `None` before unpacking and
+  canonicalization, preserve `None`, and need no per-row optional marker;
+- scalar fields remain scalars, declared tuple fields require exact tuple
+  representation, and every tuple element is canonicalized in order into a
+  fresh tuple with an exact indexed diagnostic;
+- one array-valued Pint Quantity, a list of quantities, or a tuple containing
+  a non-scalar-magnitude Quantity is rejected rather than normalized into the
+  accepted tuple-of-scalar-Quantity representation;
+- `PsdNoiseConfig` passes one exact tuple-admission table separately from its
+  quantity table, while all PSD relationship checks remain explicit after
+  generic mechanics;
 - `__post_init__` remains the sole Config canonicalization/local-relationship
   hook and neither Config defines `__new__`;
 - pure-waveform preparation applies one and only one negative sign after
@@ -603,9 +673,11 @@ alter protected scientific fixtures merely to make the migration pass.
 - mutants that accept nonpositive amplitudes, omit or duplicate the fixed sign,
   retain the old explicit zero checks, restore the Veto unit conditional, or
   bypass one declaration-table entry fail focused evidence; and
-- mutants that merge or bypass PSD tuple admission, accept a non-tuple sequence,
-  skip one indexed quantity constraint, or conflate element validation with a
-  PSD relationship fail focused evidence.
+- mutants that merge or bypass PSD tuple admission, accept or coerce a
+  non-tuple sequence or array-valued Quantity, reject or canonicalize `None`,
+  change a scalar into a tuple, omit/reorder/drop a tuple element, skip one
+  indexed quantity constraint, reuse a non-indexed tuple diagnostic, or
+  conflate element validation with a PSD relationship fail focused evidence.
 
 ### Typing
 
@@ -729,7 +801,7 @@ Maintenance 7 does not:
 - change readout science, probability laws, limits, or public products beyond
   the exact positive-amplitude/fixed-negative-polarity narrowing;
 - change Pint fields, canonical units, Config construction, or Runtime facts
-  beyond the multi-field scalar-Quantity declaration tables and
+  beyond the private table-driven Quantity-field canonicalization and
   preparation-owned signed peak described above;
 - add a Config, Runtime, renderer, artifact, IO, persistence, table, bridge,
   reconstruction, or TensorML surface;
