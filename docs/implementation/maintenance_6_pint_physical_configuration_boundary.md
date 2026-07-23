@@ -1127,7 +1127,7 @@ tensor_dslab/readout/pure_waveform/config.py
 tensor_dslab/readout/pure_waveform/runtime/prepare.py
 ```
 
-It may change exactly these 18 test and typing paths:
+It may change exactly these 19 test and typing paths:
 
 ```text
 tests/test_pint_physical_configuration.py
@@ -1141,6 +1141,7 @@ tests/test_noise_waveform_product.py
 tests/test_package_contracts.py
 tests/test_readout_axes_and_sampling.py
 tests/test_readout_configs.py
+tests/test_readout_product_types.py
 tests/test_readout_simulation.py
 tests/test_rng_ownership_migration.py
 tests/test_runtime_action_ownership.py
@@ -1151,6 +1152,10 @@ tests/typing/stage_7_public_readout_orchestration.py
 ```
 
 The first two are new paths. Every other path exists at the Design baseline.
+`tests/test_readout_product_types.py` may change only to remove imports,
+executions, and diagnostic assertions for the three retired structural
+membership helpers while preserving its dtype, floating-dtype,
+representability, field, Runtime, and validator evidence.
 Implementation may update only these two lifecycle records:
 
 ```text
