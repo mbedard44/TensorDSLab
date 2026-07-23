@@ -69,15 +69,25 @@ count/label/regular axis roots, and source-derived sampling. It removes
 RNG addressing, product execution, or `simulate_readout(...)`.
 
 [Maintenance 6](implementation/maintenance_6_pint_physical_configuration_boundary.md)
-is **User-authorized / Dispatched** from that exact clean closeout. It
-selects Pint `0.25.3`, migrates public physical Config fields to copied
-canonical scalar quantities, and extracts plain execution values once during
-preparation. It deliberately keeps Runtime records, producers, validators,
-tensors, RNG mechanics, and scientific equations unit-free. Its bounded
-action cleanup removes annotation-only Config membership checks and uses
-TensorCore `0.13.0` where the generic contract matches. Pint
-canonicalization, genuine Config relationships, and package-owned scientific,
-axes-identity, storage, and generated-result checks remain.
+is **Implementation candidate / Design-amended fixed-commit Validation
+pending** at exact Candidate 1
+`240e1492c466097b3059dfe9911ab338a4dd38a1`. It selects Pint `0.25.3`,
+migrates public physical Config fields to copied canonical scalar quantities,
+and extracts plain execution values once during preparation. It deliberately
+keeps Runtime records, producers, validators, tensors, RNG mechanics, and
+scientific equations unit-free. Its bounded action cleanup removes
+annotation-only Config membership checks and uses TensorCore `0.13.0` where
+the generic contract matches. Pint canonicalization, genuine Config
+relationships, and package-owned scientific, axes-identity, storage, and
+generated-result checks remain.
+
+The user-selected evidence amendment closes Maintenance 6 through complete
+local fixed-commit Validation and independent Review, with `13` conditional
+CUDA skips disclosed and no accelerator claim. Fresh cluster matrices are
+deferred until a separate TensorDSLab work order closes adoption of published
+TensorCore `0.15.0` exact commit
+`0f974e9e7f52125bbe829e124beb24e69de811d3`; they are not a Maintenance 6
+closure condition.
 
 [Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
 Closed through exact implementation candidate
@@ -379,8 +389,9 @@ retain their original private paths as historical evidence.
   Merged / Closed TensorCore `0.13.0`, compact-axis, and source-derived
   sampling migration.
 - [Maintenance 6 Work Order](implementation/maintenance_6_pint_physical_configuration_boundary.md):
-  User-authorized / Dispatched Pint physical-configuration boundary and
-  TensorCore-aware preparation cleanup.
+  Implementation candidate / Design-amended fixed-commit Validation-pending
+  Pint physical-configuration boundary and TensorCore-aware preparation
+  cleanup.
 - [Stage 7 Work Order](implementation/stage_7_public_readout_orchestration.md):
   Merged / Closed public request planning, whole-closure
   preparation, execute-once orchestration, and exact-retention contract.

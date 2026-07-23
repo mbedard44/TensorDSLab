@@ -376,9 +376,12 @@ functional dependency/axis correctness, not Stage 8 performance evidence.
 
 The
 [Maintenance 6 work order](implementation/maintenance_6_pint_physical_configuration_boundary.md)
-is **User-authorized / Dispatched** against exact clean Maintenance 5
-Design closeout `021694b9479d02546405f6a815aedf21c9c831a4`. Validation and
-independent Review must prove:
+is **Implementation candidate / Design-amended fixed-commit Validation
+pending** against exact clean Maintenance 5 Design closeout
+`021694b9479d02546405f6a815aedf21c9c831a4`. Candidate 1 is exact commit
+`240e1492c466097b3059dfe9911ab338a4dd38a1`, tree
+`1e5cae8c0e905c9638eb40e7f9d24fac950fee59`. Validation and independent
+Review must prove:
 
 - exact Pint `0.25.3` wheel and source identities, dependency resolution,
   isolated source/artifact imports, and retained exact TensorCore `0.13.0`
@@ -415,9 +418,9 @@ independent Review must prove:
 - exact canonical-operand continuity for deterministic/stochastic products,
   explicit physical-equivalence-versus-binary-equality cases, unchanged RNG
   calls, and exact-zero no-draw behavior; and
-- complete local source/artifact, Pyright, mutation, import/privacy, and
-  separate fresh full-A100 Validation/Review matrices across both supported
-  PyTorch minors.
+- complete local source/artifact, Pyright, mutation, import/privacy, scope,
+  protected-byte, and hygiene evidence across the exact TensorCore
+  source/archive by Pint wheel/sdist forms.
 
 TensorCore helpers must be used only when their semantics match the package
 requirement. `require_axis_signature(...)` cannot replace the unordered
@@ -427,6 +430,13 @@ freshness or scientific value domains.
 
 This gate is functional/API correctness evidence, not Stage 8 performance,
 fusion, allocation, persistence, integration, or compatibility evidence.
+Under the user-selected evidence schedule, neither role submits fresh cluster
+work for Maintenance 6. The `13` conditional CUDA skips remain an explicit
+qualification and no accelerator-correctness claim follows. Fresh two-minor
+CUDA matrices wait until a separate TensorDSLab work order adopts published
+TensorCore `0.15.0` exact commit
+`0f974e9e7f52125bbe829e124beb24e69de811d3`; those later package-owned gates
+qualify only that exact integrated pairing.
 
 ## Governance Adoption Checks
 

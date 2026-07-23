@@ -270,19 +270,30 @@ TensorDSLab semantic leaves, and sampling derived once from the source
 IO/artifacts, scientific changes, or a Stage 8 claim.
 
 Maintenance 6 Pint Physical Configuration Boundary is the
-**User-authorized / Dispatched** active package gate under
+**Implementation candidate / Design-amended fixed-commit Validation pending**
+active package gate under
 `docs/implementation/maintenance_6_pint_physical_configuration_boundary.md`.
-It retains exact TensorCore `0.13.0`, selects exact Pint `0.25.3`, moves public
-physical Config values to copied canonical scalar quantities, and extracts
-plain unit-suffixed execution facts exactly once during preparation. Runtime
-records, producers, validators, tensor payloads, collections, RNG addressing,
-and scientific equations remain Pint-free. Its bounded TensorCore
-golden-path cleanup removes annotation-only Config membership checks and
-duplicate private admission guards while preserving Pint canonicalization,
-primitive domains, genuine Config relationships, public ingress, scientific,
-relationship, storage, and generated-product checks. Production
-implementation is authorized only through the exact bounded work order and
-persistent TensorDSLab execution routes.
+Its immutable Candidate 1 is exact commit
+`240e1492c466097b3059dfe9911ab338a4dd38a1`, tree
+`1e5cae8c0e905c9638eb40e7f9d24fac950fee59`. It retains exact TensorCore
+`0.13.0`, selects exact Pint `0.25.3`, moves public physical Config values to
+copied canonical scalar quantities, and extracts plain unit-suffixed execution
+facts exactly once during preparation. Runtime records, producers, validators,
+tensor payloads, collections, RNG addressing, and scientific equations remain
+Pint-free. Its bounded TensorCore golden-path cleanup removes annotation-only
+Config membership checks and duplicate private admission guards while
+preserving Pint canonicalization, primitive domains, genuine Config
+relationships, public ingress, scientific, relationship, storage, and
+generated-product checks.
+
+The user-selected evidence amendment defers all fresh Maintenance 6 cluster
+CUDA work. Complete local fixed-commit Validation and independent Review own
+closure; the `13` conditional CUDA skips remain explicit and no accelerator
+claim follows. After Maintenance 6 closes, a separate work order may adopt
+published TensorCore `0.15.0` exact commit
+`0f974e9e7f52125bbe829e124beb24e69de811d3`. Only after that exact adoption
+also closes may separately authorized package-owned CUDA matrices qualify the
+integrated pairing.
 
 The first Stage 8 real-CUDA attempt correctly stopped before any accepted
 measurement when its protected-suite gate over-applied those macOS literals to

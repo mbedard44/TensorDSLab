@@ -22,7 +22,7 @@ Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
 Package maturity: Maintenance 5 Merged / Closed
 Next production gate: Maintenance 6 Pint physical configuration boundary;
-User-authorized / Dispatched
+Implementation candidate / Design-amended fixed-commit Validation pending
 Stage 8: separately stopped; any restart requires a new Design authority after
 Maintenance 6
 ```
@@ -99,10 +99,11 @@ through exact Review-cleared supplemental candidate
 `021694b9479d02546405f6a815aedf21c9c831a4`. It adopts exact TensorCore
 `0.13.0`, installs compact count/label/regular semantic axes, removes
 `SamplingConfig`, and derives execution sampling once from the source
-`SampleAxis`. Maintenance 6 is the active User-authorized / Dispatched
-boundary: collaborators configure physical values with canonical copied Pint
-quantities, while preparation extracts plain execution values and production
-and validation remain unit-free.
+`SampleAxis`. Maintenance 6 is the active Implementation candidate /
+Design-amended fixed-commit Validation-pending boundary: collaborators
+configure physical values with canonical copied Pint quantities, while
+preparation extracts plain execution values and production and validation
+remain unit-free.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency

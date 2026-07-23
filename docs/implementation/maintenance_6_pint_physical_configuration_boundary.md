@@ -1,10 +1,10 @@
 # Maintenance 6 Pint Physical Configuration Boundary Work Order
 
-Status: **Implementation candidate / fixed-commit Validation pending** while
-these bytes are absent from `main`. If these exact bytes are present unchanged
-on `main`, Review's clean fast-forward has completed and final Design
-acceptance remains pending until this work order and the implementation index
-record **Merged / Closed**.
+Status: **Implementation candidate / Design-amended fixed-commit Validation
+pending** while these bytes are absent from `main`. If these exact bytes are
+present unchanged on `main`, Review's clean fast-forward has completed and
+final Design acceptance remains pending until this work order and the
+implementation index record **Merged / Closed**.
 
 Stable work-order key:
 `TensorDSLab/maintenance-6-pint-physical-configuration-boundary`.
@@ -13,8 +13,17 @@ Stable work-order key:
 
 Implementation completed Candidate 1 as one clean direct child of exact
 corrected Design authority
-`6f7eba9b1c4e680930007836433f15e517288a9a`. The exact candidate commit and
-tree are fixed in the immutable Validation handoff.
+`6f7eba9b1c4e680930007836433f15e517288a9a`:
+
+```text
+commit:  240e1492c466097b3059dfe9911ab338a4dd38a1
+tree:    1e5cae8c0e905c9638eb40e7f9d24fac950fee59
+```
+
+Candidate 1 remains immutable. The later Design-owned evidence-scheduling
+amendment changes only current-state documentation on top of that candidate;
+it changes no production, test, dependency, scientific, RNG, or public API
+byte.
 
 The local evidence environment was Python `3.13.11`, PyTorch `2.12.1`, eager
 CPU, macOS `15.7.4` arm64, with CUDA unavailable. Implementation independently
@@ -46,10 +55,29 @@ Pint, primitive-domain, PSD, ordering, and distinct-key relationship.
 Dependency, facade/export, import-isolation, public-TensorCore import,
 Runtime/producer/validator Pint-privacy, retired-surface, exact-scope,
 protected-byte, diff, artifact, bytecode, and repository-cleanliness gates are
-required to remain clear on the frozen candidate. Separate fresh full-A100
-matrices remain owned by Validation and Review; this local evidence makes no
+required to remain clear on the frozen candidate. This local evidence makes no
 GPU, performance, release, deployment, conformance, or broad compatibility
 claim.
+
+## Post-Candidate Evidence-Scheduling Amendment
+
+After Candidate 1 was frozen, the user explicitly directed TensorCore and
+TensorDSLab to defer fresh cluster CUDA gates until their new dependency
+surfaces are stable together. Maintenance 6 therefore closes through complete
+local fixed-commit Validation and independent Review, with its `13`
+conditional CUDA skips retained as an explicit qualification. Validation and
+Review must not submit a Della or other cluster allocation for this
+maintenance, and Maintenance 6 makes no new accelerator-correctness claim.
+
+This amendment does not adopt TensorCore `0.15.0`. Maintenance 6 remains
+exactly pinned to published TensorCore `0.13.0` at
+`202d8b1bc6259b8453d3d377570417f2480d782b`. After Maintenance 6 closes, a
+separate TensorDSLab work order may adopt published TensorCore `0.15.0` at
+`0f974e9e7f52125bbe829e124beb24e69de811d3`. Only after that exact adoption
+also closes may separately authorized, package-owned two-PyTorch-minor CUDA
+matrices qualify the integrated TensorCore/TensorDSLab pairing. Those future
+matrices are not a retroactive Maintenance 6 closure condition and do not
+replace the separately authorized Stage 8 performance work.
 
 This is the package-authoritative TensorDSLab Design work order for the next
 breaking, pre-deployment configuration migration. It binds the already-closed
@@ -1362,16 +1390,15 @@ than silently extending the loop.
    forms, TensorDSLab source/artifact isolation, diff, import, privacy, and
    artifact gates on the exact candidate.
 2. Validation independently reconstructs the exact TensorCore and Pint
-   dependencies, repeats all local gates, runs mutation-style probes against
-   the unit/preparation boundary, and executes a fresh full-A100 source and
-   artifact matrix on both accepted PyTorch minors. It must exercise the exact
-   Pint wheel and independently verify the sdist-built installation before
-   dispatching one unchanged fixed commit.
+   dependencies, repeats all local gates, and runs mutation-style probes
+   against the unit/preparation boundary. It must exercise the exact Pint
+   wheel and independently verify the sdist-built installation before
+   dispatching one unchanged fixed commit. The `13` conditional CUDA skips are
+   recorded qualifications rather than failures.
 3. Review independently audits API clarity, registry isolation, every config
    migration, one-time preparation extraction, Runtime purity, numerical/RNG
-   continuity, dependency identity, typing, and documentation. Review uses a
-   separate fresh full-A100 allocation and one immutable Validation-cleared
-   commit.
+   continuity, dependency identity, typing, documentation, and the complete
+   local source/artifact evidence on one immutable Validation-cleared commit.
 4. Review returns at most one complete finding packet. Any correction requires
    explicit bounded Design authority and a fresh Validation pass; no
    Review-to-Implementation loop is implicit.
@@ -1379,9 +1406,10 @@ than silently extending the loop.
    `git merge --ff-only`. Design then performs the two-document
    documentation/evidence closeout fixed above.
 
-GPU evidence in this stage proves correctness and device preservation, not
-fusion, allocation freedom, or performance. Stage 8 characterization remains
-a separate future authority.
+No fresh GPU evidence is collected in this maintenance. Accelerator
+qualification waits for the exact integrated TensorCore `0.15.0` adoption
+baseline described above. Stage 8 characterization remains a separate future
+authority.
 
 ## Documentation And History
 
@@ -1412,6 +1440,9 @@ lifecycle records listed in the candidate allowlist.
 
 This work order is operative through the user's explicit Maintenance 6
 dispatch and the exact Design authority named in the implementation handoff.
+The post-candidate evidence-scheduling amendment synchronizes only
+current-state documentation within the Design allowlist above. It preserves
+Candidate 1 immutably and does not consume an Implementation correction slot.
 
 ## Non-Goals
 
@@ -1420,6 +1451,8 @@ This work order does not authorize:
 - TensorCore changes or a Pint dependency in TensorCore;
 - depending on, claiming, or locally recreating an unpublished future
   TensorCore requirements surface;
+- adopting TensorCore `0.15.0` or performing its downstream migration inside
+  Maintenance 6;
 - reopening or rewriting TensorDSLab Maintenance 5;
 - IO, `TensorArtifact`, config serialization, persistence, or schema versioning;
 - a public UnitRegistry, application registry, unit-definition plugin, or
@@ -1433,6 +1466,7 @@ This work order does not authorize:
 - normal/lognormal delay restoration or any scientific-law change;
 - TensorG4DS, TensorML, sibling-package, or integration edits;
 - public compatibility aliases for retired config field names;
+- a cluster submission or fresh real-CUDA qualification for Maintenance 6;
 - Stage 8 benchmarking, compiler fusion, workspaces, `out=`, or allocation
   claims;
 - release, deployment, conformance, backward-compatibility, or broad
@@ -1455,8 +1489,8 @@ Stop the affected work and return exact evidence to TensorDSLab Design if:
 - unit conversion cannot complete before RNG consumption and writes;
 - `SamplingConfig` or string-valued SampleAxis coordinates reappear at the
   execution baseline;
-- source/archive or CPU/CUDA behavior conflicts at the accepted comparison
-  boundary;
+- source/archive, wheel/sdist, local execution, or typing behavior conflicts
+  at the accepted comparison boundary;
 - an edit is required outside the exact allowlist;
 - the repository, dependency, branch, or execution route is dirty, stale, or
   discrepant; or
@@ -1482,7 +1516,9 @@ candidate:
 - keeps Runtime, production, validation, and tensor execution unit-free;
 - preserves accepted scientific, numerical, RNG, storage, device, and
   autograd behavior at the declared boundaries;
-- passes the complete local and fresh-A100 Validation/Review matrices; and
+- passes the complete local source/artifact, typing, mutation,
+  import/privacy, scope, protected-byte, and hygiene Validation/Review
+  matrices with the CUDA skips disclosed; and
 - is independently Review-cleared and cleanly fast-forwarded under this
   explicit user-authorized dispatch.
 

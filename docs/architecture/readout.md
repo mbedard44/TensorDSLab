@@ -4,9 +4,10 @@
 
 This page summarizes the accepted post-binned readout architecture introduced
 with TensorCore `0.7`. Closed Maintenance 5 installs published TensorCore
-`0.13.0`; User-authorized / Dispatched Maintenance 6 fixes the next public
-physical-configuration boundary. The complete scientific equations, config
-sketches, RNG encoding, numerical gates, and source citations live in
+`0.13.0`; the Design-amended Maintenance 6 implementation candidate fixes the
+next public physical-configuration boundary. The complete scientific
+equations, config sketches, RNG encoding, numerical gates, and source
+citations live in
 [`rebuild.md`](rebuild.md). Donor comparison and intentional divergences live
 in [`../parity.md`](../parity.md).
 
@@ -34,10 +35,11 @@ exact source/archive forms locally and in separate fresh full-A100 allocations.
 Maintenance 5 is **Merged / Closed** through exact Review-cleared supplemental
 candidate `81ad2f52fe4a1966e5b3a0ceb5063138e42e731f` and Design closeout
 `021694b9479d02546405f6a815aedf21c9c831a4`. Maintenance 6 is
-**User-authorized / Dispatched**. It selects exact Pint `0.25.3` for public
-physical Config values and the compact SampleAxis convenience boundary while
-preserving the implemented axes, sampling authority, product graph, science,
-RNG, and unit-free execution core.
+**Implementation candidate / Design-amended fixed-commit Validation pending**
+at exact Candidate 1 `240e1492c466097b3059dfe9911ab338a4dd38a1`. It
+selects exact Pint `0.25.3` for public physical Config values and the compact
+SampleAxis convenience boundary while preserving the implemented axes,
+sampling authority, product graph, science, RNG, and unit-free execution core.
 
 ## Scope
 
@@ -881,10 +883,11 @@ evidence stage; any justified fusion work remains a later optimization stage.
 
 Maintenance 5 atomically adopts exact published TensorCore `0.13.0`, the
 compact semantic axes, and source-derived sampling while preserving all product
-execution. It is Merged / Closed. Maintenance 6 is User-authorized /
-Dispatched; it owns the next physical Config representation and bounded
-runtime-admission cleanup. Its work order and the implementation index are
-the sole lifecycle records.
+execution. It is Merged / Closed. Maintenance 6 is an Implementation candidate
+under a Design-amended fixed-commit Validation gate; it owns the next physical
+Config representation and bounded runtime-admission cleanup. Current-state
+lifecycle wording is synchronized across the package's authoritative
+documentation map.
 
 ## Return To Design Before
 

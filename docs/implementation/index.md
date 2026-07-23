@@ -534,10 +534,10 @@ dispatched no Pint or Stage 8 work.
 
 ### [Maintenance 6 Pint Physical Configuration Boundary](maintenance_6_pint_physical_configuration_boundary.md)
 
-Status: **Implementation candidate / fixed-commit Validation pending** while
-these bytes are absent from `main`. If present unchanged on `main`, Review's
-clean fast-forward has completed and final Design acceptance remains pending
-until this index and the work order record **Merged / Closed**.
+Status: **Implementation candidate / Design-amended fixed-commit Validation
+pending** while these bytes are absent from `main`. If present unchanged on
+`main`, Review's clean fast-forward has completed and final Design acceptance
+remains pending until this index and the work order record **Merged / Closed**.
 
 Maintenance 6 is the selected next package gate from exact clean Maintenance 5
 Design-closeout baseline
@@ -571,21 +571,31 @@ scientific/RNG/result behavior remain.
 
 The work order freezes exact dependency artifacts, exports, Config census,
 Runtime rename map, production/test/lifecycle allowlists, protected bytes,
-local and separate full-A100 role evidence, and finite loop budgets.
+complete local role evidence, explicit unavailable-CUDA qualifications, and
+finite loop budgets.
 Implementation is dispatched only for that exact bounded work order. It
 authorizes no IO/artifact, integration, Stage 8, performance, compatibility,
 release, push, or sibling-package action.
 
 Candidate 1 is one clean direct child of corrected Design authority
-`6f7eba9b1c4e680930007836433f15e517288a9a`; its exact commit and tree are
-recorded in the immutable Validation handoff. Implementation's local
+`6f7eba9b1c4e680930007836433f15e517288a9a`, at exact commit
+`240e1492c466097b3059dfe9911ab338a4dd38a1` and tree
+`1e5cae8c0e905c9638eb40e7f9d24fac950fee59`. Implementation's local
 TensorCore source/archive by Pint wheel/sdist matrix passed the focused module
 at `10/10`, full discovery at `207/194/13`, and Pyright `1.1.411` with zero
 diagnostics in all four forms. Exact dependency artifacts, negative typing,
 helper-retirement mutations, import/privacy, scope/protected-byte, diff,
-artifact, and hygiene gates were also exercised. CUDA was unavailable
-locally; the work order's separate fresh full-A100 Validation and Review
-matrices remain mandatory.
+artifact, and hygiene gates were also exercised.
+
+The user later directed both packages to defer fresh cluster CUDA gates until
+the new TensorCore and TensorDSLab surfaces are stable together. A
+Design-owned documentation amendment therefore makes complete local
+fixed-commit Validation and independent Review the Maintenance 6 closure gate;
+the `13` CUDA skips remain explicit and no accelerator claim follows.
+Maintenance 6 stays pinned to TensorCore `0.13.0`. A separate later work order
+may adopt published TensorCore `0.15.0` exact commit
+`0f974e9e7f52125bbe829e124beb24e69de811d3`, after which separately authorized
+package-owned CUDA matrices may qualify only that exact integrated pairing.
 
 ## Expected Stage Discipline
 

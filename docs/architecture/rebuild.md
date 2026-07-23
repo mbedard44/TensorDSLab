@@ -77,10 +77,13 @@ but Maintenance 5 introduces no Pint, table, artifact, persistence, or IO
 surface.
 
 Maintenance 6 Pint Physical Configuration Boundary is
-**User-authorized / Dispatched** under its focused
+**Implementation candidate / Design-amended fixed-commit Validation pending**
+under its focused
 [work order](../implementation/maintenance_6_pint_physical_configuration_boundary.md).
-It retains the exact Maintenance 5 axis/dependency baseline and selects Pint
-`0.25.3` for public physical Config values only. The accepted flow is:
+Its exact Candidate 1 is
+`240e1492c466097b3059dfe9911ab338a4dd38a1`. It retains the exact Maintenance
+5 axis/dependency baseline and selects Pint `0.25.3` for public physical Config
+values only. The accepted flow is:
 
 ```text
 caller Quantity
@@ -7067,10 +7070,12 @@ Closed prerequisites and remaining Design gates are:
    before descendant use.
 4. Maintenance 5 is Merged / Closed at exact TensorCore `0.13.0`; compact
    axes and source-derived sampling are the implemented baseline.
-5. Maintenance 6 is the active User-authorized / Dispatched production gate:
-   adopt exact Pint `0.25.3` at the public physical Config boundary, extract
-   unit-free Runtime operands once, and complete the bounded private-admission
-   cleanup without changing readout science.
+5. Maintenance 6 is the active Implementation candidate under a
+   Design-amended fixed-commit Validation gate: adopt exact Pint `0.25.3` at
+   the public physical Config boundary, extract unit-free Runtime operands
+   once, and complete the bounded private-admission cleanup without changing
+   readout science. Its fresh CUDA gate is deferred until the separate exact
+   TensorCore `0.15.0` adoption closes.
 6. Any Stage 8 rerun requires a new Design authority after Maintenance 6.
    Waveform-tail optimization evidence after the
    functional producers are accepted: compiler/execution mode, equivalence to
