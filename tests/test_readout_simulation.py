@@ -5,7 +5,7 @@ from contextlib import ExitStack
 from dataclasses import replace
 from itertools import combinations, product
 import math
-from typing import ClassVar
+from typing import Any, ClassVar
 import unittest
 from unittest.mock import patch
 
@@ -49,7 +49,6 @@ from tensor_dslab import (
     ReadoutCollection,
     ReadoutConfig,
     SampleAxis,
-    SamplingConfig,
     TimingJitterConfig,
     TpcFebSnrPulseConfig,
     WhiteNoiseConfig,
@@ -71,7 +70,7 @@ import tensor_dslab.readout.pure_waveform.runtime.produce as pure_producer
 import tensor_dslab.readout.pure_waveform.runtime.validate as pure_validator
 import tensor_dslab.readout.runtime.prepare as readout_preparer
 from tensor_dslab.readout.runtime.prepare import ReadoutRuntime
-from tensor_dslab.readout.runtime.sampling import prepare_sampling
+from tensor_dslab.readout.runtime.sampling import SamplingRuntime, prepare_sampling
 from tests.readout_fixtures import ForeignField
 
 
@@ -238,28 +237,33 @@ class _OneShotProducts:
         return iter(self._values)
 
 
-def _sampling(*, count: int = 4, period_ps: int = 1_000) -> SamplingConfig:
-    return SamplingConfig(
-        sample_period_ps=PositiveInteger(period_ps),
-        sample_count=PositiveInteger(count),
+def _sampling(*, count: int = 4, period_ps: int = 1_000) -> SamplingRuntime:
+    return SamplingRuntime(
+        sample_count=count,
+        sample_period_ps=period_ps,
+        sample_dimension=2,
     )
 
 
 def _axes(
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
     *,
     sample_first: bool = False,
 ) -> tuple[ExampleAxis | ChannelAxis | SampleAxis, ...]:
-    example = ExampleAxis(coordinates=("example-0", "example-1"))
-    channel = ChannelAxis(coordinates=("channel-0", "channel-1"))
-    sample = sampling.build_axis()
+    example = ExampleAxis(count=2)
+    channel = ChannelAxis(labels=("channel-0", "channel-1"))
+    sample = SampleAxis(
+        start=0,
+        step=sampling.sample_period_ps,
+        count=sampling.sample_count,
+    )
     if sample_first:
         return (sample, example, channel)
     return (example, channel, sample)
 
 
 def _photoelectrons(
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
     *,
     sample_first: bool = False,
     noncontiguous: bool = False,
@@ -306,7 +310,6 @@ def _digitized_config(
 
 
 def _config(
-    sampling: SamplingConfig,
     *,
     charge: ChargeConfig | None = None,
     pure: PureWaveformConfig | None = None,
@@ -315,7 +318,6 @@ def _config(
     digitized: DigitizedWaveformConfig | None = None,
 ) -> ReadoutConfig:
     return ReadoutConfig(
-        sampling=sampling,
         charge=ChargeConfig() if charge is None else charge,
         pure_waveform=_pure_config() if pure is None else pure,
         noise_waveform=(
@@ -442,7 +444,7 @@ class ReadoutRequestAndClosureTest(unittest.TestCase):
     def test_all_63_requests_have_exact_closure_execution_and_retention(self) -> None:
         sampling = _sampling()
         source = _photoelectrons(sampling)
-        config = _config(sampling)
+        config = _config()
         seen = 0
 
         for count in range(1, len(PRODUCT_TYPES) + 1):
@@ -540,7 +542,7 @@ class ReadoutRequestAndClosureTest(unittest.TestCase):
         result = simulate_readout(
             source,
             products=requested,
-            config=_config(sampling),
+            config=_config(),
             rng=_FailingRng(seed=0),
         )
         self.assertEqual(requested.iterations, 1)
@@ -560,7 +562,7 @@ class ReadoutRequestAndClosureTest(unittest.TestCase):
             result = simulate_readout(
                 source,
                 products=PRODUCT_TYPES,
-                config=_config(sampling),
+                config=_config(),
                 rng=_FailingRng(seed=0),
             )
         collection_constructor.assert_called_once()
@@ -599,7 +601,7 @@ class ReadoutRequestAndClosureTest(unittest.TestCase):
                         simulate_readout(
                             source,
                             products=products_value,  # type: ignore[arg-type]
-                            config=_config(sampling),
+                            config=_config(),
                             rng=rng,
                         )
                 self.assertEqual(rng.calls, 0)
@@ -617,7 +619,7 @@ class ReadoutRequestAndClosureTest(unittest.TestCase):
             {
                 "photoelectrons": wrong_source,
                 "products": (Photoelectrons,),
-                "config": _config(sampling),
+                "config": _config(),
             },
             {
                 "photoelectrons": source,
@@ -627,7 +629,7 @@ class ReadoutRequestAndClosureTest(unittest.TestCase):
             {
                 "photoelectrons": source,
                 "products": object(),
-                "config": _config(sampling),
+                "config": _config(),
             },
         )
         for arguments in cases:
@@ -654,7 +656,7 @@ class ReadoutRequestAndClosureTest(unittest.TestCase):
     ) -> None:
         sampling = _sampling()
         source = _photoelectrons(sampling)
-        complete = _config(sampling)
+        complete = _config()
         cases: tuple[tuple[type[TensorField], str], ...] = (
             (Charge, "charge"),
             (PureWaveform, "charge"),
@@ -697,7 +699,7 @@ class ReadoutRequestAndClosureTest(unittest.TestCase):
     def test_contextually_invalid_irrelevant_configs_are_unconsumed(self) -> None:
         sampling = _sampling()
         source = _photoelectrons(sampling)
-        baseline = _config(sampling)
+        baseline = _config()
         invalid_charge = ChargeConfig(
             smearing=ChargeSmearingConfig(
                 relative_sigma=NonnegativeFloat(3.0e38)
@@ -829,7 +831,7 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
         if isinstance(exact_rng, _FailingRng):
             self.assertEqual(exact_rng.calls, 0)
 
-    def test_real_request_source_sampling_and_dtype_failures_are_preflight(
+    def test_real_request_source_start_and_dtype_failures_are_preflight(
         self,
     ) -> None:
         sampling = _sampling()
@@ -842,45 +844,33 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
             ValueError,
             source=negative,
             products=(DigitizedWaveform,),
-            config=_config(sampling),
+            config=_config(),
         )
 
-        mismatched_sampling = _sampling(count=5)
+        example, channel, _ = source.axes
+        shifted_source = Photoelectrons(
+            tensor=source.tensor.clone(),
+            axes=(
+                example,
+                channel,
+                SampleAxis(start=1, step=1_000, count=4),
+            ),
+        )
         self._assert_preflight_failure(
             ValueError,
-            source=source,
+            source=shifted_source,
             products=(DigitizedWaveform,),
-            config=_config(mismatched_sampling),
+            config=_config(),
         )
-        example, channel, _ = source.axes
-        for coordinates in (
-            ("1ps", "1001ps", "2001ps", "3001ps"),
-            ("0ps", "2000ps", "4000ps", "6000ps"),
-        ):
-            with self.subTest(sample_coordinates=coordinates):
-                mismatched_source = Photoelectrons(
-                    tensor=source.tensor.clone(),
-                    axes=(
-                        example,
-                        channel,
-                        SampleAxis(coordinates=coordinates),
-                    ),
-                )
-                self._assert_preflight_failure(
-                    ValueError,
-                    source=mismatched_source,
-                    products=(DigitizedWaveform,),
-                    config=_config(sampling),
-                )
         self._assert_preflight_failure(
             TypeError,
             source=source,
             products=(DigitizedWaveform,),
-            config=_config(sampling),
+            config=_config(),
             floating_dtype=torch.int64,
         )
 
-    def test_truth_only_requires_deep_source_and_sampling_agreement(
+    def test_truth_only_requires_deep_source_and_zero_start(
         self,
     ) -> None:
         sampling = _sampling()
@@ -896,34 +886,20 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
             axes=(
                 example,
                 channel,
-                SampleAxis(
-                    coordinates=("1ps", "1001ps", "2001ps", "3001ps")
-                ),
-            ),
-        )
-        wrong_period = Photoelectrons(
-            tensor=source.tensor.clone(),
-            axes=(
-                example,
-                channel,
-                SampleAxis(
-                    coordinates=("0ps", "2000ps", "4000ps", "6000ps")
-                ),
+                SampleAxis(start=1, step=1_000, count=4),
             ),
         )
         cases = (
-            ("negative values", negative, sampling),
-            ("sample count", source, _sampling(count=5)),
-            ("sample start", shifted_start, sampling),
-            ("sample period", wrong_period, sampling),
+            ("negative values", negative),
+            ("sample start", shifted_start),
         )
-        for name, candidate_source, candidate_sampling in cases:
+        for name, candidate_source in cases:
             with self.subTest(case=name):
                 self._assert_preflight_failure(
                     ValueError,
                     source=candidate_source,
                     products=(Photoelectrons,),
-                    config=ReadoutConfig(sampling=candidate_sampling),
+                    config=ReadoutConfig(),
                 )
 
         above_charge_ceiling_values = source.tensor.clone()
@@ -960,7 +936,7 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
             truth = simulate_readout(
                 above_charge_ceiling,
                 products=(Photoelectrons,),
-                config=ReadoutConfig(sampling=sampling),
+                config=ReadoutConfig(),
                 rng=rng,
             )
         self.assertIs(truth.field(Photoelectrons), above_charge_ceiling)
@@ -982,14 +958,14 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
                 ValueError,
                 source=above_charge_ceiling,
                 products=(Charge,),
-                config=_config(sampling),
+                config=_config(),
             )
         charge_preparation.assert_called_once()
 
     def test_each_real_product_preparation_failure_precedes_all_producers(self) -> None:
         sampling = _sampling()
         source = _photoelectrons(sampling)
-        complete = _config(sampling)
+        complete = _config()
         invalid_charge = replace(
             complete,
             charge=ChargeConfig(
@@ -1053,7 +1029,7 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
     def test_successful_generated_products_run_each_deep_validator_once(self) -> None:
         sampling = _sampling()
         source = _photoelectrons(sampling)
-        config = _config(sampling)
+        config = _config()
         rng = _FailingRng(seed=0)
         requested, runtime = readout_preparer.prepare_readout(
             source,
@@ -1182,7 +1158,7 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
                         simulate_readout(
                             source,
                             products=(DigitizedWaveform,),
-                            config=_config(sampling),
+                            config=_config(),
                             rng=_FailingRng(seed=0),
                         )
                 for downstream_mock in downstream:
@@ -1206,7 +1182,7 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
             result = simulate_readout(
                 source,
                 products=(Photoelectrons,),
-                config=ReadoutConfig(sampling=sampling),
+                config=ReadoutConfig(),
                 rng=_FailingRng(seed=0),
                 floating_dtype=object(),  # type: ignore[arg-type]
             )
@@ -1216,7 +1192,7 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
             TypeError,
             source=source,
             products=(DigitizedWaveform,),
-            config=_config(sampling),
+            config=_config(),
             floating_dtype=object(),
         )
 
@@ -1236,7 +1212,7 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
                 simulate_readout(
                     source,
                     products=(Photoelectrons,),
-                    config=ReadoutConfig(sampling=sampling),
+                    config=ReadoutConfig(),
                     rng=_FailingRng(seed=0),
                 )
         collection_mock.assert_not_called()
@@ -1253,7 +1229,7 @@ class ReadoutRngContractTest(unittest.TestCase):
             simulate_readout,
             source,
             products=(Photoelectrons,),
-            config=ReadoutConfig(sampling=sampling),
+            config=ReadoutConfig(),
             rng=object(),
         )
 
@@ -1261,13 +1237,13 @@ class ReadoutRngContractTest(unittest.TestCase):
         truth = simulate_readout(
             source,
             products=(Photoelectrons,),
-            config=ReadoutConfig(sampling=sampling),
+            config=ReadoutConfig(),
             rng=rng,
         )
         deterministic = simulate_readout(
             source,
             products=PRODUCT_TYPES,
-            config=_config(sampling),
+            config=_config(),
             rng=rng,
         )
         self.assertIs(truth.field(Photoelectrons), source)
@@ -1284,7 +1260,7 @@ class ReadoutRngContractTest(unittest.TestCase):
         result = simulate_readout(
             source,
             products=(NoiseWaveform,),
-            config=_config(sampling, noise=white),
+            config=_config(noise=white),
             rng=_RecordingRng(seed=0),
         )
         self.assertIs(type(result.field(NoiseWaveform)), NoiseWaveform)
@@ -1302,7 +1278,7 @@ class ReadoutRngContractTest(unittest.TestCase):
                 simulate_readout(
                     source,
                     products=(NoiseWaveform,),
-                    config=_config(sampling, noise=white),
+                    config=_config(noise=white),
                     rng=rng,
                 )
         self.assertEqual(rng.calls, 1)
@@ -1319,7 +1295,7 @@ class ReadoutRngContractTest(unittest.TestCase):
         charge_config = ChargeConfig(
             dark_count=DarkCountConfig(rate_hz=NonnegativeFloat(2.5e8))
         )
-        sampling_runtime = prepare_sampling(source, config=sampling)
+        sampling_runtime = prepare_sampling(source)
         charge_runtime = charge_preparer.prepare_charge(
             charge_config,
             photoelectrons=source,
@@ -1330,7 +1306,7 @@ class ReadoutRngContractTest(unittest.TestCase):
             lambda rng: simulate_readout(
                 source,
                 products=(Charge,),
-                config=_config(sampling, charge=charge_config),
+                config=_config(charge=charge_config),
                 rng=rng,
                 floating_dtype=dtype,
             ),
@@ -1382,7 +1358,7 @@ class ReadoutRngContractTest(unittest.TestCase):
                     lambda rng: simulate_readout(
                         source,
                         products=(NoiseWaveform,),
-                        config=_config(sampling, noise=noise_config),
+                        config=_config(noise=noise_config),
                         rng=rng,
                         floating_dtype=dtype,
                     ),
@@ -1504,7 +1480,6 @@ class ReadoutRngContractTest(unittest.TestCase):
                             source,
                             products=(Charge, NoiseWaveform),
                             config=_config(
-                                sampling,
                                 charge=charge,
                                 noise=noise,
                             ),
@@ -1533,7 +1508,7 @@ class ReadoutRngContractTest(unittest.TestCase):
         zero = NoiseWaveformConfig(model=ZeroNoiseConfig())
         zero_runtime = noise_preparer.prepare_noise_waveform(
             zero,
-            sampling=prepare_sampling(source, config=sampling),
+            sampling=prepare_sampling(source),
             shape=source.shape,
             floating_dtype=torch.float32,
             device=source.tensor.device,
@@ -1544,7 +1519,7 @@ class ReadoutRngContractTest(unittest.TestCase):
         result = simulate_readout(
             source,
             products=(Charge, NoiseWaveform),
-            config=_config(sampling, charge=charge, noise=zero),
+            config=_config(charge=charge, noise=zero),
             rng=rng,
         )
         self.assertEqual(result.field_types, frozenset({Charge, NoiseWaveform}))
@@ -1553,7 +1528,7 @@ class ReadoutRngContractTest(unittest.TestCase):
         charge_only = simulate_readout(
             source,
             products=(Charge,),
-            config=_config(sampling, charge=charge, noise=white),
+            config=_config(charge=charge, noise=white),
             rng=_FailingRng(seed=0),
         )
         self.assertEqual(charge_only.field_types, frozenset({Charge}))
@@ -1562,7 +1537,7 @@ class ReadoutRngContractTest(unittest.TestCase):
         noise_only = simulate_readout(
             source,
             products=(NoiseWaveform,),
-            config=_config(sampling, charge=charge, noise=white),
+            config=_config(charge=charge, noise=white),
             rng=_RecordingRng(seed=0),
         )
         self.assertEqual(noise_only.field_types, frozenset({NoiseWaveform}))
@@ -1582,7 +1557,6 @@ class ReadoutRngContractTest(unittest.TestCase):
                     source,
                     products=(Charge, NoiseWaveform),
                     config=_config(
-                        sampling,
                         charge=ChargeConfig(),
                         noise=reused_white,
                     ),
@@ -1619,7 +1593,6 @@ class ReadoutRngContractTest(unittest.TestCase):
             (
                 (Charge, NoiseWaveform),
                 _config(
-                    sampling,
                     charge=ChargeConfig(dark_count=dark),
                     noise=psd,
                 ),
@@ -1627,7 +1600,6 @@ class ReadoutRngContractTest(unittest.TestCase):
             (
                 (Charge,),
                 _config(
-                    sampling,
                     charge=ChargeConfig(
                         dark_count=dark,
                         smearing=ChargeSmearingConfig(
@@ -1686,14 +1658,13 @@ class ReadoutCompositionAndStorageTest(unittest.TestCase):
             source,
             products=(Charge, NoiseWaveform),
             config=_config(
-                sampling,
                 charge=charge_config,
                 noise=noise_config,
             ),
             rng=Threefry4x32(seed=seed),
             floating_dtype=dtype,
         )
-        sampling_runtime = prepare_sampling(source, config=sampling)
+        sampling_runtime = prepare_sampling(source)
         charge_runtime = charge_preparer.prepare_charge(
             charge_config,
             photoelectrons=source,
@@ -1727,7 +1698,7 @@ class ReadoutCompositionAndStorageTest(unittest.TestCase):
     def test_real_composition_and_retention_are_invariant(self) -> None:
         sampling = _sampling()
         source = _photoelectrons(sampling)
-        config = _config(sampling)
+        config = _config()
         requests = (
             (Photoelectrons,),
             (Charge,),
@@ -1787,7 +1758,6 @@ class ReadoutCompositionAndStorageTest(unittest.TestCase):
         )
 
         white_config = _config(
-            sampling,
             noise=NoiseWaveformConfig(
                 model=WhiteNoiseConfig(rms_mv=PositiveFloat(0.25))
             ),
@@ -1828,7 +1798,7 @@ class ReadoutCompositionAndStorageTest(unittest.TestCase):
                     result = simulate_readout(
                         source,
                         products=PRODUCT_TYPES,
-                        config=_config(sampling),
+                        config=_config(),
                         rng=_FailingRng(seed=0),
                         floating_dtype=dtype,
                     )
@@ -1908,7 +1878,7 @@ class ReadoutCompositionAndStorageTest(unittest.TestCase):
             result = simulate_readout(
                 source,
                 products=PRODUCT_TYPES,
-                config=_config(sampling),
+                config=_config(),
                 rng=_FailingRng(seed=0),
             )
         self.assertEqual(set(captures), set(GENERATED_TYPES))
@@ -1932,7 +1902,7 @@ class ReadoutCompositionAndStorageTest(unittest.TestCase):
             result = simulate_readout(
                 source,
                 products=(PureWaveform, AnalogWaveform),
-                config=_config(sampling),
+                config=_config(),
                 rng=_FailingRng(seed=0),
                 floating_dtype=torch.float64,
             )
@@ -1966,7 +1936,7 @@ class ReadoutCompositionAndStorageTest(unittest.TestCase):
             result = simulate_readout(
                 source,
                 products=PRODUCT_TYPES,
-                config=_config(sampling),
+                config=_config(),
                 rng=_FailingRng(seed=0),
             )
         generator.assert_not_called()
@@ -1986,7 +1956,7 @@ class ReadoutSimulationCudaTest(unittest.TestCase):
         result = simulate_readout(
             source,
             products=PRODUCT_TYPES,
-            config=_config(sampling),
+            config=_config(),
             rng=_FailingRng(seed=0),
         )
         self.assertIs(result.field(Photoelectrons), source)
@@ -2001,7 +1971,6 @@ class ReadoutSimulationCudaTest(unittest.TestCase):
         sampling = _sampling()
         source = _photoelectrons(sampling, device="cuda")
         config = _config(
-            sampling,
             noise=NoiseWaveformConfig(
                 model=WhiteNoiseConfig(rms_mv=PositiveFloat(0.5))
             ),
@@ -2022,7 +1991,6 @@ class ReadoutSimulationCudaTest(unittest.TestCase):
         source = _photoelectrons(sampling, device="cuda")
         shared = RngKey(namespace=0xABCDEF03, stream=1)
         config = _config(
-            sampling,
             charge=ChargeConfig(
                 dark_count=DarkCountConfig(
                     rate_hz=NonnegativeFloat(0.0),

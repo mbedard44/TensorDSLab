@@ -13,14 +13,20 @@ from tensor_dslab import (
 )
 
 
-sample_axis = SampleAxis(coordinates=("0ps", "2000ps"))
+sample_axis = SampleAxis(start=0, step=2_000, count=2)
 assert_type(sample_axis, SampleAxis)
+assert_type(sample_axis.coordinate_at(1), int)
+assert_type(sample_axis.index_of(2_000), int)
 
-example_axis = ExampleAxis(coordinates=("e0",))
+example_axis = ExampleAxis(count=1)
 assert_type(example_axis, ExampleAxis)
+assert_type(example_axis.coordinate_at(0), int)
+assert_type(example_axis.index_of(0), int)
 
-channel_axis = ChannelAxis(coordinates=("c0",))
+channel_axis = ChannelAxis(labels=("c0",))
 assert_type(channel_axis, ChannelAxis)
+assert_type(channel_axis.coordinate_at(0), str)
+assert_type(channel_axis.index_of("c0"), int)
 
 photoelectrons = Photoelectrons(
     tensor=torch.zeros((1, 1, 2), dtype=torch.int64),
@@ -28,7 +34,12 @@ photoelectrons = Photoelectrons(
 )
 assert_type(photoelectrons, Photoelectrons)
 assert_type(photoelectrons.axis(SampleAxis), SampleAxis)
+assert_type(photoelectrons.axis(ExampleAxis), ExampleAxis)
+assert_type(photoelectrons.axis(ChannelAxis), ChannelAxis)
 assert_type(photoelectrons.dimension_of(SampleAxis), int)
+assert_type(photoelectrons.coordinate_at(ExampleAxis, index=0), int)
+assert_type(photoelectrons.coordinate_at(ChannelAxis, index=0), str)
+assert_type(photoelectrons.coordinate_at(SampleAxis, index=0), int)
 
 readout = ReadoutCollection(fields=(photoelectrons,))
 assert_type(readout, ReadoutCollection)

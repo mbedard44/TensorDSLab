@@ -21,7 +21,7 @@ from tensor_dslab import (
     NoiseWaveform,
     PureWaveform,
     PureWaveformConfig,
-    SamplingConfig,
+    SampleAxis,
     TpcFebSnrPulseConfig,
 )
 from tensor_dslab.readout.analog_waveform.runtime.prepare import (
@@ -45,14 +45,10 @@ from tensor_dslab.readout.pure_waveform.runtime.produce import (
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 
 
-sampling = SamplingConfig(
-    sample_period_ps=PositiveInteger(2_000),
-    sample_count=PositiveInteger(4),
-)
 axes = (
-    ExampleAxis(coordinates=("example-0",)),
-    ChannelAxis(coordinates=("channel-0",)),
-    sampling.build_axis(),
+    ExampleAxis(count=1),
+    ChannelAxis(labels=("channel-0",)),
+    SampleAxis(start=0, step=2_000, count=4),
 )
 
 charge = Charge(

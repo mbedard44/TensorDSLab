@@ -41,7 +41,6 @@ from tensor_dslab import (
     ReadoutCollection,
     ReadoutConfig,
     SampleAxis,
-    SamplingConfig,
     TpcFebSnrPulseConfig,
     ZeroNoiseConfig,
     simulate_readout,
@@ -143,19 +142,11 @@ class _FailingRng(CounterRng):
         raise AssertionError("deterministic runtime requested RNG words")
 
 
-def _sampling() -> SamplingConfig:
-    return SamplingConfig(
-        sample_period_ps=PositiveInteger(2_000),
-        sample_count=PositiveInteger(4),
-    )
-
-
 def _source() -> Photoelectrons:
-    sampling = _sampling()
     axes = (
-        ExampleAxis(coordinates=("example-0",)),
-        ChannelAxis(coordinates=("channel-0",)),
-        sampling.build_axis(),
+        ExampleAxis(count=1),
+        ChannelAxis(labels=("channel-0",)),
+        SampleAxis(start=0, step=2_000, count=4),
     )
     return Photoelectrons(
         tensor=torch.tensor([[[1, 0, 2, 1]]], dtype=torch.int64),
@@ -176,7 +167,6 @@ def _config(*, psd: bool = False) -> ReadoutConfig:
         else NoiseWaveformConfig(model=ZeroNoiseConfig())
     )
     return ReadoutConfig(
-        sampling=_sampling(),
         charge=ChargeConfig(),
         pure_waveform=PureWaveformConfig(
             model=TpcFebSnrPulseConfig(
@@ -501,7 +491,10 @@ class RuntimeActionOwnershipTest(unittest.TestCase):
         prepare_sampling_call.assert_called_once()
         self.assertEqual(requested, frozenset(PRODUCT_TYPES))
         self.assertEqual(len(captured_sampling), 1)
-        self.assertEqual(sample_dimension_calls, [(source, SampleAxis)])
+        self.assertEqual(
+            sample_dimension_calls,
+            [(source, SampleAxis), (source, SampleAxis)],
+        )
         sampling = captured_sampling[0]
         assert runtime.charge is not None
         assert runtime.pure_waveform is not None
@@ -509,6 +502,38 @@ class RuntimeActionOwnershipTest(unittest.TestCase):
         self.assertIs(runtime.charge.sampling, sampling)
         self.assertIs(runtime.pure_waveform.sampling, sampling)
         self.assertIs(runtime.noise_waveform.sampling, sampling)
+
+        alternate_axes = (
+            SampleAxis(start=0, step=4_000, count=6),
+            ExampleAxis(count=1),
+            ChannelAxis(labels=("channel-0",)),
+        )
+        alternate_source = Photoelectrons(
+            tensor=torch.ones((6, 1, 1), dtype=torch.int64),
+            axes=alternate_axes,
+        )
+        _, alternate_runtime = prepare_readout(
+            alternate_source,
+            products=(DigitizedWaveform,),
+            config=_config(),
+            rng=_FailingRng(seed=0),
+            floating_dtype=torch.float32,
+        )
+        assert alternate_runtime.charge is not None
+        assert alternate_runtime.pure_waveform is not None
+        assert alternate_runtime.noise_waveform is not None
+        alternate_sampling = alternate_runtime.charge.sampling
+        self.assertEqual(alternate_sampling.sample_count, 6)
+        self.assertEqual(alternate_sampling.sample_period_ps, 4_000)
+        self.assertEqual(alternate_sampling.sample_dimension, 0)
+        self.assertIs(
+            alternate_runtime.pure_waveform.sampling,
+            alternate_sampling,
+        )
+        self.assertIs(
+            alternate_runtime.noise_waveform.sampling,
+            alternate_sampling,
+        )
 
     def test_prepared_tensor_values_and_storage_are_read_only(self) -> None:
         source = _source()
@@ -645,9 +670,9 @@ class RuntimeActionOwnershipTest(unittest.TestCase):
         assert runtime.noise_waveform is not None
 
         other_axes = (
-            ExampleAxis(coordinates=("other-example",)),
-            ChannelAxis(coordinates=("channel-0",)),
-            SampleAxis(coordinates=("0ps", "2000ps", "4000ps", "6000ps")),
+            ExampleAxis(count=1),
+            ChannelAxis(labels=("other-channel",)),
+            SampleAxis(start=0, step=2_000, count=4),
         )
         wrong_charge = Charge(
             tensor=torch.zeros(source.shape, dtype=torch.float32),
@@ -669,7 +694,7 @@ class RuntimeActionOwnershipTest(unittest.TestCase):
         short_axes = (
             source.axis(ExampleAxis),
             source.axis(ChannelAxis),
-            SampleAxis(coordinates=("0ps", "2000ps")),
+            SampleAxis(start=0, step=2_000, count=2),
         )
         short_charge = Charge(
             tensor=torch.zeros((1, 1, 2), dtype=torch.float32),

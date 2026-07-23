@@ -4,7 +4,6 @@ from tensor_dslab.common import (
     ChannelAxis,
     ExampleAxis,
     SampleAxis,
-    SamplingConfig,
 )
 from tensor_dslab.readout import (
     AfterpulseConfig,
@@ -67,7 +66,6 @@ __all__ = (
     "ReadoutCollection",
     "ReadoutConfig",
     "SampleAxis",
-    "SamplingConfig",
     "TimingJitterConfig",
     "TpcFebSnrPulseConfig",
     "VetoPduPulseConfig",

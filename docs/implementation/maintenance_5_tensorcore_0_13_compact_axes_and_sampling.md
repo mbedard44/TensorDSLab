@@ -1,6 +1,9 @@
 # Maintenance 5 TensorCore 0.13 Compact Axes And Sampling Work Order
 
-Status: **Design-complete / User-authorized / Undispatched**.
+Status: **Implementation candidate / Validation pending while these bytes are
+absent from `main`; if present unchanged on `main`, Review's fast-forward is
+complete and final Design acceptance remains pending unless this work order
+and the implementation index record Merged / Closed**.
 
 Stable work-order key:
 `TensorDSLab/maintenance-5-tensorcore-0-13-compact-axes-and-sampling`.
@@ -847,6 +850,63 @@ Stop the affected slice and return exact evidence to Design if:
 Do not silently widen the work order. A concrete TensorCore defect returns to
 both package Design authorities with a minimal reproducer; it does not
 authorize a TensorCore edit from TensorDSLab.
+
+## Implementation Candidate Evidence
+
+Implementation started from exact clean Design authority
+`f734e745e5eda29bb88664c11d0a464f03c3f8e9` on branch
+`codex/maintenance-5-tensorcore-0-13-compact-axes-and-sampling`. Candidate 1
+is one direct child of that authority; its exact immutable commit and tree are
+reported in the fixed-commit handoff because a commit cannot contain its own
+identity.
+
+The implementation independently reconstructed TensorCore `0.13.0` source at
+exact commit `202d8b1bc6259b8453d3d377570417f2480d782b`, parent
+`f62506b6d2f6926db446e2d163f26870575c9419`, and tree
+`48fa9a28db6d043abc07d9963b2015983ca436ea`. Its independently generated
+no-prefix ZIP is exactly 373491 bytes with SHA-256
+`ed804c71a617a79a63b53be86157e2045322d6c6868ca3766dc75d5526cb8b09`.
+The source and archive `tensor_core/` bytes are identical, expose the frozen
+30-name root order and 14-file topology, and report package version `0.13.0`.
+
+Local evidence used CPython `3.13.11`, macOS `15.7.4` arm64, and PyTorch
+`2.12.1` eager CPU with no CUDA runtime or available CUDA device:
+
+```text
+focused exact source:   169 run / 158 passed / 11 conditional CUDA skips
+focused exact archive:  169 run / 158 passed / 11 conditional CUDA skips
+full exact source:      198 run / 185 passed / 13 conditional CUDA skips
+full exact archive:     198 run / 185 passed / 13 conditional CUDA skips
+Pyright 1.1.411 source: 0 errors / 0 warnings / 0 informations
+Pyright 1.1.411 archive: 0 errors / 0 warnings / 0 informations
+```
+
+An external negative typing probe produced the same 12 expected diagnostics
+against both dependency forms for float-valued compact-axis inputs, retired
+`coordinates=`, retired `sampling=`, and both retired `SamplingConfig` import
+paths. Focused committed evidence proves compact-axis generic/domain ordering
+and adjacent bounds, range-backed nonmaterializing coordinates, exact lookup
+categories, source-derived sampling across axis orders and distinct count/step
+values, one shared `SamplingRuntime` identity, truth-only zero-start
+preflight, exact source-axis retention, and public/retired-surface behavior.
+Concrete mutation-equivalent checks reject coordinate materialization, fixed
+sampling facts, weakened compact-axis narrowing, restored sampling-policy
+agreement, and any retained abstract-root lookup exception promise. Existing
+same-stack stochastic literals, all 63 product requests, RNG-call continuity,
+storage, autograd, source immutability, and global-RNG gates remain unchanged.
+
+Fresh-process import isolation reports TensorG4DS, TensorML, DSLab, G4DS11,
+and Pint absent. Public-root-only TensorCore imports, direct NumPy/Pint import
+absence, protected bytes, exact changed-path allowlists, `git diff --check`,
+privacy scans, and artifact/bytecode hygiene pass. No TensorCore, sibling,
+scientific, RNG, producer/effect, Pint, IO/artifact, integration, renderer,
+Stage 8, optimization, release, conformance, merge, or push effect occurred.
+Local CUDA was unavailable. While these bytes are absent from `main`,
+independent fresh full-A100 Validation and Review evidence across both required
+PyTorch minors and dependency forms remains mandatory. If they are present
+unchanged on `main`, those gates and Review's fast-forward are complete while
+final Design acceptance remains pending unless the lifecycle records say
+Merged / Closed.
 
 ## Execution Roles And Finite Loop
 

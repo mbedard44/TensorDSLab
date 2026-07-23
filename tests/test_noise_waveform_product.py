@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from itertools import permutations
 import math
+from typing import Any
 import unittest
 from unittest.mock import patch
 
@@ -11,7 +12,6 @@ from tensor_core import (
     CounterRng,
     NonnegativeFloat,
     PositiveFloat,
-    PositiveInteger,
     RngKey,
     TensorAxis,
     Threefry4x32,
@@ -26,7 +26,6 @@ from tensor_dslab import (
     Photoelectrons,
     PsdNoiseConfig,
     SampleAxis,
-    SamplingConfig,
     WhiteNoiseConfig,
     ZeroNoiseConfig,
 )
@@ -65,26 +64,23 @@ class _FailingRng(CounterRng):
         )
 
 
-def _sampling(*, count: int, period_ps: int = 1_000) -> SamplingConfig:
-    return SamplingConfig(
-        sample_period_ps=PositiveInteger(period_ps),
-        sample_count=PositiveInteger(count),
+def _sampling(*, count: int, period_ps: int = 1_000) -> SamplingRuntime:
+    return SamplingRuntime(
+        sample_count=count,
+        sample_period_ps=period_ps,
+        sample_dimension=2,
     )
 
 
 def _prepare_psd_powers(
     config: PsdNoiseConfig,
     *,
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
     dtype: torch.dtype,
 ) -> tuple[float, ...]:
     return _prepare_psd_powers_prepared(
         config,
-        sampling=SamplingRuntime(
-            sample_count=sampling.sample_count.value,
-            sample_period_ps=sampling.sample_period_ps.value,
-            sample_dimension=2,
-        ),
+        sampling=sampling,
         dtype=dtype,
     )
 
@@ -92,12 +88,17 @@ def _prepare_psd_powers(
 def _produce_noise_waveform(
     photoelectrons: Photoelectrons,
     *,
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
     config: NoiseWaveformConfig,
     rng: CounterRng,
     floating_dtype: torch.dtype,
 ) -> NoiseWaveform:
-    sampling_runtime = prepare_sampling(photoelectrons, config=sampling)
+    sampling_runtime = prepare_sampling(photoelectrons)
+    if (
+        sampling_runtime.sample_count != sampling.sample_count
+        or sampling_runtime.sample_period_ps != sampling.sample_period_ps
+    ):
+        raise AssertionError("test source and sampling runtime diverged")
     runtime = prepare_noise_waveform(
         config,
         sampling=sampling_runtime,
@@ -115,9 +116,9 @@ def _produce_noise_waveform(
 
 
 def _axes(
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
     *,
-    order: tuple[type[TensorAxis], ...] = (
+    order: tuple[type[TensorAxis[Any]], ...] = (
         ExampleAxis,
         ChannelAxis,
         SampleAxis,
@@ -125,23 +126,27 @@ def _axes(
     examples: int = 2,
     channels: int = 3,
     label_prefix: str = "original",
-) -> tuple[TensorAxis, ...]:
-    available: dict[type[TensorAxis], TensorAxis] = {
-        ExampleAxis: ExampleAxis(
-            coordinates=tuple(f"{label_prefix}-example-{index}" for index in range(examples))
-        ),
+) -> tuple[TensorAxis[Any], ...]:
+    available: dict[type[TensorAxis[Any]], TensorAxis[Any]] = {
+        ExampleAxis: ExampleAxis(count=examples),
         ChannelAxis: ChannelAxis(
-            coordinates=tuple(f"{label_prefix}-channel-{index}" for index in range(channels))
+            labels=tuple(
+                f"{label_prefix}-channel-{index}" for index in range(channels)
+            )
         ),
-        SampleAxis: sampling.build_axis(),
+        SampleAxis: SampleAxis(
+            start=0,
+            step=sampling.sample_period_ps,
+            count=sampling.sample_count,
+        ),
     }
     return tuple(available[axis_type] for axis_type in order)
 
 
 def _photoelectrons(
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
     *,
-    order: tuple[type[TensorAxis], ...] = (
+    order: tuple[type[TensorAxis[Any]], ...] = (
         ExampleAxis,
         ChannelAxis,
         SampleAxis,
@@ -239,11 +244,11 @@ def _round(value: float, dtype: torch.dtype) -> float:
 def _reference_psd_powers(
     config: PsdNoiseConfig,
     *,
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
     dtype: torch.dtype,
 ) -> tuple[float, ...]:
-    sample_count = sampling.sample_count.value
-    sample_rate = 1.0e12 / sampling.sample_period_ps.value
+    sample_count = sampling.sample_count
+    sample_rate = 1.0e12 / sampling.sample_period_ps
     spacing = sample_rate / sample_count
     nyquist = sample_rate / 2.0
     frequency_count = sample_count // 2 + 1
@@ -348,7 +353,7 @@ class NoiseProductBranchTest(unittest.TestCase):
         self.assertTrue(_independent_storage(first.tensor, second.tensor))
         self.assertTrue(torch.equal(torch.random.get_rng_state(), state))
 
-    def test_dtype_sampling_and_device_fail_before_rng(self) -> None:
+    def test_dtype_and_device_fail_before_rng(self) -> None:
         sampling = _sampling(count=8)
         source = _photoelectrons(sampling)
         failing_rng = _FailingRng(seed=0)
@@ -360,15 +365,6 @@ class NoiseProductBranchTest(unittest.TestCase):
                 rng=failing_rng,
                 floating_dtype=torch.float16,
             )
-        with self.assertRaises(ValueError):
-            _produce_noise_waveform(
-                source,
-                sampling=_sampling(count=8, period_ps=2_000),
-                config=_white_config(),
-                rng=failing_rng,
-                floating_dtype=torch.float32,
-            )
-
         meta_source = _photoelectrons(sampling, device="meta")
         with self.assertRaises(ValueError):
             _produce_noise_waveform(
@@ -536,7 +532,7 @@ class PsdPreparationTest(unittest.TestCase):
     def test_odd_even_cells_overlap_fsum_conservation_and_one_rounding(self) -> None:
         for count in (5, 6):
             sampling = _sampling(count=count)
-            sample_rate = 1.0e12 / sampling.sample_period_ps.value
+            sample_rate = 1.0e12 / sampling.sample_period_ps
             spacing = sample_rate / count
             edges = (0.0, spacing / 2.0, 1.75 * spacing, 0.45 * sample_rate)
             model = PsdNoiseConfig(
@@ -635,7 +631,7 @@ class PsdPreparationTest(unittest.TestCase):
             nonlocal call_count
             call_count += 1
             materialized = tuple(values)
-            if call_count == sampling.sample_count.value // 2 + 2:
+            if call_count == sampling.sample_count // 2 + 2:
                 return math.inf
             return original_fsum(materialized)
 
@@ -659,22 +655,22 @@ class PsdPreparationTest(unittest.TestCase):
         source = _photoelectrons(sampling)
         config = _flat_psd_config()
         original_fsum = math.fsum
-        final_call = sampling.sample_count.value // 2 + 2
+        final_call = sampling.sample_count // 2 + 2
 
         for dtype in (torch.float32, torch.float64):
             with self.subTest(dtype=dtype):
                 normal_guard = 8.0 if dtype is torch.float32 else 16.0
                 limit = torch.finfo(dtype).max / (
-                    sampling.sample_count.value * normal_guard
+                    sampling.sample_count * normal_guard
                 )
                 above_limit = math.nextafter(limit, math.inf)
                 self.assertTrue(math.isfinite(limit))
                 self.assertLessEqual(
-                    sampling.sample_count.value * normal_guard * limit,
+                    sampling.sample_count * normal_guard * limit,
                     torch.finfo(dtype).max,
                 )
                 self.assertGreater(
-                    sampling.sample_count.value * normal_guard * above_limit,
+                    sampling.sample_count * normal_guard * above_limit,
                     torch.finfo(dtype).max,
                 )
 
@@ -732,7 +728,7 @@ class PsdSynthesisTest(unittest.TestCase):
         for count in (5, 6):
             sampling = _sampling(count=count)
             source = _photoelectrons(sampling, examples=1, channels=1)
-            sample_rate = 1.0e12 / sampling.sample_period_ps.value
+            sample_rate = 1.0e12 / sampling.sample_period_ps
             spacing = sample_rate / count
             frequency_count = count // 2 + 1
             target_boundaries = (0.0,) + tuple(

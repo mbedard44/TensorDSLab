@@ -475,7 +475,10 @@ contracts rather than implicit `ReadoutCollection` membership order.
 
 ### [Maintenance 5 TensorCore 0.13 Compact Axes And Sampling](maintenance_5_tensorcore_0_13_compact_axes_and_sampling.md)
 
-Status: **Design-complete / User-authorized / Undispatched**.
+Status: **Implementation candidate / Validation pending while these bytes are
+absent from `main`; if present unchanged on `main`, Review's fast-forward is
+complete and final Design acceptance remains pending unless this index and the
+work order record Merged / Closed**.
 
 Maintenance 5 atomically adopts published TensorCore `0.13.0` exact commit
 `202d8b1bc6259b8453d3d377570417f2480d782b`, migrates
@@ -493,6 +496,18 @@ existing three-field `SamplingRuntime`. The exact Design authority commit and
 verified execution routes are named in the dispatch handoff. It authorizes no
 Pint, IO/artifact, integration, renderer, Stage 8 measurement, optimization,
 compatibility shim, release claim, or push.
+
+Implementation completed the bounded migration on
+`codex/maintenance-5-tensorcore-0-13-compact-axes-and-sampling` from exact
+Design authority `f734e745e5eda29bb88664c11d0a464f03c3f8e9`. Candidate 1
+uses the exact source/archive dependency identities and passes the local
+focused, full, static-typing, import, privacy, scope, and hygiene gates
+recorded in the work order. Its exact immutable commit is supplied in the
+fixed-commit Validation handoff; this containing commit cannot name itself.
+While these bytes are absent from `main`, independent full-A100 Validation and
+Review evidence remains required. If they are present unchanged on `main`,
+those gates and Review's fast-forward are complete while final Design
+acceptance remains pending unless the lifecycle records say Merged / Closed.
 
 ## Candidate Pint Physical Configuration Work
 

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import TypeVar, final
+from typing import Any, TypeVar, final
 
 import torch
-from tensor_core import TensorAxis, TensorField
+from tensor_core import LabelAxis, TensorAxis, TensorField
 
 from tensor_dslab.common import ChannelAxis, ExampleAxis, SampleAxis
 from tensor_dslab.readout import (
@@ -21,11 +21,11 @@ FieldT = TypeVar("FieldT", bound=TensorField)
 
 
 @final
-class OtherAxis(TensorAxis):
+class OtherAxis(LabelAxis):
     __slots__ = ()
 
     def _require(self) -> None:
-        if not self.coordinates:
+        if not self.labels:
             raise ValueError("OtherAxis must be nonempty")
 
 
@@ -37,12 +37,12 @@ class ForeignField(TensorField):
         return
 
 
-DEFAULT_AXIS_ORDER: tuple[type[TensorAxis], ...] = (
+DEFAULT_AXIS_ORDER: tuple[type[TensorAxis[Any]], ...] = (
     ExampleAxis,
     ChannelAxis,
     SampleAxis,
 )
-ALTERNATE_AXIS_ORDER: tuple[type[TensorAxis], ...] = (
+ALTERNATE_AXIS_ORDER: tuple[type[TensorAxis[Any]], ...] = (
     SampleAxis,
     ExampleAxis,
     ChannelAxis,
@@ -64,22 +64,30 @@ FLOATING_PRODUCT_TYPES: tuple[type[TensorField], ...] = (
 
 
 def make_axes(
-    order: tuple[type[TensorAxis], ...] = DEFAULT_AXIS_ORDER,
+    order: tuple[type[TensorAxis[Any]], ...] = DEFAULT_AXIS_ORDER,
     *,
-    example_coordinates: tuple[str, ...] = ("example-0", "example-1"),
-    channel_coordinates: tuple[str, ...] = ("channel-0", "channel-1"),
-    sample_coordinates: tuple[str, ...] = ("0ps", "2000ps", "4000ps", "6000ps"),
-) -> tuple[TensorAxis, ...]:
-    axes: list[TensorAxis] = []
+    example_count: int = 2,
+    channel_labels: tuple[str, ...] = ("channel-0", "channel-1"),
+    sample_start: int = 0,
+    sample_step: int = 2000,
+    sample_count: int = 4,
+) -> tuple[TensorAxis[Any], ...]:
+    axes: list[TensorAxis[Any]] = []
     for axis_type in order:
         if axis_type is ExampleAxis:
-            axes.append(ExampleAxis(coordinates=example_coordinates))
+            axes.append(ExampleAxis(count=example_count))
         elif axis_type is ChannelAxis:
-            axes.append(ChannelAxis(coordinates=channel_coordinates))
+            axes.append(ChannelAxis(labels=channel_labels))
         elif axis_type is SampleAxis:
-            axes.append(SampleAxis(coordinates=sample_coordinates))
+            axes.append(
+                SampleAxis(
+                    start=sample_start,
+                    step=sample_step,
+                    count=sample_count,
+                )
+            )
         elif axis_type is OtherAxis:
-            axes.append(OtherAxis(coordinates=("other-0", "other-1")))
+            axes.append(OtherAxis(labels=("other-0", "other-1")))
         else:
             raise ValueError(f"unsupported fixture axis type: {axis_type}")
     return tuple(axes)
@@ -98,7 +106,7 @@ def product_dtype(
 
 
 def make_tensor(
-    axes: tuple[TensorAxis, ...],
+    axes: tuple[TensorAxis[Any], ...],
     *,
     dtype: torch.dtype,
     device: torch.device | str = "cpu",
@@ -113,7 +121,7 @@ def make_tensor(
 def make_product(
     field_type: type[FieldT],
     *,
-    axes: tuple[TensorAxis, ...] | None = None,
+    axes: tuple[TensorAxis[Any], ...] | None = None,
     dtype: torch.dtype | None = None,
     floating_dtype: torch.dtype = torch.float32,
     device: torch.device | str = "cpu",
@@ -142,7 +150,7 @@ def make_product(
 def make_collection(
     field_types: tuple[type[TensorField], ...] = PRODUCT_TYPES,
     *,
-    axes: tuple[TensorAxis, ...] | None = None,
+    axes: tuple[TensorAxis[Any], ...] | None = None,
     floating_dtype: torch.dtype = torch.float32,
     device: torch.device | str = "cpu",
 ) -> ReadoutCollection:

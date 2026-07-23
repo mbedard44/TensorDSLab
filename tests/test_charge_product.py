@@ -36,7 +36,6 @@ from tensor_dslab import (
     FixedDelayConfig,
     Photoelectrons,
     SampleAxis,
-    SamplingConfig,
     TimingJitterConfig,
 )
 import tensor_dslab.readout.charge.runtime.produce as charge_producer
@@ -54,12 +53,17 @@ from tensor_dslab.readout.runtime.sampling import SamplingRuntime, prepare_sampl
 def _produce_charge(
     photoelectrons: Photoelectrons,
     *,
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
     config: ChargeConfig,
     rng: CounterRng,
     floating_dtype: torch.dtype,
 ) -> Charge:
-    sampling_runtime = prepare_sampling(photoelectrons, config=sampling)
+    sampling_runtime = prepare_sampling(photoelectrons)
+    if (
+        sampling_runtime.sample_count != sampling.sample_count
+        or sampling_runtime.sample_period_ps != sampling.sample_period_ps
+    ):
+        raise AssertionError("test source and sampling runtime diverged")
     runtime = prepare_charge(
         config,
         photoelectrons=photoelectrons,
@@ -143,17 +147,22 @@ class _FixedBlockRng(CounterRng):
         cls.calls = 0
 
 
-def _sampling() -> SamplingConfig:
-    return SamplingConfig(
-        sample_period_ps=PositiveInteger(2000),
-        sample_count=PositiveInteger(4),
+def _sampling(
+    *,
+    period_ps: int = 2_000,
+    count: int = 4,
+) -> SamplingRuntime:
+    return SamplingRuntime(
+        sample_count=count,
+        sample_period_ps=period_ps,
+        sample_dimension=2,
     )
 
 
-def _sampling_runtime(sampling: SamplingConfig) -> SamplingRuntime:
+def _sampling_runtime(sampling: SamplingRuntime) -> SamplingRuntime:
     return SamplingRuntime(
-        sample_count=sampling.sample_count.value,
-        sample_period_ps=sampling.sample_period_ps.value,
+        sample_count=sampling.sample_count,
+        sample_period_ps=sampling.sample_period_ps,
         sample_dimension=2,
     )
 
@@ -164,9 +173,13 @@ def _field(
     sample_first: bool = False,
 ) -> Photoelectrons:
     sampling = _sampling()
-    example = ExampleAxis(coordinates=tuple(f"e{i}" for i in range(2)))
-    channel = ChannelAxis(coordinates=tuple(f"c{i}" for i in range(2)))
-    sample = sampling.build_axis()
+    example = ExampleAxis(count=2)
+    channel = ChannelAxis(labels=tuple(f"c{i}" for i in range(2)))
+    sample = SampleAxis(
+        start=0,
+        step=sampling.sample_period_ps,
+        count=sampling.sample_count,
+    )
     axes = (sample, example, channel) if sample_first else (example, channel, sample)
     return Photoelectrons(tensor=values, axes=axes)
 
@@ -174,17 +187,23 @@ def _field(
 def _ensemble_field(
     values: torch.Tensor,
     *,
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
 ) -> Photoelectrons:
-    example = ExampleAxis(
-        coordinates=tuple(f"e{i}" for i in range(values.shape[0]))
-    )
+    example = ExampleAxis(count=values.shape[0])
     channel = ChannelAxis(
-        coordinates=tuple(f"c{i}" for i in range(values.shape[1]))
+        labels=tuple(f"c{i}" for i in range(values.shape[1]))
     )
     return Photoelectrons(
         tensor=values,
-        axes=(example, channel, sampling.build_axis()),
+        axes=(
+            example,
+            channel,
+            SampleAxis(
+                start=0,
+                step=sampling.sample_period_ps,
+                count=sampling.sample_count,
+            ),
+        ),
     )
 
 
@@ -401,10 +420,7 @@ class ChargeProductPreflightTest(unittest.TestCase):
         period = 2677300530967072003
         endpoint_rate = 37.35105523020191
         above_rate = math.nextafter(endpoint_rate, math.inf)
-        sampling = SamplingConfig(
-            sample_period_ps=PositiveInteger(period),
-            sample_count=PositiveInteger(2),
-        )
+        sampling = _sampling(period_ps=period, count=2)
         numerator, denominator = endpoint_rate.as_integer_ratio()
         exact_endpoint = Fraction(
             numerator * period,
@@ -491,10 +507,7 @@ class DarkCountStatisticalTest(unittest.TestCase):
     def test_dark_poisson_mean_variance_zero_pmf_and_tail(self) -> None:
         per_seed = 1 << 16
         seeds = (0, 1, 0x0123456789ABCDEF, 0xFFFFFFFFFFFFFFFF)
-        sampling = SamplingConfig(
-            sample_period_ps=PositiveInteger(2000),
-            sample_count=PositiveInteger(2),
-        )
+        sampling = _sampling(period_ps=2_000, count=2)
         config = DarkCountConfig(rate_hz=NonnegativeFloat(2.0e9))
         observations: list[torch.Tensor] = []
         for seed in seeds:
@@ -834,10 +847,7 @@ class ChargeSmearingTest(unittest.TestCase):
     ) -> None:
         per_seed = 1 << 14
         seeds = (0, 1, 0x0123456789ABCDEF, 0xFFFFFFFFFFFFFFFF)
-        sampling = SamplingConfig(
-            sample_period_ps=PositiveInteger(2000),
-            sample_count=PositiveInteger(2),
-        )
+        sampling = _sampling(period_ps=2_000, count=2)
         observations: list[torch.Tensor] = []
         for seed in seeds:
             source = _ensemble_field(
@@ -989,10 +999,7 @@ class CudaChargeProductTest(unittest.TestCase):
 
     def test_completed_dark_plus_smearing_statistics(self) -> None:
         per_seed = 1 << 14
-        sampling = SamplingConfig(
-            sample_period_ps=PositiveInteger(2000),
-            sample_count=PositiveInteger(2),
-        )
+        sampling = _sampling(period_ps=2_000, count=2)
         observations: list[torch.Tensor] = []
         for seed in (0, 1, 0x0123456789ABCDEF, 0xFFFFFFFFFFFFFFFF):
             source = _ensemble_field(

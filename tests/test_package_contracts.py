@@ -11,7 +11,14 @@ import unittest
 
 import torch
 import tensor_core
-from tensor_core import TensorAxis, TensorCollection, TensorField
+from tensor_core import (
+    CountAxis,
+    LabelAxis,
+    RegularAxis,
+    TensorAxis,
+    TensorCollection,
+    TensorField,
+)
 
 import tensor_dslab
 import tensor_dslab.common as common
@@ -32,6 +39,81 @@ from tensor_dslab import (
 
 
 class PackageContractTest(unittest.TestCase):
+    def test_tensorcore_0_13_public_surface_and_topology_are_exact(self) -> None:
+        self.assertEqual(
+            tensor_core.__all__,
+            (
+                "TensorArtifact",
+                "TensorAxis",
+                "CountAxis",
+                "RegularAxis",
+                "LabelAxis",
+                "TensorCollection",
+                "TensorField",
+                "TableColumn",
+                "TableCollection",
+                "TableField",
+                "RngKey",
+                "CounterRng",
+                "Threefry4x32",
+                "Scalar",
+                "FiniteFloat",
+                "NonnegativeFloat",
+                "NonnegativeInteger",
+                "PositiveFloat",
+                "PositiveInteger",
+                "Probability",
+                "logical_positions",
+                "require_axis_signature",
+                "require_finite_real",
+                "require_field_types",
+                "require_integer",
+                "require_nonnegative_integer",
+                "require_positive_integer",
+                "require_same_axes",
+                "require_same_device",
+                "require_same_dtype",
+            ),
+        )
+        package_root = Path(tensor_core.__file__).resolve().parent
+        self.assertEqual(
+            tuple(
+                sorted(
+                    str(path.relative_to(package_root))
+                    for path in package_root.rglob("*")
+                    if path.is_file() and path.name != ".DS_Store"
+                )
+            ),
+            (
+                "__init__.py",
+                "artifacts.py",
+                "py.typed",
+                "random.py",
+                "scalars.py",
+                "table/__init__.py",
+                "table/collection.py",
+                "table/column.py",
+                "table/field.py",
+                "tensor/__init__.py",
+                "tensor/axis.py",
+                "tensor/collection.py",
+                "tensor/field.py",
+                "validation.py",
+            ),
+        )
+        dependency_metadata = tomllib.loads(
+            (package_root.parent / "pyproject.toml").read_text()
+        )
+        self.assertEqual(dependency_metadata["project"]["version"], "0.13.0")
+        self.assertEqual(
+            dependency_metadata["project"]["requires-python"],
+            ">=3.11",
+        )
+        self.assertEqual(
+            dependency_metadata["project"]["dependencies"],
+            ["torch>=2.11,<2.13"],
+        )
+
     def test_package_metadata_selects_exact_tensorcore_candidate(self) -> None:
         metadata = tomllib.loads(Path("pyproject.toml").read_text())
         self.assertEqual(metadata["build-system"]["build-backend"], "hatchling.build")
@@ -43,7 +125,7 @@ class PackageContractTest(unittest.TestCase):
             project["dependencies"],
             [
                 "torch",
-                "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@4708bf2ca063a1bcd37a30a342733b9e3dbe9f59",
+                "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@202d8b1bc6259b8453d3d377570417f2480d782b",
             ],
         )
         self.assertEqual(
@@ -56,7 +138,7 @@ class PackageContractTest(unittest.TestCase):
     def test_exact_common_readout_and_package_exports(self) -> None:
         self.assertEqual(
             common.__all__,
-            ("ChannelAxis", "ExampleAxis", "SampleAxis", "SamplingConfig"),
+            ("ChannelAxis", "ExampleAxis", "SampleAxis"),
         )
         expected_readout = (
             "AfterpulseConfig",
@@ -121,7 +203,6 @@ class PackageContractTest(unittest.TestCase):
                 "ReadoutCollection",
                 "ReadoutConfig",
                 "SampleAxis",
-                "SamplingConfig",
                 "TimingJitterConfig",
                 "TpcFebSnrPulseConfig",
                 "VetoPduPulseConfig",
@@ -195,10 +276,6 @@ class PackageContractTest(unittest.TestCase):
         self.assertEqual(ExampleAxis.__module__, "tensor_dslab.common.axes")
         self.assertEqual(SampleAxis.__module__, "tensor_dslab.common.axes")
         self.assertEqual(
-            tensor_dslab.SamplingConfig.__module__,
-            "tensor_dslab.common.sampling",
-        )
-        self.assertEqual(
             ReadoutCollection.__module__,
             "tensor_dslab.readout.collection",
         )
@@ -238,7 +315,9 @@ class PackageContractTest(unittest.TestCase):
 
     def test_semantic_leaves_are_direct_final_fieldless_roots(self) -> None:
         leaf_groups = (
-            ((ExampleAxis, ChannelAxis, SampleAxis), TensorAxis),
+            ((ExampleAxis,), CountAxis),
+            ((ChannelAxis,), LabelAxis),
+            ((SampleAxis,), RegularAxis),
             (
                 (
                     Photoelectrons,
@@ -271,12 +350,12 @@ class PackageContractTest(unittest.TestCase):
         self.assertTrue(isabstract(TensorField))
         self.assertTrue(isabstract(TensorCollection))
 
-        sample = SampleAxis(coordinates=("0ps", "2000ps"))
+        sample = SampleAxis(start=0, step=2_000, count=2)
         photoelectrons = Photoelectrons(
             tensor=torch.zeros((1, 1, 2), dtype=torch.int64),
             axes=(
-                ExampleAxis(coordinates=("e0",)),
-                ChannelAxis(coordinates=("c0",)),
+                ExampleAxis(count=1),
+                ChannelAxis(labels=("c0",)),
                 sample,
             ),
         )
@@ -292,10 +371,18 @@ class PackageContractTest(unittest.TestCase):
             "IdSequence",
             "TensorAxis",
             "TensorAxisId",
+            "CountAxis",
+            "LabelAxis",
+            "RegularAxis",
             "TensorCollection",
             "TensorField",
             "TensorFieldId",
             "TensorLayout",
+            "TensorArtifact",
+            "TableCollection",
+            "TableColumn",
+            "TableField",
+            "Scalar",
             "PositiveInteger",
             "CounterRng",
             "RngKey",
@@ -311,6 +398,7 @@ class PackageContractTest(unittest.TestCase):
     def test_retired_files_and_future_placeholders_are_absent(self) -> None:
         absent = (
             "tensor_dslab/common/ids.py",
+            "tensor_dslab/common/sampling.py",
             "tensor_dslab/readout/builders.py",
             "tensor_dslab/readout/ids.py",
             "tensor_dslab/readout/tensors.py",
@@ -602,7 +690,7 @@ class PackageContractTest(unittest.TestCase):
             "tensor_dslab.readout",
             "tensor_dslab",
         )
-        deferred = ("tensor_g4ds", "tensor_ml", "dslab", "g4ds11")
+        deferred = ("tensor_g4ds", "tensor_ml", "dslab", "g4ds11", "pint")
         for module_name in modules:
             with self.subTest(module=module_name):
                 code = (
@@ -619,6 +707,7 @@ class PackageContractTest(unittest.TestCase):
                 self.assertEqual(completed.returncode, 0, completed.stderr)
 
         retired_modules = (
+            "tensor_dslab.common.sampling",
             "tensor_dslab.readout._random",
             "tensor_dslab.readout._rng",
             "tensor_dslab.readout.types",

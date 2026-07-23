@@ -32,7 +32,6 @@ from tensor_dslab import (
     PsdNoiseConfig,
     PureWaveformConfig,
     ReadoutConfig,
-    SamplingConfig,
     TimingJitterConfig,
     TpcFebSnrPulseConfig,
     VetoPduPulseConfig,
@@ -131,12 +130,7 @@ def make_all_valid_configs() -> tuple[object, ...]:
     )
     analog = AnalogWaveformConfig(saturation=saturation)
     digitized = make_digitized_config()
-    sampling = SamplingConfig(
-        sample_period_ps=PositiveInteger(2000),
-        sample_count=PositiveInteger(4),
-    )
     readout = ReadoutConfig(
-        sampling=sampling,
         charge=charge,
         pure_waveform=pure,
         noise_waveform=noise,
@@ -166,7 +160,6 @@ def make_all_valid_configs() -> tuple[object, ...]:
         AnalogWaveformConfig(),
         analog,
         digitized,
-        sampling,
         readout,
     )
 
@@ -364,19 +357,11 @@ class ReadoutConfigsTest(unittest.TestCase):
                 input_max_mv=FiniteFloat(1.0),
             )
 
-    def test_readout_config_requires_sampling_and_accepts_optional_products(self) -> None:
-        sampling = SamplingConfig(
-            sample_period_ps=PositiveInteger(1),
-            sample_count=PositiveInteger(2),
-        )
-        minimal = ReadoutConfig(sampling=sampling)
-        self.assertIs(minimal.sampling, sampling)
+    def test_readout_config_accepts_truth_only_and_optional_products(self) -> None:
+        minimal = ReadoutConfig()
         self.assertIsNone(minimal.charge)
         with self.assertRaises(TypeError):
-            ReadoutConfig(sampling=object())  # type: ignore[arg-type]
-        with self.assertRaises(TypeError):
             ReadoutConfig(
-                sampling=sampling,
                 charge=object(),  # type: ignore[arg-type]
             )
 

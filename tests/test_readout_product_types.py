@@ -121,13 +121,13 @@ class ReadoutProductTypesTest(unittest.TestCase):
                     Photoelectrons(tensor=tensor, axes=axes)
 
         duplicate_axes = (
-            ExampleAxis(coordinates=("e0",)),
-            ExampleAxis(coordinates=("e1",)),
-            SampleAxis(coordinates=("0ps", "1ps")),
+            ExampleAxis(count=1),
+            ExampleAxis(count=2),
+            SampleAxis(start=0, step=1, count=2),
         )
         with self.assertRaises(ValueError):
             Photoelectrons(
-                tensor=torch.zeros((1, 1, 2), dtype=torch.int64),
+                tensor=torch.zeros((1, 2, 2), dtype=torch.int64),
                 axes=duplicate_axes,
             )
 
@@ -197,9 +197,10 @@ class ReadoutProductTypesTest(unittest.TestCase):
 
     def test_constructor_does_not_scan_scientific_values(self) -> None:
         axes = make_axes(
-            example_coordinates=("e0",),
-            channel_coordinates=("c0",),
-            sample_coordinates=("0ps", "1ps"),
+            example_count=1,
+            channel_labels=("c0",),
+            sample_step=1,
+            sample_count=2,
         )
         tensor = torch.tensor([[[-1, 0]]], dtype=torch.int64)
         field = Photoelectrons(tensor=tensor, axes=axes)
@@ -246,9 +247,10 @@ class ReadoutProductTypesTest(unittest.TestCase):
 
     def test_product_deep_validators_reject_invalid_values(self) -> None:
         axes = make_axes(
-            example_coordinates=("e0",),
-            channel_coordinates=("c0",),
-            sample_coordinates=("0ps", "1ps"),
+            example_count=1,
+            channel_labels=("c0",),
+            sample_step=1,
+            sample_count=2,
         )
         source = Photoelectrons(
             tensor=torch.zeros((1, 1, 2), dtype=torch.int64),

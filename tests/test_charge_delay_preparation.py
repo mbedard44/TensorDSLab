@@ -4,12 +4,11 @@ from decimal import Decimal, localcontext
 import math
 import unittest
 
-from tensor_core import PositiveFloat, PositiveInteger, Probability
+from tensor_core import PositiveFloat, Probability
 
 from tensor_dslab import (
     AfterpulseConfig,
     AfterpulseRecoveryConfig,
-    SamplingConfig,
 )
 from tensor_dslab.readout.charge.runtime.effects.delays import (
     DelayRuntime,
@@ -20,17 +19,10 @@ from tensor_dslab.readout.charge.runtime.effects.delays import (
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 
 
-def _sampling(*, period_ps: int = 2000, count: int = 8) -> SamplingConfig:
-    return SamplingConfig(
-        sample_period_ps=PositiveInteger(period_ps),
-        sample_count=PositiveInteger(count),
-    )
-
-
-def _sampling_runtime(sampling: SamplingConfig) -> SamplingRuntime:
+def _sampling(*, period_ps: int = 2000, count: int = 8) -> SamplingRuntime:
     return SamplingRuntime(
-        sample_count=sampling.sample_count.value,
-        sample_period_ps=sampling.sample_period_ps.value,
+        sample_count=count,
+        sample_period_ps=period_ps,
         sample_dimension=2,
     )
 
@@ -38,22 +30,22 @@ def _sampling_runtime(sampling: SamplingConfig) -> SamplingRuntime:
 def _prepare_fixed_delay(
     delay_ns: float,
     *,
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
 ) -> DelayRuntime:
     return _prepare_fixed_delay_prepared(
         delay_ns,
-        sampling=_sampling_runtime(sampling),
+        sampling=sampling,
     )
 
 
 def prepare_exponential_delay(
     mean_delay_ns: float,
     *,
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
 ) -> DelayRuntime:
     return _prepare_exponential_delay_prepared(
         mean_delay_ns,
-        sampling=_sampling_runtime(sampling),
+        sampling=sampling,
     )
 
 
@@ -61,13 +53,13 @@ def prepare_afterpulse_recovery(
     afterpulse: AfterpulseConfig,
     recovery: AfterpulseRecoveryConfig,
     *,
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
     delay: DelayRuntime,
 ) -> tuple[tuple[float, ...], tuple[float, ...]]:
     return _prepare_afterpulse_recovery_prepared(
         afterpulse,
         recovery,
-        sampling=_sampling_runtime(sampling),
+        sampling=sampling,
         delay=delay,
     )
 
@@ -156,11 +148,11 @@ class ExponentialDelayPreparationTest(unittest.TestCase):
         sample_count: int,
     ) -> None:
         sampling = _sampling(count=sample_count)
-        mean_ns = sampling.sample_period_ps.value * 1.0e-3 * ratio
+        mean_ns = sampling.sample_period_ps * 1.0e-3 * ratio
         plan = prepare_exponential_delay(mean_ns, sampling=sampling)
         with localcontext() as context:
             context.prec = 110
-            inverse_mean = Decimal(sampling.sample_period_ps.value) / (
+            inverse_mean = Decimal(sampling.sample_period_ps) / (
                 Decimal.from_float(mean_ns) * Decimal(1000)
             )
             expected_probability, expected_tail = _decimal_exponential_law(
@@ -246,7 +238,7 @@ class ExponentialDelayPreparationTest(unittest.TestCase):
 
     def test_ratio_and_sample_count_domains(self) -> None:
         sampling = _sampling()
-        period_ns = sampling.sample_period_ps.value * 1.0e-3
+        period_ns = sampling.sample_period_ps * 1.0e-3
         for ratio in (2.0**-52, 1.0, 2.0**52):
             with self.subTest(ratio=ratio):
                 plan = prepare_exponential_delay(
@@ -302,7 +294,7 @@ class AfterpulseRecoveryPreparationTest(unittest.TestCase):
                     delay=delay,
                 )
 
-                period = float(sampling.sample_period_ps.value)
+                period = float(sampling.sample_period_ps)
                 x_binary64 = period / (mean_delay_ns * 1000.0)
                 y_binary64 = period / (recovery_ns * 1000.0)
                 if branch == "series":
@@ -327,7 +319,7 @@ class AfterpulseRecoveryPreparationTest(unittest.TestCase):
 
                 with localcontext() as context:
                     context.prec = 110
-                    period_ps = Decimal(sampling.sample_period_ps.value)
+                    period_ps = Decimal(sampling.sample_period_ps)
                     x = period_ps / (
                         Decimal.from_float(mean_delay_ns) * Decimal(1000)
                     )
@@ -338,11 +330,11 @@ class AfterpulseRecoveryPreparationTest(unittest.TestCase):
                     scaling = x / combined
                     q_x, r_x = _decimal_exponential_law(
                         x,
-                        sample_count=sampling.sample_count.value,
+                        sample_count=sampling.sample_count,
                     )
                     q_combined, r_combined = _decimal_exponential_law(
                         combined,
-                        sample_count=sampling.sample_count.value,
+                        sample_count=sampling.sample_count,
                     )
 
                     complete_errors: list[Decimal] = []
@@ -387,7 +379,7 @@ class AfterpulseRecoveryPreparationTest(unittest.TestCase):
 
                     for first_outside in range(
                         1,
-                        sampling.sample_count.value + 1,
+                        sampling.sample_count + 1,
                     ):
                         if r_x[first_outside] == 0:
                             self.assertEqual(overflow[first_outside], 0.0)
@@ -470,8 +462,8 @@ class AfterpulseRecoveryPreparationTest(unittest.TestCase):
             sampling=sampling,
             delay=delay,
         )
-        self.assertEqual(len(recovery), sampling.sample_count.value)
-        self.assertEqual(len(overflow), sampling.sample_count.value + 1)
+        self.assertEqual(len(recovery), sampling.sample_count)
+        self.assertEqual(len(overflow), sampling.sample_count + 1)
         self.assertTrue(all(0.0 <= value <= 1.0 for value in recovery))
         self.assertTrue(all(0.0 <= value <= 1.0 for value in overflow))
         self.assertTrue(all(later >= earlier for earlier, later in zip(recovery, recovery[1:])))

@@ -91,7 +91,9 @@ class ReadoutCollectionTest(unittest.TestCase):
         self.assertIs(accepted.field(Photoelectrons).axes, axes)
         self.assertIs(accepted.field(NoiseWaveform).axes, equal_but_distinct_axes)
 
-        mismatched_coordinates = make_axes(channel_coordinates=("other-0", "other-1"))
+        mismatched_coordinates = make_axes(
+            channel_labels=("other-0", "other-1")
+        )
         with self.assertRaises(ValueError):
             ReadoutCollection(
                 fields=(
@@ -183,8 +185,6 @@ class ReadoutCollectionTest(unittest.TestCase):
         self.assertIs(type(collection.field(Charge)), Charge)
         with self.assertRaises(KeyError):
             collection.field(PureWaveform)
-        with self.assertRaises(TypeError):
-            collection.field(TensorField)
 
     def test_membership_is_immutable_and_equality_is_identity(self) -> None:
         first = make_collection((Photoelectrons,))

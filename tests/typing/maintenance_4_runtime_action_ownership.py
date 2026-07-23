@@ -27,7 +27,7 @@ from tensor_dslab import (
     PureWaveform,
     PureWaveformConfig,
     ReadoutConfig,
-    SamplingConfig,
+    SampleAxis,
     TpcFebSnrPulseConfig,
     ZeroNoiseConfig,
 )
@@ -60,20 +60,15 @@ from tensor_dslab.readout.pure_waveform.runtime.validate import (
 from tensor_dslab.readout.runtime.prepare import ReadoutRuntime, prepare_readout
 
 
-sampling = SamplingConfig(
-    sample_period_ps=PositiveInteger(2_000),
-    sample_count=PositiveInteger(4),
-)
 source = Photoelectrons(
     tensor=torch.ones((1, 1, 4), dtype=torch.int64),
     axes=(
-        ExampleAxis(coordinates=("example-0",)),
-        ChannelAxis(coordinates=("channel-0",)),
-        sampling.build_axis(),
+        ExampleAxis(count=1),
+        ChannelAxis(labels=("channel-0",)),
+        SampleAxis(start=0, step=2_000, count=4),
     ),
 )
 config = ReadoutConfig(
-    sampling=sampling,
     charge=ChargeConfig(),
     pure_waveform=PureWaveformConfig(
         model=TpcFebSnrPulseConfig(

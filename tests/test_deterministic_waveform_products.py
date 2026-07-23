@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from typing import Any
 import unittest
 from unittest.mock import patch
 
@@ -28,7 +29,6 @@ from tensor_dslab import (
     PureWaveform,
     PureWaveformConfig,
     SampleAxis,
-    SamplingConfig,
     TpcFebSnrPulseConfig,
     VetoPduPulseConfig,
 )
@@ -59,41 +59,41 @@ from tensor_dslab.readout.pure_waveform.runtime.produce import (
 from tensor_dslab.readout.pure_waveform.runtime.validate import (
     validate_pure_waveform as require_valid_pure,
 )
-from tensor_dslab.readout.runtime.sampling import SamplingRuntime, prepare_sampling
+from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 
 
 PulseModel = TpcFebSnrPulseConfig | VetoPduPulseConfig
 
 
-def _sampling(*, period_ps: int = 8_000, count: int = 8) -> SamplingConfig:
-    return SamplingConfig(
-        sample_period_ps=PositiveInteger(period_ps),
-        sample_count=PositiveInteger(count),
+def _sampling(*, period_ps: int = 8_000, count: int = 8) -> SamplingRuntime:
+    return SamplingRuntime(
+        sample_count=count,
+        sample_period_ps=period_ps,
+        sample_dimension=2,
     )
 
 
 def _axes(
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
     *,
-    order: tuple[type[TensorAxis], ...] = (
+    order: tuple[type[TensorAxis[Any]], ...] = (
         ExampleAxis,
         ChannelAxis,
         SampleAxis,
     ),
     start_ps: int = 0,
     period_ps: int | None = None,
-) -> tuple[TensorAxis, ...]:
+) -> tuple[TensorAxis[Any], ...]:
     exact_period = (
-        sampling.sample_period_ps.value if period_ps is None else period_ps
+        sampling.sample_period_ps if period_ps is None else period_ps
     )
-    available: dict[type[TensorAxis], TensorAxis] = {
-        ExampleAxis: ExampleAxis(coordinates=("example-0",)),
-        ChannelAxis: ChannelAxis(coordinates=("channel-0",)),
+    available: dict[type[TensorAxis[Any]], TensorAxis[Any]] = {
+        ExampleAxis: ExampleAxis(count=1),
+        ChannelAxis: ChannelAxis(labels=("channel-0",)),
         SampleAxis: SampleAxis(
-            coordinates=tuple(
-                f"{start_ps + index * exact_period}ps"
-                for index in range(sampling.sample_count.value)
-            )
+            start=start_ps,
+            step=exact_period,
+            count=sampling.sample_count,
         ),
     }
     return tuple(available[axis_type] for axis_type in order)
@@ -101,7 +101,7 @@ def _axes(
 
 def _tensor_from_samples(
     samples: list[float],
-    axes: tuple[TensorAxis, ...],
+    axes: tuple[TensorAxis[Any], ...],
     *,
     dtype: torch.dtype,
     device: torch.device | str = "cpu",
@@ -130,10 +130,10 @@ def _tensor_from_samples(
 
 def _charge(
     samples: list[float],
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
     *,
     dtype: torch.dtype,
-    axes: tuple[TensorAxis, ...] | None = None,
+    axes: tuple[TensorAxis[Any], ...] | None = None,
     device: torch.device | str = "cpu",
     noncontiguous: bool = False,
     requires_grad: bool = False,
@@ -154,10 +154,10 @@ def _charge(
 
 def _pure(
     samples: list[float],
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
     *,
     dtype: torch.dtype,
-    axes: tuple[TensorAxis, ...] | None = None,
+    axes: tuple[TensorAxis[Any], ...] | None = None,
     device: torch.device | str = "cpu",
     noncontiguous: bool = False,
     requires_grad: bool = False,
@@ -178,10 +178,10 @@ def _pure(
 
 def _noise(
     samples: list[float],
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
     *,
     dtype: torch.dtype,
-    axes: tuple[TensorAxis, ...] | None = None,
+    axes: tuple[TensorAxis[Any], ...] | None = None,
     device: torch.device | str = "cpu",
     noncontiguous: bool = False,
     requires_grad: bool = False,
@@ -202,10 +202,10 @@ def _noise(
 
 def _analog(
     samples: list[float],
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
     *,
     dtype: torch.dtype,
-    axes: tuple[TensorAxis, ...] | None = None,
+    axes: tuple[TensorAxis[Any], ...] | None = None,
     device: torch.device | str = "cpu",
     noncontiguous: bool = False,
     requires_grad: bool = False,
@@ -275,13 +275,13 @@ def _raw_pulse(time_ns: float, model: PulseModel) -> float:
 
 
 def _reference_coefficients(
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
     config: PureWaveformConfig,
     *,
     dtype: torch.dtype,
     device: torch.device | str,
 ) -> torch.Tensor:
-    period_ns = sampling.sample_period_ps.value / 1000.0
+    period_ns = sampling.sample_period_ps / 1000.0
     model = config.model
     sample = 0
     raw: list[float] = []
@@ -289,7 +289,7 @@ def _reference_coefficients(
         raw.append(_raw_pulse(sample * period_ns, model))
         sample += 1
     normalization = max(abs(value) for value in raw)
-    retained = raw[: sampling.sample_count.value]
+    retained = raw[: sampling.sample_count]
     return torch.tensor(
         [
             value / normalization * model.peak_voltage_mv_per_pe.value
@@ -302,8 +302,8 @@ def _reference_coefficients(
 
 def _reference_pure(
     charge: torch.Tensor,
-    axes: tuple[TensorAxis, ...],
-    sampling: SamplingConfig,
+    axes: tuple[TensorAxis[Any], ...],
+    sampling: SamplingRuntime,
     config: PureWaveformConfig,
 ) -> torch.Tensor:
     sample_dimension = next(
@@ -396,14 +396,14 @@ def _independent_storage(left: torch.Tensor, right: torch.Tensor) -> bool:
 def _produce_pure_waveform(
     charge: Charge,
     *,
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
     config: PureWaveformConfig,
 ) -> PureWaveform:
     runtime = prepare_pure_waveform(
         config,
         sampling=SamplingRuntime(
-            sample_count=sampling.sample_count.value,
-            sample_period_ps=sampling.sample_period_ps.value,
+            sample_count=sampling.sample_count,
+            sample_period_ps=sampling.sample_period_ps,
             sample_dimension=charge.dimension_of(SampleAxis),
         ),
         floating_dtype=charge.tensor.dtype,
@@ -631,9 +631,13 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
     ) -> None:
         sampling = _sampling(count=8)
         axes = (
-            sampling.build_axis(),
-            ExampleAxis(coordinates=("example-0", "example-1")),
-            ChannelAxis(coordinates=("channel-0", "channel-1")),
+            SampleAxis(
+                start=0,
+                step=sampling.sample_period_ps,
+                count=sampling.sample_count,
+            ),
+            ExampleAxis(count=2),
+            ChannelAxis(labels=("channel-0", "channel-1")),
         )
         backing = torch.zeros((8, 2, 2, 2), dtype=torch.float32)
         values = backing[..., 0]
@@ -752,52 +756,6 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                 rtol=1e-3,
             )
         )
-
-    def test_sampling_relationship_rejects_size_start_and_period_mismatch(
-        self,
-    ) -> None:
-        sampling = _sampling(count=4)
-        mismatch_cases = (
-            (
-                _charge(
-                    [1.0, 0.0, 0.0],
-                    _sampling(count=3),
-                    dtype=torch.float32,
-                ),
-                sampling,
-            ),
-            (
-                _charge(
-                    [1.0, 0.0, 0.0, 0.0],
-                    sampling,
-                    dtype=torch.float32,
-                    axes=_axes(sampling, start_ps=8_000),
-                ),
-                sampling,
-            ),
-            (
-                _charge(
-                    [1.0, 0.0, 0.0, 0.0],
-                    sampling,
-                    dtype=torch.float32,
-                    axes=_axes(sampling, period_ps=4_000),
-                ),
-                sampling,
-            ),
-        )
-        for charge, expected_sampling in mismatch_cases:
-            with self.subTest(axis=charge.axis(SampleAxis).coordinates):
-                with self.assertRaises(ValueError):
-                    prepare_sampling(
-                        Photoelectrons(
-                            tensor=torch.zeros_like(
-                                charge.tensor,
-                                dtype=torch.int64,
-                            ),
-                            axes=charge.axes,
-                        ),
-                        config=expected_sampling,
-                    )
 
     def test_pure_waveform_rejects_out_of_range_support_before_convolution(
         self,

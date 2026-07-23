@@ -135,7 +135,7 @@ def prepare_readout(
         need_digitized=need_digitized,
     )
 
-    sampling = prepare_sampling(photoelectrons, config=config.sampling)
+    sampling = prepare_sampling(photoelectrons)
     device = photoelectrons.tensor.device
     if device.type not in ("cpu", "cuda"):
         raise ValueError("readout simulation supports only CPU and CUDA")

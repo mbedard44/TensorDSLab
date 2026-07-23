@@ -48,7 +48,6 @@ from tensor_dslab import (
     PureWaveformConfig,
     ReadoutConfig,
     SampleAxis,
-    SamplingConfig,
     TimingJitterConfig,
     TpcFebSnrPulseConfig,
     VetoPduPulseConfig,
@@ -78,7 +77,7 @@ from tensor_dslab.readout.noise_waveform.runtime.validate import (
 from tensor_dslab.readout.pure_waveform.runtime.produce import (
     produce_pure_waveform as _produce_pure_waveform_prepared,
 )
-from tensor_dslab.readout.runtime.sampling import prepare_sampling
+from tensor_dslab.readout.runtime.sampling import SamplingRuntime, prepare_sampling
 
 
 _NAMESPACE = 0x54445331
@@ -108,9 +107,9 @@ def _hex_bits(values: torch.Tensor) -> tuple[str, ...]:
 
 def _source() -> Photoelectrons:
     axes = (
-        ExampleAxis(coordinates=("event-0",)),
-        ChannelAxis(coordinates=("channel-0",)),
-        SampleAxis(coordinates=("0ps", "2000ps", "4000ps", "6000ps")),
+        ExampleAxis(count=1),
+        ChannelAxis(labels=("channel-0",)),
+        SampleAxis(start=0, step=2_000, count=4),
     )
     return Photoelectrons(
         tensor=torch.tensor([[[3, 0, 1, 2]]], dtype=torch.int64),
@@ -118,22 +117,29 @@ def _source() -> Photoelectrons:
     )
 
 
-def _sampling() -> SamplingConfig:
-    return SamplingConfig(
-        sample_period_ps=PositiveInteger(2000),
-        sample_count=PositiveInteger(4),
+def _sampling() -> SamplingRuntime:
+    return SamplingRuntime(
+        sample_count=4,
+        sample_period_ps=2_000,
+        sample_dimension=2,
     )
 
 
 def _produce_charge(
     photoelectrons: Photoelectrons,
     *,
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
     config: ChargeConfig,
     rng: CounterRng,
     floating_dtype: torch.dtype,
 ) -> Charge:
-    sampling_runtime = prepare_sampling(photoelectrons, config=sampling)
+    sampling_runtime = prepare_sampling(photoelectrons)
+    self_consistent = (
+        sampling_runtime.sample_count == sampling.sample_count
+        and sampling_runtime.sample_period_ps == sampling.sample_period_ps
+    )
+    if not self_consistent:
+        raise AssertionError("test source and sampling runtime diverged")
     runtime = prepare_charge(
         config,
         photoelectrons=photoelectrons,
@@ -148,12 +154,18 @@ def _produce_charge(
 def _produce_noise_waveform(
     photoelectrons: Photoelectrons,
     *,
-    sampling: SamplingConfig,
+    sampling: SamplingRuntime,
     config: NoiseWaveformConfig,
     rng: CounterRng,
     floating_dtype: torch.dtype,
 ) -> NoiseWaveform:
-    sampling_runtime = prepare_sampling(photoelectrons, config=sampling)
+    sampling_runtime = prepare_sampling(photoelectrons)
+    self_consistent = (
+        sampling_runtime.sample_count == sampling.sample_count
+        and sampling_runtime.sample_period_ps == sampling.sample_period_ps
+    )
+    if not self_consistent:
+        raise AssertionError("test source and sampling runtime diverged")
     runtime = prepare_noise_waveform(
         config,
         sampling=sampling_runtime,
@@ -283,7 +295,7 @@ class RngOwnershipMigrationTest(unittest.TestCase):
         prepared_name: str,
         invoke: Callable[[CounterRng], NoiseWaveform | Charge],
         source: Photoelectrons,
-        sampling: SamplingConfig,
+        sampling: SamplingRuntime,
         config: NoiseWaveformConfig | ChargeConfig,
         field_type: type[NoiseWaveform] | type[Charge],
         floating_dtype: torch.dtype,
@@ -682,9 +694,7 @@ class RngOwnershipMigrationTest(unittest.TestCase):
 
     def test_complete_public_config_inventory_has_exact_key_ownership(self) -> None:
         no_key_fields = {
-            SamplingConfig: ("sample_period_ps", "sample_count"),
             ReadoutConfig: (
-                "sampling",
                 "charge",
                 "pure_waveform",
                 "noise_waveform",

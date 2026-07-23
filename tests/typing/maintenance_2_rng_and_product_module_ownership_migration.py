@@ -6,7 +6,6 @@ import torch
 from tensor_core import (
     NonnegativeFloat,
     PositiveFloat,
-    PositiveInteger,
     RngKey,
     Threefry4x32,
 )
@@ -20,7 +19,7 @@ from tensor_dslab import (
     NoiseWaveform,
     NoiseWaveformConfig,
     Photoelectrons,
-    SamplingConfig,
+    SampleAxis,
     WhiteNoiseConfig,
 )
 from tensor_dslab.readout.charge.runtime.prepare import prepare_charge
@@ -34,14 +33,10 @@ from tensor_dslab.readout.noise_waveform.runtime.produce import (
 from tensor_dslab.readout.runtime.sampling import prepare_sampling
 
 
-sampling = SamplingConfig(
-    sample_period_ps=PositiveInteger(2_000),
-    sample_count=PositiveInteger(4),
-)
 axes = (
-    ExampleAxis(coordinates=("example-0",)),
-    ChannelAxis(coordinates=("channel-0",)),
-    sampling.build_axis(),
+    ExampleAxis(count=1),
+    ChannelAxis(labels=("channel-0",)),
+    SampleAxis(start=0, step=2_000, count=4),
 )
 source = Photoelectrons(
     tensor=torch.ones((1, 1, 4), dtype=torch.int64),
@@ -50,7 +45,7 @@ source = Photoelectrons(
 rng = Threefry4x32(seed=17)
 key = RngKey(namespace=0x54445331, stream=101)
 
-sampling_runtime = prepare_sampling(source, config=sampling)
+sampling_runtime = prepare_sampling(source)
 noise_runtime = prepare_noise_waveform(
     NoiseWaveformConfig(
         model=WhiteNoiseConfig(
