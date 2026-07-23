@@ -30,7 +30,10 @@ from tensor_dslab.readout.noise_waveform.runtime.prepare import (
 from tensor_dslab.readout.noise_waveform.runtime.produce import (
     produce_noise_waveform,
 )
-from tensor_dslab.readout.runtime.sampling import prepare_sampling
+from tensor_dslab.readout.runtime.sampling import (
+    SamplingRuntime,
+    prepare_sampling,
+)
 
 
 axes = (
@@ -46,6 +49,7 @@ rng = Threefry4x32(seed=17)
 key = RngKey(namespace=0x54445331, stream=101)
 
 sampling_runtime = prepare_sampling(source)
+assert_type(sampling_runtime, SamplingRuntime)
 noise_runtime = prepare_noise_waveform(
     NoiseWaveformConfig(
         model=WhiteNoiseConfig(

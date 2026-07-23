@@ -33,6 +33,8 @@ from tensor_dslab import (
 )
 
 
+assert_type(ReadoutConfig(), ReadoutConfig)
+
 photoelectrons = Photoelectrons(
     tensor=torch.ones((1, 1, 4), dtype=torch.int64),
     axes=(

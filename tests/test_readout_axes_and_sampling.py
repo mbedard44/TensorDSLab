@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from inspect import Parameter, signature
-from typing import cast
+from typing import cast, final
 import unittest
 from unittest.mock import PropertyMock, patch
 
@@ -72,9 +72,13 @@ class ReadoutAxesAndSamplingTest(unittest.TestCase):
         self.assertIs(type(examples.coordinate_at(1)), int)
         self.assertEqual(examples.coordinate_at(1), 1)
         self.assertIs(type(examples.index_of(1)), int)
+        self.assertIs(type(channels.coordinate_at(1)), str)
         self.assertEqual(channels.coordinate_at(1), "tile-1")
+        self.assertIs(type(channels.index_of("tile-1")), int)
         self.assertEqual(channels.index_of("tile-1"), 1)
+        self.assertIs(type(samples.coordinate_at(2)), int)
         self.assertEqual(samples.coordinate_at(2), 8_000)
+        self.assertIs(type(samples.index_of(8_000)), int)
         self.assertEqual(samples.index_of(8_000), 2)
 
         for axis, bad_index in ((examples, True), (channels, 2), (samples, -1)):
@@ -142,6 +146,21 @@ class ReadoutAxesAndSamplingTest(unittest.TestCase):
             with self.subTest(field=field):
                 with self.assertRaises(TypeError):
                     SampleAxis(**kwargs)
+        for invalid in (1.0, "1"):
+            with self.subTest(field="start", value=invalid):
+                with self.assertRaises(TypeError):
+                    SampleAxis(
+                        start=invalid,  # type: ignore[arg-type]
+                        step=1,
+                        count=2,
+                    )
+            with self.subTest(field="step", value=invalid):
+                with self.assertRaises(TypeError):
+                    SampleAxis(
+                        start=0,
+                        step=invalid,  # type: ignore[arg-type]
+                        count=2,
+                    )
 
         maximum = (1 << 63) - 1
         valid = SampleAxis(start=maximum - 2, step=1, count=2)
@@ -152,7 +171,22 @@ class ReadoutAxesAndSamplingTest(unittest.TestCase):
             SampleAxis(start=0, step=(maximum // 2) + 1, count=2)
 
     def test_axis_equality_and_hash_include_exact_type_and_state(self) -> None:
+        @final
         class OtherCountAxis(CountAxis):
+            __slots__ = ()
+
+            def _require(self) -> None:
+                return
+
+        @final
+        class OtherLabelAxis(LabelAxis):
+            __slots__ = ()
+
+            def _require(self) -> None:
+                return
+
+        @final
+        class OtherRegularAxis(RegularAxis):
             __slots__ = ()
 
             def _require(self) -> None:
@@ -168,17 +202,41 @@ class ReadoutAxesAndSamplingTest(unittest.TestCase):
             ChannelAxis(labels=("a", "b")),
             ChannelAxis(labels=("a", "b")),
         )
+        self.assertEqual(
+            hash(ChannelAxis(labels=("a", "b"))),
+            hash(ChannelAxis(labels=("a", "b"))),
+        )
         self.assertNotEqual(
             ChannelAxis(labels=("a", "b")),
-            ChannelAxis(labels=("b", "a")),
+            ChannelAxis(labels=("a", "c")),
+        )
+        self.assertNotEqual(
+            ChannelAxis(labels=("a", "b")),
+            OtherLabelAxis(labels=("a", "b")),
         )
         self.assertEqual(
             SampleAxis(start=0, step=2, count=3),
             SampleAxis(start=0, step=2, count=3),
         )
+        self.assertEqual(
+            hash(SampleAxis(start=0, step=2, count=3)),
+            hash(SampleAxis(start=0, step=2, count=3)),
+        )
         self.assertNotEqual(
             SampleAxis(start=0, step=2, count=3),
             SampleAxis(start=2, step=2, count=3),
+        )
+        self.assertNotEqual(
+            SampleAxis(start=0, step=2, count=3),
+            SampleAxis(start=0, step=3, count=3),
+        )
+        self.assertNotEqual(
+            SampleAxis(start=0, step=2, count=3),
+            SampleAxis(start=0, step=2, count=4),
+        )
+        self.assertNotEqual(
+            SampleAxis(start=0, step=2, count=3),
+            OtherRegularAxis(start=0, step=2, count=3),
         )
         self.assertNotEqual(
             ExampleAxis(count=2),
