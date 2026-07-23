@@ -400,9 +400,10 @@ or scientific contracts.
 
 Stage 8 still requires a new Design authority and a complete evidence rerun
 from scratch. At Maintenance 3 closeout, Maintenance 4 was the next required
-baseline. The accepted sequence now places Maintenance 5 next; any later
-Stage 8 restart must begin from its closed baseline. Maintenance 3 did not
-itself dispatch or complete Stage 8.
+baseline. Maintenance 4 and Maintenance 5 subsequently closed; the accepted
+sequence now places Maintenance 6 next. Any later Stage 8 restart must begin
+from the closed Maintenance 6 baseline. Maintenance 3 did not itself dispatch
+or complete Stage 8.
 
 ## Maintenance 4 Production Work Order
 
@@ -459,7 +460,7 @@ The old private paths are removed without shims. The work authorizes no
 renderer, IO/artifact surface, integration, workspace, optimization, Stage 8
 restart, compatibility claim, or push. This was the correct historical
 Maintenance 4 closeout boundary; the accepted sequence now places Maintenance
-5 before any later Stage 8 authority.
+5 and then Maintenance 6 before any later Stage 8 authority.
 
 ### Later Integration And Artifact Stages
 
@@ -526,37 +527,49 @@ contract, supported-device boundary, persistence/integration surface, or
 Stage 8 state. It authorizes no Pint implementation, IO/artifact work,
 renderer, optimization, benchmark, release, compatibility claim, or push.
 Any Stage 8 restart requires a separately accepted new Design authority from
-this closed Maintenance 5 baseline.
+the Maintenance 6 baseline after that maintenance closes; Maintenance 5 itself
+dispatched no Pint or Stage 8 work.
 
-## Candidate Pint Physical Configuration Work
+## Maintenance 6 Physical-Configuration Migration
 
-### [Candidate Pint Physical Configuration Boundary](proposed_pint_physical_configuration_boundary.md)
+### [Maintenance 6 Pint Physical Configuration Boundary](maintenance_6_pint_physical_configuration_boundary.md)
 
-Status: **Design draft / Undispatched**.
+Status: **Design-complete / Undispatched**.
 
-This nonoperative candidate records the intended package-local Pint boundary
-for physical configuration after TensorDSLab completes Maintenance 5 against
-the already-published TensorCore `0.13.0` compact-axis and generic-Scalar
-model. Public physical Config fields
-accept scalar Pint quantities with unit-neutral names, copy them into one
-private TensorDSLab registry, and canonicalize them to documented units.
-Product preparation extracts each active required canonical magnitude exactly
-once into unit-suffixed Runtime execution facts. Producers, validators, tensor
-fields, collections, RNG mechanics, and tensor kernels remain unit-free.
-
-The candidate also records TensorDSLab's physical convenience surface over a
-compact integer-picosecond `SampleAxis`: generic axis state remains integer
-`start`, `step`, and `count`, while `start_time`, `sample_period`, `time_at`,
-and exclusive `stop_time` return fresh Pint quantities. It assumes a prior
-retirement of `SamplingConfig` and source-derived sampling preparation.
-
-No exact Pint release, Pint implementation baseline, Maintenance number,
-implementation branch, or production authority is selected. Exact TensorCore
+Maintenance 6 is the selected next package gate from exact clean Maintenance 5
+Design-closeout baseline
+`021694b9479d02546405f6a815aedf21c9c831a4`. It retains exact TensorCore
 `0.13.0` commit
-`202d8b1bc6259b8453d3d377570417f2480d782b` is available, but the document
-must be refrozen after Maintenance 5 is Merged / Closed. It authorizes no
-production, tests, dependency change, IO, artifacts, integration, Stage 8
-work, compatibility claim, or push.
+`202d8b1bc6259b8453d3d377570417f2480d782b` and selects exact Pint
+`0.25.3`.
+
+The migration moves 26 physical fields across the existing 22 Config classes
+to copied canonical scalar `pint.Quantity` values with unit-neutral names. One
+private registry and one canonicalizer own recognition, conversion, defensive
+copying, and exactly one TensorCore `Scalar.require(...)` normalization.
+Preparation extracts each active magnitude once into plain unit-suffixed
+Runtime facts. Producers, validators, product fields, collections, RNG
+mechanics, and tensor kernels remain unit-free.
+
+The stage also gives compact integer-picosecond `SampleAxis` one
+`from_period(...)` constructor and four fresh Pint-valued accessors, while
+retiring the redundant integer `start_ps`, `sample_period_ps`, and `stop_ps`
+aliases. Its exact one-ULP integerization rule accepts conversion noise such as
+`2 ns -> 2000.0000000000002 ps` without introducing general Config rounding.
+
+A bounded TensorCore `0.13.0` golden-path cleanup removes duplicate admission
+checks inside private child preparers/effect executors and makes raw pulse,
+PSD, jitter, afterpulse, and ADC preparation consume one-time extracted plain
+values. Public ingress validation, scientific checks, exact model dispatch,
+generated-product validation, axes identity, storage freshness, and all
+scientific/RNG/result behavior remain.
+
+The work order freezes exact dependency artifacts, exports, Config census,
+Runtime rename map, production/test/lifecycle allowlists, protected bytes,
+local and separate full-A100 role evidence, and finite loop budgets.
+Implementation remains undispatched; this Design work authorizes no
+production, IO/artifact, integration, Stage 8, performance, compatibility,
+release, push, or sibling-package action.
 
 ## Expected Stage Discipline
 

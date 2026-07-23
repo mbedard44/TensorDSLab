@@ -15,10 +15,9 @@ clustering, TensorML training, durable IO, or campaign orchestration.
 ## Readout Foundation
 
 The package provides the post-binned readout foundation introduced against
-TensorCore `0.7` and extended through Maintenance 4 on exact TensorCore
-`0.9.0`. The user-authorized
+TensorCore `0.7`, reorganized through Maintenance 4, and migrated by the closed
 [Maintenance 5 migration](docs/implementation/maintenance_5_tensorcore_0_13_compact_axes_and_sampling.md)
-adopts exact published TensorCore `0.13.0` commit
+to exact published TensorCore `0.13.0` commit
 `202d8b1bc6259b8453d3d377570417f2480d782b` and fixes the current target
 surface:
 
@@ -106,6 +105,21 @@ replacement: there is no legacy constructor, alias, or dual axis model.
 Example coordinates are local ordinals and do not claim durable event identity;
 channel labels retain detector identity. The complete readout boundary—not
 `SampleAxis` construction generally—requires example-local `start == 0`.
+
+[Maintenance 6 Pint Physical Configuration Boundary](docs/implementation/maintenance_6_pint_physical_configuration_boundary.md)
+is **Design-complete / Undispatched**. Its selected API lets collaborators
+configure physical values with scalar Pint quantities while preserving a
+unit-free execution core:
+
+```text
+Pint Quantity -> Config -> prepare_* -> plain Runtime -> produce_* -> validate_*
+```
+
+The target retains exact TensorCore `0.13.0`, uses its public
+`Scalar.require(...)` normalization instead of duplicating numeric rules, and
+keeps quantities out of tensors, RNG addressing, Runtime records, producers,
+validators, and collections. The currently installed Config constructors
+remain unchanged until that maintenance is separately dispatched and merged.
 
 The historical [TensorCore consumer proposal](docs/implementation/proposed_tensorcore_counter_rng_and_distributions.md)
 is now fulfilled by published TensorCore `0.9.0` commit

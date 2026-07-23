@@ -17,14 +17,14 @@ The current identity and maturity are:
 
 ```text
 Project/display name: TensorDSLab
-Python import: tensor_dslab (accepted on main through Maintenance 4)
+Python import: tensor_dslab (accepted on main through Maintenance 5)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
-Package maturity: Maintenance 4 Merged / Closed
-Next production gate: Maintenance 5 TensorCore 0.13 compact axes and
-source-derived sampling; lifecycle is recorded in its work order and index
+Package maturity: Maintenance 5 Merged / Closed
+Next production gate: Maintenance 6 Pint physical configuration boundary;
+Design-complete / Undispatched
 Stage 8: separately stopped; any restart requires a new Design authority after
-Maintenance 5
+Maintenance 6
 ```
 
 Stage 1 is Design-complete, and Stage 2 is Merged / Closed on `main` at
@@ -92,6 +92,17 @@ produce, and validate actions without adding a public surface. Separate fresh
 Validation and Review full-A100 source/archive runs cleared the exact final
 bytes. The first Stage 8 attempt remains stopped evidence and is not executable
 authority.
+
+Maintenance 5 TensorCore 0.13 Compact Axes And Sampling is **Merged / Closed**
+through exact Review-cleared supplemental candidate
+`81ad2f52fe4a1966e5b3a0ceb5063138e42e731f` and Design closeout
+`021694b9479d02546405f6a815aedf21c9c831a4`. It adopts exact TensorCore
+`0.13.0`, installs compact count/label/regular semantic axes, removes
+`SamplingConfig`, and derives execution sampling once from the source
+`SampleAxis`. Maintenance 6 is the next Design-complete but undispatched
+boundary: collaborators configure physical values with canonical copied Pint
+quantities, while preparation extracts plain execution values and production
+and validation remain unit-free.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency
@@ -281,10 +292,10 @@ as `TensorDSLab`; keep semantic subpackages directly below the import root.
 Do not create placeholder modules to reserve architecture. Add a module only
 when there is a real concept, behavior, or contract to house.
 
-This product-centered tree is the accepted Maintenance 5 target. Its product
-and runtime structure is the merged Maintenance 4 implementation; Maintenance
-5 removes only the redundant public `common/sampling.py` policy owner while
-retaining the private source-derived sampling runtime. It combines the public
+This product-centered tree is the implemented Maintenance 5 baseline. Its
+product and runtime structure is the merged Maintenance 4 implementation;
+Maintenance 5 removes only the redundant public `common/sampling.py` policy
+owner while retaining the private source-derived sampling runtime. It combines the public
 ownership established by Maintenance 2 and Stage 7 with non-exported product
 runtime actions. Maintenance 2 is Merged / Closed
 through exact candidate
@@ -315,8 +326,8 @@ validator. There is no global `configs/`, `fields.py`, `builders.py`, generic
 Stage 2 used TensorCore `0.6` and Stage 3 selected exact TensorCore `0.7.0`
 commit `b454d738f6385ce6489d85492a618a3dab139bb6`; both remain historical
 evidence only. Maintenance 2 selected exact TensorCore `0.9.0` commit
-`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. User-authorized Maintenance
-5 targets published TensorCore `0.13.0` commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. Closed Maintenance 5 adopts
+published TensorCore `0.13.0` commit
 `202d8b1bc6259b8453d3d377570417f2480d782b`. Every selection and fixed
 TensorDSLab consumer probe is exact-baseline package evidence, not a broad
 compatibility claim.
@@ -344,6 +355,13 @@ domain products, scientific configuration, artifact format, or IO policy, and
 it has no `0.6` ID/layout/metadata model, generic selection/movement API,
 output-buffer/workspace API, or lifecycle service. Maintenance 5 adopts no
 table or artifact surface.
+
+Maintenance 6 uses TensorCore's public `Scalar.require(...)` contract exactly
+once per canonicalized physical Config field. TensorCore remains independent
+of Pint and owns no registry, unit, quantity, canonical physical dimension, or
+TensorDSLab Config policy. Do not wrap canonical magnitudes in Scalar objects;
+store fresh Pint quantities at the public Config boundary and plain built-in
+numbers in Runtime records.
 
 The exact TensorCore `0.9.0` dependency selected for Maintenance 2 exposed
 public `RngKey`, `CounterRng`, `Threefry4x32`, `logical_positions`, and
@@ -421,8 +439,10 @@ than by a loose axis-name constant.
 The complete Photoelectrons/readout boundary requires `start == 0`, while the
 semantic axis may represent a valid nonzero-start regular subgrid. Private
 sampling preparation derives numeric execution facts once from this exact
-source axis. There is no duplicate `SamplingConfig`, timestamp parsing, unit
-string, or Pint value in Maintenance 5.
+source axis. There is no duplicate `SamplingConfig` or timestamp parsing.
+Maintenance 6 adds package-owned Pint conveniences at Config and SampleAxis
+boundaries only; axes remain canonical integers and Runtime/tensor execution
+remains unit-free.
 
 Every readout field has exactly one example, channel, and sample axis, in any
 order. The tuple order is tensor dimension order and therefore also defines
@@ -581,8 +601,12 @@ prerequisites plus ProductRuntime (+ RNG) -> produce_<product> -> Product
 Product plus minimal prepared facts -> validate_<product> -> None
 ```
 
-Preparation interprets config, converts units, derives scientific operands,
-proves bounds, and materializes required device constants. Production performs
+Preparation interprets already-validated config, extracts canonical physical
+magnitudes, derives scientific operands, proves contextual bounds, and
+materializes required device constants. Under Maintenance 6, unit recognition,
+conversion, canonical copying, and scalar-domain validation happen once in the
+public Config constructor; preparation never carries Pint into Runtime.
+Production performs
 tensor execution, accepted RNG requests, narrow dynamic guards, and exactly
 one semantic-field construction; it imports no Config or validator. Validation
 performs the completed product's deep publication scan without repair,
@@ -942,8 +966,8 @@ typed path:
 - the future TensorG4DS-to-TensorDSLab semantic bridge and its provenance,
   coordinate, unit, dtype, axes, and device contract;
 - user configs;
-- construction of constrained scalar wrappers for meaningful numeric config or
-  artifact values;
+- normalization through TensorCore constrained-scalar requirements for
+  meaningful numeric config or artifact values;
 - construction of detector, readout, reconstruction, cache, table, array, and
   tensor records;
 - construction of TensorCore axes, fields, and collections;
@@ -961,9 +985,12 @@ only tensor/RNG execution and correctness-critical dynamic guards; explicit
 product validation owns the completed-result deep scan before any descendant
 or collection publication consumes it.
 
-Use scalar wrappers at config, source, and artifact boundaries where
-constraints are meaningful. Numeric wrappers should reject bool. Plain `bool`
-is appropriate for boolean fields.
+Use TensorCore scalar requirements at config, source, and artifact boundaries
+where numeric constraints are meaningful. Store a Scalar wrapper only when
+that wrapper is itself the accepted public representation; Maintenance 6
+instead stores canonical Pint quantities and plain Runtime magnitudes. Numeric
+requirements should reject bool. Plain `bool` is appropriate for boolean
+fields.
 
 Prefer these migration directions as real code is introduced:
 
@@ -975,6 +1002,18 @@ Prefer these migration directions as real code is introduced:
 - semantic leaf construction remains cheap while product-owned runtime
   validators own value-domain scans and `simulate_readout(...)` invokes each
   validator immediately after production.
+
+For the accepted Maintenance 6 boundary, whole-request
+`prepare_readout(...)` owns public ingress, request closure, dtype/device, RNG
+capability, and key admission. Private child preparers do not repeat those
+exact-type admission checks; they own contextual extraction, exact model
+dispatch, scientific/representability checks, and Runtime construction.
+Private effect executors may trust exact Runtime and primitive types reachable
+only through that typed path, but must retain count, envelope, address,
+allocation, and scientific-law guards. Generic TensorCore relationship
+helpers should be used where their contract matches exactly, not where
+TensorDSLab requires arbitrary axis order, exact source-axis object reuse, an
+absolute dtype domain, or storage freshness.
 
 Do not add runtime policing for callers who deliberately leave the public API.
 Unsupported final-leaf subclassing, class mutation, constructor bypass,
@@ -1047,6 +1086,19 @@ Good tests should:
   source-derived sampling, complete-input zero start, `SamplingConfig` and
   `common.sampling` absence, and retirement of the off-path
   `field(TensorField)` exception assertion;
+- for Maintenance 6, prove exact Pint `0.25.3` identity, one private registry,
+  two deliberate quantity-construction exports, canonical defensive copies,
+  one TensorCore `Scalar.require(...)` normalization per physical field,
+  complete physical/dimensionless Config coverage, and explicit unhashability
+  of every public Config;
+- for Maintenance 6, prove `SampleAxis` remains integer-backed while its
+  constructor/access conveniences return fresh quantities, Runtime records
+  recursively contain no Config/Pint object, each active physical operand is
+  extracted exactly once, and producers and validators perform no unit work;
+- for Maintenance 6, kill mutations that restore duplicate private admission
+  guards or Config-bearing numerical helpers, while preserving scientific,
+  relationship, axes-identity, storage, dtype/device, and generated-product
+  postcondition checks;
 - prove intrinsic leaf dtype/structure checks separately from explicit deep
   scientific value validation;
 - prove `ReadoutCollection` accepts exactly nonempty unordered recognized

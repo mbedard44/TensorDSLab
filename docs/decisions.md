@@ -61,14 +61,15 @@ boundary against both the clean source checkout and an independently archived
 pin. TensorDSLab will not fork TensorCore or reproduce its private mechanics.
 
 Maintenance 2 later installed exact TensorCore `0.9.0` for public RNG and
-same-dtype behavior. User-authorized Maintenance 5 supersedes the installed
-dependency target with published TensorCore `0.13.0` exact commit
+same-dtype behavior. Closed Maintenance 5 supersedes that dependency with
+published TensorCore `0.13.0` exact commit
 `202d8b1bc6259b8453d3d377570417f2480d782b`. The later version retains the
 accepted tensor roots and RNG surface while adding compact axis
 representations, generic `Scalar`, table roots, `TensorArtifact`, and a
 golden-path structural boundary. Maintenance 5 consumes the compact axes and
 preserved generic mechanics only; it adds no TensorDSLab table, artifact/IO,
-or Pint surface.
+or Pint surface. Maintenance 6 retains the exact pin and consumes only
+`Scalar.require(...)` at TensorDSLab's package-owned quantity boundary.
 
 ### Exact Types Replace Loose Semantic Namespaces
 
@@ -94,7 +95,7 @@ Every readout field has exactly one `ExampleAxis`, one `ChannelAxis`, and one
 code locates axes by exact type rather than fixed dimension. Dimension-
 preserving products reuse the exact truth axes tuple and exact axis objects.
 
-Maintenance 5 selects:
+Maintenance 5 implements:
 
 - `ExampleAxis(CountAxis)` with a nonempty zero-based local ordinal range;
 - `ChannelAxis(LabelAxis)` with nonempty unique string labels; and
@@ -111,6 +112,10 @@ semantic sample axis may represent a valid nonzero-start subgrid.
 sample proposal, and `SampleGrid` are retired without shims. Hot paths and
 positional RNG use tensor positions and plain prepared integers, not semantic
 coordinate values.
+
+Maintenance 6 leaves that storage and hot-path contract unchanged. It adds a
+Pint-aware `SampleAxis.from_period(...)` conversion and fresh physical-time
+accessors without storing a Quantity or unit on the axis.
 
 ### Six Typed Fields Define Readout Products
 
@@ -766,6 +771,41 @@ renderer, Stage 8 measurement, optimization, compatibility shim, release, or
 push. This decision does not itself dispatch production; the exact execution
 lifecycle is recorded only in the work order and implementation index.
 
+### Maintenance 6 Makes Pint A Public Boundary, Not An Execution Substrate
+
+The user-selected
+[Maintenance 6 work order](implementation/maintenance_6_pint_physical_configuration_boundary.md)
+accepts exact Pint `0.25.3` for public physical Config fields while retaining
+exact TensorCore `0.13.0` commit
+`202d8b1bc6259b8453d3d377570417f2480d782b`.
+
+TensorDSLab owns one private registry and exports only `quantity(...)` and
+`quantities(...)`. A physical Config accepts a compatible scalar Quantity,
+copies it into the package registry in a documented canonical unit, and calls
+one TensorCore `Scalar.require(...)` rule to normalize its scalar magnitude.
+Public physical names become unit-neutral. Every Config is explicitly
+unhashable.
+
+Preparation extracts each active physical magnitude once into a plain,
+unit-suffixed Runtime fact. Runtime records, producers, validators, tensors,
+collections, and RNG addressing remain unit-free. `SampleAxis` remains a
+compact integer-picosecond `RegularAxis`; it gains one bounded Pint-aware
+constructor and four fresh quantity accessors without storing a unit or
+Quantity.
+
+The same maintenance accepts a narrow golden-path cleanup: public Config and
+whole-request preparation retain admission responsibility, while private
+child preparers and Charge executors stop duplicating exact Config/Runtime,
+primitive dtype/device admission already guaranteed by the typed path.
+Scientific laws, exact model dispatch, tensor relationships, axes identity,
+storage freshness, absolute product dtype domains, allocation/address/envelope
+limits, and generated-product validation remain.
+
+The decision is Design-complete but does not dispatch production. It
+authorizes no TensorCore edit, scientific equation or RNG change, IO/artifact
+surface, integration, Stage 8 work, optimization, compatibility shim, release,
+or push.
+
 ### Completed Stochastic Literals Are Numerical-Stack Qualified
 
 Maintenance 2's completed Gaussian, Poisson, binomial, noise, and Charge
@@ -787,7 +827,7 @@ scientific equation, production code, TensorCore dependency, or historical
 literal. The first Stage 8 executable correctly stopped before accepted
 measurement when its work order over-applied the macOS literals on Della. That
 authority and executable input remain immutable stopped evidence; a later
-Stage 8 restart requires a new authority after Maintenance 5.
+Stage 8 restart requires a new authority after Maintenance 6.
 
 ## Superseded
 

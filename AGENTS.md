@@ -257,17 +257,29 @@ full-A100 source/archive allocations. It changes no public facade, scientific
 equation, stochastic address, result law, dependency, or supported device
 boundary, and it makes no performance or Stage 8 claim.
 
-Maintenance 5 TensorCore 0.13 Compact Axes And Sampling is
-the user-authorized next migration under
+Maintenance 5 TensorCore 0.13 Compact Axes And Sampling is **Merged / Closed**
+through exact Review-cleared supplemental candidate
+`81ad2f52fe4a1966e5b3a0ceb5063138e42e731f` and Design closeout
+`021694b9479d02546405f6a815aedf21c9c831a4` under
 `docs/implementation/maintenance_5_tensorcore_0_13_compact_axes_and_sampling.md`.
-Its exact execution lifecycle is recorded only in that work order and
-`docs/implementation/index.md`.
-It targets exact published TensorCore `0.13.0` commit
+It adopts exact published TensorCore `0.13.0` commit
 `202d8b1bc6259b8453d3d377570417f2480d782b`, compact
 `CountAxis`/`LabelAxis`/`RegularAxis` representation roots with final
 TensorDSLab semantic leaves, and sampling derived once from the source
 `SampleAxis`. It cleanly removes `SamplingConfig` without introducing Pint,
 IO/artifacts, scientific changes, or a Stage 8 claim.
+
+Maintenance 6 Pint Physical Configuration Boundary is the
+**Design-complete / Undispatched** next package gate under
+`docs/implementation/maintenance_6_pint_physical_configuration_boundary.md`.
+It retains exact TensorCore `0.13.0`, selects exact Pint `0.25.3`, moves public
+physical Config values to copied canonical scalar quantities, and extracts
+plain unit-suffixed execution facts exactly once during preparation. Runtime
+records, producers, validators, tensor payloads, collections, RNG addressing,
+and scientific equations remain Pint-free. Its bounded TensorCore
+golden-path cleanup removes duplicate private admission guards while
+preserving public ingress, scientific, relationship, storage, and generated-
+product checks. Production implementation remains undispatched.
 
 The first Stage 8 real-CUDA attempt correctly stopped before any accepted
 measurement when its protected-suite gate over-applied those macOS literals to
@@ -275,7 +287,7 @@ the frozen Della Linux/x86_64 stack. Exact Stage 8 authority
 `84802c1f2c89a6a5deeec305ce7bb2cd9ad2e829` and executable input
 `728840bf2858c861104d5f7bb3cdbb4e3e1361b5` remain immutable stopped evidence
 and are not executable authority. Stage 8 requires a new Design authority after
-Maintenance 5 before any rerun. Later GPU
+Maintenance 6 before any rerun. Later GPU
 characterization and integration production remain undispatched.
 
 If implementation reveals a concrete contradiction in the accepted design, stop
@@ -297,9 +309,9 @@ The checkout root is the project folder. The `tensor_dslab/` directory is the
 Python import package. Do not create a
 flat TitleCase Python package that imports as `TensorDSLab`.
 
-The accepted Maintenance 5 target uses this product-centered readout tree. It
-retains Maintenance 4's product/runtime structure while removing the redundant
-public sampling-config module:
+The implemented Maintenance 5 baseline uses this product-centered readout
+tree. It retains Maintenance 4's product/runtime structure while removing the
+redundant public sampling-config module:
 
 ```text
 tensor_dslab/
@@ -349,9 +361,10 @@ tensor_dslab/
       runtime/{prepare.py,produce.py,validate.py}
 ```
 
-This is the bounded Maintenance 5 target, not permission to create additional
-placeholders. The current clean baseline still contains
-`common/sampling.py` until the authorized migration is implemented.
+This is the implemented Maintenance 5 package tree, not permission to create
+additional placeholders. Maintenance 6 may add only the accepted
+`common/units.py` behavior and the exact allowlisted physical-config/runtime
+changes in its work order; it does not reorganize this product tree.
 Maintenance 2 realized the preceding product/module ownership
 migration without compatibility shims, and Stage 7 completed
 `readout/simulation.py`; their private `_produce.py`, `*Plan`,
@@ -372,7 +385,10 @@ and `readout.simulation` remains the thin owner of the unchanged public
 `simulate_readout(...)` signature, topological action sequence, exact
 retention, and final collection construction. Shared semantic axes remain in
 `common`; Maintenance 5 makes the source `SampleAxis` the sole sampling
-authority and removes `SamplingConfig`. Charge-specific multinomial/category
+authority and removes `SamplingConfig`. Maintenance 6 keeps those compact
+integer axes, adds deliberate Pint construction/access conveniences at the
+TensorDSLab boundary, and never sends quantities into `SamplingRuntime` or
+tensor execution. Charge-specific multinomial/category
 orchestration, count-domain helpers, and scientific effects remain private
 under `charge/runtime/effects/`.
 
@@ -391,6 +407,19 @@ or generic graph. Extract genuinely identical checks or preparation mechanics
 into the narrowest private owner, while keeping product-specific semantics and
 errors explicit; do not create broad `utils.py` or `helpers.py` modules merely
 to make signatures look uniform.
+
+Under the accepted Maintenance 6 target, Config construction owns public
+quantity recognition, dimension conversion, canonical copying, and scalar
+domain validation. Whole-request `prepare_readout(...)` owns public ingress,
+closure, dtype, device, RNG capability, and stochastic-key admission. Private
+child preparers trust that typed admission and own only contextual extraction,
+model dispatch, scientific/representation checks, and Runtime construction.
+Producers consume typed prerequisites plus plain Runtime facts and perform
+tensor/RNG execution only. Validators remain immediate product and
+relationship postconditions. Do not duplicate parent admission checks inside
+private child actions, and do not remove scientific, axes-identity, freshness,
+device/dtype, or generated-product checks merely because TensorCore supplies
+generic roots.
 
 Keep import direction acyclic: TensorCore, common, shared readout requirements,
 product configs/fields, the source-bound sampling runtime, product runtime
@@ -502,7 +531,7 @@ when there is a real TensorDSLab concept, behavior, or contract to house.
 
 ## TensorCore Boundary
 
-Maintenance 5 targets exact published TensorCore `0.13.0` commit
+Maintenance 5 adopts exact published TensorCore `0.13.0` commit
 `202d8b1bc6259b8453d3d377570417f2480d782b` and these semantic roots:
 
 ```text
@@ -518,7 +547,11 @@ Production imports come from the public `tensor_core` package root. TensorCore
 owns universal representation validation, constrained scalars, exact-type
 lookup, generic relationship helpers, generic table roots, and the
 `TensorArtifact` extension point. Maintenance 5 adopts no table, artifact, IO,
-or Pint surface. TensorCore has no retired `0.6` ID/layout/metadata model,
+or Pint surface. Maintenance 6 consumes TensorCore's public
+`Scalar.require(...)` normalization at the package-owned quantity boundary,
+but Pint recognition, dimensions, canonical units, registry ownership, and
+physical policy remain entirely TensorDSLab-owned. TensorCore has no retired
+`0.6` ID/layout/metadata model,
 generic selection or movement API, output-buffer/workspace API, or lifecycle
 service. TensorDSLab must not recreate retired IDs, layouts, constants,
 sidecars, compatibility shims, or generic operations.
@@ -559,7 +592,7 @@ Numeric kernels use tensor indices plus one source-derived `SamplingRuntime`;
 they do not materialize or parse semantic coordinates. There is no
 `SamplingConfig`, `ExampleId`, `ChannelId`, `TensorAxisId`, `TensorFieldId`,
 `IdSequence`, `TensorLayout`, `SampleGrid`, or `DigitizedWaveformSpec` in the
-Maintenance 5 target.
+implemented Maintenance 5 baseline.
 
 Every field contains exactly one example, channel, and sample axis in any
 order, uses `torch.strided`, and reuses the exact source axis tuple for

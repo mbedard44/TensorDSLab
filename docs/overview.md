@@ -45,7 +45,7 @@ closeout. It corrects only the numerical-stack applicability of Maintenance
 2's completed stochastic literals and changes no production, dependency,
 RNG, or scientific contract. The first Stage 8 executable correctly stopped
 before accepted measurement on that test-contract conflict; it cannot resume
-without a new authority after Maintenance 5. Later GPU
+without a new authority after Maintenance 6. Later GPU
 characterization and integration remain Design targets.
 
 [Maintenance 4](implementation/maintenance_4_runtime_action_ownership.md) is
@@ -59,14 +59,24 @@ local source/archive evidence and separate fresh Validation and Review
 full-A100 source/archive allocations cleared the final bytes.
 
 [Maintenance 5](implementation/maintenance_5_tensorcore_0_13_compact_axes_and_sampling.md)
-is the user-authorized next migration; its exact lifecycle is recorded in that
-work order and the implementation index. It atomically targets published
+is **Merged / Closed** through exact Review-cleared supplemental candidate
+`81ad2f52fe4a1966e5b3a0ceb5063138e42e731f` and Design closeout
+`021694b9479d02546405f6a815aedf21c9c831a4`. It atomically adopts published
 TensorCore `0.13.0` exact
 commit `202d8b1bc6259b8453d3d377570417f2480d782b`, compact
 count/label/regular axis roots, and source-derived sampling. It removes
 `SamplingConfig` and `ReadoutConfig.sampling` without changing readout science,
-RNG addressing, product execution, or `simulate_readout(...)`. The migration
-starts from the closed Maintenance 4 production baseline.
+RNG addressing, product execution, or `simulate_readout(...)`.
+
+[Maintenance 6](implementation/maintenance_6_pint_physical_configuration_boundary.md)
+is **Design-complete / Undispatched** from that exact clean closeout. It
+selects Pint `0.25.3`, migrates public physical Config fields to copied
+canonical scalar quantities, and extracts plain execution values once during
+preparation. It deliberately keeps Runtime records, producers, validators,
+tensors, RNG mechanics, and scientific equations unit-free. Its bounded
+action cleanup uses TensorCore `0.13.0` where the generic contract matches and
+retains package-owned scientific, axes-identity, storage, and generated-result
+checks where it does not.
 
 [Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
 Closed through exact implementation candidate
@@ -130,7 +140,8 @@ field. Native input loading, detector-window construction, and PE binning stay
 in the future TensorG4DS bridge. `Photoelectrons` therefore has no config and
 no local producer.
 
-Exact classes carry semantic meaning. Under the accepted Maintenance 5 target:
+Exact classes carry semantic meaning. Under the implemented Maintenance 5
+baseline:
 
 - `ExampleAxis` directly subclasses `CountAxis` and represents nonempty
   zero-based local ordinals;
@@ -296,7 +307,7 @@ input and owns only its field and ingress validator. `readout.simulation`
 keeps the one public orchestration function; `readout.runtime.prepare`
 composes the complete private Runtime closure. Generic RNG and distribution
 mechanics entered through the selected TensorCore `0.9.0` dependency and are
-preserved by the exact `0.13.0` Maintenance 5 target, while config-owned
+preserved by the exact `0.13.0` Maintenance 5 baseline, while config-owned
 `RngKey` values select TensorDSLab stochastic roles.
 
 Privacy is export-driven. Runtime paths remain importable Python
@@ -364,8 +375,11 @@ retain their original private paths as historical evidence.
   `b3c7c907004741ba67b8b92a54bbdc8c85216dda`; public API, science,
   dependency, and RNG behavior remain unchanged.
 - [Maintenance 5 Work Order](implementation/maintenance_5_tensorcore_0_13_compact_axes_and_sampling.md):
-  user-authorized TensorCore `0.13.0`, compact-axis, and source-derived
+  Merged / Closed TensorCore `0.13.0`, compact-axis, and source-derived
   sampling migration.
+- [Maintenance 6 Work Order](implementation/maintenance_6_pint_physical_configuration_boundary.md):
+  Design-complete / Undispatched Pint physical-configuration boundary and
+  TensorCore-aware preparation cleanup.
 - [Stage 7 Work Order](implementation/stage_7_public_readout_orchestration.md):
   Merged / Closed public request planning, whole-closure
   preparation, execute-once orchestration, and exact-retention contract.

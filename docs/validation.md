@@ -322,16 +322,16 @@ names in live documents, accidental placeholder files, and consistency among
 architecture, design, decisions, parity, validation, and implementation-stage
 records.
 
-## Maintenance 5 Compact-Axis And Sampling Gate
+## Closed Maintenance 5 Compact-Axis And Sampling Evidence
 
-The user-authorized
+The closed
 [Maintenance 5 work order](implementation/maintenance_5_tensorcore_0_13_compact_axes_and_sampling.md)
-targets exact published TensorCore `0.13.0` commit
+adopts exact published TensorCore `0.13.0` commit
 `202d8b1bc6259b8453d3d377570417f2480d782b`. The explicitly labeled
 Historical Stage 3 sections below preserve closed string-axis and
 `SamplingConfig` evidence; they do not define the Maintenance 5 target.
 
-Maintenance 5 Validation and Review must independently prove:
+Maintenance 5 Validation and Review independently proved:
 
 - exact dependency commit, parent, tree, version, 30 root exports, 14 installed
   files, direct Git pin, source/archive byte identity, and canonical archive;
@@ -367,10 +367,61 @@ coordinates for Channel, concrete typed axis/field lookup, new constructors,
 retired imports/keywords, and source-derived preparation. Runtime tests own
 exact `bool` rejection because Python typing treats `bool` as `int`.
 
-Implementation runs full local source/archive and static gates. Validation and
-Review each use a separate fresh full-A100 allocation across supported
+Implementation ran full local source/archive and static gates. Validation and
+Review each used a separate fresh full-A100 allocation across supported
 PyTorch `2.11` and `2.12`, with no conditional CUDA skips. This evidence is
 functional dependency/axis correctness, not Stage 8 performance evidence.
+
+## Maintenance 6 Pint And Runtime-Boundary Gate
+
+The
+[Maintenance 6 work order](implementation/maintenance_6_pint_physical_configuration_boundary.md)
+is **Design-complete / Undispatched** against exact clean Maintenance 5
+Design closeout `021694b9479d02546405f6a815aedf21c9c831a4`. Validation and
+independent Review must prove:
+
+- exact Pint `0.25.3` wheel and source identities, dependency resolution,
+  isolated source/artifact imports, and retained exact TensorCore `0.13.0`
+  commit;
+- one private registry, no application-registry mutation, and exactly the two
+  new `quantity(...)`/`quantities(...)` facade exports;
+- exact scalar magnitude/container acceptance, parser and dimensionality error
+  translation, external-registry canonical copying, absence of Pint arrays,
+  and one TensorCore `Scalar.require(...)` normalization per physical field;
+- all 26 physical Config fields, all 35 unchanged nonphysical fields, exact
+  local/cross-field rules, and explicit unhashability of all 22 Configs;
+- unit-neutral public physical names and complete absence of compatibility
+  aliases for retired suffix-bearing public fields;
+- compact integer SampleAxis state, the bounded one-ULP period conversion, and
+  exact built-in-int physical accessor magnitudes—including legal values above
+  `2**53`—without storing a Quantity or unit on the axis;
+- direct integer source-derived `SamplingRuntime` preparation;
+- one-time extraction of every active canonical magnitude into plain
+  unit-suffixed Runtime facts, with no Config or Pint object recursively
+  retained by a Runtime;
+- pure numerical helpers receiving plain operands rather than Configs and no
+  producer or validator performing unit conversion or Config interpretation;
+- removal of only duplicate child-preparer and private Charge
+  Runtime/primitive admission policing already owned by the public typed path;
+- retention of exact model dispatch, scientific laws, tensor relationships,
+  representability, count/envelope/address/allocation limits, axes identity,
+  storage freshness, absolute dtype/device rules, and generated-product
+  validation;
+- exact canonical-operand continuity for deterministic/stochastic products,
+  explicit physical-equivalence-versus-binary-equality cases, unchanged RNG
+  calls, and exact-zero no-draw behavior; and
+- complete local source/artifact, Pyright, mutation, import/privacy, and
+  separate fresh full-A100 Validation/Review matrices across both supported
+  PyTorch minors.
+
+TensorCore helpers must be used only when their semantics match the package
+requirement. `require_axis_signature(...)` cannot replace the unordered
+readout-axis set, `require_same_axes(...)` cannot replace exact source-axis
+tuple identity, and no TensorCore helper establishes TensorDSLab storage
+freshness or scientific value domains.
+
+This gate is functional/API correctness evidence, not Stage 8 performance,
+fusion, allocation, persistence, integration, or compatibility evidence.
 
 ## Governance Adoption Checks
 
@@ -696,6 +747,11 @@ once. Runtime/effect `__init__.py` modules import and export nothing; privacy
 tests inspect facades and `__all__` rather than assuming Python prevents deep
 imports or parent-package attributes.
 
+Maintenance 6 adds only `quantity` and `quantities` to
+`tensor_dslab.common` and the package root. The readout facade and every
+product facade remain unchanged; the private registry, unit helpers, Runtime
+records, action functions, and TensorCore generic `Scalar` remain unexported.
+
 Closed Stage 6 regression checks proved every former product package,
 `readout.types`, the readout root, and the package root were acyclic. Closed
 Maintenance 2 evidence instead proves fresh-process imports of every product
@@ -725,9 +781,19 @@ TensorCore pin. Positive probes should require concrete inference for:
 - `charge.axis(SampleAxis) -> SampleAxis`; and
 - `charge.dimension_of(SampleAxis) -> int`.
 
+Maintenance 6 adds positive probes for unparameterized Pint `Quantity`
+signatures on every migrated physical field, `quantity(...)`,
+`quantities(...)`, `SampleAxis.from_period(...)`, and the four physical-time
+accessors. Package-private probes require
+`type[Scalar[float]].require(...) -> float`, exact plain Runtime field types,
+and no Any leakage across Config-to-Runtime preparation. Negative probes cover
+raw physical numbers, wrong dimensions, retired suffix-bearing public names,
+Quantity use in dimensionless fields, and attempts to treat Runtime facts as
+quantities.
+
 The work order must report the exact checker/version or explicitly qualify its
-absence. Manual review is not a substitute for the fixed Maintenance 5 static
-probes required to adopt the dependency.
+absence. Manual review is not a substitute for the fixed stage-specific
+static probes.
 
 ## Result Taxonomy, Storage, And Device Scope
 
@@ -792,7 +858,7 @@ archive suites at `198/198/0`.
 Those A100 runs establish correctness and same-stack replay only. They ran no
 Stage 8 benchmark, profiler, threshold, kernel-count, memory, or performance
 measurement. Any Stage 8 restart requires a new Design authority after
-Maintenance 5.
+Maintenance 6.
 
 Stage 5 does not activate Bernoulli, exponential, Poisson, categorical,
 multinomial, rejection, source-quantum, iterative-generation, Charge-stream,

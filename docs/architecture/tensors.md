@@ -12,13 +12,14 @@ published TensorCore `0.9.0` commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59` for public RNG/distribution and
 same-dtype ownership. Those remain immutable historical baselines.
 
-User-authorized Maintenance 5 selects published TensorCore `0.13.0` exact
+Closed Maintenance 5 adopts published TensorCore `0.13.0` exact
 commit `202d8b1bc6259b8453d3d377570417f2480d782b`, tree
-`48fa9a28db6d043abc07d9963b2015983ca436ea`, as the next dependency target.
+`48fa9a28db6d043abc07d9963b2015983ca436ea`, as the current dependency.
 Maintenance 5 consumes its compact semantic axes and golden-path structural
 boundary while preserving the public RNG and tensor relationships TensorDSLab
-already uses. The dependency also exposes generic `Scalar`, but Maintenance 5
-does not consume it; the deferred Pint stage owns any later use. Every
+already uses. The dependency also exposes generic `Scalar`; Design-complete /
+Undispatched Maintenance 6 uses its public `require(...)` normalization at the
+package-owned Pint boundary while retaining this exact dependency. Every
 dependency change still requires an exact pin and TensorDSLab-owned
 source/archive, typing, CPU, and CUDA consumer evidence. No broad compatibility
 result follows.
@@ -29,7 +30,10 @@ Ownership is **Merged / Closed** through exact Review-cleared supplemental
 candidate `b3c7c907004741ba67b8b92a54bbdc8c85216dda`. It preserves this
 TensorCore boundary and the exact `0.9.0` dependency while reorganizing only
 unexported TensorDSLab preparation, production, and validation ownership.
-Maintenance 5 is the user-authorized next migration. Its work order and the
+Maintenance 5 is Merged / Closed through exact Review-cleared supplemental
+candidate `81ad2f52fe4a1966e5b3a0ceb5063138e42e731f` and Design closeout
+`021694b9479d02546405f6a815aedf21c9c831a4`. Maintenance 6 is the next
+Design-complete / Undispatched package gate; its work order and the
 implementation index are the sole lifecycle records.
 
 The previous TensorCore `0.6` ID/layout/sidecar architecture is historical and
@@ -73,6 +77,14 @@ mechanics.
 TensorCore additionally exposes generic table roots and `TensorArtifact`.
 Maintenance 5 does not use them to infer a TensorDSLab table backend, schema,
 artifact, persistence format, or IO policy.
+
+Maintenance 6 consumes no new TensorCore representation. It calls an accepted
+`type[Scalar[float]].require(value, field)` once after Pint dimension
+conversion to normalize a canonical physical magnitude. It stores neither the
+Scalar wrapper nor any Pint object in TensorCore, fields, collections, Runtime
+records, or tensor execution. TensorDSLab alone owns Quantity recognition,
+registry isolation, dimensions, canonical units, defensive copying, error
+translation, and physical policy.
 
 TensorDSLab owns:
 
@@ -172,6 +184,15 @@ The semantic sample axis may have nonzero start. Complete
 `Photoelectrons`/readout preparation requires start zero and derives one
 private `SamplingRuntime` directly from the source axis. There is no public
 `SamplingConfig` or second period/count authority.
+
+Maintenance 6 keeps that stored representation unchanged and adds only a
+TensorDSLab-owned `SampleAxis.from_period(...)` conversion plus fresh
+`start_time`, `sample_period`, `time_at`, and exclusive `stop_time` Pint
+quantities. The constructor canonicalizes a compatible scalar time to an
+integer picosecond step using the work order's bounded one-ULP rule; the
+accessors reconstruct fresh quantities from stored integers. No unit string,
+registry, or Quantity becomes axis state, and `prepare_sampling(...)` reads
+`start`, `step`, and `count` directly without Pint.
 
 Dimension-preserving producers reuse the exact source axes tuple and exact
 axis instances. This is stronger than merely reconstructing equal axes and is

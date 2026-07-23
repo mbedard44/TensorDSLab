@@ -27,13 +27,14 @@ non-exported preparation, production, and validation actions under product
 same final bytes locally and in separate fresh full-A100 source/archive runs.
 It changes no public, scientific, RNG, dependency, supported-device,
 performance, or Stage 8 contract. The first Stage 8 attempt remains stopped
-evidence; any rerun requires a new Design authority after Maintenance 5.
+evidence; any rerun requires a new Design authority after Maintenance 6.
 
-Maintenance 5 Compact Axes And Sampling is the user-authorized next migration
-under the focused
+Maintenance 5 Compact Axes And Sampling is **Merged / Closed** through exact
+Review-cleared supplemental candidate
+`81ad2f52fe4a1966e5b3a0ceb5063138e42e731f` and Design closeout
+`021694b9479d02546405f6a815aedf21c9c831a4` under the focused
 [work order](../implementation/maintenance_5_tensorcore_0_13_compact_axes_and_sampling.md).
-That work order and the implementation index are the sole lifecycle records.
-It selects published TensorCore `0.13.0` exact commit
+It adopts published TensorCore `0.13.0` exact commit
 `202d8b1bc6259b8453d3d377570417f2480d782b` and fixes this accepted
 replacement:
 
@@ -74,6 +75,38 @@ and `0.9.0` dependency statements remain exact for their closed stages.
 TensorCore `0.13.0` also exposes `Scalar`, table roots, and `TensorArtifact`,
 but Maintenance 5 introduces no Pint, table, artifact, persistence, or IO
 surface.
+
+Maintenance 6 Pint Physical Configuration Boundary is
+**Design-complete / Undispatched** under its focused
+[work order](../implementation/maintenance_6_pint_physical_configuration_boundary.md).
+It retains the exact Maintenance 5 axis/dependency baseline and selects Pint
+`0.25.3` for public physical Config values only. The accepted flow is:
+
+```text
+caller Quantity
+  -> Config canonical copy + one TensorCore Scalar.require normalization
+  -> prepare_<product> extracts one plain canonical magnitude
+  -> unit-free Runtime
+  -> unit-free produce_<product>
+  -> unit-free validate_<product>
+```
+
+Public physical field names become unit-neutral; private Runtime facts remain
+unit-suffixed. `SampleAxis` stays compact and integer-backed while gaining one
+Pint-aware construction convenience and four fresh quantity accessors.
+Maintenance 6 also removes duplicate private admission guards that are already
+owned by Config construction or whole-request preparation. It does not remove
+exact model dispatch, scientific laws, representability, tensor relationships,
+axes identity, storage freshness, dtype/device, allocation/address/envelope,
+or generated-product postcondition checks.
+
+This Maintenance 6 block and its work order supersede every later unqualified
+raw physical Config field, unit-suffixed public physical field name, Config-
+bearing numerical helper, or statement that Pint remains merely deferred.
+Those sketches remain historical Stage 3 through Maintenance 5 design evidence
+until later editorial compaction; they are not Maintenance 6 implementation
+authority. The stage changes no scientific equation, RNG address, product
+meaning, IO/artifact boundary, or Stage 8 contract.
 
 TensorDSLab Design selected and implemented the following RNG and
 module-ownership foundation:
@@ -6839,14 +6872,16 @@ The completed prerequisites and remaining production sequence are:
    Review-cleared candidate `b3c7c907004741ba67b8b92a54bbdc8c85216dda`.
    It realizes explicit ProductRuntime, prepare, produce, and validate
    ownership while preserving Stage 7 behavior.
-4. Complete Maintenance 5's compact-axis and sampling migration.
-5. The first Stage 8 real-CUDA attempt remains stopped evidence. Any rerun
-   requires a new Design authority after Maintenance 5.
+4. Maintenance 5 Compact Axes And Sampling is Merged / Closed.
+5. Complete the separately dispatched Maintenance 6 Pint physical-
+   configuration migration.
+6. The first Stage 8 real-CUDA attempt remains stopped evidence. Any rerun
+   requires a new Design authority after Maintenance 6.
    Profile real GPU memory and execution before designing workspace/output
    reuse.
-6. Design the exact TensorG4DS-to-truth-Photoelectrons bridge.
-7. Design explicit TensorML/reconstruction adapters.
-8. Design durable artifacts only after in-memory contracts stabilize.
+7. Design the exact TensorG4DS-to-truth-Photoelectrons bridge.
+8. Design explicit TensorML/reconstruction adapters.
+9. Design durable artifacts only after in-memory contracts stabilize.
 
 Each production slice uses the repository Implementation/Validation/Review
 loop and fixed-commit evidence. No compatibility alias preserves `0.6`.
@@ -6865,7 +6900,7 @@ the historical `0.6` contracts in the first table.
 | three required axes plus optional extra shared axes | exactly three readout axis types |
 | sealed generic `TensorField` | six direct TensorDSLab product leaves |
 | loose axis/field constants and registries | class-owned schema and typed calls |
-| count-only sample plus collection-sidecar `SampleGrid` | shared `SamplingConfig` policy plus its realized timestamp-backed `SampleAxis` |
+| count-only sample plus collection-sidecar `SampleGrid` | compact integer-picosecond `SampleAxis(RegularAxis)` and source-derived `SamplingRuntime` |
 | `DigitizedWaveformSpec` sidecar | builder config held externally; artifact binding deferred |
 | partial ordered pipeline snapshots | request-selected completed unordered results |
 | descendant invalidation | immutable one-shot construction |
@@ -7026,22 +7061,25 @@ Closed prerequisites and remaining Design gates are:
    autograd boundary while realizing the product runtime action tree, shared
    `SamplingRuntime`, complete closure preparation, and immediate validation
    before descendant use.
-4. Maintenance 5 is the next production gate: adopt exact TensorCore `0.13.0`,
-   compact the three semantic axes, derive sampling from the source
-   `SampleAxis`, and remove `SamplingConfig` without changing readout science.
-5. Any Stage 8 rerun requires a new Design authority after Maintenance 5.
+4. Maintenance 5 is Merged / Closed at exact TensorCore `0.13.0`; compact
+   axes and source-derived sampling are the implemented baseline.
+5. Maintenance 6 is the next Design-complete / Undispatched production gate:
+   adopt exact Pint `0.25.3` at the public physical Config boundary, extract
+   unit-free Runtime operands once, and complete the bounded private-admission
+   cleanup without changing readout science.
+6. Any Stage 8 rerun requires a new Design authority after Maintenance 6.
    Waveform-tail optimization evidence after the
    functional producers are accepted: compiler/execution mode, equivalence to
    the frozen eager reference, one-kernel/no-target-sized-temporary
    instrumentation, and the fallback gate for a purpose-built kernel.
    Cross-product analog/digitized
    fusion remains excluded.
-6. Digitization-config association for independent/durable consumers.
-7. Exact TensorG4DS source and dense truth-binning bridge, including provenance
+7. Digitization-config association for independent/durable consumers.
+8. Exact TensorG4DS source and dense truth-binning bridge, including provenance
    origin, left-edge construction, exact boundary assignment at `0`, `i * T`,
    and exclusive `N * T`, plus `underflow_hit_count` and
    `overflow_hit_count` accounting.
-8. Whether typed collection convenience properties materially improve the API.
+9. Whether typed collection convenience properties materially improve the API.
 
 The fixed-`K` correlated-avalanche model is implemented and closed on eager
 CPU: exact config ownership, independent per-edge phase closure,

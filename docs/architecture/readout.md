@@ -3,8 +3,9 @@
 ## Purpose And Authority
 
 This page summarizes the accepted post-binned readout architecture introduced
-with TensorCore `0.7`. User-authorized Maintenance 5 fixes its migration target
-at published TensorCore `0.13.0`. The complete scientific equations, config
+with TensorCore `0.7`. Closed Maintenance 5 installs published TensorCore
+`0.13.0`; Design-complete / Undispatched Maintenance 6 fixes the next public
+physical-configuration boundary. The complete scientific equations, config
 sketches, RNG encoding, numerical gates, and source citations live in
 [`rebuild.md`](rebuild.md). Donor comparison and intentional divergences live
 in [`../parity.md`](../parity.md).
@@ -30,10 +31,13 @@ Design closeout. Maintenance 4 Runtime Action Ownership is
 behavior-preserving private ownership refactor with no public or scientific
 contract change. Fixed-commit Validation and independent Review cleared the
 exact source/archive forms locally and in separate fresh full-A100 allocations.
-Maintenance 5 is the user-authorized next migration. Its exact lifecycle is
-recorded in its work order and the implementation index. It changes only the
-exact dependency, axis representations, and sampling ownership described
-below.
+Maintenance 5 is **Merged / Closed** through exact Review-cleared supplemental
+candidate `81ad2f52fe4a1966e5b3a0ceb5063138e42e731f` and Design closeout
+`021694b9479d02546405f6a815aedf21c9c831a4`. Maintenance 6 is
+**Design-complete / Undispatched**. It selects exact Pint `0.25.3` for public
+physical Config values and the compact SampleAxis convenience boundary while
+preserving the implemented axes, sampling authority, product graph, science,
+RNG, and unit-free execution core.
 
 ## Scope
 
@@ -135,6 +139,13 @@ axis itself may describe a valid nonzero-start subgrid. `SamplingConfig`,
 timestamp-string sample coordinates, and the collection-level `SampleGrid`
 are retired. The future TensorG4DS bridge constructs the compact axis while it
 bins PE truth.
+
+Maintenance 6 keeps the stored axis exactly integer-backed and adds
+`SampleAxis.from_period(...)` plus fresh Pint-valued `start_time`,
+`sample_period`, `time_at(...)`, and exclusive `stop_time` conveniences.
+Preparation continues to consume integer `start`, `step`, and `count`
+directly; semantic time quantities never enter hot-path indexing or RNG
+addresses.
 
 ## Product Fields And Collection
 
@@ -239,6 +250,28 @@ or runtime workspace policy in scientific config.
 `ReadoutConfig()` is the valid truth-only configuration; source sampling is
 not duplicated in a public config.
 
+Maintenance 6 replaces each public physical scalar field with a scalar Pint
+Quantity in the field's documented dimension and removes the unit suffix from
+that public name. One private TensorDSLab registry and one common canonicalizer
+copy every accepted caller Quantity into a canonical package-owned Quantity
+and invoke the selected TensorCore `Scalar.require(...)` rule exactly once.
+Dimensionless, algorithmic, key, and composition fields retain their current
+types. All public Configs become explicitly unhashable.
+
+The unit boundary ends during preparation:
+
+```text
+physical Config Quantity
+  -> one canonical magnitude extraction
+  -> unit-suffixed plain Runtime fact
+  -> tensor/RNG production
+```
+
+Runtime records, products, collections, producers, validators, and RNG
+addresses contain no Pint object or unit string. This target is
+Design-complete but remains undispatched; the currently implemented Config
+constructors remain the Maintenance 5 surface until implementation closes.
+
 Exact stochastic leaf configs own defaulted TensorCore `RngKey` values:
 white/PSD noise use streams `1`/`2`; dark count uses `3`; retained/overflow
 direct crosstalk use `4`/`5`; retained/overflow delayed crosstalk use `6`/`7`;
@@ -304,14 +337,29 @@ closure signal; no duplicate `need_*` booleans or public dependency registry
 is introduced. Complete closure preparation still precedes the first RNG
 request, production call, or semantic-output write.
 
-Product preparers own config interpretation, units, scientific equations,
-representability proofs, and device-operand materialization. Product producers
+Product preparers own contextual config interpretation, canonical-magnitude
+extraction, scientific equations, representability proofs, and
+device-operand materialization. Public Config construction owns quantity
+recognition, unit conversion, canonical copying, and scalar-domain
+validation. Product producers
 receive only explicit prerequisite products, the exact ProductRuntime, and
 `CounterRng` when stochastic-capable. Production performs tensor/RNG execution,
 narrow dynamic guards that cannot be proved beforehand, and final field
 construction; it imports no Config and performs no deep publication scan.
 Only Charge and NoiseWaveform production receive `CounterRng`. An exact-zero
 or disabled stochastic path simply makes no RNG request.
+
+The Maintenance 6 cleanup applies TensorCore's golden-path philosophy at the
+existing boundary. Whole-request preparation retains public ingress, request,
+dtype/device, RNG capability, and key checks. Private child preparers stop
+repeating those exact admission checks but retain exact model dispatch,
+scientific laws, tensor relationships, representability, allocation/address,
+and envelope limits. Private Charge effect executors may trust Runtime and
+primitive types supplied only by the typed package path, while retaining every
+scientific and tensor correctness guard. Validators remain unchanged and
+package-owned because TensorCore does not establish exact source-axis tuple
+identity, generated-product storage freshness, absolute product dtype domains,
+or deep scientific value validity.
 
 Product runtime validators are first-class, read-only actions. They neither
 repair nor reconstruct values and run immediately after their product is
@@ -830,8 +878,10 @@ evidence stage; any justified fusion work remains a later optimization stage.
 
 Maintenance 5 atomically adopts exact published TensorCore `0.13.0`, the
 compact semantic axes, and source-derived sampling while preserving all product
-execution. Its work order and the implementation index are the sole lifecycle
-records.
+execution. It is Merged / Closed. Maintenance 6 is Design-complete /
+Undispatched; it owns the next physical Config representation and bounded
+runtime-admission cleanup. Its work order and the implementation index are the
+sole lifecycle records.
 
 ## Return To Design Before
 

@@ -25,7 +25,7 @@ generic-RNG owner.
 CUDA was unavailable, so it adds no GPU or completed-value cross-backend
 evidence. Stage 7 is Merged / Closed, but no observable-specific IV comparison
 or acceptance margin follows merely from implementing the executable boundary.
-User-authorized Maintenance 5 targets exact published TensorCore `0.13.0`
+Closed Maintenance 5 adopts exact published TensorCore `0.13.0`
 commit `202d8b1bc6259b8453d3d377570417f2480d782b`, compact semantic axes,
 and source-derived sampling. It changes representation and removes duplicate
 sampling policy; it does not change a donor comparison boundary or parity
@@ -48,6 +48,25 @@ The accepted comparison requires identical private sampling runtime values,
 RNG requests, and same-stack completed products. This is representation
 continuity, not a new donor-parity classification.
 
+Design-complete / Undispatched Maintenance 6 adds one new representation
+comparison boundary for physical Config values:
+
+- when Pint canonicalization returns the same binary64 magnitude as the closed
+  scalar field, exact same-stack Runtime operands, RNG calls, and completed
+  products remain required;
+- physically equivalent unit expressions are required to represent the same
+  physical quantity even when Pint's converted binary64 magnitudes differ by
+  rounding, such as `2 ns` and `2000 ps`; and
+- physical equivalence alone does not justify silently rounding ordinary
+  Config magnitudes or claiming bitwise product parity when prepared binary64
+  operands differ.
+
+The only bounded integerization exception is
+`SampleAxis.from_period(...)`, where a converted picosecond value within one
+ULP of an integer is accepted as that exact compact coordinate. SampleAxis
+physical accessors preserve exact integer magnitudes, including above
+`2**53`. This is a representation rule, not a donor-science approximation.
+
 ## Purpose
 
 This page defines what TensorDSLab means by parity with IV-DSLab. It records
@@ -61,9 +80,10 @@ state, RNG streams, sparse PE-row growth, condition-database loading, fixed
 array rank, or incidental implementation defects.
 
 The semantic-root architecture was introduced against TensorCore `0.7` and is
-installed in the current production baseline against exact TensorCore `0.9.0`.
-Maintenance 5 targets the published `0.13.0` compact-axis roots without
-changing scientific behavior. The architecture is governed by
+installed in the current production baseline against exact TensorCore
+`0.13.0` after Maintenance 5. Maintenance 6 retains those compact-axis roots
+and changes only the physical Config representation and bounded private
+admission ownership without changing scientific behavior. The architecture is governed by
 [Rebuild Architecture](architecture/rebuild.md),
 [Post-Binned Readout Architecture](architecture/readout.md), and
 [TensorCore Integration](architecture/tensors.md). The fixed-`K` section of

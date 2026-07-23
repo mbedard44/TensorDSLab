@@ -25,12 +25,14 @@ historical pre-deployment TensorCore `0.6` representation without a
 compatibility layer. Stage 2 and Maintenance 1 remain historical evidence and
 do not constrain the semantic-root architecture introduced against TensorCore
 `0.7`. Maintenance 2's exact TensorCore `0.9.0` pin remains closed historical
-RNG-ownership evidence. User-authorized Maintenance 5 selects published
+RNG-ownership evidence. Closed Maintenance 5 adopts published
 TensorCore `0.13.0` exact commit
 `202d8b1bc6259b8453d3d377570417f2480d782b` for compact semantic axes and
 the accepted golden-path structural boundary. TensorCore `0.13.0` also exposes
-generic `Scalar`; Maintenance 5 does not consume it, and the deferred Pint
-stage owns any later TensorDSLab use.
+generic `Scalar`. Design-complete / Undispatched Maintenance 6 selects exact
+Pint `0.25.3` and uses `Scalar.require(...)` at the package-owned physical-
+configuration boundary without putting Pint into TensorCore or tensor
+execution.
 
 ## Target Collaborator Surface
 
@@ -91,9 +93,9 @@ TensorCollection   immutable fields keyed by exact field type
 
 Exact TensorCore `0.13.0` commit
 `202d8b1bc6259b8453d3d377570417f2480d782b` is the accepted Maintenance 5
-target. Exact consumer probes must establish public imports, constructors,
-typing, archive identity, and scientific continuity. This is not a broad
-compatibility claim.
+baseline. Exact consumer probes establish public imports, constructors,
+typing, archive identity, and scientific continuity. Maintenance 6 retains
+that exact pin. This is not a broad compatibility claim.
 
 Every TensorDSLab semantic axis, field, or collection leaf has exactly one
 appropriate TensorCore root in `__bases__`, with no mixin or other base, and is
@@ -198,6 +200,25 @@ scientific submodels use `None`; alternative algorithms use closed unions of
 exact config types. There is no generic `Config` ABC, string algorithm switch,
 product-level persistence flag, or scientific config containing runtime buffer
 policy.
+
+Maintenance 6 fixes the physical-value boundary as:
+
+```text
+caller Quantity
+  -> frozen Config with a copied canonical scalar Quantity
+  -> prepare_<product> extracts one plain canonical magnitude
+  -> unit-free ProductRuntime
+  -> unit-free producer and validator
+```
+
+TensorDSLab owns one private Pint registry and exports only `quantity(...)`
+and `quantities(...)` construction helpers. Public physical field names are
+unit-neutral because the value carries its unit; private Runtime values retain
+unit suffixes. Each canonicalization uses exactly one TensorCore
+`Scalar.require(...)` normalization and stores no Scalar wrapper. All public
+Configs are explicitly unhashable. Configs containing only dimensionless
+control/composition state remain ordinary Python/TensorCore records but follow
+the same unhashable contract.
 
 The selected high-level computation is:
 
@@ -354,6 +375,19 @@ once immediately after production and before any descendant. Product
 `field.py` files retain only semantic identity and cheap intrinsic `_require()`
 checks.
 
+The accepted TensorCore `0.13.0` golden path is applied deliberately rather
+than mechanically. `prepare_readout(...)` retains public ingress, closure,
+dtype/device, RNG capability, and key-admission checks. Private child
+preparers trust that admission and own contextual extraction, exact model
+dispatch, scientific/representability checks, and Runtime construction.
+Private Charge executors may trust exact Runtime and primitive types supplied
+only through the typed path, but retain tensor relationships, count and
+envelope limits, address/allocation bounds, and scientific laws. Generic
+TensorCore relationship helpers are used only where their contract matches;
+arbitrary axis order, exact source-axis tuple identity, absolute dtype domains,
+storage freshness, and generated-product postconditions remain TensorDSLab
+responsibilities.
+
 The three action families are role-symmetric, not signature-identical.
 Genuinely identical sampling, representability, finite-value, and relationship
 logic is extracted into the narrowest non-exported owner, while explicit
@@ -498,3 +532,12 @@ characterization remains later work. Maintenance 4 Runtime Action Ownership is
 [`implementation/maintenance_4_runtime_action_ownership.md`](implementation/maintenance_4_runtime_action_ownership.md).
 It implements only the behavior-preserving internal action/tree refactor
 described above and does not authorize the deferred renderer.
+
+[Maintenance 5](implementation/maintenance_5_tensorcore_0_13_compact_axes_and_sampling.md)
+is **Merged / Closed** through exact Review-cleared supplemental candidate
+`81ad2f52fe4a1966e5b3a0ceb5063138e42e731f` and Design closeout
+`021694b9479d02546405f6a815aedf21c9c831a4`.
+[Maintenance 6](implementation/maintenance_6_pint_physical_configuration_boundary.md)
+is **Design-complete / Undispatched**. No Pint/config/runtime production byte,
+Stage 8 rerun, IO/artifact surface, integration, or push follows until a
+separate explicit dispatch.
