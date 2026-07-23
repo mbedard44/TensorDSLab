@@ -297,10 +297,13 @@ target pins exact published TensorCore `0.15.0` commit
 `logical_positions(...)` use with `RngPositions`, imports matching generic
 validation requirements from TensorCore, and centralizes the unchanged
 `0x54445331` readout RNG namespace in one non-exported TensorDSLab module. It
-changes no public TensorDSLab facade, Pint boundary, scientific law, role
-stream, raw RNG address, product result, or Stage 8 contract. Its package loop
-is local-only; the exact integrated two-Torch-minor CUDA gates remain a
-separate post-closeout authority before any push.
+also makes pulse Configs store strictly positive amplitude magnitudes while
+pure-waveform preparation applies the fixed DS20k negative polarity exactly
+once; calibrated rendered results remain exact. No public facade, Pint
+ownership boundary, other scientific law, role stream, raw RNG address, or
+Stage 8 contract changes. Its package loop is local-only; the exact integrated
+two-Torch-minor CUDA gates remain a separate post-closeout authority before any
+push.
 
 The first Stage 8 real-CUDA attempt correctly stopped before any accepted
 measurement when its protected-suite gate over-applied those macOS literals to

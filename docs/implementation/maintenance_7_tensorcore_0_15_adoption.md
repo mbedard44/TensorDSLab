@@ -42,8 +42,11 @@ Design-side observation alone.
 
 This work order follows the TensorCore, public typing, validation-boundary,
 same-device, stochastic-address, product-semantics, and testing standards in
-[`CONTRIBUTING.md`](../../CONTRIBUTING.md). It changes no donor/parity boundary
-and therefore protects [`docs/parity.md`](../parity.md).
+[`CONTRIBUTING.md`](../../CONTRIBUTING.md). The dependency/RNG migration changes
+no donor boundary. The positive-amplitude/fixed-negative-polarity narrowing
+keeps the calibrated rendered parity result but changes how caller calibration
+expresses that sign, so Design synchronizes
+[`docs/parity.md`](../parity.md) explicitly.
 
 ## Objective
 
@@ -63,10 +66,15 @@ TensorDSLab
   owns product prepare / produce / validate actions
 ```
 
-The migration must be behavior-preserving on supported TensorDSLab paths.
-It changes no scientific equation, role stream number, positional address,
-Threefry word, distribution law, stochastic traversal order, exact-zero draw
-behavior, product meaning, public TensorDSLab API, or Pint boundary.
+The dependency and RNG migration must be behavior-preserving on supported
+TensorDSLab paths. The one separately ratified public scientific/API narrowing
+in this maintenance is the pulse-amplitude convention: both pulse Configs
+accept a strictly positive peak-voltage magnitude, and pure-waveform
+preparation applies the fixed DS20k negative polarity exactly once. Existing
+calibrated negative-going rendered outputs remain exact. No scientific
+equation, role stream number, positional address, Threefry word, distribution
+law, stochastic traversal order, exact-zero draw behavior, product meaning,
+field name, canonical unit, or Pint ownership boundary otherwise changes.
 
 ## Dependency Adoption
 
@@ -340,6 +348,75 @@ Producers still import no Config or validator. Runtime records remain Pint-
 free, Config-free, final, frozen, and slotted. The public
 `simulate_readout(...)` signature and request-closure semantics are unchanged.
 
+## Positive Pulse Amplitude And Fixed DS20k Polarity
+
+`TpcFebSnrPulseConfig.peak_voltage_per_photoelectron` and
+`VetoPduPulseConfig.peak_voltage_per_photoelectron` denote amplitude
+magnitudes. Both Configs canonicalize that field in `mV` through
+`PositiveFloat`, not `FiniteFloat` plus a separate zero check. Zero, signed
+zero, and negative caller quantities are rejected during Config construction.
+The field name and public `Quantity` representation remain unchanged.
+
+Every flat required scalar-Quantity field in each of those two multi-field
+Configs uses one readable declaration table:
+
+```python
+for name, unit, constraint in (
+    ("fast_time_constant", "ns", PositiveFloat),
+    ("slow_time_constant", "ns", PositiveFloat),
+    ("support_time", "ns", PositiveFloat),
+    ("peak_voltage_per_photoelectron", "mV", PositiveFloat),
+):
+    object.__setattr__(
+        self,
+        name,
+        _canonical_quantity(
+            getattr(self, name),
+            unit=unit,
+            field=f"TpcFebSnrPulseConfig.{name}",
+            constraint=constraint,
+        ),
+    )
+```
+
+`VetoPduPulseConfig` uses the same exact `(name, unit, constraint)` shape for
+its eight fields. This removes its field-name-dependent unit conditional.
+`DigitizedWaveformConfig` uses the same declaration-table shape for its two
+required scalar voltage quantities. `AnalogSaturationConfig` uses the same
+table for its two optional scalar voltage quantities while skipping a `None`
+entry before canonicalization. Single-Quantity Configs retain their shorter
+direct call, and `PsdNoiseConfig` retains indexed sequence canonicalization.
+
+`__post_init__`, not `__new__`, remains the canonicalization owner: the
+dataclass-generated initializer must first assign the caller's values, after
+which Config construction normalizes representation and checks genuine local
+relationships. This is not a Config ABC, metadata/reflection framework, or
+requirement that structurally different Quantity fields use an inappropriate
+scalar loop.
+
+`prepare_pure_waveform(...)` extracts the positive magnitude once and creates
+the signed execution fact exactly once:
+
+```python
+signed_peak_voltage_mv_per_pe = -canonical_magnitude(
+    model.peak_voltage_per_photoelectron
+)
+```
+
+That signed negative value enters the existing representability and coefficient
+equations. The prepared Runtime remains Config-free and Pint-free. The existing
+represented-zero check remains mandatory because a valid strictly positive
+binary64 magnitude can still vanish when represented in the requested Torch
+dtype. No producer applies another sign, gain, or inversion.
+
+The calibrated TPC and Veto Config fixtures change from negative caller
+quantities to equal positive magnitudes. Their prepared kernels,
+`PureWaveform`, downstream `AnalogWaveform`, and downstream
+`DigitizedWaveform` values remain exact on the same accepted execution stack.
+Formerly accepted positive rendered polarity is deliberately retired: positive
+and negative Config inputs are not two supported detector modes. The single
+negative-going polarity is part of TensorDSLab's DS20k DAQ model.
+
 ## Exact Production Scope
 
 Implementation may change exactly these production/metadata paths:
@@ -348,6 +425,7 @@ Implementation may change exactly these production/metadata paths:
 pyproject.toml
 tensor_dslab/readout/rng_keys.py
 tensor_dslab/readout/requirements.py
+tensor_dslab/readout/analog_waveform/config.py
 tensor_dslab/readout/analog_waveform/field.py
 tensor_dslab/readout/charge/config.py
 tensor_dslab/readout/charge/field.py
@@ -357,12 +435,14 @@ tensor_dslab/readout/charge/runtime/effects/counts.py
 tensor_dslab/readout/charge/runtime/effects/dark_counts.py
 tensor_dslab/readout/charge/runtime/effects/smearing.py
 tensor_dslab/readout/charge/runtime/effects/timing_jitter.py
+tensor_dslab/readout/digitized_waveform/config.py
 tensor_dslab/readout/digitized_waveform/field.py
 tensor_dslab/readout/noise_waveform/config.py
 tensor_dslab/readout/noise_waveform/field.py
 tensor_dslab/readout/noise_waveform/runtime/prepare.py
 tensor_dslab/readout/noise_waveform/runtime/produce.py
 tensor_dslab/readout/photoelectrons/field.py
+tensor_dslab/readout/pure_waveform/config.py
 tensor_dslab/readout/pure_waveform/field.py
 tensor_dslab/readout/pure_waveform/runtime/prepare.py
 tensor_dslab/readout/analog_waveform/runtime/prepare.py
@@ -381,12 +461,20 @@ areas are:
 tests/test_charge_correlated_avalanches.py
 tests/test_charge_count_orchestration.py
 tests/test_charge_product.py
+tests/test_deterministic_waveform_products.py
 tests/test_noise_waveform_product.py
 tests/test_package_contracts.py
+tests/test_pint_physical_configuration.py
+tests/test_readout_configs.py
 tests/test_readout_product_types.py
 tests/test_rng_ownership_migration.py
 tests/test_readout_simulation.py
+tests/test_runtime_action_ownership.py
+tests/typing/maintenance_4_runtime_action_ownership.py
 tests/typing/maintenance_2_rng_and_product_module_ownership_migration.py
+tests/typing/maintenance_6_pint_physical_configuration_boundary.py
+tests/typing/stage_4_deterministic_waveform_products.py
+tests/typing/stage_7_public_readout_orchestration.py
 ```
 
 Adding a new focused `tests/test_tensorcore_0_15_adoption.py` is preferred when
@@ -450,6 +538,29 @@ alter protected scientific fixtures merely to make the migration pass.
 - production contains exactly one `0x54445331` literal, in
   `readout/rng_keys.py`, while expected-value tests/docs remain free to record
   that frozen number.
+
+### Pulse amplitude and polarity
+
+- both pulse Configs use `PositiveFloat` for the canonical `mV` amplitude
+  magnitude and contain no duplicate explicit zero check;
+- exact positive quantities are accepted while zero, signed zero, and negative
+  quantities are rejected with the canonical field-bearing scalar boundary;
+- every multi-field flat scalar-Quantity Config uses the exact
+  `(name, unit, constraint)` declaration-table shape, optional fields are
+  skipped before canonicalization, and no field-name-dependent unit
+  conditional remains;
+- `__post_init__` remains the sole Config canonicalization/local-relationship
+  hook and neither Config defines `__new__`;
+- pure-waveform preparation applies one and only one negative sign after
+  magnitude extraction and before dtype representability;
+- a nonzero magnitude that vanishes in the requested floating dtype remains a
+  pre-production error;
+- calibrated TPC/Veto kernels and negative-going pure, analog, and digitized
+  outputs remain exact after converting their Config fixtures from negative
+  values to equal positive magnitudes; and
+- mutants that accept nonpositive amplitudes, omit or duplicate the fixed sign,
+  retain the old explicit zero checks, restore the Veto unit conditional, or
+  bypass one declaration-table entry fail focused evidence.
 
 ### Typing
 
@@ -531,14 +642,17 @@ docs/design.md
 docs/implementation/index.md
 docs/implementation/maintenance_7_tensorcore_0_15_adoption.md
 docs/overview.md
+docs/parity.md
 docs/validation.md
 ```
 
 Implementation may update only the new work order and implementation index for
 candidate lifecycle/evidence. Final Design closeout may update the exact live
 status records named by a pre-merge tree search and frozen before Review
-fast-forward. `docs/parity.md`, closed work orders, governance records, and
-history are protected.
+fast-forward. The Design-ratified `docs/parity.md` amplitude/polarity wording
+is part of the immutable authority baseline and is protected from
+Implementation edits. Closed work orders, governance records, and history are
+also protected.
 
 ## Stop Conditions
 
@@ -550,6 +664,10 @@ Return to Design without widening the candidate if:
   raw accessor or unsupported transform;
 - any raw position, key, word, schedule, same-stack output, scientific law,
   no-draw path, axis identity, storage, or autograd behavior drifts;
+- positive-magnitude Config input cannot reproduce the exact accepted
+  negative-going calibrated waveform after one preparation-owned sign;
+- the represented-zero safeguard would have to be removed or moved into tensor
+  execution;
 - the one-namespace cleanup requires a facade export, compatibility shim, or
   generic RNG module;
 - a protected production, test, documentation, dependency, parity,
@@ -563,8 +681,11 @@ Return to Design without widening the candidate if:
 
 Maintenance 7 does not:
 
-- change readout science, probability laws, limits, or public products;
-- change Pint fields, canonical units, Config construction, or Runtime facts;
+- change readout science, probability laws, limits, or public products beyond
+  the exact positive-amplitude/fixed-negative-polarity narrowing;
+- change Pint fields, canonical units, Config construction, or Runtime facts
+  beyond the multi-field scalar-Quantity declaration tables and
+  preparation-owned signed peak described above;
 - add a Config, Runtime, renderer, artifact, IO, persistence, table, bridge,
   reconstruction, or TensorML surface;
 - add or change an RNG algorithm, distribution, key, stream, seed, quantum,
@@ -584,6 +705,9 @@ Maintenance 7 is complete only when:
 - every authorized generic helper and RngPositions migration is complete with
   no local compatibility layer;
 - the single non-exported TensorDSLab RNG namespace source is installed;
+- both pulse Configs store positive canonical amplitude magnitudes,
+  preparation applies fixed negative polarity exactly once, and calibrated
+  negative-going outputs remain exact;
 - all supported outputs, addresses, scientific and storage contracts remain
   unchanged;
 - complete local fixed-commit Validation and independent Review clear one

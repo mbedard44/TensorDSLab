@@ -33,7 +33,9 @@ TensorCore `0.15.0` commit
 `587ff59711255c027a85cfef883422d40ea5dcda`. Its accepted target consumes the
 public `RngPositions` representation and the supported
 `tensor_core.validation` parts bin without changing TensorDSLab's semantic
-leaves, products, physical configuration, or public exports.
+leaves, products, or public exports. Its one physical-configuration narrowing
+makes pulse fields positive amplitude magnitudes and gives preparation sole
+ownership of fixed DS20k negative polarity.
 
 Maintenance 3 is Merged / Closed through exact Review-cleared candidate
 `dfe45c96f9cc141f91e29a6a3d81bd7a3e8a49f0`. Maintenance 4 Runtime Action

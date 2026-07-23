@@ -110,10 +110,12 @@ unit-free. Local `main` remains unpushed pending the separate TensorCore
 is Design-complete and undispatched. It adopts exact published TensorCore
 `0.15.0`, replaces `logical_positions(...)` with validated `RngPositions`,
 uses TensorCore's generic validation parts where the contracts match, and
-centralizes the unchanged readout RNG namespace without changing streams,
-addresses, science, Pint, products, or facades. Its local package gate makes no
-fresh CUDA claim; separately authorized integrated CUDA evidence follows only
-after the adoption closes.
+centralizes the unchanged readout RNG namespace. It also makes pulse Configs
+store positive amplitude magnitudes and applies fixed DS20k negative polarity
+once in preparation, preserving calibrated rendered results. Streams,
+addresses, other science, Pint ownership, products, and facades remain
+unchanged. Its local package gate makes no fresh CUDA claim; separately
+authorized integrated CUDA evidence follows only after the adoption closes.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency

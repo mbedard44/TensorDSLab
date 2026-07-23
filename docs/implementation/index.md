@@ -616,8 +616,10 @@ representability, allocation, shape-span, and count-domain mechanics to
 TensorCore, and gives the existing `0x54445331` namespace one non-exported
 TensorDSLab source. Readout composition, Pint/physical policy, product
 validation, scientific count arithmetic, ledgers, role streams, raw address
-values, word schedules, and public exports remain TensorDSLab-owned and
-unchanged.
+values, word schedules, and public exports remain TensorDSLab-owned. The one
+ratified Config/scientific narrowing makes both pulse amplitudes strictly
+positive magnitudes and applies fixed DS20k negative polarity exactly once in
+preparation; calibrated rendered results remain exact.
 
 The package Implementation/Validation/Review loop is local-only and makes no
 new CUDA claim. After exact adoption closeout, a separate authority runs

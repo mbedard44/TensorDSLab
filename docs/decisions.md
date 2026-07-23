@@ -433,6 +433,27 @@ TensorDSLab two-Torch-minor CUDA gate. Neither the dependency adoption nor that
 future functional CUDA evidence is Stage 8 performance work, and TensorDSLab
 remains unpushed until both gates close.
 
+### Pulse Configs Store Amplitude Magnitude And Preparation Owns Polarity
+
+TensorDSLab intentionally models the negative-going DS20k DAQ pulse response,
+but polarity is not a caller-selectable calibration dimension. Maintenance 7
+therefore makes both TPC FEB-SNR and Veto PDU
+`peak_voltage_per_photoelectron` values strictly positive canonical `mV`
+amplitude magnitudes through the existing TensorCore `PositiveFloat`
+constraint. Zero, signed zero, and negative Config quantities are invalid.
+
+`prepare_pure_waveform(...)` applies one fixed negative sign after canonical
+magnitude extraction and before dtype representability. No producer, analog
+stage, or digitizer applies another inversion. The representable-zero guard
+remains because a nonzero binary64 magnitude may vanish in the requested Torch
+dtype. Calibrated fixture inputs change sign at the Config boundary while
+their prepared kernels and rendered products remain exact.
+
+This is a deliberate pre-deployment API/scientific narrowing, not a request
+for a new TensorCore scalar. TensorCore's existing `PositiveFloat` is
+sufficient; Pint recognition, units, fixed detector polarity, and pulse
+preparation remain TensorDSLab-owned.
+
 ### Charge Uses Aggregate Multinomial And Hybrid Poisson Sampling
 
 Timing jitter and AP placement use aggregate multinomial laws realized through

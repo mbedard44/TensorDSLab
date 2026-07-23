@@ -129,7 +129,9 @@ is **Design-complete / User authorization pending / Undispatched**. It will
 replace raw logical-position tensors with TensorCore `RngPositions`, retire
 matching local generic validators in favor of `tensor_core.validation`, and
 give the unchanged readout RNG namespace one non-exported source. The
-TensorDSLab public API, physical/Pint configuration, scientific behavior,
+maintenance also makes both pulse Configs accept positive voltage-amplitude
+magnitudes while preparation applies the fixed DS20k negative polarity once;
+calibrated rendered results remain exact. Public field names, Pint ownership,
 default keys and streams, and same-stack stochastic results remain unchanged.
 
 The historical [TensorCore consumer proposal](docs/implementation/proposed_tensorcore_counter_rng_and_distributions.md)

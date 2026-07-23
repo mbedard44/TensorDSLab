@@ -37,10 +37,13 @@ execution.
 
 Maintenance 7 is **Design-complete / User authorization pending /
 Undispatched**. It targets exact published TensorCore `0.15.0` commit
-`0f974e9e7f52125bbe829e124beb24e69de811d3` and a behavior-preserving
-consumer cleanup: `RngPositions` replaces raw logical-position tensors,
+`0f974e9e7f52125bbe829e124beb24e69de811d3`. Its dependency/RNG cleanup is
+behavior-preserving: `RngPositions` replaces raw logical-position tensors,
 matching generic validation moves to `tensor_core.validation`, and one
-non-exported TensorDSLab value owns the unchanged readout RNG namespace.
+non-exported TensorDSLab value owns the unchanged readout RNG namespace. Its
+separate ratified scientific/API narrowing stores positive pulse-amplitude
+magnitudes and applies fixed DS20k negative polarity once in preparation while
+preserving calibrated rendered results.
 
 ## Target Collaborator Surface
 

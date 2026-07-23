@@ -46,8 +46,11 @@ Undispatched** under its focused
 [TensorCore 0.15 adoption work order](../implementation/maintenance_7_tensorcore_0_15_adoption.md).
 It will replace raw logical-position tensors with exact `RngPositions`, import
 matching generic validation requirements from TensorCore, and centralize the
-unchanged readout RNG namespace. No scientific, product, Pint, role-key,
-address, or public-facade change is accepted.
+unchanged readout RNG namespace. It also makes pulse Configs store strictly
+positive amplitude magnitudes and applies the fixed DS20k negative polarity
+once in preparation, preserving calibrated negative-going results. No other
+scientific, product, Pint, role-key, address, or public-facade change is
+accepted.
 
 ## Scope
 

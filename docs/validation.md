@@ -468,6 +468,10 @@ prove:
   TensorDSLab readout/scientific/product relationship;
 - one non-exported production source for namespace `0x54445331`, with all ten
   streams and every default key unchanged;
+- positive pulse-amplitude Config magnitudes, rejection of zero/negative
+  quantities, one preparation-owned fixed negative sign, retained
+  dtype-rounded-zero rejection, and exact calibrated negative-going kernel and
+  waveform continuity;
 - unchanged source/axes/storage/autograd/device/dtype/product postconditions;
 - zero-diagnostic Pyright plus frozen negative typing for raw-tensor position
   rejection and the adopted validation signatures; and

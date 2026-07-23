@@ -119,9 +119,14 @@ authorization pending / Undispatched** under
 It pins exact published TensorCore `0.15.0`, cleanly replaces
 `logical_positions(...)` with `RngPositions`, moves only matching generic
 validation mechanics into TensorCore ownership, and gives the unchanged
-`0x54445331` readout namespace one non-exported source. It preserves every
-role stream, raw position value/order, word schedule, scientific limit,
-same-stack result, Config/Pint contract, product action, and facade.
+`0x54445331` readout namespace one non-exported source. It also ratifies the
+DS20k pulse convention that public pulse Configs store positive
+peak-voltage-per-photoelectron magnitudes while preparation applies the fixed
+negative polarity exactly once. Calibrated rendered results remain exact. This
+positive-magnitude block supersedes later unqualified signed-Config sketches
+in this long-form document. Every role stream, raw position value/order, word
+schedule, other scientific limit, product action, and facade remains
+unchanged.
 
 TensorDSLab Design selected and implemented the following RNG and
 module-ownership foundation:
@@ -4148,8 +4153,8 @@ For an 8 ns parity fixture, the audited donor values translate to:
 
 | Model | TensorDSLab fixture values |
 | --- | --- |
-| TPC FEB-SNR | `fast_time_constant_ns=83`, `slow_time_constant_ns=383`, `support_time_ns=3000`, `peak_voltage_mv_per_pe=-7` |
-| Veto PDU | `gaussian_center_ns=232.89`, `gaussian_width_ns=507.72`, `edge_offset_1_ns=-81.92`, `edge_width_1_ns=147.28`, `edge_offset_2_ns=-176.50`, `edge_width_2_ns=45.69`, `support_time_ns=2020.27`, `peak_voltage_mv_per_pe=-14.5912372` |
+| TPC FEB-SNR | `fast_time_constant_ns=83`, `slow_time_constant_ns=383`, `support_time_ns=3000`, `peak_voltage_mv_per_pe=7` |
+| Veto PDU | `gaussian_center_ns=232.89`, `gaussian_width_ns=507.72`, `edge_offset_1_ns=-81.92`, `edge_width_1_ns=147.28`, `edge_offset_2_ns=-176.50`, `edge_width_2_ns=45.69`, `support_time_ns=2020.27`, `peak_voltage_mv_per_pe=14.5912372` |
 
 The Veto support reproduces the donor's retained samples from 0 through
 2016 ns at 8 ns spacing; it does not promote the donor's support heuristic as a
@@ -4162,21 +4167,23 @@ For sample period `T` and template index `j`, each model is point-sampled as
 Preflight rejects a model/sampling combination whose exclusive support produces
 no samples or whose sampled extremum is nonfinite or zero; normalization must
 never divide by an unresolved template. The sampled template is normalized by
-the magnitude of its sampled extremum, scaled once by its signed
-`peak_voltage_mv_per_pe`, convolved causally with PE-equivalent charge, and
-truncated to the input sample count. Negative-going detector pulses therefore
-use a negative configured peak voltage; there is no second gain or inversion
-switch. Output axes and shape match charge. Baseline is not part of the
-signal-only `PureWaveform`.
+the magnitude of its sampled extremum, scaled once by the negative of its
+strictly positive `peak_voltage_mv_per_pe` amplitude magnitude, convolved
+causally with PE-equivalent charge, and truncated to the input sample count.
+Negative-going detector polarity is fixed by preparation rather than encoded
+as a caller-selected sign; there is no second gain or inversion switch. Output
+axes and shape match charge. Baseline is not part of the signal-only
+`PureWaveform`.
 
 `prepare_pure_waveform(...)` prepares the config-derived sample times, pulse
-values, sampled-extremum normalization, and signed scaling in Python binary64,
-and validates that finite template before any product producer runs. The
-producer materializes those prepared coefficients once in the exact `Charge`
-dtype and device. This is host-side preparation of small configuration-derived
-coefficients, not host materialization of the input payload. Causal convolution
-and every payload-sized operation execute in the field dtype on the field
-device with no hidden widening.
+values, sampled-extremum normalization, positive amplitude extraction, and one
+fixed negative sign in Python binary64, and validates that finite template
+before any product producer runs. The producer materializes those prepared
+coefficients once in the exact `Charge` dtype and device. This is host-side
+preparation of small configuration-derived coefficients, not host
+materialization of the input payload. Causal convolution and every
+payload-sized operation execute in the field dtype on the field device with no
+hidden widening.
 
 TensorDSLab intentionally standardizes the discretization around those donor
 equations:
@@ -4191,8 +4198,9 @@ equations:
   strict crop. TensorDSLab instead requires one explicit exclusive
   `support_time_ns` and applies the repository-wide left-edge convention.
 - IV scales the positive template and inverts after convolution. TensorDSLab
-  applies the signed configured peak once, producing the same negative-going
-  parity waveform without a second inversion switch.
+  applies the fixed negative polarity once to the configured positive amplitude
+  magnitude, producing the same negative-going parity waveform without a
+  second inversion switch.
 - The first MVP applies none of IV's eventwise fractional-bin exponential
   amplitude correction. That correction reuses parameters inconsistently and
   is not an exact fractional delay of either adopted pulse equation.
@@ -6492,9 +6500,9 @@ The rebuild validation matrix includes:
 - exact TPC FEB-SNR and Veto PDU donor-equation oracles, including
   `tau_fast = tau_r`, `tau_slow = tau_r + tau_l`, `tau_slow > tau_fast`, and
   every renamed Gaussian/two-erf parameter mapping;
-- sampled-template normalization/support oracles, signed peak scaling, causal
-  convolution alignment, same-length truncation, and no hidden
-  gain/inversion/baseline;
+- sampled-template normalization/support oracles, positive amplitude plus one
+  fixed negative-polarity scaling step, causal convolution alignment,
+  same-length truncation, and no hidden gain/inversion/baseline;
 - parity fixtures proving the separately classified differences from IV's TPC
   continuous normalization, heuristic TPC/Veto support, post-convolution
   inversion, fractional-bin amplitude correction, and gate-edge behavior;

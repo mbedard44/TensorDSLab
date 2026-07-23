@@ -415,7 +415,7 @@ stochastic laws are identical.
 | afterpulse delay law | intentional divergence | TensorDSLab accepts an ordinary exponential mean-delay model instead of IV's literal reciprocal-exponential expression. |
 | afterpulse recovery amplitude | intentional divergence / binned approximation | `recovery=None` gives unit AP charge instead of IV recovery weighting; a composed recovery config uses conditional category means without changing branching and omits within-category recovery variance. |
 | charge smearing | statistical | The ideal aggregate-Gaussian identity is an analytic oracle; one finite-lattice aggregate draw is not the donor's per-avalanche digital draw sequence. |
-| FEB-SNR pulse template and convolution | numerical | Same functional family, but normalization and binned-photoelectron edge/sub-bin behavior differ. |
+| FEB-SNR pulse template and convolution | numerical | Same functional family and negative-going detector polarity, with a positive public amplitude magnitude and one preparation-owned negative sign; normalization and binned-photoelectron edge/sub-bin behavior differ. |
 | eventwise IV sub-bin amplitude correction | not applicable | True PE phase is absent after binning. |
 | omission of a phase-marginalized amplitude correction | intentional divergence | A latent-phase expectation is possible, but the first MVP does not apply one. |
 | exact zero baseline | exact | Both can produce an all-zero noise waveform. |
@@ -871,8 +871,10 @@ and removes the prebuffer.
 
 TensorDSLab uses the same template family but normalizes by its sampled maximum,
 performs causal full convolution truncated to the input sample count, and
-applies explicit gain and sign. `PureWaveform` remains signal-only; baseline is
-owned by `NoiseWaveform`.
+accepts one strictly positive peak-voltage-per-photoelectron amplitude
+magnitude. Preparation applies the fixed DS20k negative polarity exactly once;
+the public Config does not expose a polarity switch or signed amplitude.
+`PureWaveform` remains signal-only; baseline is owned by `NoiseWaveform`.
 
 ### Pure-Waveform Parity Claim
 
@@ -884,6 +886,11 @@ identical; for the audited IV default parameters their peak normalization
 differs by roughly 66 parts per million. Stage 4 locks reviewed TPC and Veto
 checkpoint values, independent binary64 reference equations, and explicit
 `float32`/`float64` tolerances rather than relying on that audit estimate.
+Maintenance 7 changes only the public calibration convention from a signed
+negative quantity to an equal positive magnitude followed by one
+preparation-owned negative sign. This is an intentional API narrowing faithful
+to the negative-going DS20k DAQ response; calibrated rendered kernels and
+waveforms remain exact.
 
 IV's eventwise sub-bin amplitude correction is **not applicable** at the
 post-binned boundary because true PE phase has been discarded. Loss of the
@@ -901,7 +908,8 @@ area, or energy bias, return to Design for a phase-marginalized tensor
 formulation.
 
 Validation should compare sampled template values, peak, area, time-to-peak,
-impulse response, same-length truncation, sign/gain, and boundary behavior.
+impulse response, same-length truncation, positive Config magnitude,
+preparation-owned negative polarity, and boundary behavior.
 
 ## Noise Waveforms
 

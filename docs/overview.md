@@ -96,9 +96,12 @@ closure condition.
 clean local baseline `65bb55bf98bb37a129a950d93a0bdb9b0d3f2971`. It targets
 published TensorCore `0.15.0`, replaces `logical_positions(...)` with
 `RngPositions`, migrates matching generic validation helpers to TensorCore,
-and centralizes the unchanged readout RNG namespace. It changes no public
-TensorDSLab API, Pint contract, role stream, scientific address, or result.
-Its local closure precedes the separate integrated CUDA gate and any push.
+and centralizes the unchanged readout RNG namespace. It also makes pulse
+Config values positive amplitude magnitudes and applies fixed DS20k negative
+polarity once in preparation, with exact calibrated result continuity. Public
+field names, Pint ownership, role streams, and scientific addresses remain
+unchanged. Its local closure precedes the separate integrated CUDA gate and any
+push.
 
 [Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
 Closed through exact implementation candidate
