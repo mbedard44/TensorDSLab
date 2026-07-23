@@ -107,9 +107,8 @@ channel labels retain detector identity. The complete readout boundary—not
 `SampleAxis` construction generally—requires example-local `start == 0`.
 
 [Maintenance 6 Pint Physical Configuration Boundary](docs/implementation/maintenance_6_pint_physical_configuration_boundary.md)
-is **Implementation candidate / Design-amended fixed-commit Validation
-pending** at exact Candidate 1
-`240e1492c466097b3059dfe9911ab338a4dd38a1`. Its implemented API lets
+is **Merged / Closed** through exact Review-cleared target
+`0257fb477ee04556ebbe26351123ae610b5d7925`. Its implemented API lets
 collaborators configure physical values with scalar Pint quantities while
 preserving a unit-free execution core:
 
@@ -121,8 +120,9 @@ The target retains exact TensorCore `0.13.0`, uses its public
 `Scalar.require(...)` normalization instead of duplicating numeric rules, and
 keeps quantities out of tensors, RNG addressing, Runtime records, producers,
 validators, and collections. Complete local Validation and independent Review
-own closure; fresh CUDA qualification is deferred until the separate
-TensorCore `0.15.0` adoption closes.
+cleared the exact final bytes with `13` unavailable-CUDA skips and no
+accelerator claim. Local `main` remains unpushed until the separate TensorCore
+`0.15.0` adoption and exact integrated CUDA gates close.
 
 The historical [TensorCore consumer proposal](docs/implementation/proposed_tensorcore_counter_rng_and_distributions.md)
 is now fulfilled by published TensorCore `0.9.0` commit

@@ -534,13 +534,11 @@ dispatched no Pint or Stage 8 work.
 
 ### [Maintenance 6 Pint Physical Configuration Boundary](maintenance_6_pint_physical_configuration_boundary.md)
 
-Status: **Implementation candidate / Design-amended fixed-commit Validation
-pending** while these bytes are absent from `main`. If present unchanged on
-`main`, Review's clean fast-forward has completed and final Design acceptance
-remains pending until this index and the work order record **Merged / Closed**.
+Status: **Merged / Closed** through exact Review-cleared target
+`0257fb477ee04556ebbe26351123ae610b5d7925`, tree
+`b4f5703ca5b756dc27d876c1dd17ee56cb43b4e8`.
 
-Maintenance 6 is the selected next package gate from exact clean Maintenance 5
-Design-closeout baseline
+Maintenance 6 closed from exact clean Maintenance 5 Design-closeout baseline
 `021694b9479d02546405f6a815aedf21c9c831a4`. It retains exact TensorCore
 `0.13.0` commit
 `202d8b1bc6259b8453d3d377570417f2480d782b` and selects exact Pint
@@ -573,8 +571,8 @@ The work order freezes exact dependency artifacts, exports, Config census,
 Runtime rename map, production/test/lifecycle allowlists, protected bytes,
 complete local role evidence, explicit unavailable-CUDA qualifications, and
 finite loop budgets.
-Implementation is dispatched only for that exact bounded work order. It
-authorizes no IO/artifact, integration, Stage 8, performance, compatibility,
+Implementation was dispatched only for that exact bounded work order. It
+authorized no IO/artifact, integration, Stage 8, performance, compatibility,
 release, push, or sibling-package action.
 
 Candidate 1 is one clean direct child of corrected Design authority
@@ -591,11 +589,13 @@ The user later directed both packages to defer fresh cluster CUDA gates until
 the new TensorCore and TensorDSLab surfaces are stable together. A
 Design-owned documentation amendment therefore makes complete local
 fixed-commit Validation and independent Review the Maintenance 6 closure gate;
-the `13` CUDA skips remain explicit and no accelerator claim follows.
+both roles cleared the exact final target under that gate. The `13` CUDA skips
+remain explicit and no accelerator claim follows.
 Maintenance 6 stays pinned to TensorCore `0.13.0`. A separate later work order
-may adopt published TensorCore `0.15.0` exact commit
+will consider adoption of published TensorCore `0.15.0` exact commit
 `0f974e9e7f52125bbe829e124beb24e69de811d3`, after which separately authorized
 package-owned CUDA matrices may qualify only that exact integrated pairing.
+Local `main` remains unpushed pending that adoption and those integrated gates.
 
 ## Expected Stage Discipline
 

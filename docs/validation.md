@@ -376,12 +376,13 @@ functional dependency/axis correctness, not Stage 8 performance evidence.
 
 The
 [Maintenance 6 work order](implementation/maintenance_6_pint_physical_configuration_boundary.md)
-is **Implementation candidate / Design-amended fixed-commit Validation
-pending** against exact clean Maintenance 5 Design closeout
-`021694b9479d02546405f6a815aedf21c9c831a4`. Candidate 1 is exact commit
+is **Merged / Closed** through exact Review-cleared target
+`0257fb477ee04556ebbe26351123ae610b5d7925`, tree
+`b4f5703ca5b756dc27d876c1dd17ee56cb43b4e8`, against exact clean Maintenance 5
+Design closeout `021694b9479d02546405f6a815aedf21c9c831a4`. Candidate 1 is exact commit
 `240e1492c466097b3059dfe9911ab338a4dd38a1`, tree
 `1e5cae8c0e905c9638eb40e7f9d24fac950fee59`. Validation and independent
-Review must prove:
+Review proved:
 
 - exact Pint `0.25.3` wheel and source identities, dependency resolution,
   isolated source/artifact imports, and retained exact TensorCore `0.13.0`
@@ -430,10 +431,12 @@ freshness or scientific value domains.
 
 This gate is functional/API correctness evidence, not Stage 8 performance,
 fusion, allocation, persistence, integration, or compatibility evidence.
-Under the user-selected evidence schedule, neither role submits fresh cluster
-work for Maintenance 6. The `13` conditional CUDA skips remain an explicit
-qualification and no accelerator-correctness claim follows. Fresh two-minor
-CUDA matrices wait until a separate TensorDSLab work order adopts published
+Under the user-selected evidence schedule, neither role submitted fresh
+cluster work for Maintenance 6. The complete local matrix passed with `13`
+conditional CUDA skips as an explicit qualification, and no
+accelerator-correctness claim follows. Local `main` remains unpushed. Fresh
+two-minor CUDA matrices wait until a separate TensorDSLab work order adopts
+published
 TensorCore `0.15.0` exact commit
 `0f974e9e7f52125bbe829e124beb24e69de811d3`; those later package-owned gates
 qualify only that exact integrated pairing.

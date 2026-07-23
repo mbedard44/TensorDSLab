@@ -1,15 +1,13 @@
 # Maintenance 6 Pint Physical Configuration Boundary Work Order
 
-Status: **Implementation candidate / Design-amended fixed-commit Validation
-pending** while these bytes are absent from `main`. If these exact bytes are
-present unchanged on `main`, Review's clean fast-forward has completed and
-final Design acceptance remains pending until this work order and the
-implementation index record **Merged / Closed**.
+Status: **Merged / Closed** through exact Review-cleared target
+`0257fb477ee04556ebbe26351123ae610b5d7925`, tree
+`b4f5703ca5b756dc27d876c1dd17ee56cb43b4e8`.
 
 Stable work-order key:
 `TensorDSLab/maintenance-6-pint-physical-configuration-boundary`.
 
-## Implementation Candidate Evidence
+## Final Evidence
 
 Implementation completed Candidate 1 as one clean direct child of exact
 corrected Design authority
@@ -20,10 +18,11 @@ commit:  240e1492c466097b3059dfe9911ab338a4dd38a1
 tree:    1e5cae8c0e905c9638eb40e7f9d24fac950fee59
 ```
 
-Candidate 1 remains immutable. The later Design-owned evidence-scheduling
-amendment changes only current-state documentation on top of that candidate;
-it changes no production, test, dependency, scientific, RNG, or public API
-byte.
+Candidate 1 remains immutable. The later Design-owned evidence-scheduling and
+closeout-scope amendments changed only documentation on top of that candidate;
+they changed no production, test, dependency, scientific, RNG, or public API
+byte. Validation cleared exact final target `0257fb477ee04556ebbe26351123ae610b5d7925`
+unchanged, and Review fast-forwarded that exact commit to local `main`.
 
 The local evidence environment was Python `3.13.11`, PyTorch `2.12.1`, eager
 CPU, macOS `15.7.4` arm64, with CUDA unavailable. Implementation independently
@@ -211,7 +210,7 @@ coordination_status:       Deferred
 registry_storage_profile:  Disabled
 maintenance_4:             Merged / Closed
 maintenance_5:             Merged / Closed
-maintenance_6:             User-authorized / Dispatched
+maintenance_6:             Merged / Closed
 stage_8:                   deferred until after Maintenance 6
 ```
 
@@ -1551,5 +1550,6 @@ candidate:
 - is independently Review-cleared and cleanly fast-forwarded under this
   explicit user-authorized dispatch.
 
-This document is the operative Design authority for the dispatched
-Maintenance 6 implementation and evidence loop.
+This document records the closed Maintenance 6 implementation and evidence
+loop. Local `main` remains unpushed pending the separate TensorCore `0.15.0`
+adoption and exact integrated CUDA gates.

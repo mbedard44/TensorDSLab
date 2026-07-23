@@ -77,13 +77,11 @@ but Maintenance 5 introduces no Pint, table, artifact, persistence, or IO
 surface.
 
 Maintenance 6 Pint Physical Configuration Boundary is
-**Implementation candidate / Design-amended fixed-commit Validation pending**
-under its focused
+**Merged / Closed** through exact Review-cleared target
+`0257fb477ee04556ebbe26351123ae610b5d7925` under its focused
 [work order](../implementation/maintenance_6_pint_physical_configuration_boundary.md).
-Its exact Candidate 1 is
-`240e1492c466097b3059dfe9911ab338a4dd38a1`. It retains the exact Maintenance
-5 axis/dependency baseline and selects Pint `0.25.3` for public physical Config
-values only. The accepted flow is:
+It retains the exact Maintenance 5 axis/dependency baseline and selects Pint
+`0.25.3` for public physical Config values only. The accepted flow is:
 
 ```text
 caller Quantity
@@ -6880,15 +6878,18 @@ The completed prerequisites and remaining production sequence are:
    It realizes explicit ProductRuntime, prepare, produce, and validate
    ownership while preserving Stage 7 behavior.
 4. Maintenance 5 Compact Axes And Sampling is Merged / Closed.
-5. Complete the separately dispatched Maintenance 6 Pint physical-
-   configuration migration.
-6. The first Stage 8 real-CUDA attempt remains stopped evidence. Any rerun
+5. Maintenance 6 Pint Physical Configuration Boundary is Merged / Closed
+   through exact Review-cleared target
+   `0257fb477ee04556ebbe26351123ae610b5d7925`.
+6. Adopt published TensorCore `0.15.0` and complete the matching TensorDSLab
+   cleanup through a separate Design-pending / Undispatched work order.
+7. The first Stage 8 real-CUDA attempt remains stopped evidence. Any rerun
    requires a new Design authority after Maintenance 6.
    Profile real GPU memory and execution before designing workspace/output
    reuse.
-7. Design the exact TensorG4DS-to-truth-Photoelectrons bridge.
-8. Design explicit TensorML/reconstruction adapters.
-9. Design durable artifacts only after in-memory contracts stabilize.
+8. Design the exact TensorG4DS-to-truth-Photoelectrons bridge.
+9. Design explicit TensorML/reconstruction adapters.
+10. Design durable artifacts only after in-memory contracts stabilize.
 
 Each production slice uses the repository Implementation/Validation/Review
 loop and fixed-commit evidence. No compatibility alias preserves `0.6`.
@@ -7070,12 +7071,11 @@ Closed prerequisites and remaining Design gates are:
    before descendant use.
 4. Maintenance 5 is Merged / Closed at exact TensorCore `0.13.0`; compact
    axes and source-derived sampling are the implemented baseline.
-5. Maintenance 6 is the active Implementation candidate under a
-   Design-amended fixed-commit Validation gate: adopt exact Pint `0.25.3` at
-   the public physical Config boundary, extract unit-free Runtime operands
-   once, and complete the bounded private-admission cleanup without changing
-   readout science. Its fresh CUDA gate is deferred until the separate exact
-   TensorCore `0.15.0` adoption closes.
+5. Maintenance 6 is Merged / Closed through exact Review-cleared target
+   `0257fb477ee04556ebbe26351123ae610b5d7925`: it adopts exact Pint `0.25.3`
+   at the public physical Config boundary, extracts unit-free Runtime operands
+   once, and completes the bounded private-admission cleanup without changing
+   readout science.
 6. Any Stage 8 rerun requires a new Design authority after Maintenance 6.
    Waveform-tail optimization evidence after the
    functional producers are accepted: compiler/execution mode, equivalence to
@@ -7083,12 +7083,16 @@ Closed prerequisites and remaining Design gates are:
    instrumentation, and the fallback gate for a purpose-built kernel.
    Cross-product analog/digitized
    fusion remains excluded.
-7. Digitization-config association for independent/durable consumers.
-8. Exact TensorG4DS source and dense truth-binning bridge, including provenance
+7. TensorCore `0.15.0` adoption and matching TensorDSLab cleanup are the next
+   Design-pending / Undispatched package gate. Local `main` remains unpushed
+   until that adoption and the exact integrated CUDA gates close.
+8. Digitization-config association for independent/durable consumers.
+9. Exact TensorG4DS source and dense truth-binning bridge, including provenance
    origin, left-edge construction, exact boundary assignment at `0`, `i * T`,
    and exclusive `N * T`, plus `underflow_hit_count` and
    `overflow_hit_count` accounting.
-9. Whether typed collection convenience properties materially improve the API.
+10. Whether typed collection convenience properties materially improve the
+    API.
 
 The fixed-`K` correlated-avalanche model is implemented and closed on eager
 CPU: exact config ownership, independent per-edge phase closure,
