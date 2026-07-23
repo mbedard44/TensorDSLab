@@ -1,9 +1,13 @@
 # Maintenance 5 TensorCore 0.13 Compact Axes And Sampling Work Order
 
-Status: **Implementation candidate / Validation pending while these bytes are
-absent from `main`; if present unchanged on `main`, Review's fast-forward is
-complete and final Design acceptance remains pending unless this work order
-and the implementation index record Merged / Closed**.
+Status: **Merged / Closed** through exact Review-cleared supplemental
+candidate `81ad2f52fe4a1966e5b3a0ceb5063138e42e731f`, tree
+`1c9ce87237544c32dee4b4f594e97ab929234475`.
+
+Review fast-forwarded clean `main` from
+`a46899c4e3bacd6deec23ea64da5e68b382816e9` to those exact bytes without a
+merge commit. Final Design accepted the merged result and records closure in
+this documentation-only direct child.
 
 Stable work-order key:
 `TensorDSLab/maintenance-5-tensorcore-0-13-compact-axes-and-sampling`.
@@ -121,7 +125,7 @@ conformance_finding:       Not evaluated
 coordination_status:       Deferred
 registry_storage_profile:  Disabled
 maintenance_4:             Merged / Closed
-maintenance_5:             lifecycle-dependent state above
+maintenance_5:             Merged / Closed
 stage_8:                   Stopped / new authority required after this work
 ```
 
@@ -851,14 +855,26 @@ Do not silently widen the work order. A concrete TensorCore defect returns to
 both package Design authorities with a minimal reproducer; it does not
 authorize a TensorCore edit from TensorDSLab.
 
-## Implementation Candidate Evidence
+## Final Implementation, Validation, Review, And Merge Evidence
 
 Implementation started from exact clean Design authority
 `f734e745e5eda29bb88664c11d0a464f03c3f8e9` on branch
-`codex/maintenance-5-tensorcore-0-13-compact-axes-and-sampling`. Candidate 1
-is one direct child of that authority; its exact immutable commit and tree are
-reported in the fixed-commit handoff because a commit cannot contain its own
-identity.
+`codex/maintenance-5-tensorcore-0-13-compact-axes-and-sampling`. Exact
+Candidate 1 `e6828e4309472238019844d9157b2b6bd96cd647`, tree
+`c9001c7bbad4420e1f075e9956ffcc3f8570c305`, is one direct child of that
+authority.
+
+Validation cleared Candidate 1 unchanged. Independent Review found no
+production, API, scientific, dependency, architecture, or scope defect, but
+returned one consolidated committed-proof packet covering positive typing,
+exact compact-axis constructor and lookup types, and complete equality/hash
+state. Design authorized exactly one direct-child supplemental correction.
+Exact supplemental candidate
+`81ad2f52fe4a1966e5b3a0ceb5063138e42e731f`, tree
+`1c9ce87237544c32dee4b4f594e97ab929234475`, changed only three authorized
+test/typing paths from Candidate 1, with 67 insertions and 3 deletions.
+Validation cleared it unchanged, and Review's single authorized recheck found
+zero remaining findings.
 
 The implementation independently reconstructed TensorCore `0.13.0` source at
 exact commit `202d8b1bc6259b8453d3d377570417f2480d782b`, parent
@@ -895,18 +911,47 @@ agreement, and any retained abstract-root lookup exception promise. Existing
 same-stack stochastic literals, all 63 product requests, RNG-call continuity,
 storage, autograd, source immutability, and global-RNG gates remain unchanged.
 
+The supplemental evidence additionally locks `ReadoutConfig()` as
+`ReadoutConfig` and `prepare_sampling(...)` as `SamplingRuntime`; rejects
+float, string, and Boolean compact-axis integer inputs at the accepted
+boundaries; requires exact built-in coordinate and index result types; and
+proves exact semantic leaf type plus complete label/regular-axis state in
+equality and hashing. Validation and Review independently killed the
+corresponding source/archive mutants, including an `Any` sampling return,
+float/string `SampleAxis` state, Boolean channel indices, erased label/regular
+leaf types, and omission of each regular-axis state component. Equal-object
+hash checks do not invent an unequal-object hash promise.
+
 Fresh-process import isolation reports TensorG4DS, TensorML, DSLab, G4DS11,
 and Pint absent. Public-root-only TensorCore imports, direct NumPy/Pint import
 absence, protected bytes, exact changed-path allowlists, `git diff --check`,
 privacy scans, and artifact/bytecode hygiene pass. No TensorCore, sibling,
 scientific, RNG, producer/effect, Pint, IO/artifact, integration, renderer,
-Stage 8, optimization, release, conformance, merge, or push effect occurred.
-Local CUDA was unavailable. While these bytes are absent from `main`,
-independent fresh full-A100 Validation and Review evidence across both required
-PyTorch minors and dependency forms remains mandatory. If they are present
-unchanged on `main`, those gates and Review's fast-forward are complete while
-final Design acceptance remains pending unless the lifecycle records say
-Merged / Closed.
+Stage 8, optimization, release, conformance, or push effect occurred. Local
+CUDA was unavailable.
+
+Validation and Review each used a separate fresh full-A100 allocation.
+Against both PyTorch `2.11.0+cu126` and `2.12.1+cu126`, each role passed:
+
+```text
+focused exact source:   169 run / 169 passed / 0 skipped
+focused exact archive:  169 run / 169 passed / 0 skipped
+full exact source:      198 run / 198 passed / 0 skipped
+full exact archive:     198 run / 198 passed / 0 skipped
+```
+
+Review's independent allocation recorded RHEL `9.8` x86_64, Python
+`3.11.15`, CUDA `12.6`, and an `A100-PCIE-40GB`.
+
+Both roles independently reconstructed the exact candidate and TensorCore
+source/archive forms, used distinct evidence trees, and proved unchanged
+before/after environments and package inventories, clean repositories,
+protected bytes, and artifact absence. Review fast-forwarded clean `main`
+from `a46899c4e3bacd6deec23ea64da5e68b382816e9` to exact supplemental
+candidate `81ad2f52fe4a1966e5b3a0ceb5063138e42e731f` without a merge commit,
+then repeated the local source/archive test, typing, import, scope, privacy,
+diff, and hygiene gates successfully. Final Design independently accepted the
+merged bytes and records closure in this documentation-only direct child.
 
 ## Execution Roles And Finite Loop
 
@@ -986,3 +1031,8 @@ Maintenance 5 is complete only when:
 
 Closure authorizes no Pint work, IO, integration, renderer, Stage 8 restart,
 optimization, release, or push.
+
+Exact merged candidate `81ad2f52fe4a1966e5b3a0ceb5063138e42e731f`
+and this documentation-only Design closeout satisfy every completion condition
+above. Stage 8 remains stopped and requires a separately accepted new Design
+authority from this closed Maintenance 5 baseline.

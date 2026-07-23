@@ -475,10 +475,12 @@ contracts rather than implicit `ReadoutCollection` membership order.
 
 ### [Maintenance 5 TensorCore 0.13 Compact Axes And Sampling](maintenance_5_tensorcore_0_13_compact_axes_and_sampling.md)
 
-Status: **Implementation candidate / Validation pending while these bytes are
-absent from `main`; if present unchanged on `main`, Review's fast-forward is
-complete and final Design acceptance remains pending unless this index and the
-work order record Merged / Closed**.
+Status: **Merged / Closed** through exact Review-cleared supplemental candidate
+`81ad2f52fe4a1966e5b3a0ceb5063138e42e731f`, tree
+`1c9ce87237544c32dee4b4f594e97ab929234475`. Review fast-forwarded clean
+`main` from `a46899c4e3bacd6deec23ea64da5e68b382816e9` to those exact
+bytes without a merge commit. Final Design accepted the merged result and
+records closure in a documentation-only direct child. No push occurred.
 
 Maintenance 5 atomically adopts published TensorCore `0.13.0` exact commit
 `202d8b1bc6259b8453d3d377570417f2480d782b`, migrates
@@ -499,15 +501,32 @@ compatibility shim, release claim, or push.
 
 Implementation completed the bounded migration on
 `codex/maintenance-5-tensorcore-0-13-compact-axes-and-sampling` from exact
-Design authority `f734e745e5eda29bb88664c11d0a464f03c3f8e9`. Candidate 1
-uses the exact source/archive dependency identities and passes the local
-focused, full, static-typing, import, privacy, scope, and hygiene gates
-recorded in the work order. Its exact immutable commit is supplied in the
-fixed-commit Validation handoff; this containing commit cannot name itself.
-While these bytes are absent from `main`, independent full-A100 Validation and
-Review evidence remains required. If they are present unchanged on `main`,
-those gates and Review's fast-forward are complete while final Design
-acceptance remains pending unless the lifecycle records say Merged / Closed.
+Design authority `f734e745e5eda29bb88664c11d0a464f03c3f8e9`. Exact Candidate
+1 `e6828e4309472238019844d9157b2b6bd96cd647` passed fixed-commit
+Validation. Review returned one consolidated proof-only packet; Design
+authorized one direct-child supplemental correction. The final candidate above
+changed only three authorized test/typing paths from Candidate 1, with 67
+insertions and 3 deletions. Validation cleared it unchanged and Review's single
+recheck found zero remaining findings.
+
+Against independently reconstructed exact TensorCore source and canonical
+archive forms, the final local focused suites passed at
+`169 run / 158 passed / 11 conditional CUDA skips`, full discovery passed at
+`198 / 185 / 13`, Pyright `1.1.411` reported zero diagnostics, and the
+external negative typing probe produced the same 12 expected diagnostics in
+both forms. Validation and Review each ran separate fresh full-A100
+allocations across PyTorch `2.11.0+cu126` and `2.12.1+cu126`; each role passed
+focused source and archive suites at `169/169/0` and full source and archive
+suites at `198/198/0` for both minors. Exact dependency, environment/inventory,
+scope, protected-byte, import/privacy, mutation, post-merge, and repository
+hygiene gates passed.
+
+Closure changes no readout science, RNG address or call order, generated result
+contract, supported-device boundary, persistence/integration surface, or
+Stage 8 state. It authorizes no Pint implementation, IO/artifact work,
+renderer, optimization, benchmark, release, compatibility claim, or push.
+Any Stage 8 restart requires a separately accepted new Design authority from
+this closed Maintenance 5 baseline.
 
 ## Candidate Pint Physical Configuration Work
 
