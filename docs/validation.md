@@ -376,7 +376,7 @@ functional dependency/axis correctness, not Stage 8 performance evidence.
 
 The
 [Maintenance 6 work order](implementation/maintenance_6_pint_physical_configuration_boundary.md)
-is **Design-complete / Undispatched** against exact clean Maintenance 5
+is **User-authorized / Dispatched** against exact clean Maintenance 5
 Design closeout `021694b9479d02546405f6a815aedf21c9c831a4`. Validation and
 independent Review must prove:
 

@@ -48,7 +48,7 @@ The accepted comparison requires identical private sampling runtime values,
 RNG requests, and same-stack completed products. This is representation
 continuity, not a new donor-parity classification.
 
-Design-complete / Undispatched Maintenance 6 adds one new representation
+User-authorized / Dispatched Maintenance 6 adds one new representation
 comparison boundary for physical Config values:
 
 - when Pint canonicalization returns the same binary64 magnitude as the closed

@@ -534,7 +534,7 @@ dispatched no Pint or Stage 8 work.
 
 ### [Maintenance 6 Pint Physical Configuration Boundary](maintenance_6_pint_physical_configuration_boundary.md)
 
-Status: **Design-complete / Undispatched**.
+Status: **User-authorized / Dispatched**.
 
 Maintenance 6 is the selected next package gate from exact clean Maintenance 5
 Design-closeout baseline
@@ -567,8 +567,8 @@ scientific/RNG/result behavior remain.
 The work order freezes exact dependency artifacts, exports, Config census,
 Runtime rename map, production/test/lifecycle allowlists, protected bytes,
 local and separate full-A100 role evidence, and finite loop budgets.
-Implementation remains undispatched; this Design work authorizes no
-production, IO/artifact, integration, Stage 8, performance, compatibility,
+Implementation is dispatched only for that exact bounded work order. It
+authorizes no IO/artifact, integration, Stage 8, performance, compatibility,
 release, push, or sibling-package action.
 
 ## Expected Stage Discipline

@@ -29,7 +29,7 @@ RNG-ownership evidence. Closed Maintenance 5 adopts published
 TensorCore `0.13.0` exact commit
 `202d8b1bc6259b8453d3d377570417f2480d782b` for compact semantic axes and
 the accepted golden-path structural boundary. TensorCore `0.13.0` also exposes
-generic `Scalar`. Design-complete / Undispatched Maintenance 6 selects exact
+generic `Scalar`. User-authorized / Dispatched Maintenance 6 selects exact
 Pint `0.25.3` and uses `Scalar.require(...)` at the package-owned physical-
 configuration boundary without putting Pint into TensorCore or tensor
 execution.
@@ -538,6 +538,6 @@ is **Merged / Closed** through exact Review-cleared supplemental candidate
 `81ad2f52fe4a1966e5b3a0ceb5063138e42e731f` and Design closeout
 `021694b9479d02546405f6a815aedf21c9c831a4`.
 [Maintenance 6](implementation/maintenance_6_pint_physical_configuration_boundary.md)
-is **Design-complete / Undispatched**. No Pint/config/runtime production byte,
-Stage 8 rerun, IO/artifact surface, integration, or push follows until a
-separate explicit dispatch.
+is **User-authorized / Dispatched**. Its exact work order authorizes only the
+bounded Pint/config/runtime implementation and evidence loop; no Stage 8
+rerun, IO/artifact surface, integration, or push follows.

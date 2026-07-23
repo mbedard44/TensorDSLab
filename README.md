@@ -107,7 +107,7 @@ channel labels retain detector identity. The complete readout boundary—not
 `SampleAxis` construction generally—requires example-local `start == 0`.
 
 [Maintenance 6 Pint Physical Configuration Boundary](docs/implementation/maintenance_6_pint_physical_configuration_boundary.md)
-is **Design-complete / Undispatched**. Its selected API lets collaborators
+is **User-authorized / Dispatched**. Its selected API lets collaborators
 configure physical values with scalar Pint quantities while preserving a
 unit-free execution core:
 

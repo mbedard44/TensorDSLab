@@ -1,6 +1,6 @@
 # Maintenance 6 Pint Physical Configuration Boundary Work Order
 
-Status: **Design-complete / Undispatched**.
+Status: **User-authorized / Dispatched**.
 
 Stable work-order key:
 `TensorDSLab/maintenance-6-pint-physical-configuration-boundary`.
@@ -12,10 +12,10 @@ TensorCore `0.13.0` compact-axis and generic-`Scalar` baseline to exact Pint
 quantity, and tightens the private preparation boundary without changing
 readout science.
 
-The user selected Pint as the next package direction and authorized this
-documentation work. Production implementation remains undispatched. It
-requires a separate explicit dispatch through TensorDSLab's persistent
-Implementation, Validation, and Review routes.
+The user selected Pint as the next package direction, authorized the Design
+work, and explicitly dispatched its production implementation. Execution is
+limited to TensorDSLab's persistent Implementation, Validation, and Review
+routes and the exact scope below.
 
 ## Objective
 
@@ -137,7 +137,7 @@ coordination_status:       Deferred
 registry_storage_profile:  Disabled
 maintenance_4:             Merged / Closed
 maintenance_5:             Merged / Closed
-maintenance_6:             Design-complete / Undispatched
+maintenance_6:             User-authorized / Dispatched
 stage_8:                   deferred until after Maintenance 6
 ```
 
@@ -1318,7 +1318,8 @@ orders and historical blobs are not rewritten to pretend they used Pint.
 Once this authority is committed, Implementation may edit only the two
 lifecycle records listed in the candidate allowlist.
 
-This work order remains nonoperative until separately dispatched.
+This work order is operative through the user's explicit Maintenance 6
+dispatch and the exact Design authority named in the implementation handoff.
 
 ## Non-Goals
 
@@ -1386,8 +1387,8 @@ candidate:
 - preserves accepted scientific, numerical, RNG, storage, device, and
   autograd behavior at the declared boundaries;
 - passes the complete local and fresh-A100 Validation/Review matrices; and
-- is independently Review-cleared and cleanly fast-forwarded under a later
+- is independently Review-cleared and cleanly fast-forwarded under this
   explicit user-authorized dispatch.
 
-Until separately dispatched, this document is Design authority and planning
-evidence only.
+This document is the operative Design authority for the dispatched
+Maintenance 6 implementation and evidence loop.

@@ -4,7 +4,7 @@
 
 This page summarizes the accepted post-binned readout architecture introduced
 with TensorCore `0.7`. Closed Maintenance 5 installs published TensorCore
-`0.13.0`; Design-complete / Undispatched Maintenance 6 fixes the next public
+`0.13.0`; User-authorized / Dispatched Maintenance 6 fixes the next public
 physical-configuration boundary. The complete scientific equations, config
 sketches, RNG encoding, numerical gates, and source citations live in
 [`rebuild.md`](rebuild.md). Donor comparison and intentional divergences live
@@ -34,7 +34,7 @@ exact source/archive forms locally and in separate fresh full-A100 allocations.
 Maintenance 5 is **Merged / Closed** through exact Review-cleared supplemental
 candidate `81ad2f52fe4a1966e5b3a0ceb5063138e42e731f` and Design closeout
 `021694b9479d02546405f6a815aedf21c9c831a4`. Maintenance 6 is
-**Design-complete / Undispatched**. It selects exact Pint `0.25.3` for public
+**User-authorized / Dispatched**. It selects exact Pint `0.25.3` for public
 physical Config values and the compact SampleAxis convenience boundary while
 preserving the implemented axes, sampling authority, product graph, science,
 RNG, and unit-free execution core.
@@ -878,10 +878,10 @@ evidence stage; any justified fusion work remains a later optimization stage.
 
 Maintenance 5 atomically adopts exact published TensorCore `0.13.0`, the
 compact semantic axes, and source-derived sampling while preserving all product
-execution. It is Merged / Closed. Maintenance 6 is Design-complete /
-Undispatched; it owns the next physical Config representation and bounded
-runtime-admission cleanup. Its work order and the implementation index are the
-sole lifecycle records.
+execution. It is Merged / Closed. Maintenance 6 is User-authorized /
+Dispatched; it owns the next physical Config representation and bounded
+runtime-admission cleanup. Its work order and the implementation index are
+the sole lifecycle records.
 
 ## Return To Design Before
 

@@ -69,7 +69,7 @@ count/label/regular axis roots, and source-derived sampling. It removes
 RNG addressing, product execution, or `simulate_readout(...)`.
 
 [Maintenance 6](implementation/maintenance_6_pint_physical_configuration_boundary.md)
-is **Design-complete / Undispatched** from that exact clean closeout. It
+is **User-authorized / Dispatched** from that exact clean closeout. It
 selects Pint `0.25.3`, migrates public physical Config fields to copied
 canonical scalar quantities, and extracts plain execution values once during
 preparation. It deliberately keeps Runtime records, producers, validators,
@@ -378,7 +378,7 @@ retain their original private paths as historical evidence.
   Merged / Closed TensorCore `0.13.0`, compact-axis, and source-derived
   sampling migration.
 - [Maintenance 6 Work Order](implementation/maintenance_6_pint_physical_configuration_boundary.md):
-  Design-complete / Undispatched Pint physical-configuration boundary and
+  User-authorized / Dispatched Pint physical-configuration boundary and
   TensorCore-aware preparation cleanup.
 - [Stage 7 Work Order](implementation/stage_7_public_readout_orchestration.md):
   Merged / Closed public request planning, whole-closure

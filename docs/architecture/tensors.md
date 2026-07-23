@@ -17,8 +17,8 @@ commit `202d8b1bc6259b8453d3d377570417f2480d782b`, tree
 `48fa9a28db6d043abc07d9963b2015983ca436ea`, as the current dependency.
 Maintenance 5 consumes its compact semantic axes and golden-path structural
 boundary while preserving the public RNG and tensor relationships TensorDSLab
-already uses. The dependency also exposes generic `Scalar`; Design-complete /
-Undispatched Maintenance 6 uses its public `require(...)` normalization at the
+already uses. The dependency also exposes generic `Scalar`; User-authorized /
+Dispatched Maintenance 6 uses its public `require(...)` normalization at the
 package-owned Pint boundary while retaining this exact dependency. Every
 dependency change still requires an exact pin and TensorDSLab-owned
 source/archive, typing, CPU, and CUDA consumer evidence. No broad compatibility
@@ -33,7 +33,7 @@ unexported TensorDSLab preparation, production, and validation ownership.
 Maintenance 5 is Merged / Closed through exact Review-cleared supplemental
 candidate `81ad2f52fe4a1966e5b3a0ceb5063138e42e731f` and Design closeout
 `021694b9479d02546405f6a815aedf21c9c831a4`. Maintenance 6 is the next
-Design-complete / Undispatched package gate; its work order and the
+User-authorized / Dispatched package gate; its work order and the
 implementation index are the sole lifecycle records.
 
 The previous TensorCore `0.6` ID/layout/sidecar architecture is historical and

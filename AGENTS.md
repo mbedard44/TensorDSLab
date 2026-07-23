@@ -270,7 +270,7 @@ TensorDSLab semantic leaves, and sampling derived once from the source
 IO/artifacts, scientific changes, or a Stage 8 claim.
 
 Maintenance 6 Pint Physical Configuration Boundary is the
-**Design-complete / Undispatched** next package gate under
+**User-authorized / Dispatched** active package gate under
 `docs/implementation/maintenance_6_pint_physical_configuration_boundary.md`.
 It retains exact TensorCore `0.13.0`, selects exact Pint `0.25.3`, moves public
 physical Config values to copied canonical scalar quantities, and extracts
@@ -279,7 +279,8 @@ records, producers, validators, tensor payloads, collections, RNG addressing,
 and scientific equations remain Pint-free. Its bounded TensorCore
 golden-path cleanup removes duplicate private admission guards while
 preserving public ingress, scientific, relationship, storage, and generated-
-product checks. Production implementation remains undispatched.
+product checks. Production implementation is authorized only through the
+exact bounded work order and persistent TensorDSLab execution routes.
 
 The first Stage 8 real-CUDA attempt correctly stopped before any accepted
 measurement when its protected-suite gate over-applied those macOS literals to
