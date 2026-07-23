@@ -74,9 +74,10 @@ selects Pint `0.25.3`, migrates public physical Config fields to copied
 canonical scalar quantities, and extracts plain execution values once during
 preparation. It deliberately keeps Runtime records, producers, validators,
 tensors, RNG mechanics, and scientific equations unit-free. Its bounded
-action cleanup uses TensorCore `0.13.0` where the generic contract matches and
-retains package-owned scientific, axes-identity, storage, and generated-result
-checks where it does not.
+action cleanup removes annotation-only Config membership checks and uses
+TensorCore `0.13.0` where the generic contract matches. Pint
+canonicalization, genuine Config relationships, and package-owned scientific,
+axes-identity, storage, and generated-result checks remain.
 
 [Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
 Closed through exact implementation candidate

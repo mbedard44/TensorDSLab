@@ -277,10 +277,12 @@ physical Config values to copied canonical scalar quantities, and extracts
 plain unit-suffixed execution facts exactly once during preparation. Runtime
 records, producers, validators, tensor payloads, collections, RNG addressing,
 and scientific equations remain Pint-free. Its bounded TensorCore
-golden-path cleanup removes duplicate private admission guards while
-preserving public ingress, scientific, relationship, storage, and generated-
-product checks. Production implementation is authorized only through the
-exact bounded work order and persistent TensorDSLab execution routes.
+golden-path cleanup removes annotation-only Config membership checks and
+duplicate private admission guards while preserving Pint canonicalization,
+primitive domains, genuine Config relationships, public ingress, scientific,
+relationship, storage, and generated-product checks. Production
+implementation is authorized only through the exact bounded work order and
+persistent TensorDSLab execution routes.
 
 The first Stage 8 real-CUDA attempt correctly stopped before any accepted
 measurement when its protected-suite gate over-applied those macOS literals to
@@ -410,11 +412,13 @@ errors explicit; do not create broad `utils.py` or `helpers.py` modules merely
 to make signatures look uniform.
 
 Under the accepted Maintenance 6 target, Config construction owns public
-quantity recognition, dimension conversion, canonical copying, and scalar
-domain validation. Whole-request `prepare_readout(...)` owns public ingress,
-closure, dtype, device, RNG capability, and stochastic-key admission. Private
-child preparers trust that typed admission and own only contextual extraction,
-model dispatch, scientific/representation checks, and Runtime construction.
+quantity recognition, dimension conversion, canonical copying, scalar-domain
+validation, primitive value domains, and genuine local relationships. It does
+not repeat annotated wrapper, key, nested-Config, optional, or union
+membership. Whole-request `prepare_readout(...)` owns public ingress, closure,
+dtype, device, RNG capability, and stochastic-key admission. Private child
+preparers trust that typed admission and own only contextual extraction, model
+dispatch, scientific/representation checks, and Runtime construction.
 Producers consume typed prerequisites plus plain Runtime facts and perform
 tensor/RNG execution only. Validators remain immediate product and
 relationship postconditions. Do not duplicate parent admission checks inside

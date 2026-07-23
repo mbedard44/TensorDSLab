@@ -220,6 +220,14 @@ Configs are explicitly unhashable. Configs containing only dimensionless
 control/composition state remain ordinary Python/TensorCore records but follow
 the same unhashable contract.
 
+Config `__post_init__` is reserved for real construction behavior: Pint
+canonicalization, unwrapped primitive-domain validation, or genuine local
+relationships such as ordering, matching lengths, and distinct keys. It does
+not repeat annotations by checking `Scalar`, `RngKey`, nested Config,
+optional, or closed-union membership. Static typing and Review own that
+supported composition; malformed typed composition has no stable runtime
+diagnostic promise. No generic Config ABC is introduced.
+
 The selected high-level computation is:
 
 ```text

@@ -526,6 +526,21 @@ normalizer. Product-specific Config classes remain ordinary explicit
 dataclasses; the one common function owns only the genuinely identical Pint
 boundary.
 
+Config `__post_init__` methods remain only where construction performs real
+behavior:
+
+- canonicalizing and defensively copying a physical Pint quantity;
+- validating an unwrapped primitive value domain that the field itself does
+  not own; or
+- enforcing a genuine local relationship such as ordering, matching lengths,
+  nonempty scientific data, or distinct stochastic keys.
+
+They do not recheck annotated `Scalar` wrappers, `RngKey` values, nested
+Config records, optional Configs, or closed Config unions merely to prove
+membership. Those relationships are owned by static typing and Review on the
+supported public path. Deliberately malformed typed composition has no
+promised construction-time failure or exception category.
+
 ### Charge physical fields
 
 | Config | Current field | Target field | Canonical unit | Local rule |
@@ -705,8 +720,11 @@ Public Config construction validates information knowable from one config:
 - dimensional compatibility;
 - conversion into the canonical unit and private registry;
 - finite scalar magnitude;
-- sign, nonzero, and local ordering rules; and
-- exact types of dimensionless/control fields.
+- sign, nonzero, and local relationship rules; and
+- primitive value domains not already owned by a typed wrapper.
+
+Annotated wrapper, key, nested-Config, optional, and union membership is a
+static typing and Review obligation rather than duplicated runtime admission.
 
 Preparation owns contextual facts that require product inputs, sampling,
 dtype, device, another config, or an algorithm:
@@ -888,29 +906,43 @@ boundary:
 
 1. public `prepare_readout(...)` keeps exact ingress, request closure, dtype,
    device, RNG capability, and stochastic-key checks;
-2. Config constructors keep their public exact-type and scientific
-   validation;
-3. private child preparers remove duplicate exact Config, floating-dtype, and
+2. Config constructors keep Pint canonicalization, primitive value-domain
+   validation, and genuine scientific or cross-field relationships, but
+   remove annotation-only membership checks;
+3. `require_exact`, `require_optional_exact`, and `require_one_of_exact` are
+   deleted from `readout/requirements.py` once their Config call sites are
+   removed, without replacement or a new diagnostic promise;
+4. private child preparers remove duplicate exact Config, floating-dtype, and
    device admission checks already established by `prepare_readout(...)`;
-4. private Charge effect executors remove duplicate exact Runtime-type and
+5. private Charge effect executors remove duplicate exact Runtime-type and
    primitive-type guards for values supplied only through the typed package
    path;
-5. exact model-union dispatch, tensor relationship checks, scientific
+6. exact model-union dispatch, tensor relationship checks, scientific
    representability checks, allocation/address/envelope checks, and
    generated-product validation remain;
-6. `_tpc_raw(...)` and `_veto_raw(...)` receive plain floats rather than whole
+7. `_tpc_raw(...)` and `_veto_raw(...)` receive plain floats rather than whole
    Configs;
-7. PSD integration receives already-extracted plain tuples rather than a
+8. PSD integration receives already-extracted plain tuples rather than a
    `PsdNoiseConfig`;
-8. timing-jitter preparation owns extraction and its exact-zero decision;
-9. afterpulse delay and recovery share one extracted mean delay; and
-10. ADC bounds and every other active physical value are extracted once before
+9. timing-jitter preparation owns extraction and its exact-zero decision;
+10. afterpulse delay and recovery share one extracted mean delay; and
+11. ADC bounds and every other active physical value are extracted once before
     arithmetic.
 
 This is the TensorCore `0.13.0` golden path: runtime checks protect documented
 public data and scientific relationships, not deliberate calls into private
-actions with malformed typed objects. It adds no generic Runtime ABC,
-validator framework, graph, registry, or broad `utils.py` module.
+actions or Config constructors with malformed typed objects. It adds no
+generic Runtime ABC, Config ABC, validator framework, graph, registry, or
+broad `utils.py` module.
+
+TensorCore has identified exact integer-range normalization, field
+dtype/layout requirements, and eager floating representability as possible
+future generic requirements. They are unpublished and are not dependency
+authority here. Maintenance 6 retains matching generic behavior locally and
+makes no future TensorCore API claim; a later focused dependency maintenance
+may adopt only an exact published surface. The current future Design direction
+uses one variadic field-dtype requirement for both exact and accepted-set
+checks, but Maintenance 6 neither implements nor depends on that proposal.
 
 The existing validators require no redesign. They remain Pint-free and retain
 their current `ValueError`/`RuntimeError` categories, exact source-axis tuple
@@ -1063,7 +1095,7 @@ happens to be installed, and TensorCore remains Pint-free.
 
 ## Exact Candidate Scope
 
-The future implementation candidate may change exactly these 25 production
+The future implementation candidate may change exactly these 26 production
 and dependency paths:
 
 ```text
@@ -1073,6 +1105,7 @@ tensor_dslab/common/__init__.py
 tensor_dslab/common/axes.py
 tensor_dslab/common/units.py
 tensor_dslab/readout/config.py
+tensor_dslab/readout/requirements.py
 tensor_dslab/readout/runtime/prepare.py
 tensor_dslab/readout/analog_waveform/config.py
 tensor_dslab/readout/analog_waveform/runtime/prepare.py
@@ -1133,10 +1166,10 @@ All other paths are protected candidate inputs. In particular:
   `docs/physics/correlated_avalanches.md`, `LICENSE`, `pyrightconfig.json`, and
   `tensor_dslab/py.typed` are protected;
 - `tensor_dslab/readout/__init__.py`, every product facade and `field.py`,
-  `ReadoutCollection`, `requirements.py`, `simulation.py`, Photoelectrons,
-  runtime package markers, `readout/runtime/sampling.py`, product validators,
-  Charge `produce.py`/`validate.py`/`effects/counts.py`, and the pure producer
-  are protected; and
+  `ReadoutCollection`, `simulation.py`, Photoelectrons, runtime package
+  markers, `readout/runtime/sampling.py`, product validators, Charge
+  `produce.py`/`validate.py`/`effects/counts.py`, and the pure producer are
+  protected; and
 - scientific equations, RNG keys/addresses/calls, category ordering, result
   laws, storage/autograd contracts, and dtype/device behavior are protected
   even inside an allowlisted path.
@@ -1188,7 +1221,13 @@ The dispatched stage must include committed evidence for all of the following.
   edge, stop-after-final-edge, and nonzero-power rules;
 - preparation alone proves that the configured PSD covers the source-derived
   Nyquist band;
-- dimensionless fields reject quantities and retain exact current types;
+- static typing fixes the exact current wrapper, key, nested-Config,
+  optional, union, and other dimensionless field types;
+- focused source and mutation checks prove that annotation-only
+  `require_exact`, `require_optional_exact`, and `require_one_of_exact` calls
+  and their helper definitions are absent;
+- tests do not replace the retired membership checks with a promised runtime
+  exception for malformed typed composition;
 - dB remains numeric and uses the accepted amplitude conversion; and
 - all 22 target Config classes are explicitly unhashable for every valid
   composition.
@@ -1222,6 +1261,8 @@ The dispatched stage must include committed evidence for all of the following.
   restored effect Runtime- or primitive-type admission policing, parent-side
   jitter magnitude access, repeated ADC/PSD/afterpulse extraction, and
   Config-bearing numerical helpers;
+- exact mutation probes reject restoration of annotation-only Config
+  membership checks, while preserving every genuine Config relationship;
 - all invalid contextual combinations fail before RNG consumption or writes;
   and
 - prepared plain operands match the closed implementation for exact canonical
@@ -1326,6 +1367,8 @@ dispatch and the exact Design authority named in the implementation handoff.
 This work order does not authorize:
 
 - TensorCore changes or a Pint dependency in TensorCore;
+- depending on, claiming, or locally recreating an unpublished future
+  TensorCore requirements surface;
 - reopening or rewriting TensorDSLab Maintenance 5;
 - IO, `TensorArtifact`, config serialization, persistence, or schema versioning;
 - a public UnitRegistry, application registry, unit-definition plugin, or
@@ -1382,6 +1425,8 @@ candidate:
 - provides compact integer SampleAxis state plus the four selected Pint
   conveniences and the bounded one-ULP integerization rule;
 - proves Config canonicalization and one-time preparation extraction;
+- retires the three annotation-only structural membership helpers without
+  weakening Pint, primitive-domain, or genuine relationship validation;
 - completes exactly the bounded TensorCore/golden-path action cleanup;
 - keeps Runtime, production, validation, and tensor execution unit-free;
 - preserves accepted scientific, numerical, RNG, storage, device, and

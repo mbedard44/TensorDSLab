@@ -1005,7 +1005,10 @@ Prefer these migration directions as real code is introduced:
 
 For the accepted Maintenance 6 boundary, whole-request
 `prepare_readout(...)` owns public ingress, request closure, dtype/device, RNG
-capability, and key admission. Private child preparers do not repeat those
+capability, and key admission. Config construction owns Pint
+canonicalization, unwrapped primitive domains, and genuine local
+relationships, but does not repeat annotated wrapper, key, nested-Config,
+optional, or union membership. Private child preparers do not repeat those
 exact-type admission checks; they own contextual extraction, exact model
 dispatch, scientific/representability checks, and Runtime construction.
 Private effect executors may trust exact Runtime and primitive types reachable

@@ -94,15 +94,19 @@ caller Quantity
 Public physical field names become unit-neutral; private Runtime facts remain
 unit-suffixed. `SampleAxis` stays compact and integer-backed while gaining one
 Pint-aware construction convenience and four fresh quantity accessors.
-Maintenance 6 also removes duplicate private admission guards that are already
-owned by Config construction or whole-request preparation. It does not remove
-exact model dispatch, scientific laws, representability, tensor relationships,
-axes identity, storage freshness, dtype/device, allocation/address/envelope,
-or generated-product postcondition checks.
+Maintenance 6 also removes annotation-only Config membership checks and
+duplicate private admission guards already owned by static typing, Review,
+Config construction, or whole-request preparation. Config construction keeps
+Pint canonicalization, primitive value domains, and genuine local
+relationships. The maintenance does not remove exact model dispatch,
+scientific laws, representability, tensor relationships, axes identity,
+storage freshness, dtype/device, allocation/address/envelope, or
+generated-product postcondition checks.
 
 This Maintenance 6 block and its work order supersede every later unqualified
 raw physical Config field, unit-suffixed public physical field name, Config-
-bearing numerical helper, or statement that Pint remains merely deferred.
+bearing numerical helper, annotation-only Config membership check, or
+statement that Pint remains merely deferred.
 Those sketches remain historical Stage 3 through Maintenance 5 design evidence
 until later editorial compaction; they are not Maintenance 6 implementation
 authority. The stage changes no scientific equation, RNG address, product

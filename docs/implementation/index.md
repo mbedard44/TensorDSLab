@@ -557,10 +557,12 @@ retiring the redundant integer `start_ps`, `sample_period_ps`, and `stop_ps`
 aliases. Its exact one-ULP integerization rule accepts conversion noise such as
 `2 ns -> 2000.0000000000002 ps` without introducing general Config rounding.
 
-A bounded TensorCore `0.13.0` golden-path cleanup removes duplicate admission
-checks inside private child preparers/effect executors and makes raw pulse,
-PSD, jitter, afterpulse, and ADC preparation consume one-time extracted plain
-values. Public ingress validation, scientific checks, exact model dispatch,
+A bounded TensorCore `0.13.0` golden-path cleanup removes annotation-only
+Config membership checks plus duplicate admission checks inside private child
+preparers/effect executors. It makes raw pulse, PSD, jitter, afterpulse, and
+ADC preparation consume one-time extracted plain values. Pint
+canonicalization, primitive value domains, genuine Config relationships,
+public ingress validation, scientific checks, exact model dispatch,
 generated-product validation, axes identity, storage freshness, and all
 scientific/RNG/result behavior remain.
 

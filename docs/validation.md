@@ -390,6 +390,10 @@ independent Review must prove:
   and one TensorCore `Scalar.require(...)` normalization per physical field;
 - all 26 physical Config fields, all 35 unchanged nonphysical fields, exact
   local/cross-field rules, and explicit unhashability of all 22 Configs;
+- static typing for wrapper, key, nested-Config, optional, and union
+  composition; absence of `require_exact`, `require_optional_exact`, and
+  `require_one_of_exact`; and no replacement runtime-diagnostic promise for
+  malformed typed composition;
 - unit-neutral public physical names and complete absence of compatibility
   aliases for retired suffix-bearing public fields;
 - compact integer SampleAxis state, the bounded one-ULP period conversion, and
@@ -402,7 +406,8 @@ independent Review must prove:
 - pure numerical helpers receiving plain operands rather than Configs and no
   producer or validator performing unit conversion or Config interpretation;
 - removal of only duplicate child-preparer and private Charge
-  Runtime/primitive admission policing already owned by the public typed path;
+  Runtime/primitive admission policing plus annotation-only Config membership
+  checks already owned by the public typed path;
 - retention of exact model dispatch, scientific laws, tensor relationships,
   representability, count/envelope/address/allocation limits, axes identity,
   storage freshness, absolute dtype/device rules, and generated-product

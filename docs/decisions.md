@@ -793,18 +793,21 @@ compact integer-picosecond `RegularAxis`; it gains one bounded Pint-aware
 constructor and four fresh quantity accessors without storing a unit or
 Quantity.
 
-The same maintenance accepts a narrow golden-path cleanup: public Config and
-whole-request preparation retain admission responsibility, while private
-child preparers and Charge executors stop duplicating exact Config/Runtime,
-primitive dtype/device admission already guaranteed by the typed path.
-Scientific laws, exact model dispatch, tensor relationships, axes identity,
-storage freshness, absolute product dtype domains, allocation/address/envelope
-limits, and generated-product validation remain.
+The same maintenance accepts a narrow golden-path cleanup. Config
+`__post_init__` retains Pint canonicalization, unwrapped primitive domains, and
+genuine local relationships, but does not repeat annotated wrapper, key,
+nested-Config, optional, or union membership. Whole-request preparation
+retains public ingress responsibility, while private child preparers and
+Charge executors stop duplicating Config/Runtime and primitive dtype/device
+admission already guaranteed by the typed path. Scientific laws, exact model
+dispatch, tensor relationships, axes identity, storage freshness, absolute
+product dtype domains, allocation/address/envelope limits, and
+generated-product validation remain.
 
-The decision is Design-complete but does not dispatch production. It
-authorizes no TensorCore edit, scientific equation or RNG change, IO/artifact
-surface, integration, Stage 8 work, optimization, compatibility shim, release,
-or push.
+The decision and its synchronized work order are User-authorized / Dispatched.
+They authorize no TensorCore edit, scientific equation or RNG change,
+IO/artifact surface, integration, Stage 8 work, optimization, compatibility
+shim, release, or push.
 
 ### Completed Stochastic Literals Are Numerical-Stack Qualified
 

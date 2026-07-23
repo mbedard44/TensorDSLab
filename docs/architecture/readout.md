@@ -350,7 +350,10 @@ Only Charge and NoiseWaveform production receive `CounterRng`. An exact-zero
 or disabled stochastic path simply makes no RNG request.
 
 The Maintenance 6 cleanup applies TensorCore's golden-path philosophy at the
-existing boundary. Whole-request preparation retains public ingress, request,
+existing boundary. Config construction retains physical canonicalization,
+unwrapped primitive domains, and genuine local relationships, while retiring
+annotation-only wrapper, key, nested-Config, optional, and union membership
+checks. Whole-request preparation retains public ingress, request,
 dtype/device, RNG capability, and key checks. Private child preparers stop
 repeating those exact admission checks but retain exact model dispatch,
 scientific laws, tensor relationships, representability, allocation/address,
