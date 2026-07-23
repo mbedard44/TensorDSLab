@@ -124,6 +124,14 @@ cleared the exact final bytes with `13` unavailable-CUDA skips and no
 accelerator claim. Local `main` remains unpushed until the separate TensorCore
 `0.15.0` adoption and exact integrated CUDA gates close.
 
+[Maintenance 7 TensorCore 0.15 Adoption](docs/implementation/maintenance_7_tensorcore_0_15_adoption.md)
+is **Design-complete / User authorization pending / Undispatched**. It will
+replace raw logical-position tensors with TensorCore `RngPositions`, retire
+matching local generic validators in favor of `tensor_core.validation`, and
+give the unchanged readout RNG namespace one non-exported source. The
+TensorDSLab public API, physical/Pint configuration, scientific behavior,
+default keys and streams, and same-stack stochastic results remain unchanged.
+
 The historical [TensorCore consumer proposal](docs/implementation/proposed_tensorcore_counter_rng_and_distributions.md)
 is now fulfilled by published TensorCore `0.9.0` commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The

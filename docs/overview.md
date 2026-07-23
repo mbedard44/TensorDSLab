@@ -91,6 +91,15 @@ TensorCore `0.15.0` exact commit
 `0f974e9e7f52125bbe829e124beb24e69de811d3`; they are not a Maintenance 6
 closure condition.
 
+[Maintenance 7](implementation/maintenance_7_tensorcore_0_15_adoption.md) is
+**Design-complete / User authorization pending / Undispatched** from exact
+clean local baseline `65bb55bf98bb37a129a950d93a0bdb9b0d3f2971`. It targets
+published TensorCore `0.15.0`, replaces `logical_positions(...)` with
+`RngPositions`, migrates matching generic validation helpers to TensorCore,
+and centralizes the unchanged readout RNG namespace. It changes no public
+TensorDSLab API, Pint contract, role stream, scientific address, or result.
+Its local closure precedes the separate integrated CUDA gate and any push.
+
 [Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
 Closed through exact implementation candidate
 `3eb8ad19a36308ca2b73d41d219a7a3b4b46c1da` and Review's clean fast-forward
@@ -394,6 +403,10 @@ retain their original private paths as historical evidence.
   Merged / Closed Pint physical-configuration boundary and TensorCore-aware
   preparation cleanup through exact Review-cleared target
   `0257fb477ee04556ebbe26351123ae610b5d7925`.
+- [Maintenance 7 Work Order](implementation/maintenance_7_tensorcore_0_15_adoption.md):
+  Design-complete / User authorization pending / Undispatched exact
+  TensorCore `0.15.0`, validation-ownership, RngPositions, and readout
+  namespace adoption.
 - [Stage 7 Work Order](implementation/stage_7_public_readout_orchestration.md):
   Merged / Closed public request planning, whole-closure
   preparation, execute-once orchestration, and exact-retention contract.

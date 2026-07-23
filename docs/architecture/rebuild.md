@@ -113,6 +113,16 @@ until later editorial compaction; they are not Maintenance 6 implementation
 authority. The stage changes no scientific equation, RNG address, product
 meaning, IO/artifact boundary, or Stage 8 contract.
 
+Maintenance 7 TensorCore 0.15 Adoption is **Design-complete / User
+authorization pending / Undispatched** under
+[`maintenance_7_tensorcore_0_15_adoption.md`](../implementation/maintenance_7_tensorcore_0_15_adoption.md).
+It pins exact published TensorCore `0.15.0`, cleanly replaces
+`logical_positions(...)` with `RngPositions`, moves only matching generic
+validation mechanics into TensorCore ownership, and gives the unchanged
+`0x54445331` readout namespace one non-exported source. It preserves every
+role stream, raw position value/order, word schedule, scientific limit,
+same-stack result, Config/Pint contract, product action, and facade.
+
 TensorDSLab Design selected and implemented the following RNG and
 module-ownership foundation:
 one caller-constructed TensorCore `CounterRng` per simulation invocation,
@@ -6881,8 +6891,9 @@ The completed prerequisites and remaining production sequence are:
 5. Maintenance 6 Pint Physical Configuration Boundary is Merged / Closed
    through exact Review-cleared target
    `0257fb477ee04556ebbe26351123ae610b5d7925`.
-6. Adopt published TensorCore `0.15.0` and complete the matching TensorDSLab
-   cleanup through a separate Design-pending / Undispatched work order.
+6. Complete the Design-ready, undispatched Maintenance 7 adoption of published
+   TensorCore `0.15.0` and the matching TensorDSLab validation/RngPositions
+   cleanup.
 7. The first Stage 8 real-CUDA attempt remains stopped evidence. Any rerun
    requires a new Design authority after Maintenance 6.
    Profile real GPU memory and execution before designing workspace/output
@@ -7083,9 +7094,10 @@ Closed prerequisites and remaining Design gates are:
    instrumentation, and the fallback gate for a purpose-built kernel.
    Cross-product analog/digitized
    fusion remains excluded.
-7. TensorCore `0.15.0` adoption and matching TensorDSLab cleanup are the next
-   Design-pending / Undispatched package gate. Local `main` remains unpushed
-   until that adoption and the exact integrated CUDA gates close.
+7. Maintenance 7 TensorCore `0.15.0` adoption and matching TensorDSLab cleanup
+   are Design-complete / User authorization pending / Undispatched. Local
+   `main` remains unpushed until that adoption and the exact integrated CUDA
+   gates close.
 8. Digitization-config association for independent/durable consumers.
 9. Exact TensorG4DS source and dense truth-binning bridge, including provenance
    origin, left-edge construction, exact boundary assignment at `0`, `i * T`,

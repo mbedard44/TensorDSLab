@@ -41,6 +41,14 @@ for public physical Config values and the compact SampleAxis convenience
 boundary while preserving the implemented axes, sampling authority, product
 graph, science, RNG, and unit-free execution core.
 
+Maintenance 7 is **Design-complete / User authorization pending /
+Undispatched** under its focused
+[TensorCore 0.15 adoption work order](../implementation/maintenance_7_tensorcore_0_15_adoption.md).
+It will replace raw logical-position tensors with exact `RngPositions`, import
+matching generic validation requirements from TensorCore, and centralize the
+unchanged readout RNG namespace. No scientific, product, Pint, role-key,
+address, or public-facade change is accepted.
+
 ## Scope
 
 The first readout surface starts from an already-produced dense
@@ -887,7 +895,9 @@ execution. It is Merged / Closed. Maintenance 6 is also Merged / Closed through
 exact Review-cleared target `0257fb477ee04556ebbe26351123ae610b5d7925`;
 it owns the physical Config representation and bounded runtime-admission
 cleanup. The separate TensorCore `0.15.0` adoption is next and remains
-undispatched.
+undispatched under Maintenance 7. Its local package loop intentionally makes
+no fresh CUDA claim; the exact integrated CUDA gate follows only after
+adoption closeout.
 
 ## Return To Design Before
 

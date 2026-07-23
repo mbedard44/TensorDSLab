@@ -35,6 +35,13 @@ exact Pint `0.25.3` and uses `Scalar.require(...)` at the package-owned
 physical-configuration boundary without putting Pint into TensorCore or tensor
 execution.
 
+Maintenance 7 is **Design-complete / User authorization pending /
+Undispatched**. It targets exact published TensorCore `0.15.0` commit
+`0f974e9e7f52125bbe829e124beb24e69de811d3` and a behavior-preserving
+consumer cleanup: `RngPositions` replaces raw logical-position tensors,
+matching generic validation moves to `tensor_core.validation`, and one
+non-exported TensorDSLab value owns the unchanged readout RNG namespace.
+
 ## Target Collaborator Surface
 
 The normal workflow is one public function plus named product classes:
@@ -550,5 +557,8 @@ is **Merged / Closed** through exact Review-cleared supplemental candidate
 is **Merged / Closed** through exact Review-cleared target
 `0257fb477ee04556ebbe26351123ae610b5d7925`. It implements only the bounded
 Pint/config/runtime scope; no Stage 8 rerun, IO/artifact surface, integration,
-or push follows. TensorCore `0.15.0` adoption is the next Design-pending /
-Undispatched package gate.
+or push follows. TensorCore `0.15.0` adoption is the next Design-complete /
+User authorization pending / Undispatched package gate.
+[Maintenance 7](implementation/maintenance_7_tensorcore_0_15_adoption.md) is
+the exact Design-complete / User authorization pending work order for that
+adoption. It does not dispatch itself, run cluster work, or authorize a push.

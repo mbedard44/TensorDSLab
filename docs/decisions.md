@@ -405,6 +405,34 @@ candidate `89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
 rejects duplicate keys assigned to distinct roles in the requested transitive
 closure before any RNG request, producer invocation, or semantic-output write.
 
+### TensorCore `0.15.0` Owns Prepared Positions And Generic Requirements
+
+Maintenance 7 is Design-complete and undispatched against exact published
+TensorCore `0.15.0` commit
+`0f974e9e7f52125bbe829e124beb24e69de811d3`. TensorDSLab will replace
+`logical_positions(...)` without an alias by passing exact `RngPositions` to
+public CounterRng distributions. Its complete production transform need is
+covered by `from_shape`, `movedim`, `select`, unit-stride `slice`, and
+nonnegative `offset`. Those transforms preserve exact raw values and order;
+they never renumber scientific addresses.
+
+TensorDSLab will also import matching generic dtype, layout, eager-float
+representability, shape-span, allocation, and count-tensor requirements from
+TensorCore. It retains readout-axis composition, Pint/physical policy, product
+validation, scientific count arithmetic, ledgers, role-key uniqueness, and
+address-lattice bounds. There is no TensorDSLab validator wrapper or
+compatibility layer.
+
+The package-wide readout RNG namespace remains exactly `0x54445331`, but one
+non-exported `readout/rng_keys.py` value becomes its sole production source.
+All ten append-only stream values remain where their owning product configs
+declare them. This is an ownership cleanup, not a new RNG addressing scheme.
+
+Maintenance 7 closes locally before a separate exact integrated TensorCore /
+TensorDSLab two-Torch-minor CUDA gate. Neither the dependency adoption nor that
+future functional CUDA evidence is Stage 8 performance work, and TensorDSLab
+remains unpushed until both gates close.
+
 ### Charge Uses Aggregate Multinomial And Hybrid Poisson Sampling
 
 Timing jitter and AP placement use aggregate multinomial laws realized through

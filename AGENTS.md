@@ -289,6 +289,19 @@ is a separate adoption of published TensorCore `0.15.0` exact commit
 `0f974e9e7f52125bbe829e124beb24e69de811d3`; only after that adoption and the
 exact integrated CUDA gates close may TensorDSLab be pushed.
 
+Maintenance 7 TensorCore 0.15 Adoption is **Design-complete / User
+authorization pending / Undispatched** under
+`docs/implementation/maintenance_7_tensorcore_0_15_adoption.md`. Its focused
+target pins exact published TensorCore `0.15.0` commit
+`0f974e9e7f52125bbe829e124beb24e69de811d3`, replaces raw
+`logical_positions(...)` use with `RngPositions`, imports matching generic
+validation requirements from TensorCore, and centralizes the unchanged
+`0x54445331` readout RNG namespace in one non-exported TensorDSLab module. It
+changes no public TensorDSLab facade, Pint boundary, scientific law, role
+stream, raw RNG address, product result, or Stage 8 contract. Its package loop
+is local-only; the exact integrated two-Torch-minor CUDA gates remain a
+separate post-closeout authority before any push.
+
 The first Stage 8 real-CUDA attempt correctly stopped before any accepted
 measurement when its protected-suite gate over-applied those macOS literals to
 the frozen Della Linux/x86_64 stack. Exact Stage 8 authority
@@ -373,6 +386,10 @@ This is the implemented Maintenance 5 package tree, not permission to create
 additional placeholders. Maintenance 6 may add only the accepted
 `common/units.py` behavior and the exact allowlisted physical-config/runtime
 changes in its work order; it does not reorganize this product tree.
+The undispatched Maintenance 7 target may add only the accepted non-exported
+`readout/rng_keys.py` policy module and the exact validation/RngPositions
+migration paths in its work order; it creates no generic RNG wrapper or
+compatibility layer.
 Maintenance 2 realized the preceding product/module ownership
 migration without compatibility shims, and Stage 7 completed
 `readout/simulation.py`; their private `_produce.py`, `*Plan`,

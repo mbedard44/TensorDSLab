@@ -21,8 +21,8 @@ Python import: tensor_dslab (accepted on main through Maintenance 5)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
 Package maturity: Maintenance 6 Merged / Closed
-Next production gate: TensorCore 0.15 adoption and matching TensorDSLab cleanup;
-Design pending / Undispatched
+Next production gate: Maintenance 7 TensorCore 0.15 adoption;
+Design-complete / User authorization pending / Undispatched
 Stage 8: separately stopped; any restart requires a new Design authority after
 Maintenance 6
 ```
@@ -105,6 +105,15 @@ physical values with canonical copied Pint quantities, while preparation
 extracts plain execution values and production and validation remain
 unit-free. Local `main` remains unpushed pending the separate TensorCore
 `0.15.0` adoption and exact integrated CUDA gates.
+
+[Maintenance 7](docs/implementation/maintenance_7_tensorcore_0_15_adoption.md)
+is Design-complete and undispatched. It adopts exact published TensorCore
+`0.15.0`, replaces `logical_positions(...)` with validated `RngPositions`,
+uses TensorCore's generic validation parts where the contracts match, and
+centralizes the unchanged readout RNG namespace without changing streams,
+addresses, science, Pint, products, or facades. Its local package gate makes no
+fresh CUDA claim; separately authorized integrated CUDA evidence follows only
+after the adoption closes.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency

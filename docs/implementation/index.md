@@ -597,6 +597,33 @@ will consider adoption of published TensorCore `0.15.0` exact commit
 package-owned CUDA matrices may qualify only that exact integrated pairing.
 Local `main` remains unpushed pending that adoption and those integrated gates.
 
+## Maintenance 7 TensorCore 0.15 Adoption
+
+### [Maintenance 7 TensorCore 0.15 Adoption](maintenance_7_tensorcore_0_15_adoption.md)
+
+Status: **Design-complete / User authorization pending / Undispatched**.
+
+Maintenance 7 starts from exact clean local Maintenance 6 Design-closeout
+baseline `65bb55bf98bb37a129a950d93a0bdb9b0d3f2971`, tree
+`c76269e043c81b18243b8355327131eac68e3f0a`. It selects exact published
+TensorCore `0.15.0` commit
+`0f974e9e7f52125bbe829e124beb24e69de811d3`, tree
+`587ff59711255c027a85cfef883422d40ea5dcda`.
+
+The work order cleanly replaces `logical_positions(...)` with
+`RngPositions`, migrates only exact-matching generic dtype/layout,
+representability, allocation, shape-span, and count-domain mechanics to
+TensorCore, and gives the existing `0x54445331` namespace one non-exported
+TensorDSLab source. Readout composition, Pint/physical policy, product
+validation, scientific count arithmetic, ledgers, role streams, raw address
+values, word schedules, and public exports remain TensorDSLab-owned and
+unchanged.
+
+The package Implementation/Validation/Review loop is local-only and makes no
+new CUDA claim. After exact adoption closeout, a separate authority runs
+package-owned two-Torch-minor CUDA matrices on the exact integrated pairing.
+TensorDSLab remains unpushed until both gates close.
+
 ## Expected Stage Discipline
 
 Each stage should stay scoped to its work order. If implementation reveals a

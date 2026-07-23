@@ -441,6 +441,45 @@ TensorCore `0.15.0` exact commit
 `0f974e9e7f52125bbe829e124beb24e69de811d3`; those later package-owned gates
 qualify only that exact integrated pairing.
 
+## Maintenance 7 TensorCore 0.15 Adoption Gate
+
+The
+[Maintenance 7 work order](implementation/maintenance_7_tensorcore_0_15_adoption.md)
+is **Design-complete / User authorization pending / Undispatched** against
+exact local baseline `65bb55bf98bb37a129a950d93a0bdb9b0d3f2971`.
+
+When dispatched, local fixed-commit Validation and independent Review must
+prove:
+
+- exact published TensorCore `0.15.0` commit/tree/version, 34 package-root
+  exports, 19 `tensor_core.validation` exports, the exact one-name public
+  `tensor_core.validation.random` surface, 25 package files, and exact
+  source/archive identity;
+- exact Pint `0.25.3` and unchanged TensorDSLab 35/30/5 exports;
+- complete retirement of `logical_positions` and local generic
+  dtype/floating/representability/allocation/count-domain implementations
+  without a wrapper or alias;
+- exact `RngPositions` raw value/order agreement for every base, move, select,
+  PSD slice, generation offset, timing-jitter offset, and AP-category offset;
+- exact same-stack raw words and completed product continuity, no-op no-draw
+  behavior, and unchanged global RNG isolation;
+- direct delegation to TensorCore's field dtype/layout, eager-float,
+  shape-span, allocation, and count-tensor requirements while retaining every
+  TensorDSLab readout/scientific/product relationship;
+- one non-exported production source for namespace `0x54445331`, with all ten
+  streams and every default key unchanged;
+- unchanged source/axes/storage/autograd/device/dtype/product postconditions;
+- zero-diagnostic Pyright plus frozen negative typing for raw-tensor position
+  rejection and the adopted validation signatures; and
+- full local source/archive, Pint wheel/sdist, artifact, import-isolation,
+  privacy, mutation, protected-byte, and hygiene evidence.
+
+Maintenance 7 performs no cluster submission and makes no new accelerator
+claim. After its exact local closeout, a separate integrated-CUDA authority
+must run the complete TensorCore and TensorDSLab two-Torch-minor matrices
+against that exact pairing before TensorDSLab is pushed. Those runs are
+functional correctness evidence, not Stage 8 performance evidence.
+
 ## Governance Adoption Checks
 
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`.

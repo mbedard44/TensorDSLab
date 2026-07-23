@@ -27,6 +27,14 @@ TensorDSLab-owned source/archive, typing, and functional consumer evidence; the
 separate TensorCore `0.15.0` adoption will own the deferred integrated CUDA
 qualification. No broad compatibility result follows.
 
+Maintenance 7 is Design-complete and undispatched against exact published
+TensorCore `0.15.0` commit
+`0f974e9e7f52125bbe829e124beb24e69de811d3`, tree
+`587ff59711255c027a85cfef883422d40ea5dcda`. Its accepted target consumes the
+public `RngPositions` representation and the supported
+`tensor_core.validation` parts bin without changing TensorDSLab's semantic
+leaves, products, physical configuration, or public exports.
+
 Maintenance 3 is Merged / Closed through exact Review-cleared candidate
 `dfe45c96f9cc141f91e29a6a3d81bd7a3e8a49f0`. Maintenance 4 Runtime Action
 Ownership is **Merged / Closed** through exact Review-cleared supplemental
@@ -38,7 +46,8 @@ candidate `81ad2f52fe4a1966e5b3a0ceb5063138e42e731f` and Design closeout
 `021694b9479d02546405f6a815aedf21c9c831a4`. Maintenance 6 is Merged / Closed
 through exact Review-cleared target
 `0257fb477ee04556ebbe26351123ae610b5d7925`. TensorCore `0.15.0` adoption is
-the next Design-pending / Undispatched package gate.
+the next Design-complete / User authorization pending / Undispatched package
+gate under Maintenance 7.
 
 The previous TensorCore `0.6` ID/layout/sidecar architecture is historical and
 is intentionally not preserved through aliases.
@@ -78,6 +87,16 @@ retains `require_same_dtype(*fields)`. TensorDSLab consumes only package-root
 surfaces and never duplicates protected RNG or generic representation
 mechanics.
 
+The accepted Maintenance 7 target supersedes only that live dependency and
+consumer-mechanics description after implementation. TensorCore `0.15.0`
+replaces `logical_positions(...)` with factory-owned `RngPositions`, provides
+the trusted `movedim`, `select`, unit-slice, and nonnegative-offset transforms
+needed by every TensorDSLab stochastic route, and exposes reusable generic
+requirements through `tensor_core.validation`. TensorDSLab will use those
+surfaces directly, without a wrapper, alias, raw position accessor, or local
+generic validator. The protected CounterRng block hook remains the exact raw
+position observation boundary for tests and downstream RNG implementations.
+
 TensorCore additionally exposes generic table roots and `TensorArtifact`.
 Maintenance 5 does not use them to infer a TensorDSLab table backend, schema,
 artifact, persistence format, or IO policy.
@@ -104,8 +123,10 @@ TensorDSLab owns:
   scientific position/category lattices, direct-uniform/Gaussian ordinals,
   draw-free scientific policy, multinomial ordering and final remainders,
   count accumulation, and ledgers;
-- one private scalar-to-floating-dtype representation requirement and all raw
-  tensor dtype/shape/device policy;
+- one non-exported readout RNG namespace source, product-owned role streams,
+  and all scientific address-lattice policy;
+- readout-specific structure and scientific raw-tensor/value policy after
+  composing matching TensorCore generic requirements;
 - result aliasing/freshness, device/dtype/layout, autograd, synchronization,
   failure, and multi-output relationships; and
 - any future persistence or execution optimization.
