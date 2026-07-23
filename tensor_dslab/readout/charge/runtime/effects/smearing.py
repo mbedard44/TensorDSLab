@@ -109,8 +109,6 @@ def simulate_charge_smearing(
     runtime: ChargeSmearingRuntime,
     rng: CounterRng,
 ) -> torch.Tensor:
-    if type(runtime) is not ChargeSmearingRuntime:
-        raise TypeError("runtime must be exactly ChargeSmearingRuntime")
     if charge_pe.dtype not in (torch.float32, torch.float64):
         raise TypeError("charge_pe must use a supported floating dtype")
     if charge_square_sum.dtype is not charge_pe.dtype:

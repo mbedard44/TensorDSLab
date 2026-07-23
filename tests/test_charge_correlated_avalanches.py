@@ -20,6 +20,8 @@ from tensor_core import (
 )
 
 from tensor_dslab import (
+    quantities,
+    quantity,
     AfterpulseConfig,
     AfterpulseRecoveryConfig,
     CorrelatedAvalancheConfig,
@@ -39,6 +41,22 @@ from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 
 
 _STATISTICAL_SEEDS = (0, 1, 0x0123456789ABCDEF, 0xFFFFFFFFFFFFFFFF)
+
+
+def _ns(value: int | float):
+    return quantity(value, "ns")
+
+
+def _hz(value: int | float):
+    return quantity(value, "Hz")
+
+
+def _mv(value: int | float):
+    return quantity(value, "mV")
+
+
+def _density(value: int | float):
+    return quantity(value, "mV ** 2 / Hz")
 
 
 class _FailingRng(CounterRng):
@@ -403,26 +421,26 @@ def _sampling(*, count: int = 4) -> SamplingRuntime:
     )
 
 
-def _direct(*, mean: float = 0.3, delay_ns: float = 0.0) -> DirectCrosstalkConfig:
+def _direct(*, mean: float = 0.3, delay: float = 0.0) -> DirectCrosstalkConfig:
     return DirectCrosstalkConfig(
         mean_offspring_per_parent=NonnegativeFloat(mean),
-        delay=FixedDelayConfig(delay_ns=NonnegativeFloat(delay_ns)),
+        delay=FixedDelayConfig(delay=_ns(delay)),
     )
 
 
-def _delayed(*, mean: float = 0.2, delay_ns: float = 2.0) -> DelayedCrosstalkConfig:
+def _delayed(*, mean: float = 0.2, delay: float = 2.0) -> DelayedCrosstalkConfig:
     return DelayedCrosstalkConfig(
         mean_offspring_per_parent=NonnegativeFloat(mean),
-        delay=FixedDelayConfig(delay_ns=NonnegativeFloat(delay_ns)),
+        delay=FixedDelayConfig(delay=_ns(delay)),
     )
 
 
 def _afterpulse(*, probability: float = 0.25, recovery: bool = False) -> AfterpulseConfig:
     return AfterpulseConfig(
         probability=Probability(probability),
-        mean_delay_ns=PositiveFloat(10.0),
+        mean_delay=_ns(10.0),
         recovery=(
-            AfterpulseRecoveryConfig(time_constant_ns=PositiveFloat(20.0))
+            AfterpulseRecoveryConfig(time_constant=_ns(20.0))
             if recovery
             else None
         ),
@@ -457,8 +475,8 @@ class CorrelatedAvalancheIdentityTest(unittest.TestCase):
         roots = torch.tensor((3, 0, 1, 0), dtype=torch.int64).reshape(1, 1, 4)
         configured = CorrelatedAvalancheConfig(
             maximum_generations=NonnegativeInteger(0),
-            direct_crosstalk=_direct(mean=1.0, delay_ns=1.0e100),
-            delayed_crosstalk=_delayed(mean=1.0, delay_ns=1.0e100),
+            direct_crosstalk=_direct(mean=1.0, delay=1.0e100),
+            delayed_crosstalk=_delayed(mean=1.0, delay=1.0e100),
             afterpulse=_afterpulse(probability=1.0, recovery=True),
         )
         result = _simulate(roots, configured, rng=_FailingRng(seed=0))
@@ -472,8 +490,8 @@ class CorrelatedAvalancheIdentityTest(unittest.TestCase):
 
         ineffective = CorrelatedAvalancheConfig(
             maximum_generations=NonnegativeInteger(10),
-            direct_crosstalk=_direct(mean=0.0, delay_ns=1.0e100),
-            delayed_crosstalk=_delayed(mean=0.0, delay_ns=1.0e100),
+            direct_crosstalk=_direct(mean=0.0, delay=1.0e100),
+            delayed_crosstalk=_delayed(mean=0.0, delay=1.0e100),
             afterpulse=_afterpulse(probability=0.0, recovery=True),
         )
         result = _simulate(roots, ineffective, rng=_FailingRng(seed=0))
@@ -484,10 +502,10 @@ class CorrelatedAvalancheIdentityTest(unittest.TestCase):
         self,
     ) -> None:
         inactive_delay = ExponentialDelayConfig(
-            mean_delay_ns=PositiveFloat(1.0e100)
+            mean_delay=_ns(1.0e100)
         )
         inactive_recovery = AfterpulseRecoveryConfig(
-            time_constant_ns=PositiveFloat(1.0e100)
+            time_constant=_ns(1.0e100)
         )
         k_zero = CorrelatedAvalancheConfig(
             maximum_generations=NonnegativeInteger(0),
@@ -501,7 +519,7 @@ class CorrelatedAvalancheIdentityTest(unittest.TestCase):
             ),
             afterpulse=AfterpulseConfig(
                 probability=Probability(1.0),
-                mean_delay_ns=PositiveFloat(1.0e100),
+                mean_delay=_ns(1.0e100),
                 recovery=inactive_recovery,
             ),
         )
@@ -544,7 +562,7 @@ class CorrelatedAvalancheIdentityTest(unittest.TestCase):
             ),
             afterpulse=AfterpulseConfig(
                 probability=Probability(0.0),
-                mean_delay_ns=PositiveFloat(1.0e100),
+                mean_delay=_ns(1.0e100),
                 recovery=inactive_recovery,
             ),
         )
@@ -623,13 +641,13 @@ class CorrelatedAvalancheMechanismTest(unittest.TestCase):
             direct_crosstalk=DirectCrosstalkConfig(
                 mean_offspring_per_parent=NonnegativeFloat(0.5),
                 delay=ExponentialDelayConfig(
-                    mean_delay_ns=PositiveFloat(2.0)
+                    mean_delay=_ns(2.0)
                 ),
             ),
             delayed_crosstalk=DelayedCrosstalkConfig(
                 mean_offspring_per_parent=NonnegativeFloat(0.5),
                 delay=ExponentialDelayConfig(
-                    mean_delay_ns=PositiveFloat(2.0)
+                    mean_delay=_ns(2.0)
                 ),
             ),
             afterpulse=_afterpulse(probability=0.5),
@@ -666,7 +684,7 @@ class CorrelatedAvalancheMechanismTest(unittest.TestCase):
         roots = torch.tensor((1000, 0, 0, 0), dtype=torch.int64).reshape(1, 1, 4)
         config = CorrelatedAvalancheConfig(
             maximum_generations=NonnegativeInteger(1),
-            direct_crosstalk=_direct(mean=1.0, delay_ns=8.0),
+            direct_crosstalk=_direct(mean=1.0, delay=8.0),
         )
         result = _simulate(roots, config)
         assert result.direct_crosstalk_count is not None
@@ -1072,7 +1090,7 @@ class CorrelatedAvalancheStatisticalTest(unittest.TestCase):
                 roots,
                 CorrelatedAvalancheConfig(
                     maximum_generations=NonnegativeInteger(3),
-                    delayed_crosstalk=_delayed(mean=mean, delay_ns=2.0),
+                    delayed_crosstalk=_delayed(mean=mean, delay=2.0),
                 ),
                 rng=Threefry4x32(seed=seed),
             )
@@ -1146,13 +1164,13 @@ class CorrelatedAvalancheStatisticalTest(unittest.TestCase):
 
         unit_afterpulse = AfterpulseConfig(
             probability=Probability(probability),
-            mean_delay_ns=PositiveFloat(10.0),
+            mean_delay=_ns(10.0),
         )
         recovered_afterpulse = AfterpulseConfig(
             probability=Probability(probability),
-            mean_delay_ns=PositiveFloat(10.0),
+            mean_delay=_ns(10.0),
             recovery=AfterpulseRecoveryConfig(
-                time_constant_ns=PositiveFloat(20.0)
+                time_constant=_ns(20.0)
             ),
         )
         recovered_config = CorrelatedAvalancheConfig(
@@ -1434,11 +1452,11 @@ class CudaCorrelatedAvalancheTest(unittest.TestCase):
         original_roots = roots.clone()
         config = CorrelatedAvalancheConfig(
             maximum_generations=NonnegativeInteger(2),
-            direct_crosstalk=_direct(mean=0.3, delay_ns=1.0),
+            direct_crosstalk=_direct(mean=0.3, delay=1.0),
             delayed_crosstalk=DelayedCrosstalkConfig(
                 mean_offspring_per_parent=NonnegativeFloat(0.2),
                 delay=ExponentialDelayConfig(
-                    mean_delay_ns=PositiveFloat(4.0),
+                    mean_delay=_ns(4.0),
                 ),
             ),
             afterpulse=_afterpulse(probability=0.35, recovery=True),

@@ -7,6 +7,8 @@ import unittest
 from tensor_core import PositiveFloat, Probability
 
 from tensor_dslab import (
+    quantities,
+    quantity,
     AfterpulseConfig,
     AfterpulseRecoveryConfig,
 )
@@ -19,6 +21,22 @@ from tensor_dslab.readout.charge.runtime.effects.delays import (
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 
 
+def _ns(value: int | float):
+    return quantity(value, "ns")
+
+
+def _hz(value: int | float):
+    return quantity(value, "Hz")
+
+
+def _mv(value: int | float):
+    return quantity(value, "mV")
+
+
+def _density(value: int | float):
+    return quantity(value, "mV ** 2 / Hz")
+
+
 def _sampling(*, period_ps: int = 2000, count: int = 8) -> SamplingRuntime:
     return SamplingRuntime(
         sample_count=count,
@@ -28,23 +46,23 @@ def _sampling(*, period_ps: int = 2000, count: int = 8) -> SamplingRuntime:
 
 
 def _prepare_fixed_delay(
-    delay_ns: float,
+    delay: float,
     *,
     sampling: SamplingRuntime,
 ) -> DelayRuntime:
     return _prepare_fixed_delay_prepared(
-        delay_ns,
+        delay,
         sampling=sampling,
     )
 
 
 def prepare_exponential_delay(
-    mean_delay_ns: float,
+    mean_delay: float,
     *,
     sampling: SamplingRuntime,
 ) -> DelayRuntime:
     return _prepare_exponential_delay_prepared(
-        mean_delay_ns,
+        mean_delay,
         sampling=sampling,
     )
 
@@ -57,8 +75,8 @@ def prepare_afterpulse_recovery(
     delay: DelayRuntime,
 ) -> tuple[tuple[float, ...], tuple[float, ...]]:
     return _prepare_afterpulse_recovery_prepared(
-        afterpulse,
-        recovery,
+        float(afterpulse.mean_delay.magnitude),
+        float(recovery.time_constant.magnitude),
         sampling=sampling,
         delay=delay,
     )
@@ -130,9 +148,9 @@ class FixedDelayPreparationTest(unittest.TestCase):
         )
         self.assertGreater(below.probabilities[-1], 0.0)
         self.assertLess(below.right_tails[-1], 1.0)
-        for delay_ns in (8.0, math.nextafter(8.0, math.inf), 1.0e308):
-            with self.subTest(delay_ns=delay_ns):
-                plan = _prepare_fixed_delay(delay_ns, sampling=sampling)
+        for delay in (8.0, math.nextafter(8.0, math.inf), 1.0e308):
+            with self.subTest(delay=delay):
+                plan = _prepare_fixed_delay(delay, sampling=sampling)
                 self.assertEqual(plan.probabilities, (0.0, 0.0, 0.0, 0.0))
                 self.assertEqual(
                     plan.right_tails,
@@ -273,18 +291,18 @@ class AfterpulseRecoveryPreparationTest(unittest.TestCase):
         local_tolerance = Decimal("1e-12")
         complete_tolerance = Decimal("1e-11")
 
-        for branch, mean_delay_ns, recovery_ns in branch_cases:
+        for branch, mean_delay, recovery_ns in branch_cases:
             with self.subTest(branch=branch):
                 recovery_config = AfterpulseRecoveryConfig(
-                    time_constant_ns=PositiveFloat(recovery_ns)
+                    time_constant=_ns(recovery_ns)
                 )
                 afterpulse = AfterpulseConfig(
                     probability=Probability(0.4),
-                    mean_delay_ns=PositiveFloat(mean_delay_ns),
+                    mean_delay=_ns(mean_delay),
                     recovery=recovery_config,
                 )
                 delay = prepare_exponential_delay(
-                    mean_delay_ns,
+                    mean_delay,
                     sampling=sampling,
                 )
                 recovery, overflow = prepare_afterpulse_recovery(
@@ -295,7 +313,7 @@ class AfterpulseRecoveryPreparationTest(unittest.TestCase):
                 )
 
                 period = float(sampling.sample_period_ps)
-                x_binary64 = period / (mean_delay_ns * 1000.0)
+                x_binary64 = period / (mean_delay * 1000.0)
                 y_binary64 = period / (recovery_ns * 1000.0)
                 if branch == "series":
                     self.assertLessEqual(x_binary64 + y_binary64, 0.5)
@@ -321,7 +339,7 @@ class AfterpulseRecoveryPreparationTest(unittest.TestCase):
                     context.prec = 110
                     period_ps = Decimal(sampling.sample_period_ps)
                     x = period_ps / (
-                        Decimal.from_float(mean_delay_ns) * Decimal(1000)
+                        Decimal.from_float(mean_delay) * Decimal(1000)
                     )
                     y = period_ps / (
                         Decimal.from_float(recovery_ns) * Decimal(1000)
@@ -448,11 +466,11 @@ class AfterpulseRecoveryPreparationTest(unittest.TestCase):
     def test_recovery_is_bounded_delay_conditioned_and_tail_aware(self) -> None:
         sampling = _sampling(count=8)
         recovery_config = AfterpulseRecoveryConfig(
-            time_constant_ns=PositiveFloat(20.0)
+            time_constant=_ns(20.0)
         )
         afterpulse = AfterpulseConfig(
             probability=Probability(0.4),
-            mean_delay_ns=PositiveFloat(10.0),
+            mean_delay=_ns(10.0),
             recovery=recovery_config,
         )
         delay = prepare_exponential_delay(10.0, sampling=sampling)

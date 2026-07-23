@@ -5,6 +5,7 @@ from typing import final
 
 import torch
 
+from tensor_dslab.common.units import canonical_magnitude
 from tensor_dslab.readout.analog_waveform.config import AnalogWaveformConfig
 from tensor_dslab.readout.requirements import require_representable_float
 
@@ -12,8 +13,8 @@ from tensor_dslab.readout.requirements import require_representable_float
 @final
 @dataclass(frozen=True, slots=True)
 class AnalogWaveformRuntime:
-    minimum: torch.Tensor | None
-    maximum: torch.Tensor | None
+    minimum_mv: torch.Tensor | None
+    maximum_mv: torch.Tensor | None
 
 
 def prepare_analog_waveform(
@@ -22,23 +23,20 @@ def prepare_analog_waveform(
     floating_dtype: torch.dtype,
     device: torch.device,
 ) -> AnalogWaveformRuntime:
-    if type(config) is not AnalogWaveformConfig:
-        raise TypeError("config must be exactly AnalogWaveformConfig")
-    if floating_dtype not in (torch.float32, torch.float64):
-        raise TypeError("floating_dtype must be torch.float32 or torch.float64")
-
     minimum: float | None = None
     maximum: float | None = None
     if config.saturation is not None:
-        if config.saturation.minimum_mv is not None:
+        if config.saturation.minimum is not None:
+            minimum_mv = canonical_magnitude(config.saturation.minimum)
             minimum = require_representable_float(
-                config.saturation.minimum_mv.value,
+                minimum_mv,
                 dtype=floating_dtype,
                 field="analog saturation minimum",
             )
-        if config.saturation.maximum_mv is not None:
+        if config.saturation.maximum is not None:
+            maximum_mv = canonical_magnitude(config.saturation.maximum)
             maximum = require_representable_float(
-                config.saturation.maximum_mv.value,
+                maximum_mv,
                 dtype=floating_dtype,
                 field="analog saturation maximum",
             )
@@ -66,6 +64,6 @@ def prepare_analog_waveform(
         )
     )
     return AnalogWaveformRuntime(
-        minimum=minimum_tensor,
-        maximum=maximum_tensor,
+        minimum_mv=minimum_tensor,
+        maximum_mv=maximum_tensor,
     )

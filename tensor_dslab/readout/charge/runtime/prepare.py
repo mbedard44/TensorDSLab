@@ -51,13 +51,7 @@ def prepare_charge(
     sampling: SamplingRuntime,
     floating_dtype: torch.dtype,
 ) -> ChargeRuntime:
-    if type(config) is not ChargeConfig:
-        raise TypeError("config must be exactly ChargeConfig")
-    if floating_dtype not in (torch.float32, torch.float64):
-        raise TypeError("floating_dtype must be torch.float32 or torch.float64")
     device = photoelectrons.tensor.device
-    if device.type not in ("cpu", "cuda"):
-        raise ValueError("Charge production supports only CPU and CUDA")
 
     source = photoelectrons.tensor
     require_count_domain(source, field="Photoelectrons source")
@@ -118,7 +112,6 @@ def prepare_charge(
     timing_jitter = (
         None
         if config.timing_jitter is None
-        or config.timing_jitter.sigma_ns.value == 0.0
         else prepare_timing_jitter(
             config.timing_jitter,
             sampling=sampling,

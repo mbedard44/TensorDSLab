@@ -124,6 +124,7 @@ class PackageContractTest(unittest.TestCase):
         self.assertEqual(
             project["dependencies"],
             [
+                "pint==0.25.3",
                 "torch",
                 "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@202d8b1bc6259b8453d3d377570417f2480d782b",
             ],
@@ -138,7 +139,13 @@ class PackageContractTest(unittest.TestCase):
     def test_exact_common_readout_and_package_exports(self) -> None:
         self.assertEqual(
             common.__all__,
-            ("ChannelAxis", "ExampleAxis", "SampleAxis"),
+            (
+                "ChannelAxis",
+                "ExampleAxis",
+                "SampleAxis",
+                "quantities",
+                "quantity",
+            ),
         )
         expected_readout = (
             "AfterpulseConfig",
@@ -208,6 +215,8 @@ class PackageContractTest(unittest.TestCase):
                 "VetoPduPulseConfig",
                 "WhiteNoiseConfig",
                 "ZeroNoiseConfig",
+                "quantities",
+                "quantity",
                 "simulate_readout",
             ),
         )
@@ -690,7 +699,7 @@ class PackageContractTest(unittest.TestCase):
             "tensor_dslab.readout",
             "tensor_dslab",
         )
-        deferred = ("tensor_g4ds", "tensor_ml", "dslab", "g4ds11", "pint")
+        deferred = ("tensor_g4ds", "tensor_ml", "dslab", "g4ds11")
         for module_name in modules:
             with self.subTest(module=module_name):
                 code = (

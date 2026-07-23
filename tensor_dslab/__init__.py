@@ -4,6 +4,8 @@ from tensor_dslab.common import (
     ChannelAxis,
     ExampleAxis,
     SampleAxis,
+    quantities,
+    quantity,
 )
 from tensor_dslab.readout import (
     AfterpulseConfig,
@@ -71,5 +73,7 @@ __all__ = (
     "VetoPduPulseConfig",
     "WhiteNoiseConfig",
     "ZeroNoiseConfig",
+    "quantities",
+    "quantity",
     "simulate_readout",
 )

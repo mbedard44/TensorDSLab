@@ -46,31 +46,3 @@ def require_representable_float(
     if not math.isfinite(represented):
         raise ValueError(f"{field} is not finite in {dtype}")
     return represented
-
-
-def require_exact(
-    value: object,
-    expected: type[object],
-    field: str,
-) -> None:
-    if type(value) is not expected:
-        raise TypeError(f"{field} must be exactly {expected.__name__}")
-
-
-def require_optional_exact(
-    value: object | None,
-    expected: type[object],
-    field: str,
-) -> None:
-    if value is not None:
-        require_exact(value, expected, field)
-
-
-def require_one_of_exact(
-    value: object,
-    expected: tuple[type[object], ...],
-    field: str,
-) -> None:
-    if type(value) not in expected:
-        names = ", ".join(item.__name__ for item in expected)
-        raise TypeError(f"{field} must be exactly one of: {names}")

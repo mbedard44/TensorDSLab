@@ -18,10 +18,7 @@ from tensor_dslab.readout import (
 )
 from tensor_dslab.readout.requirements import (
     require_dtype,
-    require_exact,
     require_floating_dtype,
-    require_one_of_exact,
-    require_optional_exact,
     require_representable_float,
 )
 from tensor_dslab.readout.analog_waveform.runtime.validate import (
@@ -329,17 +326,6 @@ class ReadoutProductTypesTest(unittest.TestCase):
             require_dtype(photoelectrons, torch.int32)
         charge = make_product(Charge)
         require_floating_dtype(charge)
-
-        require_exact(photoelectrons, Photoelectrons, "field")
-        with self.assertRaises(TypeError):
-            require_exact(photoelectrons, Charge, "field")
-        require_optional_exact(None, Charge, "field")
-        require_optional_exact(charge, Charge, "field")
-        with self.assertRaises(TypeError):
-            require_optional_exact(photoelectrons, Charge, "field")
-        require_one_of_exact(charge, (Charge, PureWaveform), "field")
-        with self.assertRaises(TypeError):
-            require_one_of_exact(photoelectrons, (Charge, PureWaveform), "field")
 
         real_tensor = torch.tensor
         with patch(

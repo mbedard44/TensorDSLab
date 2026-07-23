@@ -3,11 +3,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import final
 
+from pint import Quantity
 from tensor_core import NonnegativeFloat, PositiveFloat, RngKey
 
-from tensor_dslab.readout.requirements import (
-    require_exact,
-    require_one_of_exact,
+from tensor_dslab.common.units import (
+    _canonical_quantity,
+    canonical_magnitude,
 )
 
 
@@ -19,88 +20,105 @@ _RNG_NAMESPACE = 0x54445331
 class ZeroNoiseConfig:
     """Select the exact all-zero noise algorithm."""
 
+    __hash__ = None  # pyright: ignore[reportAssignmentType]
+
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class WhiteNoiseConfig:
-    rms_mv: PositiveFloat
+    rms: Quantity
     rng_key: RngKey = RngKey(namespace=_RNG_NAMESPACE, stream=0x0000_0001)
+    __hash__ = None  # pyright: ignore[reportAssignmentType]
 
     def __post_init__(self) -> None:
-        require_exact(self.rms_mv, PositiveFloat, "WhiteNoiseConfig.rms_mv")
-        require_exact(self.rng_key, RngKey, "WhiteNoiseConfig.rng_key")
+        object.__setattr__(
+            self,
+            "rms",
+            _canonical_quantity(
+                self.rms,
+                unit="mV",
+                field="WhiteNoiseConfig.rms",
+                constraint=PositiveFloat,
+            ),
+        )
 
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class PsdNoiseConfig:
-    frequency_left_edges_hz: tuple[NonnegativeFloat, ...]
-    frequency_stop_hz: PositiveFloat
-    power_density_mv2_per_hz: tuple[NonnegativeFloat, ...]
+    frequency_left_edges: tuple[Quantity, ...]
+    frequency_stop: Quantity
+    power_density: tuple[Quantity, ...]
     rng_key: RngKey = RngKey(namespace=_RNG_NAMESPACE, stream=0x0000_0002)
+    __hash__ = None  # pyright: ignore[reportAssignmentType]
 
     def __post_init__(self) -> None:
-        if type(self.frequency_left_edges_hz) is not tuple:
+        if type(self.frequency_left_edges) is not tuple:
             raise TypeError(
-                "PsdNoiseConfig.frequency_left_edges_hz must be a tuple"
+                "PsdNoiseConfig.frequency_left_edges must be a tuple"
             )
-        if type(self.power_density_mv2_per_hz) is not tuple:
+        if type(self.power_density) is not tuple:
             raise TypeError(
-                "PsdNoiseConfig.power_density_mv2_per_hz must be a tuple"
+                "PsdNoiseConfig.power_density must be a tuple"
             )
-        if not self.frequency_left_edges_hz:
+        if not self.frequency_left_edges:
             raise ValueError("a PSD requires at least one frequency bin")
-        if len(self.frequency_left_edges_hz) != len(
-            self.power_density_mv2_per_hz
-        ):
+        if len(self.frequency_left_edges) != len(self.power_density):
             raise ValueError("PSD left-edge and density counts must match")
-        for edge in self.frequency_left_edges_hz:
-            require_exact(
+        canonical_edges = tuple(
+            _canonical_quantity(
                 edge,
-                NonnegativeFloat,
-                "PsdNoiseConfig.frequency_left_edges_hz",
+                unit="Hz",
+                field=f"PsdNoiseConfig.frequency_left_edges[{index}]",
+                constraint=NonnegativeFloat,
             )
-        require_exact(
-            self.frequency_stop_hz,
-            PositiveFloat,
-            "PsdNoiseConfig.frequency_stop_hz",
+            for index, edge in enumerate(self.frequency_left_edges)
         )
-        if self.frequency_left_edges_hz[0].value != 0.0:
+        object.__setattr__(self, "frequency_left_edges", canonical_edges)
+        object.__setattr__(
+            self,
+            "frequency_stop",
+            _canonical_quantity(
+                self.frequency_stop,
+                unit="Hz",
+                field="PsdNoiseConfig.frequency_stop",
+                constraint=PositiveFloat,
+            ),
+        )
+        canonical_density = tuple(
+            _canonical_quantity(
+                density,
+                unit="mV ** 2 / Hz",
+                field=f"PsdNoiseConfig.power_density[{index}]",
+                constraint=NonnegativeFloat,
+            )
+            for index, density in enumerate(self.power_density)
+        )
+        object.__setattr__(self, "power_density", canonical_density)
+        if canonical_magnitude(self.frequency_left_edges[0]) != 0.0:
             raise ValueError("PSD frequency coverage must start at zero")
         if any(
-            right.value <= left.value
+            canonical_magnitude(right) <= canonical_magnitude(left)
             for left, right in zip(
-                self.frequency_left_edges_hz,
-                self.frequency_left_edges_hz[1:],
+                self.frequency_left_edges,
+                self.frequency_left_edges[1:],
             )
         ):
             raise ValueError("PSD frequency left edges must be strictly increasing")
         if (
-            self.frequency_left_edges_hz[-1].value
-            >= self.frequency_stop_hz.value
+            canonical_magnitude(self.frequency_left_edges[-1])
+            >= canonical_magnitude(self.frequency_stop)
         ):
             raise ValueError("PSD frequency stop must exceed its final left edge")
-        for density in self.power_density_mv2_per_hz:
-            require_exact(
-                density,
-                NonnegativeFloat,
-                "PsdNoiseConfig.power_density_mv2_per_hz",
-            )
         if not any(
-            density.value > 0.0 for density in self.power_density_mv2_per_hz
+            canonical_magnitude(density) > 0.0
+            for density in self.power_density
         ):
             raise ValueError("use ZeroNoiseConfig for an all-zero PSD")
-        require_exact(self.rng_key, RngKey, "PsdNoiseConfig.rng_key")
 
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class NoiseWaveformConfig:
     model: ZeroNoiseConfig | WhiteNoiseConfig | PsdNoiseConfig
-
-    def __post_init__(self) -> None:
-        require_one_of_exact(
-            self.model,
-            (ZeroNoiseConfig, WhiteNoiseConfig, PsdNoiseConfig),
-            "NoiseWaveformConfig.model",
-        )
+    __hash__ = None  # pyright: ignore[reportAssignmentType]

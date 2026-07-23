@@ -17,6 +17,10 @@ def produce_analog_waveform(
     runtime: AnalogWaveformRuntime,
 ) -> AnalogWaveform:
     values = torch.add(pure.tensor, noise.tensor)
-    if runtime.minimum is not None or runtime.maximum is not None:
-        values = torch.clamp(values, min=runtime.minimum, max=runtime.maximum)
+    if runtime.minimum_mv is not None or runtime.maximum_mv is not None:
+        values = torch.clamp(
+            values,
+            min=runtime.minimum_mv,
+            max=runtime.maximum_mv,
+        )
     return AnalogWaveform(tensor=values, axes=pure.axes)

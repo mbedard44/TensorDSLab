@@ -16,17 +16,17 @@ def produce_digitized_waveform(
 ) -> DigitizedWaveform:
     interior = torch.clamp(
         torch.add(
-            torch.mul(analog.tensor, runtime.slope),
+            torch.mul(analog.tensor, runtime.slope_per_mv),
             runtime.intercept,
         ),
         min=runtime.zero,
         max=runtime.maximum,
     )
     code_float = torch.where(
-        analog.tensor <= runtime.lower_input,
+        analog.tensor <= runtime.lower_input_mv,
         runtime.zero,
         torch.where(
-            analog.tensor >= runtime.upper_input,
+            analog.tensor >= runtime.upper_input_mv,
             runtime.maximum,
             interior,
         ),

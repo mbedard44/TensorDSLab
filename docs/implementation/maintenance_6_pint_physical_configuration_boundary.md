@@ -1,9 +1,55 @@
 # Maintenance 6 Pint Physical Configuration Boundary Work Order
 
-Status: **User-authorized / Dispatched**.
+Status: **Implementation candidate / fixed-commit Validation pending** while
+these bytes are absent from `main`. If these exact bytes are present unchanged
+on `main`, Review's clean fast-forward has completed and final Design
+acceptance remains pending until this work order and the implementation index
+record **Merged / Closed**.
 
 Stable work-order key:
 `TensorDSLab/maintenance-6-pint-physical-configuration-boundary`.
+
+## Implementation Candidate Evidence
+
+Implementation completed Candidate 1 as one clean direct child of exact
+corrected Design authority
+`6f7eba9b1c4e680930007836433f15e517288a9a`. The exact candidate commit and
+tree are fixed in the immutable Validation handoff.
+
+The local evidence environment was Python `3.13.11`, PyTorch `2.12.1`, eager
+CPU, macOS `15.7.4` arm64, with CUDA unavailable. Implementation independently
+reconstructed exact TensorCore `0.13.0` source at commit
+`202d8b1bc6259b8453d3d377570417f2480d782b`, parent
+`f62506b6d2f6926db446e2d163f26870575c9419`, and tree
+`48fa9a28db6d043abc07d9963b2015983ca436ea`. Its fresh canonical no-prefix ZIP
+was `373491` bytes with SHA-256
+`ed804c71a617a79a63b53be86157e2045322d6c6868ca3766dc75d5526cb8b09`,
+and source/archive package bytes compared equal.
+
+The exact Pint `0.25.3` wheel was `307488` bytes with SHA-256
+`27eb25143bd5de9fcc4d5a4b484f16faf6b4615aa93ece6b3373a8c1a3c1b97d`;
+the exact sdist was `255106` bytes with SHA-256
+`f8f5df6cf65314d74da1ade1bf96f8e3e4d0c41b51577ac53c49e7d44ca5acee`.
+Role-owned environments imported the published wheel and an independently
+sdist-built installation.
+
+Across all four TensorCore source/archive by Pint wheel/sdist combinations,
+the focused Maintenance 6 module passed `10/10`, full discovery ran `207`
+tests with `194` passed and `13` expected unavailable-CUDA skips, and Pyright
+`1.1.411` reported zero errors, warnings, or informations. The external
+negative typing probe produced the same `38` required diagnostics in the
+representative source/wheel and archive/sdist forms. Focused source and
+process-local mutation probes rejected restoration of the three retired
+annotation-only helper definitions or Config calls while retaining every
+Pint, primitive-domain, PSD, ordering, and distinct-key relationship.
+
+Dependency, facade/export, import-isolation, public-TensorCore import,
+Runtime/producer/validator Pint-privacy, retired-surface, exact-scope,
+protected-byte, diff, artifact, bytecode, and repository-cleanliness gates are
+required to remain clear on the frozen candidate. Separate fresh full-A100
+matrices remain owned by Validation and Review; this local evidence makes no
+GPU, performance, release, deployment, conformance, or broad compatibility
+claim.
 
 This is the package-authoritative TensorDSLab Design work order for the next
 breaking, pre-deployment configuration migration. It binds the already-closed

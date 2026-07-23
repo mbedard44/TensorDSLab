@@ -125,7 +125,7 @@ def produce_noise_waveform(
             dtype=runtime.floating_dtype,
             rng=rng,
             rng_key=model.rng_key,
-            represented_rms=model.represented_rms,
+            represented_rms=model.represented_rms_mv,
         )
     elif type(model) is PsdNoiseRuntime:
         values = _psd_noise(
@@ -135,7 +135,7 @@ def produce_noise_waveform(
             dtype=runtime.floating_dtype,
             rng=rng,
             rng_key=model.rng_key,
-            represented_powers=model.represented_powers,
+            represented_powers=model.represented_powers_mv2,
         )
     else:
         raise RuntimeError("noise runtime model is not recognized")

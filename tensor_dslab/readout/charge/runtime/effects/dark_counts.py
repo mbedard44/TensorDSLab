@@ -8,6 +8,7 @@ from typing import final
 import torch
 from tensor_core import CounterRng, RngKey, logical_positions
 
+from tensor_dslab.common.units import canonical_magnitude
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 from tensor_dslab.readout.charge.config import DarkCountConfig
 from tensor_dslab.readout.charge.runtime.effects.counts import (
@@ -25,14 +26,13 @@ class DarkCountRuntime:
 
 
 def _prepare_dark_mean(
-    config: DarkCountConfig,
+    rate_hz: float,
     *,
     sampling: SamplingRuntime,
 ) -> float:
-    rate = config.rate_hz.value
-    if rate == 0.0:
+    if rate_hz == 0.0:
         return 0.0
-    numerator, denominator = rate.as_integer_ratio()
+    numerator, denominator = rate_hz.as_integer_ratio()
     if numerator * sampling.sample_period_ps > denominator * 10**20:
         raise ValueError("dark-count mean exceeds the accepted Poisson domain")
     mean = float(
@@ -52,7 +52,10 @@ def prepare_dark_counts(
     sampling: SamplingRuntime,
 ) -> DarkCountRuntime:
     return DarkCountRuntime(
-        mean=_prepare_dark_mean(config, sampling=sampling),
+        mean=_prepare_dark_mean(
+            canonical_magnitude(config.rate),
+            sampling=sampling,
+        ),
         rng_key=config.rng_key,
     )
 
@@ -63,8 +66,6 @@ def simulate_dark_counts(
     runtime: DarkCountRuntime,
     rng: CounterRng,
 ) -> torch.Tensor:
-    if type(runtime) is not DarkCountRuntime:
-        raise TypeError("runtime must be exactly DarkCountRuntime")
     require_count_domain(counts, field="dark-count input")
     if runtime.mean == 0.0:
         return counts

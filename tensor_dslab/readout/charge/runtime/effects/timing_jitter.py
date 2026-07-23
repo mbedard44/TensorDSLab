@@ -7,6 +7,7 @@ from typing import final
 import torch
 from tensor_core import CounterRng, RngKey
 
+from tensor_dslab.common.units import canonical_magnitude
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 from tensor_dslab.readout.charge.config import TimingJitterConfig
 from tensor_dslab.readout.charge.runtime.effects.counts import (
@@ -64,10 +65,10 @@ def prepare_timing_jitter(
     *,
     sampling: SamplingRuntime,
     tensor_numel: int,
-) -> TimingJitterRuntime:
-    sigma_ns = config.sigma_ns.value
+) -> TimingJitterRuntime | None:
+    sigma_ns = canonical_magnitude(config.sigma)
     if sigma_ns == 0.0:
-        raise ValueError("zero timing jitter uses the exact identity path")
+        return None
     sample_count = sampling.sample_count
     if sample_count > _MAX_SAMPLE_COUNT:
         raise ValueError("active timing jitter supports at most 8192 samples")
@@ -152,11 +153,7 @@ def simulate_timing_jitter(
     runtime: TimingJitterRuntime,
     rng: CounterRng,
 ) -> torch.Tensor:
-    if type(runtime) is not TimingJitterRuntime:
-        raise TypeError("runtime must be exactly TimingJitterRuntime")
     require_count_domain(counts, field="timing-jitter input")
-    if type(sample_dimension) is not int:
-        raise TypeError("sample_dimension must be exactly an integer")
     if sample_dimension < 0 or sample_dimension >= counts.ndim:
         raise ValueError("sample_dimension is outside the count rank")
     sample_count = len(runtime.probabilities)

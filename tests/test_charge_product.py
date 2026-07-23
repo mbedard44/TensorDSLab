@@ -21,6 +21,8 @@ from tensor_core import (
 )
 
 from tensor_dslab import (
+    quantities,
+    quantity,
     AfterpulseConfig,
     AfterpulseRecoveryConfig,
     Charge,
@@ -48,6 +50,22 @@ from tensor_dslab.readout.charge.runtime.effects import smearing as smearing_eff
 from tensor_dslab.readout.charge.runtime.prepare import prepare_charge
 from tensor_dslab.readout.charge.runtime.validate import validate_charge
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime, prepare_sampling
+
+
+def _ns(value: int | float):
+    return quantity(value, "ns")
+
+
+def _hz(value: int | float):
+    return quantity(value, "Hz")
+
+
+def _mv(value: int | float):
+    return quantity(value, "mV")
+
+
+def _density(value: int | float):
+    return quantity(value, "mV ** 2 / Hz")
 
 
 def _produce_charge(
@@ -215,10 +233,10 @@ def _config(
 ) -> ChargeConfig:
     return ChargeConfig(
         dark_count=(
-            DarkCountConfig(rate_hz=NonnegativeFloat(1.0e10)) if dark else None
+            DarkCountConfig(rate=_hz(1.0e10)) if dark else None
         ),
         timing_jitter=(
-            TimingJitterConfig(sigma_ns=NonnegativeFloat(1.0))
+            TimingJitterConfig(sigma=_ns(1.0))
             if jitter
             else None
         ),
@@ -227,7 +245,7 @@ def _config(
                 maximum_generations=NonnegativeInteger(1),
                 direct_crosstalk=DirectCrosstalkConfig(
                     mean_offspring_per_parent=NonnegativeFloat(0.2),
-                    delay=FixedDelayConfig(delay_ns=NonnegativeFloat(0.0)),
+                    delay=FixedDelayConfig(delay=_ns(0.0)),
                 ),
             )
             if correlated
@@ -338,12 +356,12 @@ class ChargeProductPreflightTest(unittest.TestCase):
     ) -> None:
         zeros = _field(torch.zeros((2, 2, 4), dtype=torch.int64))
         draw_free = ChargeConfig(
-            timing_jitter=TimingJitterConfig(sigma_ns=NonnegativeFloat(1.0)),
+            timing_jitter=TimingJitterConfig(sigma=_ns(1.0)),
             correlated_avalanches=CorrelatedAvalancheConfig(
                 maximum_generations=NonnegativeInteger(2),
                 direct_crosstalk=DirectCrosstalkConfig(
                     mean_offspring_per_parent=NonnegativeFloat(1.0),
-                    delay=FixedDelayConfig(delay_ns=NonnegativeFloat(0.0)),
+                    delay=FixedDelayConfig(delay=_ns(0.0)),
                 ),
             ),
         )
@@ -438,11 +456,11 @@ class ChargeProductPreflightTest(unittest.TestCase):
         self.assertEqual(math.nextafter(endpoint_rate, math.inf), above_rate)
 
         endpoint_config = DarkCountConfig(
-            rate_hz=NonnegativeFloat(endpoint_rate)
+            rate=_hz(endpoint_rate)
         )
         self.assertEqual(
             dark_effect._prepare_dark_mean(
-                endpoint_config,
+                float(endpoint_config.rate.magnitude),
                 sampling=_sampling_runtime(sampling),
             ),
             100_000_000.0,
@@ -465,7 +483,7 @@ class ChargeProductPreflightTest(unittest.TestCase):
         self.assertTrue(torch.equal(torch.random.get_rng_state(), state))
 
         invalid_config = ChargeConfig(
-            dark_count=DarkCountConfig(rate_hz=NonnegativeFloat(above_rate))
+            dark_count=DarkCountConfig(rate=_hz(above_rate))
         )
         with self.assertRaisesRegex(
             ValueError,
@@ -488,8 +506,8 @@ class ChargeProductPreflightTest(unittest.TestCase):
         original = source.tensor.clone()
         state = torch.random.get_rng_state().clone()
         bad = ChargeConfig(
-            timing_jitter=TimingJitterConfig(sigma_ns=NonnegativeFloat(200.0)),
-            dark_count=DarkCountConfig(rate_hz=NonnegativeFloat(1.0e10)),
+            timing_jitter=TimingJitterConfig(sigma=_ns(200.0)),
+            dark_count=DarkCountConfig(rate=_hz(1.0e10)),
         )
         with self.assertRaises(ValueError):
             _produce_charge(
@@ -508,7 +526,7 @@ class DarkCountStatisticalTest(unittest.TestCase):
         per_seed = 1 << 16
         seeds = (0, 1, 0x0123456789ABCDEF, 0xFFFFFFFFFFFFFFFF)
         sampling = _sampling(period_ps=2_000, count=2)
-        config = DarkCountConfig(rate_hz=NonnegativeFloat(2.0e9))
+        config = DarkCountConfig(rate=_hz(2.0e9))
         observations: list[torch.Tensor] = []
         for seed in seeds:
             counts = torch.zeros((per_seed, 1, 2), dtype=torch.int64)
@@ -739,13 +757,13 @@ class ChargeSmearingTest(unittest.TestCase):
         original = source.tensor.clone()
         _RecordingRng.calls = []
         config = ChargeConfig(
-            dark_count=DarkCountConfig(rate_hz=NonnegativeFloat(1.0e10)),
-            timing_jitter=TimingJitterConfig(sigma_ns=NonnegativeFloat(1.0)),
+            dark_count=DarkCountConfig(rate=_hz(1.0e10)),
+            timing_jitter=TimingJitterConfig(sigma=_ns(1.0)),
             correlated_avalanches=CorrelatedAvalancheConfig(
                 maximum_generations=NonnegativeInteger(23),
                 direct_crosstalk=DirectCrosstalkConfig(
                     mean_offspring_per_parent=NonnegativeFloat(0.2),
-                    delay=FixedDelayConfig(delay_ns=NonnegativeFloat(0.0)),
+                    delay=FixedDelayConfig(delay=_ns(0.0)),
                 ),
             ),
             smearing=ChargeSmearingConfig(
@@ -859,7 +877,7 @@ class ChargeSmearingTest(unittest.TestCase):
                 sampling=sampling,
                 config=ChargeConfig(
                     dark_count=DarkCountConfig(
-                        rate_hz=NonnegativeFloat(2.0e9)
+                        rate=_hz(2.0e9)
                     ),
                     smearing=ChargeSmearingConfig(
                         relative_sigma=NonnegativeFloat(1.0)
@@ -942,25 +960,25 @@ class CudaChargeProductTest(unittest.TestCase):
         source = _field(values, sample_first=True)
         original = source.tensor.clone()
         config = ChargeConfig(
-            dark_count=DarkCountConfig(rate_hz=NonnegativeFloat(1.0e9)),
-            timing_jitter=TimingJitterConfig(sigma_ns=NonnegativeFloat(0.5)),
+            dark_count=DarkCountConfig(rate=_hz(1.0e9)),
+            timing_jitter=TimingJitterConfig(sigma=_ns(0.5)),
             correlated_avalanches=CorrelatedAvalancheConfig(
                 maximum_generations=NonnegativeInteger(2),
                 direct_crosstalk=DirectCrosstalkConfig(
                     mean_offspring_per_parent=NonnegativeFloat(0.3),
-                    delay=FixedDelayConfig(delay_ns=NonnegativeFloat(1.0)),
+                    delay=FixedDelayConfig(delay=_ns(1.0)),
                 ),
                 delayed_crosstalk=DelayedCrosstalkConfig(
                     mean_offspring_per_parent=NonnegativeFloat(0.2),
                     delay=ExponentialDelayConfig(
-                        mean_delay_ns=PositiveFloat(4.0)
+                        mean_delay=_ns(4.0)
                     ),
                 ),
                 afterpulse=AfterpulseConfig(
                     probability=Probability(0.25),
-                    mean_delay_ns=PositiveFloat(10.0),
+                    mean_delay=_ns(10.0),
                     recovery=AfterpulseRecoveryConfig(
-                        time_constant_ns=PositiveFloat(20.0)
+                        time_constant=_ns(20.0)
                     ),
                 ),
             ),
@@ -1015,7 +1033,7 @@ class CudaChargeProductTest(unittest.TestCase):
                 sampling=sampling,
                 config=ChargeConfig(
                     dark_count=DarkCountConfig(
-                        rate_hz=NonnegativeFloat(2.0e9)
+                        rate=_hz(2.0e9)
                     ),
                     smearing=ChargeSmearingConfig(
                         relative_sigma=NonnegativeFloat(1.0)

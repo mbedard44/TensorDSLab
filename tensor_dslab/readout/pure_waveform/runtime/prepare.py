@@ -6,6 +6,7 @@ from typing import final
 
 import torch
 
+from tensor_dslab.common.units import canonical_magnitude
 from tensor_dslab.readout.requirements import require_representable_float
 from tensor_dslab.readout.pure_waveform.config import (
     PureWaveformConfig,
@@ -54,25 +55,36 @@ def _template_sample_count(
     return excluded_index
 
 
-def _tpc_raw(t_ns: float, config: TpcFebSnrPulseConfig) -> float:
-    return math.exp(-t_ns / config.slow_time_constant_ns.value) - math.exp(
-        -t_ns / config.fast_time_constant_ns.value
+def _tpc_raw(
+    t_ns: float,
+    *,
+    fast_time_constant_ns: float,
+    slow_time_constant_ns: float,
+) -> float:
+    return math.exp(-t_ns / slow_time_constant_ns) - math.exp(
+        -t_ns / fast_time_constant_ns
     )
 
 
-def _veto_raw(t_ns: float, config: VetoPduPulseConfig) -> float:
-    x = t_ns - config.gaussian_center_ns.value
-    gaussian_width_ns = config.gaussian_width_ns.value
+def _veto_raw(
+    t_ns: float,
+    *,
+    gaussian_center_ns: float,
+    gaussian_width_ns: float,
+    edge_offset_1_ns: float,
+    edge_width_1_ns: float,
+    edge_offset_2_ns: float,
+    edge_width_2_ns: float,
+) -> float:
+    x = t_ns - gaussian_center_ns
     gaussian = math.exp(
         -(x**2) / (2.0 * gaussian_width_ns**2)
     ) / math.sqrt(2.0 * math.pi * gaussian_width_ns**2)
     first_edge = 1.0 + math.erf(
-        (x - config.edge_offset_1_ns.value)
-        / (math.sqrt(2.0) * config.edge_width_1_ns.value)
+        (x - edge_offset_1_ns) / (math.sqrt(2.0) * edge_width_1_ns)
     )
     second_edge = 1.0 + math.erf(
-        (x - config.edge_offset_2_ns.value)
-        / (math.sqrt(2.0) * config.edge_width_2_ns.value)
+        (x - edge_offset_2_ns) / (math.sqrt(2.0) * edge_width_2_ns)
     )
     return gaussian * first_edge * second_edge
 
@@ -84,11 +96,6 @@ def prepare_pure_waveform(
     floating_dtype: torch.dtype,
     device: torch.device,
 ) -> PureWaveformRuntime:
-    if type(config) is not PureWaveformConfig:
-        raise TypeError("config must be exactly PureWaveformConfig")
-    if floating_dtype not in (torch.float32, torch.float64):
-        raise TypeError("floating_dtype must be torch.float32 or torch.float64")
-
     try:
         sample_period_ns = sampling.sample_period_ps / 1000.0
     except OverflowError as error:
@@ -98,11 +105,37 @@ def prepare_pure_waveform(
 
     model = config.model
     if type(model) is TpcFebSnrPulseConfig:
-        support_time_ns = model.support_time_ns.value
-        raw_at = lambda time_ns: _tpc_raw(time_ns, model)
+        fast_time_constant_ns = canonical_magnitude(model.fast_time_constant)
+        slow_time_constant_ns = canonical_magnitude(model.slow_time_constant)
+        support_time_ns = canonical_magnitude(model.support_time)
+        peak_voltage_mv_per_pe = canonical_magnitude(
+            model.peak_voltage_per_photoelectron
+        )
+        raw_at = lambda time_ns: _tpc_raw(
+            time_ns,
+            fast_time_constant_ns=fast_time_constant_ns,
+            slow_time_constant_ns=slow_time_constant_ns,
+        )
     elif type(model) is VetoPduPulseConfig:
-        support_time_ns = model.support_time_ns.value
-        raw_at = lambda time_ns: _veto_raw(time_ns, model)
+        gaussian_center_ns = canonical_magnitude(model.gaussian_center)
+        gaussian_width_ns = canonical_magnitude(model.gaussian_width)
+        edge_offset_1_ns = canonical_magnitude(model.edge_offset_1)
+        edge_width_1_ns = canonical_magnitude(model.edge_width_1)
+        edge_offset_2_ns = canonical_magnitude(model.edge_offset_2)
+        edge_width_2_ns = canonical_magnitude(model.edge_width_2)
+        support_time_ns = canonical_magnitude(model.support_time)
+        peak_voltage_mv_per_pe = canonical_magnitude(
+            model.peak_voltage_per_photoelectron
+        )
+        raw_at = lambda time_ns: _veto_raw(
+            time_ns,
+            gaussian_center_ns=gaussian_center_ns,
+            gaussian_width_ns=gaussian_width_ns,
+            edge_offset_1_ns=edge_offset_1_ns,
+            edge_width_1_ns=edge_width_1_ns,
+            edge_offset_2_ns=edge_offset_2_ns,
+            edge_width_2_ns=edge_width_2_ns,
+        )
     else:
         raise TypeError("PureWaveformConfig.model is not recognized")
 
@@ -124,7 +157,6 @@ def prepare_pure_waveform(
     if not math.isfinite(normalization) or normalization == 0.0:
         raise ValueError("pulse template sampled extremum must be finite and nonzero")
 
-    peak_voltage_mv_per_pe = model.peak_voltage_mv_per_pe.value
     rounded_peak = require_representable_float(
         peak_voltage_mv_per_pe,
         dtype=floating_dtype,

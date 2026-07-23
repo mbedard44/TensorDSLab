@@ -25,6 +25,8 @@ from tensor_core import (
 
 import tensor_dslab
 from tensor_dslab import (
+    quantities,
+    quantity,
     AfterpulseConfig,
     AfterpulseRecoveryConfig,
     AnalogSaturationConfig,
@@ -82,6 +84,22 @@ from tensor_dslab.readout.runtime.sampling import SamplingRuntime, prepare_sampl
 
 _NAMESPACE = 0x54445331
 _SEED = 0x0123456789ABCDEF
+
+
+def _ns(value: int | float):
+    return quantity(value, "ns")
+
+
+def _hz(value: int | float):
+    return quantity(value, "Hz")
+
+
+def _mv(value: int | float):
+    return quantity(value, "mV")
+
+
+def _density(value: int | float):
+    return quantity(value, "mV ** 2 / Hz")
 
 
 def _is_maintenance_2_reference_stack() -> bool:
@@ -394,7 +412,7 @@ class RngOwnershipMigrationTest(unittest.TestCase):
         return first, second
 
     def test_exact_config_owned_key_defaults_overrides_and_identity(self) -> None:
-        fixed = FixedDelayConfig(delay_ns=NonnegativeFloat(0.0))
+        fixed = FixedDelayConfig(delay=_ns(0.0))
         direct = DirectCrosstalkConfig(
             mean_offspring_per_parent=NonnegativeFloat(0.1),
             delay=fixed,
@@ -405,21 +423,21 @@ class RngOwnershipMigrationTest(unittest.TestCase):
         )
         keyed = (
             (
-                WhiteNoiseConfig(rms_mv=PositiveFloat(1.0)),
+                WhiteNoiseConfig(rms=_mv(1.0)),
                 "rng_key",
                 1,
             ),
             (
                 PsdNoiseConfig(
-                    frequency_left_edges_hz=(NonnegativeFloat(0.0),),
-                    frequency_stop_hz=PositiveFloat(1.0),
-                    power_density_mv2_per_hz=(NonnegativeFloat(1.0),),
+                    frequency_left_edges=(_hz(0.0),),
+                    frequency_stop=_hz(1.0),
+                    power_density=(_density(1.0),),
                 ),
                 "rng_key",
                 2,
             ),
             (
-                DarkCountConfig(rate_hz=NonnegativeFloat(0.0)),
+                DarkCountConfig(rate=_hz(0.0)),
                 "rng_key",
                 3,
             ),
@@ -428,14 +446,14 @@ class RngOwnershipMigrationTest(unittest.TestCase):
             (delayed, "retained_rng_key", 6),
             (delayed, "overflow_rng_key", 7),
             (
-                TimingJitterConfig(sigma_ns=NonnegativeFloat(0.0)),
+                TimingJitterConfig(sigma=_ns(0.0)),
                 "rng_key",
                 8,
             ),
             (
                 AfterpulseConfig(
                     probability=Probability(0.0),
-                    mean_delay_ns=PositiveFloat(1.0),
+                    mean_delay=_ns(1.0),
                 ),
                 "rng_key",
                 9,
@@ -465,8 +483,6 @@ class RngOwnershipMigrationTest(unittest.TestCase):
                 self.assertEqual(first, second)
                 self.assertNotEqual(first, changed)
                 self.assertIn(f"{field_name}={override!r}", repr(first))
-                with self.assertRaises(TypeError):
-                    replace(baseline, **{field_name: 1})
 
         for config in (direct, delayed):
             with self.subTest(config=type(config).__name__):
@@ -535,7 +551,7 @@ class RngOwnershipMigrationTest(unittest.TestCase):
                 noise(
                     NoiseWaveformConfig(
                         model=WhiteNoiseConfig(
-                            rms_mv=PositiveFloat(1.0),
+                            rms=_mv(1.0),
                             rng_key=white_key,
                         )
                     )
@@ -548,14 +564,14 @@ class RngOwnershipMigrationTest(unittest.TestCase):
                 noise(
                     NoiseWaveformConfig(
                         model=PsdNoiseConfig(
-                            frequency_left_edges_hz=(
-                                NonnegativeFloat(0.0),
-                                NonnegativeFloat(100_000_000.0),
+                            frequency_left_edges=(
+                                _hz(0.0),
+                                _hz(100_000_000.0),
                             ),
-                            frequency_stop_hz=PositiveFloat(250_000_000.0),
-                            power_density_mv2_per_hz=(
-                                NonnegativeFloat(1.0e-8),
-                                NonnegativeFloat(2.0e-8),
+                            frequency_stop=_hz(250_000_000.0),
+                            power_density=(
+                                _density(1.0e-8),
+                                _density(2.0e-8),
                             ),
                             rng_key=psd_key,
                         )
@@ -569,7 +585,7 @@ class RngOwnershipMigrationTest(unittest.TestCase):
                 charge(
                     ChargeConfig(
                         dark_count=DarkCountConfig(
-                            rate_hz=NonnegativeFloat(5.0e8),
+                            rate=_hz(5.0e8),
                             rng_key=dark_key,
                         )
                     )
@@ -586,7 +602,7 @@ class RngOwnershipMigrationTest(unittest.TestCase):
                             direct_crosstalk=DirectCrosstalkConfig(
                                 mean_offspring_per_parent=NonnegativeFloat(0.1),
                                 delay=FixedDelayConfig(
-                                    delay_ns=NonnegativeFloat(0.0)
+                                    delay=_ns(0.0)
                                 ),
                                 retained_rng_key=direct_retained_key,
                                 overflow_rng_key=direct_overflow_key,
@@ -606,7 +622,7 @@ class RngOwnershipMigrationTest(unittest.TestCase):
                             delayed_crosstalk=DelayedCrosstalkConfig(
                                 mean_offspring_per_parent=NonnegativeFloat(0.1),
                                 delay=FixedDelayConfig(
-                                    delay_ns=NonnegativeFloat(0.0)
+                                    delay=_ns(0.0)
                                 ),
                                 retained_rng_key=delayed_retained_key,
                                 overflow_rng_key=delayed_overflow_key,
@@ -622,7 +638,7 @@ class RngOwnershipMigrationTest(unittest.TestCase):
                 charge(
                     ChargeConfig(
                         timing_jitter=TimingJitterConfig(
-                            sigma_ns=NonnegativeFloat(1.0),
+                            sigma=_ns(1.0),
                             rng_key=jitter_key,
                         )
                     )
@@ -638,7 +654,7 @@ class RngOwnershipMigrationTest(unittest.TestCase):
                             maximum_generations=NonnegativeInteger(1),
                             afterpulse=AfterpulseConfig(
                                 probability=Probability(0.5),
-                                mean_delay_ns=PositiveFloat(1.0),
+                                mean_delay=_ns(1.0),
                                 rng_key=afterpulse_key,
                             ),
                         )
@@ -701,9 +717,9 @@ class RngOwnershipMigrationTest(unittest.TestCase):
                 "analog_waveform",
                 "digitized_waveform",
             ),
-            FixedDelayConfig: ("delay_ns",),
-            ExponentialDelayConfig: ("mean_delay_ns",),
-            AfterpulseRecoveryConfig: ("time_constant_ns",),
+            FixedDelayConfig: ("delay",),
+            ExponentialDelayConfig: ("mean_delay",),
+            AfterpulseRecoveryConfig: ("time_constant",),
             CorrelatedAvalancheConfig: (
                 "maximum_generations",
                 "direct_crosstalk",
@@ -719,41 +735,41 @@ class RngOwnershipMigrationTest(unittest.TestCase):
             ZeroNoiseConfig: (),
             NoiseWaveformConfig: ("model",),
             TpcFebSnrPulseConfig: (
-                "fast_time_constant_ns",
-                "slow_time_constant_ns",
-                "support_time_ns",
-                "peak_voltage_mv_per_pe",
+                "fast_time_constant",
+                "slow_time_constant",
+                "support_time",
+                "peak_voltage_per_photoelectron",
             ),
             VetoPduPulseConfig: (
-                "gaussian_center_ns",
-                "gaussian_width_ns",
-                "edge_offset_1_ns",
-                "edge_width_1_ns",
-                "edge_offset_2_ns",
-                "edge_width_2_ns",
-                "support_time_ns",
-                "peak_voltage_mv_per_pe",
+                "gaussian_center",
+                "gaussian_width",
+                "edge_offset_1",
+                "edge_width_1",
+                "edge_offset_2",
+                "edge_width_2",
+                "support_time",
+                "peak_voltage_per_photoelectron",
             ),
             PureWaveformConfig: ("model",),
-            AnalogSaturationConfig: ("minimum_mv", "maximum_mv"),
+            AnalogSaturationConfig: ("minimum", "maximum"),
             AnalogWaveformConfig: ("saturation",),
             DigitizedWaveformConfig: (
                 "bit_depth",
-                "input_min_mv",
-                "input_max_mv",
+                "input_minimum",
+                "input_maximum",
                 "analog_gain_db",
             ),
         }
         keyed_fields = {
-            WhiteNoiseConfig: ("rms_mv", "rng_key"),
+            WhiteNoiseConfig: ("rms", "rng_key"),
             PsdNoiseConfig: (
-                "frequency_left_edges_hz",
-                "frequency_stop_hz",
-                "power_density_mv2_per_hz",
+                "frequency_left_edges",
+                "frequency_stop",
+                "power_density",
                 "rng_key",
             ),
-            TimingJitterConfig: ("sigma_ns", "rng_key"),
-            DarkCountConfig: ("rate_hz", "rng_key"),
+            TimingJitterConfig: ("sigma", "rng_key"),
+            DarkCountConfig: ("rate", "rng_key"),
             DirectCrosstalkConfig: (
                 "mean_offspring_per_parent",
                 "delay",
@@ -768,7 +784,7 @@ class RngOwnershipMigrationTest(unittest.TestCase):
             ),
             AfterpulseConfig: (
                 "probability",
-                "mean_delay_ns",
+                "mean_delay",
                 "recovery",
                 "rng_key",
             ),
@@ -1232,7 +1248,7 @@ class RngOwnershipMigrationTest(unittest.TestCase):
                 "dark_count",
                 ChargeConfig(
                     dark_count=DarkCountConfig(
-                        rate_hz=NonnegativeFloat(0.0)
+                        rate=_hz(0.0)
                     )
                 ),
             ),
@@ -1240,7 +1256,7 @@ class RngOwnershipMigrationTest(unittest.TestCase):
                 "timing_jitter",
                 ChargeConfig(
                     timing_jitter=TimingJitterConfig(
-                        sigma_ns=NonnegativeFloat(0.0)
+                        sigma=_ns(0.0)
                     )
                 ),
             ),
@@ -1286,18 +1302,18 @@ class RngOwnershipMigrationTest(unittest.TestCase):
         sampling = _sampling()
         reference_stack = _is_maintenance_2_reference_stack()
         white_config = NoiseWaveformConfig(
-            model=WhiteNoiseConfig(rms_mv=PositiveFloat(0.75))
+            model=WhiteNoiseConfig(rms=_mv(0.75))
         )
         psd_config = NoiseWaveformConfig(
             model=PsdNoiseConfig(
-                frequency_left_edges_hz=(
-                    NonnegativeFloat(0.0),
-                    NonnegativeFloat(100_000_000.0),
+                frequency_left_edges=(
+                    _hz(0.0),
+                    _hz(100_000_000.0),
                 ),
-                frequency_stop_hz=PositiveFloat(250_000_000.0),
-                power_density_mv2_per_hz=(
-                    NonnegativeFloat(1.0e-8),
-                    NonnegativeFloat(2.0e-8),
+                frequency_stop=_hz(250_000_000.0),
+                power_density=(
+                    _density(1.0e-8),
+                    _density(2.0e-8),
                 ),
             )
         )
@@ -1365,27 +1381,27 @@ class RngOwnershipMigrationTest(unittest.TestCase):
                 )
 
         charge_config = ChargeConfig(
-            dark_count=DarkCountConfig(rate_hz=NonnegativeFloat(5.0e8)),
-            timing_jitter=TimingJitterConfig(sigma_ns=NonnegativeFloat(1.0)),
+            dark_count=DarkCountConfig(rate=_hz(5.0e8)),
+            timing_jitter=TimingJitterConfig(sigma=_ns(1.0)),
             correlated_avalanches=CorrelatedAvalancheConfig(
                 maximum_generations=NonnegativeInteger(2),
                 direct_crosstalk=DirectCrosstalkConfig(
                     mean_offspring_per_parent=NonnegativeFloat(0.6),
                     delay=ExponentialDelayConfig(
-                        mean_delay_ns=PositiveFloat(2.5)
+                        mean_delay=_ns(2.5)
                     ),
                 ),
                 delayed_crosstalk=DelayedCrosstalkConfig(
                     mean_offspring_per_parent=NonnegativeFloat(0.4),
                     delay=ExponentialDelayConfig(
-                        mean_delay_ns=PositiveFloat(4.0)
+                        mean_delay=_ns(4.0)
                     ),
                 ),
                 afterpulse=AfterpulseConfig(
                     probability=Probability(0.35),
-                    mean_delay_ns=PositiveFloat(3.0),
+                    mean_delay=_ns(3.0),
                     recovery=AfterpulseRecoveryConfig(
-                        time_constant_ns=PositiveFloat(5.0)
+                        time_constant=_ns(5.0)
                     ),
                 ),
             ),
@@ -1437,7 +1453,7 @@ class RngOwnershipMigrationTest(unittest.TestCase):
             sampling=_sampling(),
             config=NoiseWaveformConfig(
                 model=WhiteNoiseConfig(
-                    rms_mv=PositiveFloat(1.0),
+                    rms=_mv(1.0),
                     rng_key=key,
                 )
             ),

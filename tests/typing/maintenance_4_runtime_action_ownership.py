@@ -13,6 +13,8 @@ from tensor_core import (
 )
 
 from tensor_dslab import (
+    quantities,
+    quantity,
     AnalogWaveform,
     AnalogWaveformConfig,
     Charge,
@@ -59,6 +61,13 @@ from tensor_dslab.readout.pure_waveform.runtime.validate import (
 )
 from tensor_dslab.readout.runtime.prepare import ReadoutRuntime, prepare_readout
 
+def _ns(value: int | float):
+    return quantity(value, "ns")
+
+
+def _mv(value: int | float):
+    return quantity(value, "mV")
+
 
 source = Photoelectrons(
     tensor=torch.ones((1, 1, 4), dtype=torch.int64),
@@ -72,18 +81,18 @@ config = ReadoutConfig(
     charge=ChargeConfig(),
     pure_waveform=PureWaveformConfig(
         model=TpcFebSnrPulseConfig(
-            fast_time_constant_ns=PositiveFloat(1.0),
-            slow_time_constant_ns=PositiveFloat(2.0),
-            support_time_ns=PositiveFloat(6.0),
-            peak_voltage_mv_per_pe=FiniteFloat(-1.0),
+            fast_time_constant=_ns(1.0),
+            slow_time_constant=_ns(2.0),
+            support_time=_ns(6.0),
+            peak_voltage_per_photoelectron=_mv(-1.0),
         )
     ),
     noise_waveform=NoiseWaveformConfig(model=ZeroNoiseConfig()),
     analog_waveform=AnalogWaveformConfig(),
     digitized_waveform=DigitizedWaveformConfig(
         bit_depth=PositiveInteger(12),
-        input_min_mv=FiniteFloat(-20.0),
-        input_max_mv=FiniteFloat(20.0),
+        input_minimum=_mv(-20.0),
+        input_maximum=_mv(20.0),
         analog_gain_db=NonnegativeFloat(0.0),
     ),
 )

@@ -7,6 +7,7 @@ from typing import final
 import torch
 from tensor_core import CounterRng, RngKey
 
+from tensor_dslab.common.units import canonical_magnitude
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 from tensor_dslab.readout.requirements import require_representable_float
 from tensor_dslab.readout.charge.config import CorrelatedAvalancheConfig
@@ -142,16 +143,20 @@ def prepare_correlated_avalanches(
     )
     afterpulse: AfterpulseRuntime | None = None
     if config.afterpulse is not None and config.afterpulse.probability.value != 0.0:
+        mean_delay_ns = canonical_magnitude(config.afterpulse.mean_delay)
         delay = prepare_exponential_delay(
-            config.afterpulse.mean_delay_ns.value,
+            mean_delay_ns,
             sampling=sampling,
         )
         recovery: tuple[float, ...] | None = None
         overflow_recovery: tuple[float, ...] | None = None
         if config.afterpulse.recovery is not None:
+            time_constant_ns = canonical_magnitude(
+                config.afterpulse.recovery.time_constant
+            )
             recovery, overflow_recovery = prepare_afterpulse_recovery(
-                config.afterpulse,
-                config.afterpulse.recovery,
+                mean_delay_ns,
+                time_constant_ns,
                 sampling=sampling,
                 delay=delay,
             )
@@ -480,13 +485,7 @@ def simulate_correlated_avalanches(
     runtime: CorrelatedAvalancheRuntime,
     rng: CounterRng,
 ) -> _CorrelatedAvalancheResult:
-    if type(runtime) is not CorrelatedAvalancheRuntime:
-        raise TypeError("runtime must be exactly CorrelatedAvalancheRuntime")
-    if floating_dtype not in (torch.float32, torch.float64):
-        raise TypeError("floating_dtype must be torch.float32 or torch.float64")
     require_count_domain(seed_avalanches, field="correlated-avalanche roots")
-    if type(sample_dimension) is not int:
-        raise TypeError("sample_dimension must be exactly an integer")
     if sample_dimension < 0 or sample_dimension >= seed_avalanches.ndim:
         raise ValueError("sample_dimension is outside the root rank")
     if seed_avalanches.shape[sample_dimension] != runtime.sample_count:

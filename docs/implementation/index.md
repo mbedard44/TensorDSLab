@@ -534,7 +534,10 @@ dispatched no Pint or Stage 8 work.
 
 ### [Maintenance 6 Pint Physical Configuration Boundary](maintenance_6_pint_physical_configuration_boundary.md)
 
-Status: **User-authorized / Dispatched**.
+Status: **Implementation candidate / fixed-commit Validation pending** while
+these bytes are absent from `main`. If present unchanged on `main`, Review's
+clean fast-forward has completed and final Design acceptance remains pending
+until this index and the work order record **Merged / Closed**.
 
 Maintenance 6 is the selected next package gate from exact clean Maintenance 5
 Design-closeout baseline
@@ -572,6 +575,17 @@ local and separate full-A100 role evidence, and finite loop budgets.
 Implementation is dispatched only for that exact bounded work order. It
 authorizes no IO/artifact, integration, Stage 8, performance, compatibility,
 release, push, or sibling-package action.
+
+Candidate 1 is one clean direct child of corrected Design authority
+`6f7eba9b1c4e680930007836433f15e517288a9a`; its exact commit and tree are
+recorded in the immutable Validation handoff. Implementation's local
+TensorCore source/archive by Pint wheel/sdist matrix passed the focused module
+at `10/10`, full discovery at `207/194/13`, and Pyright `1.1.411` with zero
+diagnostics in all four forms. Exact dependency artifacts, negative typing,
+helper-retirement mutations, import/privacy, scope/protected-byte, diff,
+artifact, and hygiene gates were also exercised. CUDA was unavailable
+locally; the work order's separate fresh full-A100 Validation and Review
+matrices remain mandatory.
 
 ## Expected Stage Discipline
 

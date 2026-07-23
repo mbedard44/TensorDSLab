@@ -11,6 +11,8 @@ from tensor_core import (
 )
 
 from tensor_dslab import (
+    quantities,
+    quantity,
     AnalogWaveform,
     AnalogWaveformConfig,
     ChannelAxis,
@@ -44,6 +46,13 @@ from tensor_dslab.readout.pure_waveform.runtime.produce import (
 )
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 
+def _ns(value: int | float):
+    return quantity(value, "ns")
+
+
+def _mv(value: int | float):
+    return quantity(value, "mV")
+
 
 axes = (
     ExampleAxis(count=1),
@@ -57,10 +66,10 @@ charge = Charge(
 )
 pure_config = PureWaveformConfig(
     model=TpcFebSnrPulseConfig(
-        fast_time_constant_ns=PositiveFloat(83.0),
-        slow_time_constant_ns=PositiveFloat(383.0),
-        support_time_ns=PositiveFloat(3_000.0),
-        peak_voltage_mv_per_pe=FiniteFloat(-7.0),
+        fast_time_constant=_ns(83.0),
+        slow_time_constant=_ns(383.0),
+        support_time=_ns(3_000.0),
+        peak_voltage_per_photoelectron=_mv(-7.0),
     )
 )
 sampling_runtime = SamplingRuntime(
@@ -95,8 +104,8 @@ assert_type(analog, AnalogWaveform)
 
 digitized_config = DigitizedWaveformConfig(
     bit_depth=PositiveInteger(12),
-    input_min_mv=FiniteFloat(-20.0),
-    input_max_mv=FiniteFloat(2.0),
+    input_minimum=_mv(-20.0),
+    input_maximum=_mv(2.0),
     analog_gain_db=NonnegativeFloat(0.0),
 )
 digitized_runtime = prepare_digitized_waveform(

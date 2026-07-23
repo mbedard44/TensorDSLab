@@ -19,6 +19,8 @@ from tensor_core import (
 )
 
 from tensor_dslab import (
+    quantities,
+    quantity,
     ChannelAxis,
     ExampleAxis,
     NoiseWaveform,
@@ -46,6 +48,22 @@ SEEDS = (0, 1, 0x0123456789ABCDEF, 0xFFFFFFFFFFFFFFFF)
 AXIS_ORDERS = tuple(
     permutations((ExampleAxis, ChannelAxis, SampleAxis))
 )
+
+
+def _ns(value: int | float):
+    return quantity(value, "ns")
+
+
+def _hz(value: int | float):
+    return quantity(value, "Hz")
+
+
+def _mv(value: int | float):
+    return quantity(value, "mV")
+
+
+def _density(value: int | float):
+    return quantity(value, "mV ** 2 / Hz")
 
 
 class _FailingRng(CounterRng):
@@ -79,7 +97,9 @@ def _prepare_psd_powers(
     dtype: torch.dtype,
 ) -> tuple[float, ...]:
     return _prepare_psd_powers_prepared(
-        config,
+        tuple(float(value.magnitude) for value in config.frequency_left_edges),
+        float(config.frequency_stop.magnitude),
+        tuple(float(value.magnitude) for value in config.power_density),
         sampling=sampling,
         dtype=dtype,
     )
@@ -184,9 +204,9 @@ def _zero_config() -> NoiseWaveformConfig:
     return NoiseWaveformConfig(model=ZeroNoiseConfig())
 
 
-def _white_config(rms_mv: float = 1.0) -> NoiseWaveformConfig:
+def _white_config(rms: float = 1.0) -> NoiseWaveformConfig:
     return NoiseWaveformConfig(
-        model=WhiteNoiseConfig(rms_mv=PositiveFloat(rms_mv))
+        model=WhiteNoiseConfig(rms=_mv(rms))
     )
 
 
@@ -197,9 +217,9 @@ def _flat_psd_config(
 ) -> NoiseWaveformConfig:
     return NoiseWaveformConfig(
         model=PsdNoiseConfig(
-            frequency_left_edges_hz=(NonnegativeFloat(0.0),),
-            frequency_stop_hz=PositiveFloat(stop_hz),
-            power_density_mv2_per_hz=(NonnegativeFloat(density),),
+            frequency_left_edges=(_hz(0.0),),
+            frequency_stop=_hz(stop_hz),
+            power_density=(_density(density),),
         )
     )
 
@@ -256,9 +276,9 @@ def _reference_psd_powers(
         (index - 0.5) * spacing for index in range(1, frequency_count)
     )
     target_right = target_left[1:] + (nyquist,)
-    source_left = tuple(item.value for item in config.frequency_left_edges_hz)
-    source_right = source_left[1:] + (config.frequency_stop_hz.value,)
-    density = tuple(item.value for item in config.power_density_mv2_per_hz)
+    source_left = tuple(item.magnitude for item in config.frequency_left_edges)
+    source_right = source_left[1:] + (config.frequency_stop.magnitude,)
+    density = tuple(item.magnitude for item in config.power_density)
     integrated = tuple(
         math.fsum(
             source_power
@@ -353,27 +373,28 @@ class NoiseProductBranchTest(unittest.TestCase):
         self.assertTrue(_independent_storage(first.tensor, second.tensor))
         self.assertTrue(torch.equal(torch.random.get_rng_state(), state))
 
-    def test_dtype_and_device_fail_before_rng(self) -> None:
+    def test_private_preparer_relies_on_public_dtype_and_device_admission(
+        self,
+    ) -> None:
         sampling = _sampling(count=8)
         source = _photoelectrons(sampling)
-        failing_rng = _FailingRng(seed=0)
-        with self.assertRaises(TypeError):
-            _produce_noise_waveform(
-                source,
-                sampling=sampling,
-                config=_white_config(),
-                rng=failing_rng,
-                floating_dtype=torch.float16,
-            )
+        runtime = prepare_noise_waveform(
+            _zero_config(),
+            sampling=sampling,
+            shape=source.shape,
+            floating_dtype=torch.float16,
+            device=source.tensor.device,
+        )
+        self.assertIs(runtime.floating_dtype, torch.float16)
         meta_source = _photoelectrons(sampling, device="meta")
-        with self.assertRaises(ValueError):
-            _produce_noise_waveform(
-                meta_source,
-                sampling=sampling,
-                config=_zero_config(),
-                rng=failing_rng,
-                floating_dtype=torch.float32,
-            )
+        meta_runtime = prepare_noise_waveform(
+            _zero_config(),
+            sampling=sampling,
+            shape=meta_source.shape,
+            floating_dtype=torch.float32,
+            device=meta_source.tensor.device,
+        )
+        self.assertEqual(meta_runtime.device.type, "meta")
 
     def test_white_matches_finite_lattice_equation_without_demeaning(self) -> None:
         sampling = _sampling(count=7)
@@ -381,7 +402,7 @@ class NoiseProductBranchTest(unittest.TestCase):
         for dtype in (torch.float32, torch.float64):
             with self.subTest(dtype=dtype):
                 rms_input = 0.1
-                represented_rms = _round(rms_input, dtype)
+                represented_rms_mv = _round(rms_input, dtype)
                 result = _produce_noise_waveform(
                     source,
                     sampling=sampling,
@@ -399,7 +420,7 @@ class NoiseProductBranchTest(unittest.TestCase):
                     seed=0x0123456789ABCDEF
                 ).gaussian(
                     mean=0.0,
-                    standard_deviation=represented_rms,
+                    standard_deviation=represented_rms_mv,
                     key=model.rng_key,
                     positions=positions,
                     dtype=dtype,
@@ -536,10 +557,10 @@ class PsdPreparationTest(unittest.TestCase):
             spacing = sample_rate / count
             edges = (0.0, spacing / 2.0, 1.75 * spacing, 0.45 * sample_rate)
             model = PsdNoiseConfig(
-                frequency_left_edges_hz=tuple(NonnegativeFloat(value) for value in edges),
-                frequency_stop_hz=PositiveFloat(sample_rate / 2.0),
-                power_density_mv2_per_hz=tuple(
-                    NonnegativeFloat(value) for value in (1.0e-9, 2.0e-9, 0.0, 3.0e-9)
+                frequency_left_edges=tuple(_hz(value) for value in edges),
+                frequency_stop=_hz(sample_rate / 2.0),
+                power_density=tuple(
+                    _density(value) for value in (1.0e-9, 2.0e-9, 0.0, 3.0e-9)
                 ),
             )
             for dtype in (torch.float32, torch.float64):
@@ -577,36 +598,36 @@ class PsdPreparationTest(unittest.TestCase):
         source = _photoelectrons(sampling)
         invalid_models = (
             PsdNoiseConfig(
-                frequency_left_edges_hz=(NonnegativeFloat(0.0),),
-                frequency_stop_hz=PositiveFloat(400_000_000.0),
-                power_density_mv2_per_hz=(NonnegativeFloat(1.0e-9),),
+                frequency_left_edges=(_hz(0.0),),
+                frequency_stop=_hz(400_000_000.0),
+                power_density=(_density(1.0e-9),),
             ),
             PsdNoiseConfig(
-                frequency_left_edges_hz=(
-                    NonnegativeFloat(0.0),
-                    NonnegativeFloat(125_000_000.0),
+                frequency_left_edges=(
+                    _hz(0.0),
+                    _hz(125_000_000.0),
                 ),
-                frequency_stop_hz=PositiveFloat(500_000_000.0),
-                power_density_mv2_per_hz=(
-                    NonnegativeFloat(1.0e-9),
-                    NonnegativeFloat(0.0),
-                ),
-            ),
-            PsdNoiseConfig(
-                frequency_left_edges_hz=(
-                    NonnegativeFloat(0.0),
-                    NonnegativeFloat(500_000_000.0),
-                ),
-                frequency_stop_hz=PositiveFloat(600_000_000.0),
-                power_density_mv2_per_hz=(
-                    NonnegativeFloat(0.0),
-                    NonnegativeFloat(1.0e-9),
+                frequency_stop=_hz(500_000_000.0),
+                power_density=(
+                    _density(1.0e-9),
+                    _density(0.0),
                 ),
             ),
             PsdNoiseConfig(
-                frequency_left_edges_hz=(NonnegativeFloat(0.0),),
-                frequency_stop_hz=PositiveFloat(500_000_000.0),
-                power_density_mv2_per_hz=(NonnegativeFloat(4.0e-59),),
+                frequency_left_edges=(
+                    _hz(0.0),
+                    _hz(500_000_000.0),
+                ),
+                frequency_stop=_hz(600_000_000.0),
+                power_density=(
+                    _density(0.0),
+                    _density(1.0e-9),
+                ),
+            ),
+            PsdNoiseConfig(
+                frequency_left_edges=(_hz(0.0),),
+                frequency_stop=_hz(500_000_000.0),
+                power_density=(_density(4.0e-59),),
             ),
         )
         for model in invalid_models:
@@ -739,12 +760,12 @@ class PsdSynthesisTest(unittest.TestCase):
                 for index in range(frequency_count)
             )
             model = PsdNoiseConfig(
-                frequency_left_edges_hz=tuple(
-                    NonnegativeFloat(value) for value in target_boundaries[:-1]
+                frequency_left_edges=tuple(
+                    _hz(value) for value in target_boundaries[:-1]
                 ),
-                frequency_stop_hz=PositiveFloat(target_boundaries[-1]),
-                power_density_mv2_per_hz=tuple(
-                    NonnegativeFloat(value) for value in densities
+                frequency_stop=_hz(target_boundaries[-1]),
+                power_density=tuple(
+                    _density(value) for value in densities
                 ),
             )
             for dtype in (torch.float32, torch.float64):

@@ -11,6 +11,8 @@ from tensor_core import (
 )
 
 from tensor_dslab import (
+    quantities,
+    quantity,
     Charge,
     ChargeConfig,
     ChargeSmearingConfig,
@@ -35,6 +37,9 @@ from tensor_dslab.readout.runtime.sampling import (
     prepare_sampling,
 )
 
+def _mv(value: int | float):
+    return quantity(value, "mV")
+
 
 axes = (
     ExampleAxis(count=1),
@@ -53,7 +58,7 @@ assert_type(sampling_runtime, SamplingRuntime)
 noise_runtime = prepare_noise_waveform(
     NoiseWaveformConfig(
         model=WhiteNoiseConfig(
-            rms_mv=PositiveFloat(1.0),
+            rms=_mv(1.0),
             rng_key=key,
         )
     ),

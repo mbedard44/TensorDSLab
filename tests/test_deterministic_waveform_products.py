@@ -16,6 +16,8 @@ from tensor_core import (
 )
 
 from tensor_dslab import (
+    quantities,
+    quantity,
     AnalogSaturationConfig,
     AnalogWaveform,
     AnalogWaveformConfig,
@@ -63,6 +65,22 @@ from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 
 
 PulseModel = TpcFebSnrPulseConfig | VetoPduPulseConfig
+
+
+def _ns(value: int | float):
+    return quantity(value, "ns")
+
+
+def _hz(value: int | float):
+    return quantity(value, "Hz")
+
+
+def _mv(value: int | float):
+    return quantity(value, "mV")
+
+
+def _density(value: int | float):
+    return quantity(value, "mV ** 2 / Hz")
 
 
 def _sampling(*, period_ps: int = 8_000, count: int = 8) -> SamplingRuntime:
@@ -226,15 +244,15 @@ def _analog(
 
 def _tpc_config(
     *,
-    support_time_ns: float = 3_000.0,
+    support_time: float = 3_000.0,
     peak_mv: float = -7.0,
 ) -> PureWaveformConfig:
     return PureWaveformConfig(
         model=TpcFebSnrPulseConfig(
-            fast_time_constant_ns=PositiveFloat(83.0),
-            slow_time_constant_ns=PositiveFloat(383.0),
-            support_time_ns=PositiveFloat(support_time_ns),
-            peak_voltage_mv_per_pe=FiniteFloat(peak_mv),
+            fast_time_constant=_ns(83.0),
+            slow_time_constant=_ns(383.0),
+            support_time=_ns(support_time),
+            peak_voltage_per_photoelectron=_mv(peak_mv),
         )
     )
 
@@ -242,34 +260,34 @@ def _tpc_config(
 def _veto_config() -> PureWaveformConfig:
     return PureWaveformConfig(
         model=VetoPduPulseConfig(
-            gaussian_center_ns=FiniteFloat(232.89),
-            gaussian_width_ns=PositiveFloat(507.72),
-            edge_offset_1_ns=FiniteFloat(-81.92),
-            edge_width_1_ns=PositiveFloat(147.28),
-            edge_offset_2_ns=FiniteFloat(-176.50),
-            edge_width_2_ns=PositiveFloat(45.69),
-            support_time_ns=PositiveFloat(2020.27),
-            peak_voltage_mv_per_pe=FiniteFloat(-14.5912372),
+            gaussian_center=_ns(232.89),
+            gaussian_width=_ns(507.72),
+            edge_offset_1=_ns(-81.92),
+            edge_width_1=_ns(147.28),
+            edge_offset_2=_ns(-176.50),
+            edge_width_2=_ns(45.69),
+            support_time=_ns(2020.27),
+            peak_voltage_per_photoelectron=_mv(-14.5912372),
         )
     )
 
 
 def _raw_pulse(time_ns: float, model: PulseModel) -> float:
     if isinstance(model, TpcFebSnrPulseConfig):
-        return math.exp(-time_ns / model.slow_time_constant_ns.value) - math.exp(
-            -time_ns / model.fast_time_constant_ns.value
+        return math.exp(-time_ns / model.slow_time_constant.magnitude) - math.exp(
+            -time_ns / model.fast_time_constant.magnitude
         )
-    x = time_ns - model.gaussian_center_ns.value
+    x = time_ns - model.gaussian_center.magnitude
     gaussian = math.exp(
-        -(x**2) / (2.0 * model.gaussian_width_ns.value**2)
-    ) / math.sqrt(2.0 * math.pi * model.gaussian_width_ns.value**2)
+        -(x**2) / (2.0 * model.gaussian_width.magnitude**2)
+    ) / math.sqrt(2.0 * math.pi * model.gaussian_width.magnitude**2)
     first_edge = 1.0 + math.erf(
-        (x - model.edge_offset_1_ns.value)
-        / (math.sqrt(2.0) * model.edge_width_1_ns.value)
+        (x - model.edge_offset_1.magnitude)
+        / (math.sqrt(2.0) * model.edge_width_1.magnitude)
     )
     second_edge = 1.0 + math.erf(
-        (x - model.edge_offset_2_ns.value)
-        / (math.sqrt(2.0) * model.edge_width_2_ns.value)
+        (x - model.edge_offset_2.magnitude)
+        / (math.sqrt(2.0) * model.edge_width_2.magnitude)
     )
     return gaussian * first_edge * second_edge
 
@@ -285,14 +303,14 @@ def _reference_coefficients(
     model = config.model
     sample = 0
     raw: list[float] = []
-    while sample * period_ns < model.support_time_ns.value:
+    while sample * period_ns < model.support_time.magnitude:
         raw.append(_raw_pulse(sample * period_ns, model))
         sample += 1
     normalization = max(abs(value) for value in raw)
     retained = raw[: sampling.sample_count]
     return torch.tensor(
         [
-            value / normalization * model.peak_voltage_mv_per_pe.value
+            value / normalization * model.peak_voltage_per_photoelectron.magnitude
             for value in retained
         ],
         dtype=dtype,
@@ -334,14 +352,14 @@ def _reference_pure(
 def _adc_config(
     *,
     bit_depth: int = 12,
-    input_min_mv: float = -1_000.0,
-    input_max_mv: float = 1_000.0,
+    input_minimum: float = -1_000.0,
+    input_maximum: float = 1_000.0,
     gain_db: float = 0.0,
 ) -> DigitizedWaveformConfig:
     return DigitizedWaveformConfig(
         bit_depth=PositiveInteger(bit_depth),
-        input_min_mv=FiniteFloat(input_min_mv),
-        input_max_mv=FiniteFloat(input_max_mv),
+        input_minimum=_mv(input_minimum),
+        input_maximum=_mv(input_maximum),
         analog_gain_db=NonnegativeFloat(gain_db),
     )
 
@@ -352,7 +370,7 @@ def _guarded_adc_reference(
 ) -> torch.Tensor:
     maximum_code = (1 << config.bit_depth.value) - 1
     gain = 10.0 ** (config.analog_gain_db.value / 20.0)
-    span = config.input_max_mv.value - config.input_min_mv.value
+    span = config.input_maximum.magnitude - config.input_minimum.magnitude
 
     def scalar(value: float | int) -> torch.Tensor:
         return torch.tensor(
@@ -363,16 +381,16 @@ def _guarded_adc_reference(
 
     zero = scalar(0.0)
     maximum = scalar(maximum_code)
-    lower = scalar(config.input_min_mv.value / gain)
-    upper = scalar(config.input_max_mv.value / gain)
+    lower = scalar(config.input_minimum.magnitude / gain)
+    upper = scalar(config.input_maximum.magnitude / gain)
     gained = analog * scalar(gain)
     clipped = torch.clamp(
         gained,
-        min=scalar(config.input_min_mv.value),
-        max=scalar(config.input_max_mv.value),
+        min=scalar(config.input_minimum.magnitude),
+        max=scalar(config.input_maximum.magnitude),
     )
     scaled = (
-        (clipped - scalar(config.input_min_mv.value))
+        (clipped - scalar(config.input_minimum.magnitude))
         / scalar(span)
         * maximum
     )
@@ -568,7 +586,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
 
     def test_pure_waveform_support_is_left_closed_right_open(self) -> None:
         sampling = _sampling(count=4)
-        config = _tpc_config(support_time_ns=16.0, peak_mv=-2.0)
+        config = _tpc_config(support_time=16.0, peak_mv=-2.0)
         charge = _charge([1.0, 0.0, 0.0, 0.0], sampling, dtype=torch.float64)
         result = _produce_pure_waveform(
             charge,
@@ -599,7 +617,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
 
     def test_pure_waveform_is_causal_same_length_and_zero_baseline(self) -> None:
         sampling = _sampling(count=8)
-        config = _tpc_config(support_time_ns=32.0)
+        config = _tpc_config(support_time=32.0)
         charge = _charge(
             [0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
             sampling,
@@ -651,7 +669,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
             axes=axes,
         )
         self.assertFalse(charge.tensor.is_contiguous())
-        config = _tpc_config(support_time_ns=32.0)
+        config = _tpc_config(support_time=32.0)
         result = _produce_pure_waveform(
             charge,
             sampling=sampling,
@@ -678,7 +696,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
 
     def test_pure_waveform_reuses_axes_is_fresh_and_preserves_autograd(self) -> None:
         sampling = _sampling(count=6)
-        config = _tpc_config(support_time_ns=32.0)
+        config = _tpc_config(support_time=32.0)
         for dtype, rtol, atol in (
             (torch.float32, 2e-5, 2e-6),
             (torch.float64, 1e-12, 1e-12),
@@ -772,7 +790,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                 _produce_pure_waveform(
                     charge,
                     sampling=sampling,
-                    config=_tpc_config(support_time_ns=1e308),
+                    config=_tpc_config(support_time=1e308),
                 )
         self.assertEqual(charge.tensor._version, version)
         torch.testing.assert_close(charge.tensor, before)
@@ -795,7 +813,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                             charge,
                             sampling=sampling,
                             config=_tpc_config(
-                                support_time_ns=32.0,
+                                support_time=32.0,
                                 peak_mv=peak_mv,
                             ),
                         )
@@ -804,7 +822,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
 
     def test_pure_waveform_preserves_dtype_under_cpu_autocast(self) -> None:
         sampling = _sampling(count=8)
-        config = _tpc_config(support_time_ns=32.0)
+        config = _tpc_config(support_time=32.0)
         charge = _charge(
             [1.0, 0.5, 0.0, 0.25, 0.0, 0.0, 0.0, 0.0],
             sampling,
@@ -842,15 +860,15 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         configs = (
             AnalogWaveformConfig(),
             AnalogWaveformConfig(
-                saturation=AnalogSaturationConfig(minimum_mv=FiniteFloat(-2.0))
+                saturation=AnalogSaturationConfig(minimum=_mv(-2.0))
             ),
             AnalogWaveformConfig(
-                saturation=AnalogSaturationConfig(maximum_mv=FiniteFloat(3.0))
+                saturation=AnalogSaturationConfig(maximum=_mv(3.0))
             ),
             AnalogWaveformConfig(
                 saturation=AnalogSaturationConfig(
-                    minimum_mv=FiniteFloat(-2.0),
-                    maximum_mv=FiniteFloat(3.0),
+                    minimum=_mv(-2.0),
+                    maximum=_mv(3.0),
                 )
             ),
         )
@@ -864,17 +882,17 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                     if config.saturation is not None:
                         minimum = (
                             None
-                            if config.saturation.minimum_mv is None
+                            if config.saturation.minimum is None
                             else torch.tensor(
-                                config.saturation.minimum_mv.value,
+                                config.saturation.minimum.magnitude,
                                 dtype=dtype,
                             )
                         )
                         maximum = (
                             None
-                            if config.saturation.maximum_mv is None
+                            if config.saturation.maximum is None
                             else torch.tensor(
-                                config.saturation.maximum_mv.value,
+                                config.saturation.maximum.magnitude,
                                 dtype=dtype,
                             )
                         )
@@ -980,13 +998,13 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         bad_configs = (
             AnalogWaveformConfig(
                 saturation=AnalogSaturationConfig(
-                    maximum_mv=FiniteFloat(3.5e38)
+                    maximum=_mv(3.5e38)
                 )
             ),
             AnalogWaveformConfig(
                 saturation=AnalogSaturationConfig(
-                    minimum_mv=FiniteFloat(1.0),
-                    maximum_mv=FiniteFloat(1.0 + 1e-8),
+                    minimum=_mv(1.0),
+                    maximum=_mv(1.0 + 1e-8),
                 )
             ),
         )
@@ -1031,8 +1049,8 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                 noise_version = noise.tensor._version
                 config = AnalogWaveformConfig(
                     saturation=AnalogSaturationConfig(
-                        minimum_mv=FiniteFloat(-10.0),
-                        maximum_mv=FiniteFloat(10.0),
+                        minimum=_mv(-10.0),
+                        maximum=_mv(10.0),
                     )
                 )
                 result = _produce_analog_waveform(pure, noise, config=config)
@@ -1121,8 +1139,8 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         samples = [-500.0, -100.0, -1.0, 0.0, 1.0, 100.0, 500.0]
         config = _adc_config(
             bit_depth=12,
-            input_min_mv=-400.0,
-            input_max_mv=600.0,
+            input_minimum=-400.0,
+            input_maximum=600.0,
             gain_db=3.5218,
         )
         for dtype in (torch.float32, torch.float64):
@@ -1155,8 +1173,8 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         sampling = _sampling(count=5)
         config = _adc_config(
             bit_depth=4,
-            input_min_mv=-2.0,
-            input_max_mv=6.0,
+            input_minimum=-2.0,
+            input_maximum=6.0,
             gain_db=20.0,
         )
         samples = [-1.0, -0.2, 0.0, 0.6, 1.0]
@@ -1172,20 +1190,20 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
             self.assertEqual(result.tensor.flatten()[4].item(), 15)
 
         endpoint_cases = (
-            (torch.float32, _adc_config(bit_depth=2, input_min_mv=1.0, input_max_mv=5.0, gain_db=0.1)),
-            (torch.float64, _adc_config(bit_depth=2, input_min_mv=-0.1, input_max_mv=0.3, gain_db=1.0)),
+            (torch.float32, _adc_config(bit_depth=2, input_minimum=1.0, input_maximum=5.0, gain_db=0.1)),
+            (torch.float64, _adc_config(bit_depth=2, input_minimum=-0.1, input_maximum=0.3, gain_db=1.0)),
         )
         for dtype, endpoint_config in endpoint_cases:
             gain = 10.0 ** (endpoint_config.analog_gain_db.value / 20.0)
-            span = endpoint_config.input_max_mv.value - endpoint_config.input_min_mv.value
+            span = endpoint_config.input_maximum.magnitude - endpoint_config.input_minimum.magnitude
             maximum_code = (1 << endpoint_config.bit_depth.value) - 1
             upper = torch.tensor(
-                endpoint_config.input_max_mv.value / gain,
+                endpoint_config.input_maximum.magnitude / gain,
                 dtype=dtype,
             )
             slope = torch.tensor(gain * maximum_code / span, dtype=dtype)
             intercept = torch.tensor(
-                -endpoint_config.input_min_mv.value * maximum_code / span,
+                -endpoint_config.input_minimum.magnitude * maximum_code / span,
                 dtype=dtype,
             )
             unguarded = upper * slope + intercept
@@ -1210,13 +1228,13 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         analog = _analog([0.0, 1.0], sampling, dtype=torch.float32)
         configs = (
             _adc_config(
-                input_min_mv=-3.4e38,
-                input_max_mv=3.4e38,
+                input_minimum=-3.4e38,
+                input_maximum=3.4e38,
             ),
             _adc_config(
                 bit_depth=2,
-                input_min_mv=1.0,
-                input_max_mv=1.0 + 1e-8,
+                input_minimum=1.0,
+                input_maximum=1.0 + 1e-8,
             ),
         )
         for config in configs:
@@ -1239,8 +1257,8 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
             analog,
             config=_adc_config(
                 bit_depth=2,
-                input_min_mv=0.0,
-                input_max_mv=1.0,
+                input_minimum=0.0,
+                input_maximum=1.0,
             ),
         )
         self.assertTrue(
@@ -1263,8 +1281,8 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
             analog,
             config=_adc_config(
                 bit_depth=16,
-                input_min_mv=-1.0,
-                input_max_mv=1.0,
+                input_minimum=-1.0,
+                input_maximum=1.0,
             ),
         )
         self.assertTrue(
@@ -1284,8 +1302,8 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
         )
         config = _adc_config(
             bit_depth=8,
-            input_min_mv=-1.0,
-            input_max_mv=1.0,
+            input_minimum=-1.0,
+            input_maximum=1.0,
         )
         before = analog.tensor.clone()
         version = analog.tensor._version
@@ -1323,16 +1341,16 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
             self.assertIs(scalar.dtype, analog.tensor.dtype)
             self.assertEqual(scalar.device, analog.tensor.device)
         gain = 10.0 ** (config.analog_gain_db.value / 20.0)
-        span = config.input_max_mv.value - config.input_min_mv.value
+        span = config.input_maximum.magnitude - config.input_minimum.magnitude
         maximum_code = (1 << config.bit_depth.value) - 1
         expected_execution_scalars = torch.tensor(
             (
                 0.0,
                 maximum_code,
                 gain * maximum_code / span,
-                -config.input_min_mv.value * maximum_code / span,
-                config.input_min_mv.value / gain,
-                config.input_max_mv.value / gain,
+                -config.input_minimum.magnitude * maximum_code / span,
+                config.input_minimum.magnitude / gain,
+                config.input_maximum.magnitude / gain,
             ),
             dtype=analog.tensor.dtype,
             device=analog.tensor.device,
@@ -1367,13 +1385,13 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
                 pure = _produce_pure_waveform(
                     charge,
                     sampling=sampling,
-                    config=_tpc_config(support_time_ns=32.0),
+                    config=_tpc_config(support_time=32.0),
                 )
                 expected_pure = _reference_pure(
                     charge.tensor,
                     charge.axes,
                     sampling,
-                    _tpc_config(support_time_ns=32.0),
+                    _tpc_config(support_time=32.0),
                 )
                 torch.testing.assert_close(
                     pure.tensor,

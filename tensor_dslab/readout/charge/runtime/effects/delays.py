@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from fractions import Fraction
 from typing import final
 
+from tensor_dslab.common.units import canonical_magnitude
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 from tensor_dslab.readout.charge.config import (
     AfterpulseConfig,
@@ -162,10 +163,13 @@ def prepare_delay(
     sampling: SamplingRuntime,
 ) -> DelayRuntime:
     if type(config) is FixedDelayConfig:
-        return _prepare_fixed_delay(config.delay_ns.value, sampling=sampling)
+        return _prepare_fixed_delay(
+            canonical_magnitude(config.delay),
+            sampling=sampling,
+        )
     if type(config) is ExponentialDelayConfig:
         return prepare_exponential_delay(
-            config.mean_delay_ns.value,
+            canonical_magnitude(config.mean_delay),
             sampling=sampling,
         )
     raise TypeError("crosstalk delay model is not recognized")
@@ -249,22 +253,21 @@ def _g_difference(x: float, y: float) -> float:
 
 
 def prepare_afterpulse_recovery(
-    afterpulse: AfterpulseConfig,
-    recovery: AfterpulseRecoveryConfig,
+    mean_delay_ns: float,
+    time_constant_ns: float,
     *,
     sampling: SamplingRuntime,
     delay: DelayRuntime,
 ) -> tuple[tuple[float, ...], tuple[float, ...]]:
     period = sampling.sample_period_ps
-    recovery_value = recovery.time_constant_ns.value
-    numerator, denominator = recovery_value.as_integer_ratio()
+    numerator, denominator = time_constant_ns.as_integer_ratio()
     if numerator * 1000 * (1 << 52) < denominator * period:
         raise ValueError("afterpulse recovery ratio is below the accepted domain")
     if numerator * 1000 > denominator * period * (1 << 52):
         raise ValueError("afterpulse recovery ratio exceeds the accepted domain")
 
-    delay_ps = afterpulse.mean_delay_ns.value * 1000.0
-    recovery_ps = recovery_value * 1000.0
+    delay_ps = mean_delay_ns * 1000.0
+    recovery_ps = time_constant_ns * 1000.0
     x = float(period) / delay_ps
     y = float(period) / recovery_ps
     combined = x + y

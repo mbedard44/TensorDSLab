@@ -7,15 +7,32 @@ from unittest.mock import patch
 import torch
 from tensor_core import CounterRng, NonnegativeFloat, PositiveInteger, Threefry4x32
 
-from tensor_dslab import TimingJitterConfig
+from tensor_dslab import TimingJitterConfig, quantity
 from tensor_dslab.readout.charge.runtime.effects import (
     timing_jitter,
 )
 from tensor_dslab.readout.charge.runtime.effects.timing_jitter import (
-    prepare_timing_jitter,
+    TimingJitterRuntime,
+    prepare_timing_jitter as _prepare_timing_jitter,
     simulate_timing_jitter as simulate_timing_jitter_prepared,
 )
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime
+
+
+def _ns(value: int | float):
+    return quantity(value, "ns")
+
+
+def _hz(value: int | float):
+    return quantity(value, "Hz")
+
+
+def _mv(value: int | float):
+    return quantity(value, "mV")
+
+
+def _density(value: int | float):
+    return quantity(value, "mV ** 2 / Hz")
 
 
 def _sampling(*, count: int = 4) -> SamplingRuntime:
@@ -26,6 +43,22 @@ def _sampling(*, count: int = 4) -> SamplingRuntime:
     )
 
 
+def prepare_timing_jitter(
+    config: TimingJitterConfig,
+    *,
+    sampling: SamplingRuntime,
+    tensor_numel: int,
+) -> TimingJitterRuntime:
+    runtime = _prepare_timing_jitter(
+        config,
+        sampling=sampling,
+        tensor_numel=tensor_numel,
+    )
+    if runtime is None:
+        raise AssertionError("active timing jitter must prepare a runtime")
+    return runtime
+
+
 def simulate_timing_jitter(
     counts: torch.Tensor,
     *,
@@ -34,13 +67,15 @@ def simulate_timing_jitter(
     config: TimingJitterConfig,
     rng: CounterRng,
 ) -> torch.Tensor:
-    if config.sigma_ns.value == 0.0:
+    if config.sigma.magnitude == 0.0:
         return counts
     plan = prepare_timing_jitter(
         config,
         sampling=sampling,
         tensor_numel=counts.numel(),
     )
+    if plan is None:
+        raise AssertionError("active timing jitter must prepare a runtime")
     return simulate_timing_jitter_prepared(
         counts,
         sample_dimension=sample_dimension,
@@ -95,7 +130,7 @@ def _assert_statistic(
 class TimingJitterPreparationTest(unittest.TestCase):
     def test_symmetric_complete_law_matches_independent_equation(self) -> None:
         sampling = _sampling(count=8)
-        config = TimingJitterConfig(sigma_ns=NonnegativeFloat(1.0))
+        config = TimingJitterConfig(sigma=_ns(1.0))
         plan = prepare_timing_jitter(
             config,
             sampling=sampling,
@@ -126,7 +161,7 @@ class TimingJitterPreparationTest(unittest.TestCase):
             with self.subTest(ratio=ratio):
                 plan = prepare_timing_jitter(
                     TimingJitterConfig(
-                        sigma_ns=NonnegativeFloat(period_ns * ratio)
+                        sigma=_ns(period_ns * ratio)
                     ),
                     sampling=sampling,
                     tensor_numel=16,
@@ -135,7 +170,7 @@ class TimingJitterPreparationTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             prepare_timing_jitter(
                 TimingJitterConfig(
-                    sigma_ns=NonnegativeFloat(
+                    sigma=_ns(
                         period_ns * math.nextafter(2.0**-52, 0.0)
                     )
                 ),
@@ -145,7 +180,7 @@ class TimingJitterPreparationTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             prepare_timing_jitter(
                 TimingJitterConfig(
-                    sigma_ns=NonnegativeFloat(
+                    sigma=_ns(
                         period_ns * math.nextafter(64.0, math.inf)
                     )
                 ),
@@ -154,7 +189,7 @@ class TimingJitterPreparationTest(unittest.TestCase):
             )
         with self.assertRaises(ValueError):
             prepare_timing_jitter(
-                TimingJitterConfig(sigma_ns=NonnegativeFloat(1.0)),
+                TimingJitterConfig(sigma=_ns(1.0)),
                 sampling=_sampling(count=8193),
                 tensor_numel=8193,
             )
@@ -164,7 +199,7 @@ class TimingJitterPreparationTest(unittest.TestCase):
             with self.subTest(maximum_sample_ratio=ratio):
                 plan = prepare_timing_jitter(
                     TimingJitterConfig(
-                        sigma_ns=NonnegativeFloat(period_ns * ratio)
+                        sigma=_ns(period_ns * ratio)
                     ),
                     sampling=maximum_sampling,
                     tensor_numel=1,
@@ -173,14 +208,14 @@ class TimingJitterPreparationTest(unittest.TestCase):
                 self.assertEqual(len(plan.left_tails), 8192)
 
         exact_address = prepare_timing_jitter(
-            TimingJitterConfig(sigma_ns=NonnegativeFloat(1.0)),
+            TimingJitterConfig(sigma=_ns(1.0)),
             sampling=_sampling(count=8),
             tensor_numel=1 << 60,
         )
         self.assertEqual(len(exact_address.probabilities), 8)
         with self.assertRaisesRegex(ValueError, "address lattice"):
             prepare_timing_jitter(
-                TimingJitterConfig(sigma_ns=NonnegativeFloat(1.0)),
+                TimingJitterConfig(sigma=_ns(1.0)),
                 sampling=_sampling(count=8),
                 tensor_numel=(1 << 60) + 1,
             )
@@ -238,7 +273,7 @@ class TimingJitterPreparationTest(unittest.TestCase):
             with self.subTest(ratio=ratio):
                 plan = prepare_timing_jitter(
                     TimingJitterConfig(
-                        sigma_ns=NonnegativeFloat(2.0 * ratio)
+                        sigma=_ns(2.0 * ratio)
                     ),
                     sampling=_sampling(count=8),
                     tensor_numel=16,
@@ -285,7 +320,7 @@ class TimingJitterSimulationTest(unittest.TestCase):
             counts,
             sample_dimension=2,
             sampling=sampling,
-            config=TimingJitterConfig(sigma_ns=NonnegativeFloat(0.0)),
+            config=TimingJitterConfig(sigma=_ns(0.0)),
             rng=Threefry4x32(seed=0),
         )
         self.assertIs(identity, counts)
@@ -293,7 +328,7 @@ class TimingJitterSimulationTest(unittest.TestCase):
             counts,
             sample_dimension=2,
             sampling=sampling,
-            config=TimingJitterConfig(sigma_ns=NonnegativeFloat(1.0)),
+            config=TimingJitterConfig(sigma=_ns(1.0)),
             rng=Threefry4x32(seed=1234),
         )
         self.assertTrue(bool(torch.all(jittered >= 0).item()))
@@ -321,7 +356,7 @@ class TimingJitterSimulationTest(unittest.TestCase):
                 counts,
                 sample_dimension=2,
                 sampling=sampling,
-                config=TimingJitterConfig(sigma_ns=NonnegativeFloat(1.0)),
+                config=TimingJitterConfig(sigma=_ns(1.0)),
                 rng=Threefry4x32(seed=9),
             )
         self.assertEqual(len(calls), 16)
@@ -336,7 +371,7 @@ class TimingJitterSimulationTest(unittest.TestCase):
 
     def test_one_parent_ensemble_matches_prepared_categories(self) -> None:
         sampling = _sampling()
-        config = TimingJitterConfig(sigma_ns=NonnegativeFloat(1.0))
+        config = TimingJitterConfig(sigma=_ns(1.0))
         per_seed = 1 << 16
         seeds = (0, 1, 0x0123456789ABCDEF, 0xFFFFFFFFFFFFFFFF)
         retained = []

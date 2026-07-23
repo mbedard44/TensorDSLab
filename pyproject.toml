@@ -13,6 +13,7 @@ authors = [
     { name = "Michael Bedard, Princeton University" },
 ]
 dependencies = [
+    "pint==0.25.3",
     "torch",
     "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@202d8b1bc6259b8453d3d377570417f2480d782b",
 ]

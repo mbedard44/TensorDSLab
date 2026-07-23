@@ -6,6 +6,7 @@ from typing import final
 
 import torch
 
+from tensor_dslab.common.units import canonical_magnitude
 from tensor_dslab.readout.digitized_waveform.config import (
     DigitizedWaveformConfig,
 )
@@ -18,10 +19,10 @@ class DigitizedWaveformRuntime:
     maximum_code: int
     zero: torch.Tensor
     maximum: torch.Tensor
-    slope: torch.Tensor
+    slope_per_mv: torch.Tensor
     intercept: torch.Tensor
-    lower_input: torch.Tensor
-    upper_input: torch.Tensor
+    lower_input_mv: torch.Tensor
+    upper_input_mv: torch.Tensor
 
 
 def prepare_digitized_waveform(
@@ -30,19 +31,16 @@ def prepare_digitized_waveform(
     floating_dtype: torch.dtype,
     device: torch.device,
 ) -> DigitizedWaveformRuntime:
-    if type(config) is not DigitizedWaveformConfig:
-        raise TypeError("config must be exactly DigitizedWaveformConfig")
-    if floating_dtype not in (torch.float32, torch.float64):
-        raise TypeError("floating_dtype must be torch.float32 or torch.float64")
-
     maximum_code = (1 << config.bit_depth.value) - 1
+    input_minimum_mv = canonical_magnitude(config.input_minimum)
+    input_maximum_mv = canonical_magnitude(config.input_maximum)
     try:
         gain = 10.0 ** (config.analog_gain_db.value / 20.0)
-        span = config.input_max_mv.value - config.input_min_mv.value
+        span = input_maximum_mv - input_minimum_mv
         slope = gain * maximum_code / span
-        intercept = -config.input_min_mv.value * maximum_code / span
-        lower_input_mv = config.input_min_mv.value / gain
-        upper_input_mv = config.input_max_mv.value / gain
+        intercept = -input_minimum_mv * maximum_code / span
+        lower_input_mv = input_minimum_mv / gain
+        upper_input_mv = input_maximum_mv / gain
     except (OverflowError, ZeroDivisionError) as error:
         raise ValueError("ADC transfer cannot be represented in binary64") from error
 
@@ -124,8 +122,8 @@ def prepare_digitized_waveform(
         maximum_code=maximum_code,
         zero=zero,
         maximum=maximum,
-        slope=slope_tensor,
+        slope_per_mv=slope_tensor,
         intercept=intercept_tensor,
-        lower_input=lower_input,
-        upper_input=upper_input,
+        lower_input_mv=lower_input,
+        upper_input_mv=upper_input,
     )

@@ -125,9 +125,12 @@ class ReadoutAxesAndSamplingTest(unittest.TestCase):
 
     def test_sample_axis_domain_properties_and_adjacent_boundaries(self) -> None:
         axis = SampleAxis(start=4_000, step=2_000, count=3)
-        self.assertEqual(axis.start_ps, 4_000)
-        self.assertEqual(axis.sample_period_ps, 2_000)
-        self.assertEqual(axis.stop_ps, 10_000)
+        self.assertEqual(axis.start_time.magnitude, 4_000)
+        self.assertEqual(axis.sample_period.magnitude, 2_000)
+        self.assertEqual(axis.stop_time.magnitude, 10_000)
+        self.assertEqual(str(axis.start_time.units), "picosecond")
+        self.assertEqual(str(axis.sample_period.units), "picosecond")
+        self.assertEqual(str(axis.stop_time.units), "picosecond")
         self.assertEqual(axis.coordinates, range(4_000, 10_000, 2_000))
 
         invalid_cases: tuple[dict[str, int], ...] = (
@@ -164,7 +167,7 @@ class ReadoutAxesAndSamplingTest(unittest.TestCase):
 
         maximum = (1 << 63) - 1
         valid = SampleAxis(start=maximum - 2, step=1, count=2)
-        self.assertEqual(valid.stop_ps, maximum)
+        self.assertEqual(valid.stop_time.magnitude, maximum)
         with self.assertRaises(ValueError):
             SampleAxis(start=maximum - 1, step=1, count=2)
         with self.assertRaises(ValueError):
@@ -283,14 +286,21 @@ class ReadoutAxesAndSamplingTest(unittest.TestCase):
             tensor=torch.zeros((1, 1, 4), dtype=torch.int64),
             axes=axes,
         )
-        with patch.object(
-            RegularAxis,
-            "coordinates",
-            new_callable=PropertyMock,
-            side_effect=AssertionError("sampling materialized coordinates"),
-        ) as coordinates:
+        with (
+            patch.object(
+                RegularAxis,
+                "coordinates",
+                new_callable=PropertyMock,
+                side_effect=AssertionError("sampling materialized coordinates"),
+            ) as coordinates,
+            patch(
+                "tensor_dslab.common.axes._integer_quantity",
+                side_effect=AssertionError("sampling created a Pint quantity"),
+            ) as integer_quantity,
+        ):
             runtime = prepare_sampling(source)
         coordinates.assert_not_called()
+        integer_quantity.assert_not_called()
         self.assertEqual(runtime.sample_count, 4)
         self.assertEqual(runtime.sample_period_ps, 2_000)
         self.assertEqual(runtime.sample_dimension, 2)

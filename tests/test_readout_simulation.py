@@ -24,6 +24,8 @@ from tensor_core import (
 )
 
 from tensor_dslab import (
+    quantities,
+    quantity,
     AfterpulseConfig,
     AnalogSaturationConfig,
     AnalogWaveform,
@@ -97,6 +99,22 @@ PRODUCERS: tuple[tuple[str, str], ...] = (
     ("produce_analog_waveform", "analog"),
     ("produce_digitized_waveform", "digitized"),
 )
+
+
+def _ns(value: int | float):
+    return quantity(value, "ns")
+
+
+def _hz(value: int | float):
+    return quantity(value, "Hz")
+
+
+def _mv(value: int | float):
+    return quantity(value, "mV")
+
+
+def _density(value: int | float):
+    return quantity(value, "mV ** 2 / Hz")
 
 
 class _FailingRng(CounterRng):
@@ -285,26 +303,26 @@ def _photoelectrons(
     return Photoelectrons(tensor=values, axes=axes)
 
 
-def _pure_config(*, support_time_ns: float = 3.0) -> PureWaveformConfig:
+def _pure_config(*, support_time: float = 3.0) -> PureWaveformConfig:
     return PureWaveformConfig(
         model=TpcFebSnrPulseConfig(
-            fast_time_constant_ns=PositiveFloat(1.0),
-            slow_time_constant_ns=PositiveFloat(2.0),
-            support_time_ns=PositiveFloat(support_time_ns),
-            peak_voltage_mv_per_pe=FiniteFloat(-2.0),
+            fast_time_constant=_ns(1.0),
+            slow_time_constant=_ns(2.0),
+            support_time=_ns(support_time),
+            peak_voltage_per_photoelectron=_mv(-2.0),
         )
     )
 
 
 def _digitized_config(
     *,
-    input_min_mv: float = -20.0,
-    input_max_mv: float = 20.0,
+    input_minimum: float = -20.0,
+    input_maximum: float = 20.0,
 ) -> DigitizedWaveformConfig:
     return DigitizedWaveformConfig(
         bit_depth=PositiveInteger(12),
-        input_min_mv=FiniteFloat(input_min_mv),
-        input_max_mv=FiniteFloat(input_max_mv),
+        input_minimum=_mv(input_minimum),
+        input_maximum=_mv(input_maximum),
         analog_gain_db=NonnegativeFloat(0.0),
     )
 
@@ -705,23 +723,23 @@ class ReadoutRequestAndClosureTest(unittest.TestCase):
                 relative_sigma=NonnegativeFloat(3.0e38)
             )
         )
-        invalid_pure = _pure_config(support_time_ns=0.5)
+        invalid_pure = _pure_config(support_time=0.5)
         invalid_noise = NoiseWaveformConfig(
             model=PsdNoiseConfig(
-                frequency_left_edges_hz=(NonnegativeFloat(0.0),),
-                frequency_stop_hz=PositiveFloat(1.0),
-                power_density_mv2_per_hz=(NonnegativeFloat(1.0),),
+                frequency_left_edges=(_hz(0.0),),
+                frequency_stop=_hz(1.0),
+                power_density=(_density(1.0),),
             )
         )
         invalid_analog = AnalogWaveformConfig(
             saturation=AnalogSaturationConfig(
-                minimum_mv=FiniteFloat(1.0),
-                maximum_mv=FiniteFloat(1.0 + 1.0e-8),
+                minimum=_mv(1.0),
+                maximum=_mv(1.0 + 1.0e-8),
             )
         )
         invalid_digitized = _digitized_config(
-            input_min_mv=1.0,
-            input_max_mv=1.0 + 1.0e-8,
+            input_minimum=1.0,
+            input_maximum=1.0 + 1.0e-8,
         )
         cases = (
             (NoiseWaveform, replace(baseline, charge=invalid_charge)),
@@ -976,21 +994,21 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
         )
         invalid_pure = replace(
             complete,
-            pure_waveform=_pure_config(support_time_ns=0.5),
+            pure_waveform=_pure_config(support_time=0.5),
         )
         invalid_white = replace(
             complete,
             noise_waveform=NoiseWaveformConfig(
-                model=WhiteNoiseConfig(rms_mv=PositiveFloat(1.0e38))
+                model=WhiteNoiseConfig(rms=_mv(1.0e38))
             ),
         )
         invalid_psd = replace(
             complete,
             noise_waveform=NoiseWaveformConfig(
                 model=PsdNoiseConfig(
-                    frequency_left_edges_hz=(NonnegativeFloat(0.0),),
-                    frequency_stop_hz=PositiveFloat(1.0),
-                    power_density_mv2_per_hz=(NonnegativeFloat(1.0),),
+                    frequency_left_edges=(_hz(0.0),),
+                    frequency_stop=_hz(1.0),
+                    power_density=(_density(1.0),),
                 )
             ),
         )
@@ -998,16 +1016,16 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
             complete,
             analog_waveform=AnalogWaveformConfig(
                 saturation=AnalogSaturationConfig(
-                    minimum_mv=FiniteFloat(1.0),
-                    maximum_mv=FiniteFloat(1.0 + 1.0e-8),
+                    minimum=_mv(1.0),
+                    maximum=_mv(1.0 + 1.0e-8),
                 )
             ),
         )
         invalid_digitized = replace(
             complete,
             digitized_waveform=_digitized_config(
-                input_min_mv=1.0,
-                input_max_mv=1.0 + 1.0e-8,
+                input_minimum=1.0,
+                input_maximum=1.0 + 1.0e-8,
             ),
         )
         for name, candidate in (
@@ -1254,7 +1272,7 @@ class ReadoutRngContractTest(unittest.TestCase):
         sampling = _sampling()
         source = _photoelectrons(sampling)
         white = NoiseWaveformConfig(
-            model=WhiteNoiseConfig(rms_mv=PositiveFloat(1.0))
+            model=WhiteNoiseConfig(rms=_mv(1.0))
         )
         _RecordingRng.reset()
         result = simulate_readout(
@@ -1270,7 +1288,7 @@ class ReadoutRngContractTest(unittest.TestCase):
         sampling = _sampling()
         source = _photoelectrons(sampling)
         white = NoiseWaveformConfig(
-            model=WhiteNoiseConfig(rms_mv=PositiveFloat(1.0))
+            model=WhiteNoiseConfig(rms=_mv(1.0))
         )
         rng = _DynamicFailureRng(seed=0)
         with patch.object(simulation, "ReadoutCollection") as collection_mock:
@@ -1293,7 +1311,7 @@ class ReadoutRngContractTest(unittest.TestCase):
         dtype = torch.float64
 
         charge_config = ChargeConfig(
-            dark_count=DarkCountConfig(rate_hz=NonnegativeFloat(2.5e8))
+            dark_count=DarkCountConfig(rate=_hz(2.5e8))
         )
         sampling_runtime = prepare_sampling(source)
         charge_runtime = charge_preparer.prepare_charge(
@@ -1331,16 +1349,16 @@ class ReadoutRngContractTest(unittest.TestCase):
             (
                 "white",
                 NoiseWaveformConfig(
-                    model=WhiteNoiseConfig(rms_mv=PositiveFloat(0.25))
+                    model=WhiteNoiseConfig(rms=_mv(0.25))
                 ),
             ),
             (
                 "PSD",
                 NoiseWaveformConfig(
                     model=PsdNoiseConfig(
-                        frequency_left_edges_hz=(NonnegativeFloat(0.0),),
-                        frequency_stop_hz=PositiveFloat(500_000_000.0),
-                        power_density_mv2_per_hz=(NonnegativeFloat(1.0e-9),),
+                        frequency_left_edges=(_hz(0.0),),
+                        frequency_stop=_hz(500_000_000.0),
+                        power_density=(_density(1.0e-9),),
                     )
                 ),
             ),
@@ -1386,17 +1404,17 @@ class ReadoutRngContractTest(unittest.TestCase):
         source = _photoelectrons(sampling)
         shared = RngKey(namespace=0xABCDEF01, stream=1)
         other = RngKey(namespace=0xABCDEF01, stream=2)
-        delay = FixedDelayConfig(delay_ns=NonnegativeFloat(0.0))
+        delay = FixedDelayConfig(delay=_ns(0.0))
         role_configs = (
             ChargeConfig(
                 dark_count=DarkCountConfig(
-                    rate_hz=NonnegativeFloat(0.0),
+                    rate=_hz(0.0),
                     rng_key=shared,
                 )
             ),
             ChargeConfig(
                 timing_jitter=TimingJitterConfig(
-                    sigma_ns=NonnegativeFloat(0.0),
+                    sigma=_ns(0.0),
                     rng_key=shared,
                 )
             ),
@@ -1449,7 +1467,7 @@ class ReadoutRngContractTest(unittest.TestCase):
                     maximum_generations=NonnegativeInteger(0),
                     afterpulse=AfterpulseConfig(
                         probability=Probability(0.0),
-                        mean_delay_ns=PositiveFloat(1.0),
+                        mean_delay=_ns(1.0),
                         rng_key=shared,
                     ),
                 )
@@ -1463,7 +1481,7 @@ class ReadoutRngContractTest(unittest.TestCase):
         )
         noise = NoiseWaveformConfig(
             model=WhiteNoiseConfig(
-                rms_mv=PositiveFloat(1.0),
+                rms=_mv(1.0),
                 rng_key=shared,
             )
         )
@@ -1495,13 +1513,13 @@ class ReadoutRngContractTest(unittest.TestCase):
         shared = RngKey(namespace=0x54445331, stream=0x0000_0001)
         charge = ChargeConfig(
             dark_count=DarkCountConfig(
-                rate_hz=NonnegativeFloat(0.0),
+                rate=_hz(0.0),
                 rng_key=shared,
             )
         )
         white = NoiseWaveformConfig(
             model=WhiteNoiseConfig(
-                rms_mv=PositiveFloat(1.0),
+                rms=_mv(1.0),
                 rng_key=shared,
             )
         )
@@ -1548,7 +1566,7 @@ class ReadoutRngContractTest(unittest.TestCase):
                 reused_key = RngKey(namespace=0x54445331, stream=stream)
                 reused_white = NoiseWaveformConfig(
                     model=WhiteNoiseConfig(
-                        rms_mv=PositiveFloat(1.0),
+                        rms=_mv(1.0),
                         rng_key=reused_key,
                     )
                 )
@@ -1578,14 +1596,14 @@ class ReadoutRngContractTest(unittest.TestCase):
         self.assertIsNot(left, right)
         self.assertEqual(left, right)
         dark = DarkCountConfig(
-            rate_hz=NonnegativeFloat(2.5e8),
+            rate=_hz(2.5e8),
             rng_key=left,
         )
         psd = NoiseWaveformConfig(
             model=PsdNoiseConfig(
-                frequency_left_edges_hz=(NonnegativeFloat(0.0),),
-                frequency_stop_hz=PositiveFloat(500_000_000.0),
-                power_density_mv2_per_hz=(NonnegativeFloat(1.0e-9),),
+                frequency_left_edges=(_hz(0.0),),
+                frequency_stop=_hz(500_000_000.0),
+                power_density=(_density(1.0e-9),),
                 rng_key=right,
             )
         )
@@ -1638,10 +1656,10 @@ class ReadoutCompositionAndStorageTest(unittest.TestCase):
         sampling = _sampling()
         source = _photoelectrons(sampling)
         charge_config = ChargeConfig(
-            dark_count=DarkCountConfig(rate_hz=NonnegativeFloat(2.5e8))
+            dark_count=DarkCountConfig(rate=_hz(2.5e8))
         )
         noise_config = NoiseWaveformConfig(
-            model=WhiteNoiseConfig(rms_mv=PositiveFloat(0.25))
+            model=WhiteNoiseConfig(rms=_mv(0.25))
         )
         self.assertIsNotNone(charge_config.dark_count)
         self.assertIs(type(noise_config.model), WhiteNoiseConfig)
@@ -1759,7 +1777,7 @@ class ReadoutCompositionAndStorageTest(unittest.TestCase):
 
         white_config = _config(
             noise=NoiseWaveformConfig(
-                model=WhiteNoiseConfig(rms_mv=PositiveFloat(0.25))
+                model=WhiteNoiseConfig(rms=_mv(0.25))
             ),
         )
         noise_only = simulate_readout(
@@ -1972,7 +1990,7 @@ class ReadoutSimulationCudaTest(unittest.TestCase):
         source = _photoelectrons(sampling, device="cuda")
         config = _config(
             noise=NoiseWaveformConfig(
-                model=WhiteNoiseConfig(rms_mv=PositiveFloat(0.5))
+                model=WhiteNoiseConfig(rms=_mv(0.5))
             ),
         )
         result = simulate_readout(
@@ -1993,13 +2011,13 @@ class ReadoutSimulationCudaTest(unittest.TestCase):
         config = _config(
             charge=ChargeConfig(
                 dark_count=DarkCountConfig(
-                    rate_hz=NonnegativeFloat(0.0),
+                    rate=_hz(0.0),
                     rng_key=shared,
                 )
             ),
             noise=NoiseWaveformConfig(
                 model=WhiteNoiseConfig(
-                    rms_mv=PositiveFloat(0.5),
+                    rms=_mv(0.5),
                     rng_key=shared,
                 )
             ),

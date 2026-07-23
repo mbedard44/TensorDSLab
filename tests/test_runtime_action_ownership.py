@@ -23,6 +23,8 @@ from tensor_core import (
 import tensor_dslab
 import tensor_dslab.readout as readout
 from tensor_dslab import (
+    quantities,
+    quantity,
     AnalogSaturationConfig,
     AnalogWaveform,
     AnalogWaveformConfig,
@@ -125,6 +127,22 @@ RUNTIME_TYPES = (
 )
 
 
+def _ns(value: int | float):
+    return quantity(value, "ns")
+
+
+def _hz(value: int | float):
+    return quantity(value, "Hz")
+
+
+def _mv(value: int | float):
+    return quantity(value, "mV")
+
+
+def _density(value: int | float):
+    return quantity(value, "mV ** 2 / Hz")
+
+
 class _FailingRng(CounterRng):
     __slots__ = ()
 
@@ -158,9 +176,9 @@ def _config(*, psd: bool = False) -> ReadoutConfig:
     noise = (
         NoiseWaveformConfig(
             model=PsdNoiseConfig(
-                frequency_left_edges_hz=(NonnegativeFloat(0.0),),
-                frequency_stop_hz=PositiveFloat(300_000_000.0),
-                power_density_mv2_per_hz=(NonnegativeFloat(1.0e-9),),
+                frequency_left_edges=(_hz(0.0),),
+                frequency_stop=_hz(300_000_000.0),
+                power_density=(_density(1.0e-9),),
             )
         )
         if psd
@@ -170,23 +188,23 @@ def _config(*, psd: bool = False) -> ReadoutConfig:
         charge=ChargeConfig(),
         pure_waveform=PureWaveformConfig(
             model=TpcFebSnrPulseConfig(
-                fast_time_constant_ns=PositiveFloat(1.0),
-                slow_time_constant_ns=PositiveFloat(2.0),
-                support_time_ns=PositiveFloat(6.0),
-                peak_voltage_mv_per_pe=FiniteFloat(-1.0),
+                fast_time_constant=_ns(1.0),
+                slow_time_constant=_ns(2.0),
+                support_time=_ns(6.0),
+                peak_voltage_per_photoelectron=_mv(-1.0),
             )
         ),
         noise_waveform=noise,
         analog_waveform=AnalogWaveformConfig(
             saturation=AnalogSaturationConfig(
-                minimum_mv=FiniteFloat(-10.0),
-                maximum_mv=FiniteFloat(10.0),
+                minimum=_mv(-10.0),
+                maximum=_mv(10.0),
             )
         ),
         digitized_waveform=DigitizedWaveformConfig(
             bit_depth=PositiveInteger(12),
-            input_min_mv=FiniteFloat(-20.0),
-            input_max_mv=FiniteFloat(20.0),
+            input_minimum=_mv(-20.0),
+            input_maximum=_mv(20.0),
             analog_gain_db=NonnegativeFloat(0.0),
         ),
     )

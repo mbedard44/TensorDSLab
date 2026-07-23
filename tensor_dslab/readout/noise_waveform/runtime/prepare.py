@@ -7,6 +7,7 @@ from typing import final
 import torch
 from tensor_core import RngKey
 
+from tensor_dslab.common.units import canonical_magnitude
 from tensor_dslab.readout.requirements import require_representable_float
 from tensor_dslab.readout.noise_waveform.config import (
     NoiseWaveformConfig,
@@ -27,14 +28,14 @@ class ZeroNoiseRuntime:
 @dataclass(frozen=True, slots=True)
 class WhiteNoiseRuntime:
     rng_key: RngKey
-    represented_rms: float
+    represented_rms_mv: float
 
 
 @final
 @dataclass(frozen=True, slots=True)
 class PsdNoiseRuntime:
     rng_key: RngKey
-    represented_powers: torch.Tensor
+    represented_powers_mv2: torch.Tensor
 
 
 @final
@@ -70,7 +71,9 @@ def _prepare_white_rms(value: float, *, dtype: torch.dtype) -> float:
 
 
 def _prepare_psd_powers(
-    config: PsdNoiseConfig,
+    frequency_left_edges_hz: tuple[float, ...],
+    frequency_stop_hz: float,
+    power_density_mv2_per_hz: tuple[float, ...],
     *,
     sampling: SamplingRuntime,
     dtype: torch.dtype,
@@ -87,14 +90,12 @@ def _prepare_psd_powers(
         for value in (sample_rate_hz, spacing_hz, nyquist_hz)
     ):
         raise ValueError("sampling frequencies must be finite and positive")
-    if config.frequency_stop_hz.value < nyquist_hz:
+    if frequency_stop_hz < nyquist_hz:
         raise ValueError("PSD frequency coverage must reach Nyquist")
 
-    source_left = tuple(edge.value for edge in config.frequency_left_edges_hz)
-    source_right = source_left[1:] + (config.frequency_stop_hz.value,)
-    source_density = tuple(
-        density.value for density in config.power_density_mv2_per_hz
-    )
+    source_left = frequency_left_edges_hz
+    source_right = source_left[1:] + (frequency_stop_hz,)
+    source_density = power_density_mv2_per_hz
 
     frequency_count = sample_count // 2 + 1
     target_left = (0.0,) + tuple(
@@ -149,13 +150,6 @@ def prepare_noise_waveform(
     floating_dtype: torch.dtype,
     device: torch.device,
 ) -> NoiseWaveformRuntime:
-    if type(config) is not NoiseWaveformConfig:
-        raise TypeError("config must be exactly NoiseWaveformConfig")
-    if floating_dtype not in (torch.float32, torch.float64):
-        raise TypeError("floating_dtype must be torch.float32 or torch.float64")
-
-    if device.type not in ("cpu", "cuda"):
-        raise ValueError("noise production supports only CPU and CUDA")
     output_count = math.prod(shape)
     _require_position_count(output_count, field="output")
     model = config.model
@@ -171,7 +165,7 @@ def prepare_noise_waveform(
         )
     elif type(model) is WhiteNoiseConfig:
         represented_rms = _prepare_white_rms(
-            model.rms_mv.value,
+            canonical_magnitude(model.rms),
             dtype=floating_dtype,
         )
         return NoiseWaveformRuntime(
@@ -181,13 +175,22 @@ def prepare_noise_waveform(
             sampling=sampling,
             model=WhiteNoiseRuntime(
                 rng_key=model.rng_key,
-                represented_rms=represented_rms,
+                represented_rms_mv=represented_rms,
             ),
             rng_roles=(("noise.white", model.rng_key),),
         )
     elif type(model) is PsdNoiseConfig:
+        frequency_left_edges_hz = tuple(
+            canonical_magnitude(value) for value in model.frequency_left_edges
+        )
+        frequency_stop_hz = canonical_magnitude(model.frequency_stop)
+        power_density_mv2_per_hz = tuple(
+            canonical_magnitude(value) for value in model.power_density
+        )
         represented_power_values = _prepare_psd_powers(
-            model,
+            frequency_left_edges_hz,
+            frequency_stop_hz,
+            power_density_mv2_per_hz,
             sampling=sampling,
             dtype=floating_dtype,
         )
@@ -209,7 +212,7 @@ def prepare_noise_waveform(
             sampling=sampling,
             model=PsdNoiseRuntime(
                 rng_key=model.rng_key,
-                represented_powers=represented_powers,
+                represented_powers_mv2=represented_powers,
             ),
             rng_roles=(("noise.psd", model.rng_key),),
         )
