@@ -385,7 +385,46 @@ its eight fields. This removes its field-name-dependent unit conditional.
 required scalar voltage quantities. `AnalogSaturationConfig` uses the same
 table for its two optional scalar voltage quantities while skipping a `None`
 entry before canonicalization. Single-Quantity Configs retain their shorter
-direct call, and `PsdNoiseConfig` retains indexed sequence canonicalization.
+direct call.
+
+`PsdNoiseConfig` keeps tuple representation separate from element quantity
+semantics. One table owns exact tuple admission:
+
+```python
+for name in ("frequency_left_edges", "power_density"):
+    if type(getattr(self, name)) is not tuple:
+        raise TypeError(f"PsdNoiseConfig.{name} must be a tuple")
+```
+
+A second independent `(name, unit, constraint)` table owns indexed element
+canonicalization:
+
+```python
+for name, unit, constraint in (
+    ("frequency_left_edges", "Hz", NonnegativeFloat),
+    ("power_density", "mV ** 2 / Hz", NonnegativeFloat),
+):
+    object.__setattr__(
+        self,
+        name,
+        tuple(
+            _canonical_quantity(
+                value,
+                unit=unit,
+                field=f"PsdNoiseConfig.{name}[{index}]",
+                constraint=constraint,
+            )
+            for index, value in enumerate(getattr(self, name))
+        ),
+    )
+```
+
+`frequency_stop` remains a scalar direct call. PSD nonemptiness, equal tuple
+lengths, ordered coverage, exclusive stop, and nonzero-power requirements
+remain explicit relationship checks after the shared representation and
+canonicalization mechanics. The tuple table must not be merged with the
+quantity table: immutable sequence representation and physical element
+semantics are distinct Config responsibilities.
 
 `__post_init__`, not `__new__`, remains the canonicalization owner: the
 dataclass-generated initializer must first assign the caller's values, after
@@ -549,6 +588,9 @@ alter protected scientific fixtures merely to make the migration pass.
   `(name, unit, constraint)` declaration-table shape, optional fields are
   skipped before canonicalization, and no field-name-dependent unit
   conditional remains;
+- `PsdNoiseConfig` uses one exact tuple-admission table and a separate indexed
+  `(name, unit, constraint)` element-canonicalization table, with all PSD
+  relationship checks remaining explicit;
 - `__post_init__` remains the sole Config canonicalization/local-relationship
   hook and neither Config defines `__new__`;
 - pure-waveform preparation applies one and only one negative sign after
@@ -560,7 +602,10 @@ alter protected scientific fixtures merely to make the migration pass.
   values to equal positive magnitudes; and
 - mutants that accept nonpositive amplitudes, omit or duplicate the fixed sign,
   retain the old explicit zero checks, restore the Veto unit conditional, or
-  bypass one declaration-table entry fail focused evidence.
+  bypass one declaration-table entry fail focused evidence; and
+- mutants that merge or bypass PSD tuple admission, accept a non-tuple sequence,
+  skip one indexed quantity constraint, or conflate element validation with a
+  PSD relationship fail focused evidence.
 
 ### Typing
 
