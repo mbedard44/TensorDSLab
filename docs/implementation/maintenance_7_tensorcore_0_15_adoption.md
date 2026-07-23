@@ -67,20 +67,25 @@ TensorDSLab
 ```
 
 The dependency and RNG migration must be behavior-preserving on supported
-TensorDSLab paths. Two separately ratified public boundary changes are included:
+TensorDSLab paths. Three separately ratified public boundary changes are
+included:
 
 1. both pulse Configs accept a strictly positive peak-voltage magnitude, and
    pure-waveform preparation applies the fixed DS20k negative polarity exactly
    once; and
 2. `quantities(...)` and the two vector-valued PSD fields use one Pint
    `Quantity` with a copied one-dimensional NumPy magnitude rather than a tuple
-   of scalar Quantity objects.
+   of scalar Quantity objects; and
+3. stochastic Configs no longer expose per-role `RngKey` fields. TensorDSLab
+   fixes all ten role keys centrally, while the caller selects the realization
+   through the required `CounterRng.seed`.
 
 Existing calibrated negative-going rendered outputs remain exact. No
 scientific equation, role stream number, positional address, Threefry word,
 distribution law, stochastic traversal order, exact-zero draw behavior,
-product meaning, field name, canonical unit, or Pint ownership boundary
-otherwise changes.
+product meaning, physical field name, canonical unit, or Pint ownership
+boundary otherwise changes. Removing the public execution-address fields does
+not change any default key or same-seed output.
 
 ## Dependency Adoption
 
@@ -238,7 +243,6 @@ Do not promote, delete, or weaken:
 
 - `require_readout_structure(...)`;
 - request product and config closure;
-- distinct stochastic-role key policy;
 - CPU/CUDA readout device-family policy;
 - Pint recognition, registry isolation, dimensions, canonical units, and
   `Scalar.require(...)` use;
@@ -305,24 +309,28 @@ For every migrated production route:
 - disabled and exact-zero paths still request no words and avoid unnecessary
   position construction.
 
-## TensorDSLab RNG Namespace
+## Fixed TensorDSLab RNG Role Keys
 
-Add one non-exported package-policy module:
+Add one non-exported shared runtime module:
 
 ```text
-tensor_dslab/readout/rng_keys.py
+tensor_dslab/readout/runtime/keys.py
 ```
 
-with exactly one current value:
+It imports only public TensorCore `RngKey` and owns the complete fixed
+TensorDSLab address table:
 
 ```python
 RNG_NAMESPACE = 0x54445331
+
+WHITE_NOISE_RNG_KEY = RngKey(
+    namespace=RNG_NAMESPACE,
+    stream=0x0000_0001,
+)
+# ...the remaining nine exact role keys...
 ```
 
-Both Charge and Noise config modules import that value for their default
-`RngKey` objects. Remove product-local `_RNG_NAMESPACE` and production
-hardcodings of `0x54445331`. Keep all ten append-only stream values exactly
-unchanged:
+Keep all ten append-only stream values exactly unchanged:
 
 ```text
 0x0000_0001  noise white
@@ -337,11 +345,36 @@ unchanged:
 0x0000_000A  charge smearing
 ```
 
-The module and constant are export-private: neither is added to
-`tensor_dslab.readout.__all__` or `tensor_dslab.__all__`. Historical
-documentation and expected-value tests may continue to spell the literal when
-they are recording the frozen wire/address value. Production config bytes must
-contain the literal only in `rng_keys.py`.
+Remove every public stochastic Config field named `rng_key`,
+`retained_rng_key`, or `overflow_rng_key`, along with the two Config
+relationship checks that existed only to reject equal retained/overflow keys.
+No alias, optional override, compatibility constructor, top-level key policy,
+or replacement public RNG-address Config is added. The required
+`simulate_readout(..., rng=...)` input remains, and a concrete CounterRng such
+as `Threefry4x32(seed=...)` gives the caller sole realization control.
+Changing the seed changes the realization; fixed role keys keep mechanisms
+independently addressed within it.
+
+Preparation imports the appropriate constants from
+`readout.runtime.keys`, places them into the existing effect/model Runtime key
+fields, and preserves disabled-role `None` behavior. Producers consume only
+those prepared Runtime values and do not import the key module. The fixed
+mapping makes request-time user-key collision admission unnecessary:
+`ChargeRuntime.rng_roles`, `NoiseWaveformRuntime.rng_roles`, and
+`_require_unique_rng_keys(...)` are removed rather than retained as dead
+policy. Focused tests prove the ten fixed keys are unique and exact; production
+does not repeatedly validate a package-owned immutable table.
+
+This policy belongs in TensorDSLab rather than TensorCore's Threefry
+implementation. Threefry remains generic: it combines the caller's seed with
+the supplied namespace/stream, positions, quantum, and raw-word block without
+knowing any detector mechanism. No TensorCore byte changes.
+
+The module and all constants are export-private: nothing is added to
+`tensor_dslab.readout.__all__`, `tensor_dslab.__all__`, or
+`readout.runtime.__init__`. Historical documentation and expected-value tests
+may continue to spell frozen address values. Production contains the namespace
+literal and each stream literal exactly once, all in `readout/runtime/keys.py`.
 
 ## Product And Runtime Boundaries
 
@@ -375,62 +408,69 @@ All Quantity-bearing Configs use one TensorDSLab-private
 Each Config calls that helper exactly once from `__post_init__` and supplies
 two deliberately separate declarations:
 
-- `quantity_fields`: `(name, unit, constraint)` rows that own physical
-  conversion and scalar-domain normalization; and
-- `vector_fields`: names whose accepted non-`None` representation is one Pint
-  Quantity with an exact one-dimensional NumPy magnitude.
+- `scalar_fields`: complete `(name, unit, constraint)` rows for scalar
+  quantities; and
+- `vector_fields`: complete `(name, unit, constraint)` rows for quantities
+  whose accepted non-`None` magnitude is an exact one-dimensional NumPy array.
 
 The helper has this fixed private shape:
 
 ```python
+_QuantityField = tuple[str, str, type[Scalar[float]]]
+
+
 def _canonicalize_quantity_fields(
     config: object,
     *,
-    quantity_fields: tuple[
-        tuple[str, str, type[Scalar[float]]],
-        ...,
-    ],
-    vector_fields: tuple[str, ...] = (),
+    scalar_fields: tuple[_QuantityField, ...] = (),
+    vector_fields: tuple[_QuantityField, ...] = (),
 ) -> None:
     owner = type(config).__name__
 
-    for name, unit, constraint in quantity_fields:
-        parameter = getattr(config, name)
-        if parameter is None:
-            continue
-
-        canonical = (
-            _canonical_vector_quantity(
+    for vector, fields in (
+        (False, scalar_fields),
+        (True, vector_fields),
+    ):
+        for name, unit, constraint in fields:
+            parameter = getattr(config, name)
+            if parameter is None:
+                continue
+            canonical = _canonical_quantity(
                 parameter,
                 unit=unit,
                 field=f"{owner}.{name}",
                 constraint=constraint,
+                vector=vector,
             )
-            if name in vector_fields
-            else _canonical_quantity(
-                parameter,
-                unit=unit,
-                field=f"{owner}.{name}",
-                constraint=constraint,
-            )
-        )
-        object.__setattr__(config, name, canonical)
+            object.__setattr__(config, name, canonical)
 ```
 
 The helper skips every optional `None` value before scalar/vector
-canonicalization and preserves that field as `None`. Scalar fields still use
-the existing `_canonical_quantity(...)`. A vector field uses the separate
-`_canonical_vector_quantity(...)` primitive, which:
+canonicalization and preserves that field as `None`. Both representations use
+one primitive:
 
-1. requires one Pint Quantity;
-2. converts it to the declared canonical unit;
-3. requires an exact one-dimensional NumPy magnitude;
-4. visits every element in order, converts the NumPy scalar to an exact Python
+```python
+def _canonical_quantity(
+    value: object,
+    *,
+    unit: str,
+    field: str,
+    constraint: type[Scalar[float]],
+    vector: bool = False,
+) -> Quantity: ...
+```
+
+Its shared front half recognizes one Pint Quantity and converts it to the
+declared canonical unit. Its scalar branch preserves the accepted exact
+scalar-magnitude contract. Its vector branch:
+
+1. requires an exact one-dimensional NumPy magnitude;
+2. visits every element in order, converts the NumPy scalar to an exact Python
    scalar, and applies the declared TensorCore `Scalar.require(...)` with an
    exact `field[index]` label;
-5. builds a fresh canonical `numpy.float64` array in TensorDSLab's private Pint
+3. builds a fresh canonical `numpy.float64` array in TensorDSLab's private Pint
    registry; and
-6. marks that owned array non-writeable before storing the canonical Quantity.
+4. marks that owned array non-writeable before storing the canonical Quantity.
 
 An empty vector passes this generic mechanics layer so the owning Config can
 apply its nonempty relationship. Other-dimensional arrays, scalar magnitudes,
@@ -444,7 +484,7 @@ For example, the TPC Config declaration is:
 ```python
 _canonicalize_quantity_fields(
     self,
-    quantity_fields=(
+    scalar_fields=(
         ("fast_time_constant", "ns", PositiveFloat),
         ("slow_time_constant", "ns", PositiveFloat),
         ("support_time", "ns", PositiveFloat),
@@ -475,22 +515,21 @@ Its one helper call keeps vector representation separate from physical
 unit/constraint declarations:
 
 ```python
-quantity_fields=(
-    ("frequency_left_edges", "Hz", NonnegativeFloat),
+scalar_fields=(
     ("frequency_stop", "Hz", PositiveFloat),
-    ("power_density", "mV ** 2 / Hz", NonnegativeFloat),
 ),
 vector_fields=(
-    "frequency_left_edges",
-    "power_density",
+    ("frequency_left_edges", "Hz", NonnegativeFloat),
+    ("power_density", "mV ** 2 / Hz", NonnegativeFloat),
 ),
 ```
 
-The vector table determines scalar-versus-one-dimensional-array
-representation only. The quantity table independently owns units and element
-constraints. PSD nonemptiness, equal vector lengths, ordered coverage,
-exclusive stop, and nonzero-power requirements remain explicit relationship
-checks in `PsdNoiseConfig.__post_init__` after canonicalization.
+The two complete tables make scalar/vector representation explicit without a
+parallel names-only discriminator or field-dependent branch. Each physical
+field appears exactly once with its unit and constraint. PSD nonemptiness,
+equal vector lengths, ordered coverage, exclusive stop, and nonzero-power
+requirements remain explicit relationship checks in
+`PsdNoiseConfig.__post_init__` after canonicalization.
 
 The public construction helper changes coherently:
 
@@ -554,8 +593,9 @@ Implementation may change exactly these production/metadata paths:
 ```text
 pyproject.toml
 tensor_dslab/common/units.py
-tensor_dslab/readout/rng_keys.py
 tensor_dslab/readout/requirements.py
+tensor_dslab/readout/runtime/keys.py
+tensor_dslab/readout/runtime/prepare.py
 tensor_dslab/readout/analog_waveform/config.py
 tensor_dslab/readout/analog_waveform/field.py
 tensor_dslab/readout/charge/config.py
@@ -632,7 +672,7 @@ alter protected scientific fixtures merely to make the migration pass.
 - unchanged TensorDSLab 35/30/5 facade exports;
 - unchanged `quantity(...)` scalar typing and changed
   `quantities(...) -> Quantity` vector typing;
-- exactly one new non-exported `readout/rng_keys.py`;
+- exactly one new non-exported `readout/runtime/keys.py`;
 - no `logical_positions`, local duplicate of an adopted TensorCore generic
   helper, compatibility alias, wrapper, or private TensorCore import in
   production; and
@@ -657,7 +697,7 @@ alter protected scientific fixtures merely to make the migration pass.
 - product validators, axes identity, storage freshness, and scientific checks
   remain independently mutation-sensitive.
 
-### RNG positions and namespace
+### RNG positions and fixed role keys
 
 - every row-major base, move, select, slice, and offset has exact raw-tensor
   agreement with the frozen mathematical expression;
@@ -672,10 +712,18 @@ alter protected scientific fixtures merely to make the migration pass.
   and smearing outputs preserve the accepted same-stack contract;
 - exact-zero/disabled branches make no draw and no observationally meaningful
   position request;
-- default config keys retain namespace and all ten stream values; and
-- production contains exactly one `0x54445331` literal, in
-  `readout/rng_keys.py`, while expected-value tests/docs remain free to record
-  that frozen number.
+- the ten package-owned keys are exact and unique, retaining namespace and
+  every stream value from the former defaults;
+- stochastic Config signatures contain no `RngKey`, `rng_key`,
+  `retained_rng_key`, or `overflow_rng_key` surface;
+- preparation places the exact fixed key in every enabled Runtime role and
+  preserves disabled-role `None`;
+- `rng_roles` bookkeeping and request-time key-collision admission are absent,
+  while the caller-supplied `CounterRng.seed` remains the sole realization
+  control; and
+- production contains exactly one `0x54445331` namespace literal and one of
+  each stream literal, all in `readout/runtime/keys.py`, while expected-value
+  tests/docs remain free to record those frozen values.
 
 ### Quantity boundary, vector PSD, amplitude, and polarity
 
@@ -684,9 +732,11 @@ alter protected scientific fixtures merely to make the migration pass.
 - exact positive quantities are accepted while zero, signed zero, and negative
   quantities are rejected with the canonical field-bearing scalar boundary;
 - every Quantity-bearing Config calls the one private helper exactly once with
-  an exact `(name, unit, constraint)` quantity table;
+  separate complete `scalar_fields` and `vector_fields`
+  `(name, unit, constraint)` tables;
 - Config modules no longer import or call `_canonical_quantity(...)` directly;
-  that singular primitive remains module-local to `common/units.py`;
+  that singular scalar/vector primitive remains module-local to
+  `common/units.py`, and no `_canonical_vector_quantity` exists;
 - optional scalar or vector fields skip `None` before canonicalization,
   preserve `None`, and need no per-row optional marker;
 - scalar fields remain scalar quantities and declared vector fields become
@@ -721,8 +771,9 @@ alter protected scientific fixtures merely to make the migration pass.
   return, accept a wrong-rank/unsupported-dtype magnitude, retain a writable or
   source-aliased array, reject or canonicalize `None`, omit/reorder/drop a
   vector element, skip one indexed constraint, reuse a non-indexed vector
-  diagnostic, defer a PSD relationship until preparation, or let NumPy enter a
-  Runtime/producer/validator fail focused evidence.
+  diagnostic, merge/misclassify the scalar/vector tables, restore a separate
+  vector canonicalizer, defer a PSD relationship until preparation, or let
+  NumPy enter a Runtime/producer/validator fail focused evidence.
 
 ### Typing
 
@@ -734,7 +785,9 @@ positive fixtures. Negative fixtures must prove:
 - `require_field_dtype`, `require_representable_float`,
   `require_tensor_allocation`, `require_shape_span`, and
   `require_count_tensor` call signatures;
-- `RNG_NAMESPACE` is an exact `int` but is absent from package facades; and
+- every public stochastic Config rejects the retired key keywords statically,
+  while the private fixed constants have exact `RngKey` types and remain
+  absent from package facades; and
 - `quantities(...)`, both PSD vector fields, and vector canonicalization have
   exact `Quantity` result types while all unrelated public TensorDSLab
   signatures and field/collection lookup types remain unchanged.
@@ -837,8 +890,8 @@ Return to Design without widening the candidate if:
 - vector PSD canonicalization cannot preserve exact element laws,
   relationship failures, source nonaliasing, and Pint/NumPy-free Runtime
   execution;
-- the one-namespace cleanup requires a facade export, compatibility shim, or
-  generic RNG module;
+- the fixed-key cleanup requires a facade export, compatibility shim,
+  user-address override, or generic RNG module;
 - a protected production, test, documentation, dependency, parity,
   governance, or history path must change;
 - local evidence cannot distinguish restored local helpers, duplicate count
@@ -858,8 +911,9 @@ Maintenance 7 does not:
   vector PSD fields, and preparation-owned stripping/sign described above;
 - add a Config, Runtime, renderer, artifact, IO, persistence, table, bridge,
   reconstruction, or TensorML surface;
-- add or change an RNG algorithm, distribution, key, stream, seed, quantum,
-  ordinal, word schedule, or global RNG interaction;
+- add or change an RNG algorithm, distribution, fixed key value, stream, seed,
+  quantum, ordinal, word schedule, or global RNG interaction; the only key API
+  change is removal of public per-role overrides;
 - expose RngPositions or TensorCore validators through TensorDSLab facades;
 - add a general tensor-wrapper or arbitrary position transform;
 - optimize, fuse, compile, benchmark, profile, or run Stage 8;
@@ -874,7 +928,9 @@ Maintenance 7 is complete only when:
 - exact TensorCore `0.15.0` is pinned and independently verified;
 - every authorized generic helper and RngPositions migration is complete with
   no local compatibility layer;
-- the single non-exported TensorDSLab RNG namespace source is installed;
+- the single non-exported `readout/runtime/keys.py` table is installed, public
+  Config key fields and runtime collision bookkeeping are removed, and the ten
+  exact role addresses remain unchanged;
 - exact NumPy `2.3.5` is pinned, `quantities(...)` and both PSD vector fields
   use canonical copied one-dimensional Quantity arrays, and preparation strips
   them before Runtime construction;

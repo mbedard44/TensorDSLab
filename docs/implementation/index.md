@@ -613,10 +613,13 @@ TensorCore `0.15.0` commit
 The work order cleanly replaces `logical_positions(...)` with
 `RngPositions`, migrates only exact-matching generic dtype/layout,
 representability, allocation, shape-span, and count-domain mechanics to
-TensorCore, and gives the existing `0x54445331` namespace one non-exported
-TensorDSLab source. Readout composition, Pint/physical policy, product
-validation, scientific count arithmetic, ledgers, role streams, raw address
-values, word schedules, and public exports remain TensorDSLab-owned.
+TensorCore, and places the existing namespace plus all ten unchanged role keys
+in one non-exported `readout/runtime/keys.py` table. Public stochastic Config
+key fields and now-redundant runtime collision bookkeeping are removed; the
+caller continues to select realizations through `CounterRng.seed`. Readout
+composition, Pint/physical policy, product validation, scientific count
+arithmetic, ledgers, role streams, raw address values, word schedules, and
+public exports remain TensorDSLab-owned.
 Maintenance 7 also pins NumPy `2.3.5` for physical-configuration vector
 storage, changes `quantities(...)` and the two PSD vector fields to one
 canonical array-backed Pint Quantity each, and strips those arrays to plain
