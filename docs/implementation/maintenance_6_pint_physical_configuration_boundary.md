@@ -1403,8 +1403,8 @@ than silently extending the loop.
    explicit bounded Design authority and a fresh Validation pass; no
    Review-to-Implementation loop is implicit.
 5. Only an unchanged Review-cleared commit may be fast-forwarded with
-   `git merge --ff-only`. Design then performs the two-document
-   documentation/evidence closeout fixed above.
+   `git merge --ff-only`. Design then performs the bounded evidence-only
+   closeout defined under Documentation And History.
 
 No fresh GPU evidence is collected in this maintenance. Accelerator
 qualification waits for the exact integrated TensorCore `0.15.0` adoption
@@ -1436,7 +1436,35 @@ The `docs/parity.md` change records the exact physical-equivalence-versus-
 binary-equality boundary; it changes no donor classification. Closed work
 orders and historical blobs are not rewritten to pretend they used Pint.
 Once this authority is committed, Implementation may edit only the two
-lifecycle records listed in the candidate allowlist.
+lifecycle records listed in the candidate allowlist. That Implementation
+allowance does not limit the later Design-owned final closeout.
+
+After Review fast-forwards the exact cleared target, Design is explicitly
+authorized to create one evidence-only direct-child closeout commit changing
+exactly these eleven live-status records:
+
+```text
+AGENTS.md
+CONTRIBUTING.md
+README.md
+docs/architecture/readout.md
+docs/architecture/rebuild.md
+docs/architecture/tensors.md
+docs/design.md
+docs/implementation/index.md
+docs/implementation/maintenance_6_pint_physical_configuration_boundary.md
+docs/overview.md
+docs/validation.md
+```
+
+That commit may only replace pending lifecycle wording with **Merged /
+Closed**, bind the exact Review-cleared commit/tree and accepted evidence, and
+record the unavailable-CUDA/no-accelerator qualification and the no-push
+sequence. It must change no production, test, dependency, scientific, API,
+RNG, parity, governance, or historical byte. TensorDSLab `main` remains local
+and unpushed after Maintenance 6 closeout. The next package gate is the
+separately designed TensorCore `0.15.0` adoption; only after that adoption and
+the exact integrated CUDA gates close may TensorDSLab be pushed.
 
 This work order is operative through the user's explicit Maintenance 6
 dispatch and the exact Design authority named in the implementation handoff.
@@ -1471,7 +1499,8 @@ This work order does not authorize:
   claims;
 - release, deployment, conformance, backward-compatibility, or broad
   cross-package compatibility claims; or
-- a push without separate authorization.
+- any TensorDSLab push before the separate TensorCore `0.15.0` adoption and
+  exact integrated CUDA gates close.
 
 ## Stop Conditions
 
