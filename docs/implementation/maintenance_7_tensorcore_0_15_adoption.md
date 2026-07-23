@@ -67,14 +67,20 @@ TensorDSLab
 ```
 
 The dependency and RNG migration must be behavior-preserving on supported
-TensorDSLab paths. The one separately ratified public scientific/API narrowing
-in this maintenance is the pulse-amplitude convention: both pulse Configs
-accept a strictly positive peak-voltage magnitude, and pure-waveform
-preparation applies the fixed DS20k negative polarity exactly once. Existing
-calibrated negative-going rendered outputs remain exact. No scientific
-equation, role stream number, positional address, Threefry word, distribution
-law, stochastic traversal order, exact-zero draw behavior, product meaning,
-field name, canonical unit, or Pint ownership boundary otherwise changes.
+TensorDSLab paths. Two separately ratified public boundary changes are included:
+
+1. both pulse Configs accept a strictly positive peak-voltage magnitude, and
+   pure-waveform preparation applies the fixed DS20k negative polarity exactly
+   once; and
+2. `quantities(...)` and the two vector-valued PSD fields use one Pint
+   `Quantity` with a copied one-dimensional NumPy magnitude rather than a tuple
+   of scalar Quantity objects.
+
+Existing calibrated negative-going rendered outputs remain exact. No
+scientific equation, role stream number, positional address, Threefry word,
+distribution law, stochastic traversal order, exact-zero draw behavior,
+product meaning, field name, canonical unit, or Pint ownership boundary
+otherwise changes.
 
 ## Dependency Adoption
 
@@ -98,6 +104,13 @@ Keep:
 - the existing unbounded TensorDSLab `torch` dependency spelling;
 - Hatch build metadata and package selection; and
 - the exact 35-name package-root, 30-name readout, and 5-name common exports.
+
+Add exact NumPy `2.3.5`. That maintained NumPy line supports Python `3.11`
+through `3.14`, including TensorDSLab's complete accepted Python range and the
+later integrated Della Python `3.11` environment. Newer NumPy `2.5` requires
+Python `>=3.12` and is therefore not an accepted substitute. NumPy is public
+physical-configuration storage support only; tensor execution, Runtime
+records, producers, and validators remain NumPy-free.
 
 TensorDSLab imports public TensorCore roots through `tensor_core` and the
 supported validation parts bin through `tensor_core.validation` or the one
@@ -348,7 +361,7 @@ Producers still import no Config or validator. Runtime records remain Pint-
 free, Config-free, final, frozen, and slotted. The public
 `simulate_readout(...)` signature and request-closure semantics are unchanged.
 
-## Positive Pulse Amplitude And Fixed DS20k Polarity
+## Canonical Quantity Fields, Vector PSD, And Pulse Polarity
 
 `TpcFebSnrPulseConfig.peak_voltage_per_photoelectron` and
 `VetoPduPulseConfig.peak_voltage_per_photoelectron` denote amplitude
@@ -364,8 +377,8 @@ two deliberately separate declarations:
 
 - `quantity_fields`: `(name, unit, constraint)` rows that own physical
   conversion and scalar-domain normalization; and
-- `tuple_fields`: names whose accepted non-`None` representation must be
-  exactly `tuple`.
+- `vector_fields`: names whose accepted non-`None` representation is one Pint
+  Quantity with an exact one-dimensional NumPy magnitude.
 
 The helper has this fixed private shape:
 
@@ -377,60 +390,54 @@ def _canonicalize_quantity_fields(
         tuple[str, str, type[Scalar[float]]],
         ...,
     ],
-    tuple_fields: tuple[str, ...] = (),
+    vector_fields: tuple[str, ...] = (),
 ) -> None:
     owner = type(config).__name__
-
-    for name in tuple_fields:
-        parameter = getattr(config, name)
-        if parameter is not None and type(parameter) is not tuple:
-            raise TypeError(f"{owner}.{name} must be a tuple")
 
     for name, unit, constraint in quantity_fields:
         parameter = getattr(config, name)
         if parameter is None:
             continue
 
-        is_tuple = name in tuple_fields
-        values = parameter if is_tuple else (parameter,)
-        canonical = tuple(
-            _canonical_quantity(
-                value,
+        canonical = (
+            _canonical_vector_quantity(
+                parameter,
                 unit=unit,
-                field=(
-                    f"{owner}.{name}[{index}]"
-                    if is_tuple
-                    else f"{owner}.{name}"
-                ),
+                field=f"{owner}.{name}",
                 constraint=constraint,
             )
-            for index, value in enumerate(values)
+            if name in vector_fields
+            else _canonical_quantity(
+                parameter,
+                unit=unit,
+                field=f"{owner}.{name}",
+                constraint=constraint,
+            )
         )
-        object.__setattr__(
-            config,
-            name,
-            canonical if is_tuple else canonical[0],
-        )
+        object.__setattr__(config, name, canonical)
 ```
 
-The scalar-as-one-item sequence makes `_canonical_quantity(...)` occur in only
-one helper branch. The helper then restores the declared scalar-versus-tuple
-shape. It does not coerce lists or other sequences to tuples. It skips every
-optional `None` value before unpacking or canonicalization and preserves that
-field as `None`. A declared tuple is canonicalized element by element, in
-order, into a newly owned tuple; every failing element uses the exact indexed
-field label. Empty tuples pass this generic mechanics layer so that the owning
-Config can apply its own nonempty relationship if required.
+The helper skips every optional `None` value before scalar/vector
+canonicalization and preserves that field as `None`. Scalar fields still use
+the existing `_canonical_quantity(...)`. A vector field uses the separate
+`_canonical_vector_quantity(...)` primitive, which:
 
-Tuple-valued physical fields remain `tuple[Quantity, ...]`; they do not become
-one array-valued `Quantity`. Under the selected Pint version, constructing a
-Quantity from a tuple may promote its magnitude to a mutable NumPy array when
-NumPy is available, while accepted environments need not contain NumPy.
-Array-valued quantities would therefore weaken frozen-Config storage,
-environment independence, exact built-in scalar validation, independently
-convertible element units, and indexed diagnostics. The helper accepts and
-canonicalizes only scalar-magnitude Quantity elements and reassembles an exact
-immutable tuple.
+1. requires one Pint Quantity;
+2. converts it to the declared canonical unit;
+3. requires an exact one-dimensional NumPy magnitude;
+4. visits every element in order, converts the NumPy scalar to an exact Python
+   scalar, and applies the declared TensorCore `Scalar.require(...)` with an
+   exact `field[index]` label;
+5. builds a fresh canonical `numpy.float64` array in TensorDSLab's private Pint
+   registry; and
+6. marks that owned array non-writeable before storing the canonical Quantity.
+
+An empty vector passes this generic mechanics layer so the owning Config can
+apply its nonempty relationship. Other-dimensional arrays, scalar magnitudes,
+lists, tuples of Quantity objects, object arrays, nonnumeric elements, and
+nonfinite/out-of-domain elements are rejected rather than reshaped, flattened,
+or partially accepted. TensorDSLab does not promise a security boundary
+against a caller deliberately re-enabling writes or mutating Pint internals.
 
 For example, the TPC Config declaration is:
 
@@ -455,18 +462,17 @@ without requiring an optional marker in each row. Single-Quantity Configs use
 the same helper with one declaration row rather than retaining a second direct
 canonicalization pattern.
 
-`PsdNoiseConfig` keeps tuple representation separate from element quantity
-semantics. Its one helper call supplies a tuple-admission table:
+`PsdNoiseConfig` changes its two vector annotations while retaining the scalar
+stop:
 
 ```python
-tuple_fields=(
-    "frequency_left_edges",
-    "power_density",
-),
+frequency_left_edges: Quantity
+frequency_stop: Quantity
+power_density: Quantity
 ```
 
-A separate `(name, unit, constraint)` table owns both tuple-element and scalar
-quantity canonicalization:
+Its one helper call keeps vector representation separate from physical
+unit/constraint declarations:
 
 ```python
 quantity_fields=(
@@ -474,17 +480,42 @@ quantity_fields=(
     ("frequency_stop", "Hz", PositiveFloat),
     ("power_density", "mV ** 2 / Hz", NonnegativeFloat),
 ),
+vector_fields=(
+    "frequency_left_edges",
+    "power_density",
+),
 ```
 
-The helper recognizes the two tuple names, unpacks their elements, applies
-every declared unit and constraint with indexed diagnostics, and reassembles
-fresh tuples. It treats `frequency_stop` as a scalar through the same
-quantity table. PSD nonemptiness, equal tuple lengths, ordered coverage,
+The vector table determines scalar-versus-one-dimensional-array
+representation only. The quantity table independently owns units and element
+constraints. PSD nonemptiness, equal vector lengths, ordered coverage,
 exclusive stop, and nonzero-power requirements remain explicit relationship
-checks in `PsdNoiseConfig.__post_init__` after the shared representation and
-canonicalization mechanics. The tuple table must not be merged with the
-quantity table: immutable sequence representation and physical element
-semantics are distinct Config responsibilities.
+checks in `PsdNoiseConfig.__post_init__` after canonicalization.
+
+The public construction helper changes coherently:
+
+```python
+def quantities(
+    magnitudes: tuple[int | float, ...],
+    unit: str,
+) -> Quantity: ...
+```
+
+It retains exact tuple input, exact element validation, unit validation, empty
+input acceptance, TensorDSLab registry ownership, and all-or-nothing failure,
+but returns one canonical vector Quantity backed by a fresh non-writeable
+`numpy.float64` array. `quantity(...)` remains the scalar constructor.
+
+`prepare_noise_waveform(...)` is the only boundary that strips the two PSD
+vectors. It converts each canonical NumPy magnitude to a plain ordered
+`tuple[float, ...]`, then passes those tuples to the unchanged
+`_prepare_psd_powers(...)`. No NumPy array enters `PsdNoiseRuntime`, any
+producer, a tensor payload, or a completed product.
+
+The internal `canonical_magnitudes(...)` accessor performs that ordered
+array-to-tuple conversion without exposing NumPy through a facade.
+`PsdNoiseConfig.__post_init__` may use the same accessor transiently for its
+explicit relationships; canonical vector storage remains unchanged.
 
 `__post_init__`, not `__new__`, remains the canonicalization owner: the
 dataclass-generated initializer must first assign the caller's values, after
@@ -592,9 +623,15 @@ alter protected scientific fixtures merely to make the migration pass.
 - live GitHub `refs/heads/main` equal to the exact accepted commit before
   candidate work begins;
 - exact source/archive package-byte equality and archive SHA-256;
-- exact `pyproject.toml` pin and unchanged Pint/Torch/build metadata;
-- isolated source and archive imports with no sibling package loaded;
+- exact `pyproject.toml` TensorCore, Pint, and NumPy pins plus unchanged
+  Torch/build metadata;
+- exact NumPy `2.3.5` distribution identity and Python `3.11`/`3.13`
+  availability;
+- isolated source and archive imports with NumPy intentionally present through
+  the physical-configuration facade and no sibling package loaded;
 - unchanged TensorDSLab 35/30/5 facade exports;
+- unchanged `quantity(...)` scalar typing and changed
+  `quantities(...) -> Quantity` vector typing;
 - exactly one new non-exported `readout/rng_keys.py`;
 - no `logical_positions`, local duplicate of an adopted TensorCore generic
   helper, compatibility alias, wrapper, or private TensorCore import in
@@ -640,7 +677,7 @@ alter protected scientific fixtures merely to make the migration pass.
   `readout/rng_keys.py`, while expected-value tests/docs remain free to record
   that frozen number.
 
-### Pulse amplitude and polarity
+### Quantity boundary, vector PSD, amplitude, and polarity
 
 - both pulse Configs use `PositiveFloat` for the canonical `mV` amplitude
   magnitude and contain no duplicate explicit zero check;
@@ -650,17 +687,24 @@ alter protected scientific fixtures merely to make the migration pass.
   an exact `(name, unit, constraint)` quantity table;
 - Config modules no longer import or call `_canonical_quantity(...)` directly;
   that singular primitive remains module-local to `common/units.py`;
-- optional scalar or tuple fields skip `None` before unpacking and
-  canonicalization, preserve `None`, and need no per-row optional marker;
-- scalar fields remain scalars, declared tuple fields require exact tuple
-  representation, and every tuple element is canonicalized in order into a
-  fresh tuple with an exact indexed diagnostic;
-- one array-valued Pint Quantity, a list of quantities, or a tuple containing
-  a non-scalar-magnitude Quantity is rejected rather than normalized into the
-  accepted tuple-of-scalar-Quantity representation;
-- `PsdNoiseConfig` passes one exact tuple-admission table separately from its
-  quantity table, while all PSD relationship checks remain explicit after
-  generic mechanics;
+- optional scalar or vector fields skip `None` before canonicalization,
+  preserve `None`, and need no per-row optional marker;
+- scalar fields remain scalar quantities and declared vector fields become
+  fresh private-registry quantities backed by exact one-dimensional,
+  non-writeable `numpy.float64` arrays;
+- vector input is copied without source aliasing, element order is preserved,
+  and every element is normalized with an exact indexed diagnostic;
+- `PsdNoiseConfig.frequency_left_edges` and `power_density` are exact
+  `Quantity` fields, `frequency_stop` remains scalar, and all PSD relationships
+  remain explicit at Config construction;
+- `quantities(...)` accepts an exact tuple of scalar magnitudes but returns one
+  canonical vector Quantity, including an accepted empty vector;
+- scalar, zero-dimensional, multidimensional, complex, boolean, object, or
+  nonfinite vector magnitudes are rejected under their exact declared
+  categories without reshape, flatten, clipping, or partial acceptance;
+- preparation converts vector magnitudes to plain ordered tuples before
+  Runtime construction, while Runtime/producer/validator modules contain no
+  NumPy import, array, or public NumPy type;
 - `__post_init__` remains the sole Config canonicalization/local-relationship
   hook and neither Config defines `__new__`;
 - pure-waveform preparation applies one and only one negative sign after
@@ -673,11 +717,12 @@ alter protected scientific fixtures merely to make the migration pass.
 - mutants that accept nonpositive amplitudes, omit or duplicate the fixed sign,
   retain the old explicit zero checks, restore the Veto unit conditional, or
   bypass one declaration-table entry fail focused evidence; and
-- mutants that merge or bypass PSD tuple admission, accept or coerce a
-  non-tuple sequence or array-valued Quantity, reject or canonicalize `None`,
-  change a scalar into a tuple, omit/reorder/drop a tuple element, skip one
-  indexed quantity constraint, reuse a non-indexed tuple diagnostic, or
-  conflate element validation with a PSD relationship fail focused evidence.
+- mutants that retain tuple-of-Quantity storage or the old `quantities(...)`
+  return, accept a wrong-rank/unsupported-dtype magnitude, retain a writable or
+  source-aliased array, reject or canonicalize `None`, omit/reorder/drop a
+  vector element, skip one indexed constraint, reuse a non-indexed vector
+  diagnostic, defer a PSD relationship until preparation, or let NumPy enter a
+  Runtime/producer/validator fail focused evidence.
 
 ### Typing
 
@@ -690,8 +735,9 @@ positive fixtures. Negative fixtures must prove:
   `require_tensor_allocation`, `require_shape_span`, and
   `require_count_tensor` call signatures;
 - `RNG_NAMESPACE` is an exact `int` but is absent from package facades; and
-- public TensorDSLab signatures and field/collection lookup types are
-  unchanged.
+- `quantities(...)`, both PSD vector fields, and vector canonicalization have
+  exact `Quantity` result types while all unrelated public TensorDSLab
+  signatures and field/collection lookup types remain unchanged.
 
 Runtime tests own bool rejection where Python typing treats bool as int.
 
@@ -712,7 +758,8 @@ contradiction returns to Design.
 For each exact candidate:
 
 1. reconstruct exact TensorCore `0.15.0` source and archive;
-2. verify exact Pint `0.25.3` wheel and sdist-built forms remain unchanged;
+2. verify exact Pint `0.25.3` wheel/sdist-built forms and exact compatible
+   NumPy `2.3.5` wheels;
 3. run the focused adoption/affected-product suites in every required
    dependency form;
 4. run complete unittest discovery from exact source and archive forms;
@@ -738,10 +785,10 @@ explicit, and this maintenance makes no fresh accelerator claim.
 After exact Maintenance 7 local merge and Design closeout, Design will issue a
 separate fixed integrated-CUDA evidence authority. TensorCore and TensorDSLab
 then run their own package-owned complete two-Torch-minor CUDA matrices against
-the exact integrated TensorCore `0.15.0` plus closed TensorDSLab pairing. A
-result from an older pairing does not qualify the new baseline. The matrices
-are functional correctness evidence only, not Stage 8 performance,
-deployment, release, or broad-backend certification.
+the exact integrated TensorCore `0.15.0`, NumPy `2.3.5`, Pint `0.25.3`, and
+closed TensorDSLab pairing. A result from an older pairing does not qualify the
+new baseline. The matrices are functional correctness evidence only, not
+Stage 8 performance, deployment, release, or broad-backend certification.
 
 ## Documentation Scope
 
@@ -776,6 +823,8 @@ also protected.
 Return to Design without widening the candidate if:
 
 - exact TensorCore `0.15.0` source/archive identity or published ref differs;
+- exact NumPy `2.3.5` cannot support an accepted Python/Torch environment or
+  Pint `0.25.3` vector conversion without dependency drift;
 - a generic helper contract does not match the accepted TensorDSLab path;
 - RngPositions cannot express an existing exact production address without a
   raw accessor or unsupported transform;
@@ -784,6 +833,9 @@ Return to Design without widening the candidate if:
 - positive-magnitude Config input cannot reproduce the exact accepted
   negative-going calibrated waveform after one preparation-owned sign;
 - the represented-zero safeguard would have to be removed or moved into tensor
+  execution;
+- vector PSD canonicalization cannot preserve exact element laws,
+  relationship failures, source nonaliasing, and Pint/NumPy-free Runtime
   execution;
 - the one-namespace cleanup requires a facade export, compatibility shim, or
   generic RNG module;
@@ -799,10 +851,11 @@ Return to Design without widening the candidate if:
 Maintenance 7 does not:
 
 - change readout science, probability laws, limits, or public products beyond
-  the exact positive-amplitude/fixed-negative-polarity narrowing;
+  the exact vector-Quantity PSD representation and
+  positive-amplitude/fixed-negative-polarity narrowings;
 - change Pint fields, canonical units, Config construction, or Runtime facts
-  beyond the private table-driven Quantity-field canonicalization and
-  preparation-owned signed peak described above;
+  beyond the private table-driven scalar/vector Quantity canonicalization,
+  vector PSD fields, and preparation-owned stripping/sign described above;
 - add a Config, Runtime, renderer, artifact, IO, persistence, table, bridge,
   reconstruction, or TensorML surface;
 - add or change an RNG algorithm, distribution, key, stream, seed, quantum,
@@ -822,6 +875,9 @@ Maintenance 7 is complete only when:
 - every authorized generic helper and RngPositions migration is complete with
   no local compatibility layer;
 - the single non-exported TensorDSLab RNG namespace source is installed;
+- exact NumPy `2.3.5` is pinned, `quantities(...)` and both PSD vector fields
+  use canonical copied one-dimensional Quantity arrays, and preparation strips
+  them before Runtime construction;
 - both pulse Configs store positive canonical amplitude magnitudes,
   preparation applies fixed negative polarity exactly once, and calibrated
   negative-going outputs remain exact;

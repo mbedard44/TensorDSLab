@@ -616,8 +616,12 @@ representability, allocation, shape-span, and count-domain mechanics to
 TensorCore, and gives the existing `0x54445331` namespace one non-exported
 TensorDSLab source. Readout composition, Pint/physical policy, product
 validation, scientific count arithmetic, ledgers, role streams, raw address
-values, word schedules, and public exports remain TensorDSLab-owned. The one
-ratified Config/scientific narrowing makes both pulse amplitudes strictly
+values, word schedules, and public exports remain TensorDSLab-owned.
+Maintenance 7 also pins NumPy `2.3.5` for physical-configuration vector
+storage, changes `quantities(...)` and the two PSD vector fields to one
+canonical array-backed Pint Quantity each, and strips those arrays to plain
+tuples during preparation. Runtime records and tensor execution remain Pint-
+and NumPy-free. The ratified pulse narrowing makes both amplitudes strictly
 positive magnitudes and applies fixed DS20k negative polarity exactly once in
 preparation; calibrated rendered results remain exact.
 
