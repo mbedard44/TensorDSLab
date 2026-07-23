@@ -2,9 +2,10 @@
 
 ## Purpose And Authority
 
-This page summarizes the accepted post-binned readout architecture for the
-TensorCore `0.7` rebuild. The complete scientific equations, config sketches,
-RNG encoding, numerical gates, and source citations live in
+This page summarizes the accepted post-binned readout architecture introduced
+with TensorCore `0.7`. User-authorized Maintenance 5 fixes its migration target
+at published TensorCore `0.13.0`. The complete scientific equations, config
+sketches, RNG encoding, numerical gates, and source citations live in
 [`rebuild.md`](rebuild.md). Donor comparison and intentional divergences live
 in [`../parity.md`](../parity.md).
 
@@ -29,6 +30,10 @@ Design closeout. Maintenance 4 Runtime Action Ownership is
 behavior-preserving private ownership refactor with no public or scientific
 contract change. Fixed-commit Validation and independent Review cleared the
 exact source/archive forms locally and in separate fresh full-A100 allocations.
+Maintenance 5 is the user-authorized next migration. Its exact lifecycle is
+recorded in its work order and the implementation index. It changes only the
+exact dependency, axis representations, and sampling ownership described
+below.
 
 ## Scope
 
@@ -112,25 +117,24 @@ Every product has exactly one `ExampleAxis`, one `ChannelAxis`, and one
 Producers locate dimensions by exact axis type and reuse the exact truth axes
 tuple and exact axis instances for dimension-preserving results.
 
-`SamplingConfig` owns positive integer `sample_period_ps`, `sample_count >= 2`,
-example-local start zero, and signed-int64-representable exclusive window stop.
-It constructs canonical `SampleAxis` coordinates from left edges:
-
-```text
-"0ps", "2000ps", "4000ps", ...
-```
+`ExampleAxis(CountAxis)` stores nonempty local ordinal count.
+`ChannelAxis(LabelAxis)` stores nonempty unique detector labels.
+`SampleAxis(RegularAxis)` stores integer-picosecond `start`, positive `step`,
+count at least two, and a signed-int64-representable exclusive stop.
 
 All readout bin conventions are left-closed and right-open. Stored values are
 left edges; the final right edge is an exclusive stop and is not an extra axis
 coordinate.
 
-Timestamp strings are semantic labels. Numeric config values and integer
-indices drive kernels. Neither hot paths nor RNG use semantic labels as random
-addresses.
+Count and regular coordinates are exact nonmaterializing `range` values.
+Integer indices and one source-derived `SamplingRuntime` drive kernels.
+Neither hot paths nor RNG use semantic coordinate values as random addresses.
 
-The previous count-only sample axis and collection-level `SampleGrid` are
-retired. The future TensorG4DS bridge uses the same `SamplingConfig` to bin PE
-truth before calling readout.
+The complete readout boundary requires `SampleAxis.start == 0`; the semantic
+axis itself may describe a valid nonzero-start subgrid. `SamplingConfig`,
+timestamp-string sample coordinates, and the collection-level `SampleGrid`
+are retired. The future TensorG4DS bridge constructs the compact axis while it
+bins PE truth.
 
 ## Product Fields And Collection
 
@@ -210,7 +214,6 @@ model.
 
 ```text
 ReadoutConfig
-├── SamplingConfig
 ├── ChargeConfig | None
 │   ├── DarkCountConfig | None
 │   ├── TimingJitterConfig | None
@@ -233,6 +236,8 @@ ReadoutConfig
 There is no `PhotoelectronsConfig`: the field already exists. There is no
 generic `Config` ABC, string model selector, product-level persistence flag,
 or runtime workspace policy in scientific config.
+`ReadoutConfig()` is the valid truth-only configuration; source sampling is
+not duplicated in a public config.
 
 Exact stochastic leaf configs own defaulted TensorCore `RngKey` values:
 white/PSD noise use streams `1`/`2`; dark count uses `3`; retained/overflow
@@ -285,12 +290,12 @@ class SamplingRuntime:
     sample_dimension: int
 ```
 
-Request preparation constructs it once after validating the source
-`SampleAxis` against `SamplingConfig`. Temporal ProductRuntime values that
-retain sampling facts reference that exact object, so no product independently
-rediscovers the simulation source sample dimension. The values remain Python
-integers because they control dimensions, shapes, FFT lengths, and loop bounds;
-they are not payload tensors.
+Request preparation constructs it once from the exact source `SampleAxis`
+after enforcing complete-input start zero. Temporal ProductRuntime values
+reference that exact object, so no product independently rediscovers the
+simulation source sample dimension. The values remain Python integers because
+they control dimensions, shapes, FFT lengths, and loop bounds; they are not
+payload tensors.
 
 `readout.runtime.prepare` owns `ReadoutRuntime`, request parsing, typed closure,
 required-config checks, closure-wide key uniqueness, and composition of the
@@ -635,10 +640,9 @@ distributions' internal word schedules. TensorDSLab owns product-specific key
 placement, scientific position/category lattices, direct-uniform/Gaussian
 ordinals, draw-free scientific policy, multinomial ordering and final
 remainders, count accumulation, and ledgers. Positions depend on actual
-tensor-dimension indices, not
-`ExampleAxis`, `ChannelAxis`, timestamp strings, strides, or storage addresses.
-A dimension or coordinate reordering is therefore a different positional
-interpretation and carries no permutation-invariance promise.
+tensor-dimension indices, not semantic coordinate values, strides, or storage
+addresses. A dimension or coordinate reordering is therefore a different
+positional interpretation and carries no permutation-invariance promise.
 
 Selection and arbitrary chunking are not automatically stable because each
 builder invocation starts logical positions at zero. Callers use different RNG
@@ -647,12 +651,14 @@ global offsets.
 
 Closed Stage 5/6 production used a private `_RngStream` and
 `readout/_random.py`. The Maintenance 2 implementation removes both
-and pins TensorCore `0.9.0` exact commit
+and historically pins TensorCore `0.9.0` exact commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, which supplies the required
 public RNG API and focused `require_same_dtype` relationship. The historical
 consumer proposal is fulfilled, and Maintenance 2 is Merged / Closed at the
 exact candidate and Design closeout above. The closed Stage 5/6 and Maintenance
 2 evidence are CPU-only because CUDA was unavailable.
+Maintenance 5 replaces the installed pin with exact TensorCore `0.13.0`
+without changing those RNG contracts.
 
 TensorCore exposes no non-consuming concrete-algorithm capability query. The
 public builder accepts nominal `CounterRng` membership, performs no dummy draw,
@@ -706,7 +712,7 @@ The accepted Stage 7 public preparation contract covers at least:
 
 - exact source type, CPU/CUDA device, and deep nonnegative truth domain;
 - exactly three readout axes, source shape, dtype, Torch layout, and device;
-- exact `SampleAxis` agreement with `SamplingConfig`;
+- exact source `SampleAxis` narrowing and complete-input start zero;
 - one nonempty unique recognized product request;
 - exact required config closure and no irrelevant influence;
 - selected floating dtype and representable scalar constants;
@@ -759,8 +765,8 @@ private-call misuse, direct tensor mutation, or exotic dispatch hardening.
 
 ## Product-Centered Module Ownership
 
-Shared semantic axes and `SamplingConfig` live in `tensor_dslab.common`.
-Private source-bound sampling execution facts live separately in
+Shared semantic axes live in `tensor_dslab.common`; there is no public
+sampling config or `common.sampling` module. Private source-bound sampling execution facts live in
 `readout/runtime/sampling.py`. Every generated product owns public `config.py`
 and `field.py`, plus unexported
 `runtime/{prepare,produce,validate}.py`. Photoelectrons owns only its
@@ -821,6 +827,11 @@ production. Maintenance 4 is Merged / Closed through exact candidate
 behavior-preserving runtime-action ownership split described above and
 authorizes no renderer. Measured GPU characterization remains a separate
 evidence stage; any justified fusion work remains a later optimization stage.
+
+Maintenance 5 atomically adopts exact published TensorCore `0.13.0`, the
+compact semantic axes, and source-derived sampling while preserving all product
+execution. Its work order and the implementation index are the sole lifecycle
+records.
 
 ## Return To Design Before
 

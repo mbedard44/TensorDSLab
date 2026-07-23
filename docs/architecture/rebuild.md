@@ -27,8 +27,53 @@ non-exported preparation, production, and validation actions under product
 same final bytes locally and in separate fresh full-A100 source/archive runs.
 It changes no public, scientific, RNG, dependency, supported-device,
 performance, or Stage 8 contract. The first Stage 8 attempt remains stopped
-evidence; any rerun requires a new Design authority from the closed
-Maintenance 4 baseline.
+evidence; any rerun requires a new Design authority after Maintenance 5.
+
+Maintenance 5 Compact Axes And Sampling is the user-authorized next migration
+under the focused
+[work order](../implementation/maintenance_5_tensorcore_0_13_compact_axes_and_sampling.md).
+That work order and the implementation index are the sole lifecycle records.
+It selects published TensorCore `0.13.0` exact commit
+`202d8b1bc6259b8453d3d377570417f2480d782b` and fixes this accepted
+replacement:
+
+```text
+ExampleAxis(CountAxis)
+  -> nonempty zero-based local ordinal range
+
+ChannelAxis(LabelAxis)
+  -> nonempty unique string detector labels
+
+SampleAxis(RegularAxis)
+  -> nonnegative integer-picosecond start
+  -> positive step
+  -> count >= 2
+  -> exclusive stop <= 2**63 - 1
+
+source SampleAxis
+  -> prepare_sampling(photoelectrons)
+  -> SamplingRuntime(sample_count, sample_period_ps, sample_dimension)
+```
+
+The complete readout boundary requires `SampleAxis.start == 0`; the semantic
+axis itself permits valid nonzero-start regular subgrids. `SamplingConfig`,
+`ReadoutConfig.sampling`, `common/sampling.py`, timestamp-string sample
+coordinates, and the duplicate config/source agreement check are retired
+without shims. `ReadoutConfig()` becomes the truth-only configuration.
+`simulate_readout(...)`, every scientific equation, RNG key/address/call,
+ProductRuntime other than its unchanged sampling input, product result, and
+supported device boundary remain unchanged.
+
+This Maintenance 5 block and its focused work order supersede every later
+unqualified `SamplingConfig`, direct string-valued `TensorAxis`, string
+`SampleAxis`, or source/config-agreement sketch in this long-form document.
+Those sketches remain here only as historical Stage 3 through Maintenance 4
+design evidence until a later editorial compaction; they are not
+implementation authority for Maintenance 5. Explicitly historical `0.7.0`
+and `0.9.0` dependency statements remain exact for their closed stages.
+TensorCore `0.13.0` also exposes `Scalar`, table roots, and `TensorArtifact`,
+but Maintenance 5 introduces no Pint, table, artifact, persistence, or IO
+surface.
 
 TensorDSLab Design selected and implemented the following RNG and
 module-ownership foundation:
@@ -37,14 +82,15 @@ config-owned `RngKey` values for stochastic roles, public parameterized
 Gaussian, Poisson, and binomial distributions on that RNG, product
 `config.py` and `field.py` modules, a readout `config.py` and
 `collection.py`, and focused Charge effect modules. This is a TensorDSLab
-consumer decision. TensorCore now implements the generic surface in published
-version `0.9.0` at exact commit
+consumer decision. TensorCore first supplied the adopted generic surface in
+published version `0.9.0` at exact commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`, which TensorDSLab Design selected
 for Maintenance 2 after exact consumer probes. The implementation pins that
 commit, uses the public RNG/distribution surface, and realizes the accepted
-module ownership without compatibility shims. The Stage 5/6 private
-implementation remains closed historical evidence. Stage 7 and Maintenance 4
-are separate Merged / Closed production slices.
+module ownership without compatibility shims. Published TensorCore `0.13.0`
+preserves the same public RNG/distribution contract for Maintenance 5. The
+Stage 5/6 private implementation remains closed historical evidence. Stage 7
+and Maintenance 4 are separate Merged / Closed production slices.
 
 Within this architecture, the fixed-`K` algorithm under
 [Fixed-Generation Correlated-Avalanche Baseline](#fixed-generation-correlated-avalanche-baseline)
@@ -172,7 +218,7 @@ Durable persistence and IO are deferred entirely from this rebuild.
 
 ## Non-Goals
 
-- Backward compatibility with the current pre-deployment TensorCore `0.6`
+- Backward compatibility with the historical pre-deployment TensorCore `0.6`
   representation.
 - Compatibility aliases for retired IDs, constants, sidecars, or helper
   modules.
@@ -215,9 +261,9 @@ on the CPU and outside the GPU readout hot path.
 
 A separate future TensorDSLab-owned bridge will consume one exact accepted
 TensorG4DS product and construct the dense truth `Photoelectrons` field. That
-bridge owns event/channel mapping and realizes the caller's exact
-`SamplingConfig` as numeric PE bins and a timestamp-backed `SampleAxis`. It
-must not infer the window from observed hits or apply readout timing jitter:
+bridge owns event/channel mapping and constructs the caller-selected compact
+`SampleAxis(start=0, step=..., count=...)` while binning truth PEs. It must not
+infer the window from observed hits or apply readout timing jitter:
 jitter is an electronics response effect inside charge simulation, not truth
 construction.
 
@@ -225,7 +271,13 @@ The production handoff target keeps dense payloads on one explicit accelerator
 device and does not silently call `.cpu()`, `.numpy()`, convert through Python
 lists, serialize/reload, cast, move, or detach.
 
-## TensorCore `0.7` Consumer Contract
+## Historical TensorCore `0.7` Consumer Contract
+
+This section records the contract implemented by Stage 3 and consumed through
+Maintenance 4. Maintenance 5 replaces only its axis/dependency/sampling parts
+with the compact TensorCore `0.13.0` target fixed near the top of this
+document. Direct string-axis constructors below are historical, not the
+Maintenance 5 API.
 
 The rebuild targets TensorCore's three semantic roots:
 
@@ -1036,6 +1088,12 @@ requests. RNG design and operation scheduling must therefore isolate product
 random fields from unrelated requested branches.
 
 ## Scientific Configuration
+
+Except where explicitly historical, the product configuration contracts below
+remain accepted. Maintenance 5 removes only `SamplingConfig` and
+`ReadoutConfig.sampling`; every later sketch showing those values is historical
+and must be read as source-derived `SamplingRuntime` under the supersession
+block above.
 
 `ReadoutConfig` composes one required shared sampling policy with optional
 exact product configs. Every product preparer with scientific choices accepts
@@ -2165,6 +2223,11 @@ remains the sole private typed Charge constructor; Stage 7 added the public
 `simulate_readout(..., products=[Charge], ...)` request path.
 
 ## Public Builder
+
+Maintenance 5 keeps the public `simulate_readout(...)` signature but removes
+the sampling member from `ReadoutConfig`. Sampling preflight below is
+source-derived; any sketch passing or comparing a `SamplingConfig` is
+historical.
 
 The target signature is:
 
@@ -6123,6 +6186,13 @@ runtime becomes a production dependency.
 
 ## Validation Strategy
 
+Maintenance 5 replaces string-axis/config-agreement validation with compact
+axis constructor/narrowing evidence, exact source-derived sampling, and the
+complete-input `SampleAxis.start == 0` preflight. It also retires—without a
+replacement exception promise—the off-path
+`collection.field(TensorField)` `TypeError` assertion under TensorCore
+`0.13.0`'s golden-path boundary.
+
 ### Stage 6 Statistical Acceptance Policy
 
 Stage 6 validates conformance to the selected TensorDSLab probability model;
@@ -6769,13 +6839,14 @@ The completed prerequisites and remaining production sequence are:
    Review-cleared candidate `b3c7c907004741ba67b8b92a54bbdc8c85216dda`.
    It realizes explicit ProductRuntime, prepare, produce, and validate
    ownership while preserving Stage 7 behavior.
-4. The first Stage 8 real-CUDA attempt remains stopped evidence. Any rerun
-   requires a new Design authority from the closed Maintenance 4 baseline.
+4. Complete Maintenance 5's compact-axis and sampling migration.
+5. The first Stage 8 real-CUDA attempt remains stopped evidence. Any rerun
+   requires a new Design authority after Maintenance 5.
    Profile real GPU memory and execution before designing workspace/output
    reuse.
-5. Design the exact TensorG4DS-to-truth-Photoelectrons bridge.
-6. Design explicit TensorML/reconstruction adapters.
-7. Design durable artifacts only after in-memory contracts stabilize.
+6. Design the exact TensorG4DS-to-truth-Photoelectrons bridge.
+7. Design explicit TensorML/reconstruction adapters.
+8. Design durable artifacts only after in-memory contracts stabilize.
 
 Each production slice uses the repository Implementation/Validation/Review
 loop and fixed-commit evidence. No compatibility alias preserves `0.6`.
@@ -6867,15 +6938,19 @@ ownership replacement in present production. Reopening the implemented
 structure requires a concrete import-cycle, cohesion, or implementation-size
 finding rather than a preference for layer-oriented grouping.
 
-The MVP sampling and semantic timestamp contract is closed. One exact
-`SamplingConfig` owns positive integer `sample_period_ps`, `sample_count >= 2`,
+Historical Stage 3 through Maintenance 4 sampling used one exact
+`SamplingConfig` that owned positive integer `sample_period_ps`,
+`sample_count >= 2`,
 and a signed-int64 `window_stop_ps`. Its full axis begins at zero, contains
 exactly the `N` canonical ASCII left-edge timestamps `i * T` in lowercase
 picoseconds, and omits the exclusive `N * T` stop. Every `SampleAxis` is a
 regular, increasing, period-bearing signed-int64 time axis; only complete
 simulation inputs additionally require zero start and exact config agreement.
 Kernels use numeric config values and indices, while upstream floating-time
-normalization remains a TensorG4DS-bridge decision.
+normalization remains a TensorG4DS-bridge decision. Maintenance 5 supersedes
+that representation with compact `SampleAxis(start, step, count)`,
+source-derived `SamplingRuntime`, and no `SamplingConfig`, as fixed at the top
+of this document.
 
 The two pulse-shape equations and their donor-to-config parameter mappings are
 closed provisionally for the MVP by the IV adoption above. Later collaborator
@@ -6951,19 +7026,22 @@ Closed prerequisites and remaining Design gates are:
    autograd boundary while realizing the product runtime action tree, shared
    `SamplingRuntime`, complete closure preparation, and immediate validation
    before descendant use.
-4. Any Stage 8 rerun requires a new Design authority from the closed
-   Maintenance 4 baseline. Waveform-tail optimization evidence after the
+4. Maintenance 5 is the next production gate: adopt exact TensorCore `0.13.0`,
+   compact the three semantic axes, derive sampling from the source
+   `SampleAxis`, and remove `SamplingConfig` without changing readout science.
+5. Any Stage 8 rerun requires a new Design authority after Maintenance 5.
+   Waveform-tail optimization evidence after the
    functional producers are accepted: compiler/execution mode, equivalence to
    the frozen eager reference, one-kernel/no-target-sized-temporary
    instrumentation, and the fallback gate for a purpose-built kernel.
    Cross-product analog/digitized
    fusion remains excluded.
-5. Digitization-config association for independent/durable consumers.
-6. Exact TensorG4DS source and dense truth-binning bridge, including provenance
+6. Digitization-config association for independent/durable consumers.
+7. Exact TensorG4DS source and dense truth-binning bridge, including provenance
    origin, left-edge construction, exact boundary assignment at `0`, `i * T`,
    and exclusive `N * T`, plus `underflow_hit_count` and
    `overflow_hit_count` accounting.
-7. Whether typed collection convenience properties materially improve the API.
+8. Whether typed collection convenience properties materially improve the API.
 
 The fixed-`K` correlated-avalanche model is implemented and closed on eager
 CPU: exact config ownership, independent per-edge phase closure,

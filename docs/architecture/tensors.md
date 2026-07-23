@@ -6,23 +6,22 @@ This page defines how the TensorDSLab rebuild uses TensorCore. Scientific
 readout behavior belongs in [`readout.md`](readout.md) and the complete rebuild
 contract in [`rebuild.md`](rebuild.md).
 
-The closed Stage 3 through 6 TensorCore target was version `0.7.0` at exact
-clean commit `b454d738f6385ce6489d85492a618a3dab139bb6`. Every dependency
-change requires an exact pin and TensorDSLab-owned consumer probes; this
-document alone makes no compatibility claim.
+Closed Stage 3 through 6 evidence uses exact TensorCore `0.7.0` commit
+`b454d738f6385ce6489d85492a618a3dab139bb6`. Maintenance 2 installed exact
+published TensorCore `0.9.0` commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59` for public RNG/distribution and
+same-dtype ownership. Those remain immutable historical baselines.
 
-TensorDSLab has pinned published TensorCore `0.9.0` commit
-`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59` in the Maintenance 2
-implementation. It provides public `RngKey`,
-`CounterRng`, `Threefry4x32`,
-`logical_positions`, and `require_same_dtype`. TensorCore's Stage 15 work
-order and random architecture at that exact commit are authoritative; the
-TensorDSLab-hosted consumer proposal is historical evidence only. Maintenance
-2 is Merged / Closed through exact candidate
-`89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
-`9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`; `0.9.0` is the installed pin.
-Closed Stage 3 through 6 evidence remains pinned to `0.7.0`. No broad
-compatibility result follows from either exact baseline.
+User-authorized Maintenance 5 selects published TensorCore `0.13.0` exact
+commit `202d8b1bc6259b8453d3d377570417f2480d782b`, tree
+`48fa9a28db6d043abc07d9963b2015983ca436ea`, as the next dependency target.
+Maintenance 5 consumes its compact semantic axes and golden-path structural
+boundary while preserving the public RNG and tensor relationships TensorDSLab
+already uses. The dependency also exposes generic `Scalar`, but Maintenance 5
+does not consume it; the deferred Pint stage owns any later use. Every
+dependency change still requires an exact pin and TensorDSLab-owned
+source/archive, typing, CPU, and CUDA consumer evidence. No broad compatibility
+result follows.
 
 Maintenance 3 is Merged / Closed through exact Review-cleared candidate
 `dfe45c96f9cc141f91e29a6a3d81bd7a3e8a49f0`. Maintenance 4 Runtime Action
@@ -30,6 +29,8 @@ Ownership is **Merged / Closed** through exact Review-cleared supplemental
 candidate `b3c7c907004741ba67b8b92a54bbdc8c85216dda`. It preserves this
 TensorCore boundary and the exact `0.9.0` dependency while reorganizing only
 unexported TensorDSLab preparation, production, and validation ownership.
+Maintenance 5 is the user-authorized next migration. Its work order and the
+implementation index are the sole lifecycle records.
 
 The previous TensorCore `0.6` ID/layout/sidecar architecture is historical and
 is intentionally not preserved through aliases.
@@ -40,41 +41,45 @@ TensorDSLab imports only TensorCore's public package-root surface. The relevant
 semantic roots are:
 
 ```text
-TensorAxis
-  coordinates: tuple[str, ...]
-
-TensorField
-  tensor: torch.Tensor
-  axes: tuple[TensorAxis, ...]
-
-TensorCollection
-  fields keyed by exact concrete TensorField type
+TensorAxis[CoordinateT]
+  CountAxis              compact zero-based integer range
+  RegularAxis            compact regular integer range
+  LabelAxis              explicit unique string tuple
+TensorField              tensor payload plus ordered semantic axes
+TensorCollection         fields keyed by exact concrete TensorField type
 ```
 
 TensorCore owns:
 
-- abstract frozen/slotted roots and their universal representation checks;
+- abstract frozen/slotted roots and representation-state checks;
+- exact range-backed Count/Regular coordinate mechanics;
+- exact string-label mechanics;
 - ordered coordinate/index and axis/dimension lookup;
 - exact-type collection lookup;
-- constrained scalar wrappers;
+- the generic `Scalar` root and constrained scalar leaves;
 - focused numeric requirements; and
 - `require_axis_signature`, `require_same_axes`, `require_same_device`, and
   `require_field_types`.
 
-At the selected `0.9.0` Maintenance 2 dependency, TensorCore additionally owns generic immutable
-counter-RNG mechanics: exact key/seed/address validation, logical row-major
-positions, Threefry raw-word continuity, fixed-point uniforms, parameterized
-Gaussian draws, Poisson inversion/PTRS, binomial inversion/BTRS, sampler
-numerical domains and exhaustion, and those count distributions' internal
-word schedules. TensorDSLab consumes only the public package-root surface and
-never imports or duplicates protected raw-word or promoted distribution
-mechanics. The same accepted dependency target adds
-`require_same_dtype(*fields)` as a focused semantic-field relationship; it
-does not cast, add a dtype allowlist, or validate raw scratch tensors.
+TensorCore `0.13.0` retains the generic immutable counter-RNG mechanics adopted
+at `0.9.0`: exact key/seed/address validation, logical row-major positions,
+Threefry raw-word continuity, fixed-point uniforms, parameterized Gaussian
+draws, Poisson inversion/PTRS, binomial inversion/BTRS, sampler numerical
+domains/exhaustion, and the count distributions' word schedules. It also
+retains `require_same_dtype(*fields)`. TensorDSLab consumes only package-root
+surfaces and never duplicates protected RNG or generic representation
+mechanics.
+
+TensorCore additionally exposes generic table roots and `TensorArtifact`.
+Maintenance 5 does not use them to infer a TensorDSLab table backend, schema,
+artifact, persistence format, or IO policy.
 
 TensorDSLab owns:
 
-- final semantic readout axes, fields, and collection;
+- final semantic readout axes and their stronger domain narrowing;
+- the integer-picosecond interpretation of `SampleAxis`;
+- complete-input example-local start zero;
+- final readout fields and collection;
 - readout axis sets and intrinsic product dtypes;
 - collection membership and cross-field coherence;
 - deep value-domain checks at explicit trust boundaries;
@@ -89,23 +94,23 @@ TensorDSLab owns:
   failure, and multi-output relationships; and
 - any future persistence or execution optimization.
 
-TensorCore `0.7` has no generic selection, batching, movement, reduction,
-addition, detachment, metadata, output-buffer, `out=`, workspace, storage,
-lease, registry, publication, or lifecycle API. TensorDSLab does not recreate
-retired generic APIs merely to preserve its pre-deployment implementation.
+TensorCore `0.13.0` has no generic selection, batching, movement, reduction,
+addition, detachment, output-buffer, `out=`, workspace, storage, lease, or
+lifecycle service. TensorDSLab does not recreate retired APIs merely to
+preserve its pre-deployment implementation.
 
 ## Extension Contract
 
-Each TensorDSLab semantic leaf has exactly its matching TensorCore root in
-`__bases__`, with no mixin or other base:
+Each TensorDSLab semantic leaf directly inherits exactly one matching
+TensorCore semantic or representation root, with no mixin:
 
 ```python
 @final
-class ExampleAxis(TensorAxis):
+class ExampleAxis(CountAxis):
     __slots__ = ()
 
     def _require(self) -> None:
-        if not self.coordinates:
+        if self.count == 0:
             raise ValueError("ExampleAxis must be nonempty")
 ```
 
@@ -121,19 +126,21 @@ Leaves do not reapply `@dataclass`, override construction, or add semantic
 state. TensorCore's final `_validate()` phase always establishes universal
 validity before the package-owned `_require()` phase.
 
-Ordinary ABC inheritance intentionally relies on static checks, tests, and
-Review for package-authored leaf shape. TensorDSLab does not add a metaclass,
-runtime-finality guard, lineage scanner, or other adversarial defense against a
-caller who deliberately violates the public contract.
+TensorCore `0.13.0` and TensorDSLab intentionally rely on static checks, tests,
+and Review for supported leaf structure. They retain runtime checks for
+constructed data/scientific invariants, not hostile Python metaprogramming.
+Malformed class objects, ignored type errors, private-module use,
+monkey-patching, or subclassing a statically final leaf have no promised
+runtime result or diagnostic category.
 
 ## Semantic Axes
 
-TensorDSLab owns three final readout axis types:
+TensorDSLab owns:
 
 ```text
-ExampleAxis
-ChannelAxis
-SampleAxis
+ExampleAxis(CountAxis)
+ChannelAxis(LabelAxis)
+SampleAxis(RegularAxis)
 ```
 
 Every readout field has exactly one of each and no other axis. The ordered axes
@@ -149,25 +156,29 @@ Exact axis types are unique in a field by TensorCore construction. TensorDSLab
 checks the unordered readout type set so it does not accidentally impose one
 dimension order through `require_axis_signature`.
 
-Each coordinate is a unique nonempty exact string, and tuple order defines
-index order. Coordinates, indices, and dimensions remain distinct:
+Coordinates, indices, and dimensions remain distinct:
 
-- a coordinate is the semantic string at one axis position;
+- a coordinate is the representation-specific semantic value at one position;
 - an index is that zero-based position; and
 - a dimension is the position of an axis in a field's ordered axes tuple.
 
-`ExampleAxis` and `ChannelAxis` contain stable package-owned labels.
-`SampleAxis` contains regular increasing left-edge timestamps generated from
-`SamplingConfig`, using canonical strings such as `"0ps"` and `"2000ps"`.
-Kernels use the numeric sampling values and integer indices; they do not parse
-semantic labels in the hot path.
+`ExampleAxis(count=N)` exposes `range(0, N)` and carries no durable event
+identity. `ChannelAxis(labels=(...))` retains explicit unique detector labels.
+`SampleAxis(start, step, count)` exposes a compact regular `range` of integer
+picosecond left edges. It requires nonnegative start, positive step, at least
+two samples, and `start + step * count <= 2**63 - 1`.
+
+The semantic sample axis may have nonzero start. Complete
+`Photoelectrons`/readout preparation requires start zero and derives one
+private `SamplingRuntime` directly from the source axis. There is no public
+`SamplingConfig` or second period/count authority.
 
 Dimension-preserving producers reuse the exact source axes tuple and exact
 axis instances. This is stronger than merely reconstructing equal axes and is
 part of each producer's return contract.
 
 There are no `TensorAxisId` values, axis constants, ID-backed/count-only
-distinction, coordinate object classes, `TensorLayout`, `TensorAxes`,
+sidecar distinction, coordinate object classes, `TensorLayout`, `TensorAxes`,
 `shared_axes`, axis-role sidecar, or `SampleGrid`.
 
 ## Product Fields
@@ -280,11 +291,11 @@ RNG. The stochastic effect uses the exact `RngKey` captured from its leaf
 config during preparation.
 
 `readout.runtime.sampling` owns one private `SamplingRuntime` containing Python
-integer sample count, period, and dimension. Request preparation constructs it
-once after validating the source/config relationship; temporal ProductRuntime
-values that retain sampling facts reference that exact object. This is private
-source-bound execution state and therefore does not belong in public
-`common.sampling`.
+integer sample count, period, and dimension. Request preparation derives it
+once from the source `SampleAxis` after enforcing complete-input start zero;
+temporal ProductRuntime values that retain sampling facts reference that exact
+object. This private source-bound execution state has no public companion
+config or common sampling module.
 
 Production imports no Config, performs no scientific preparation, and owns no
 deep publication scan. Immediately after every generated field is constructed,
@@ -417,15 +428,18 @@ preserves the accepted invalid-generated-result `RuntimeError` boundary. A
 failed validation prevents descendants and final collection construction; the
 failed local field never escapes.
 
-Malformed supported operands use TensorCore's documented `TypeError` boundary;
-unsatisfied well-formed relationships use `ValueError` where applicable.
+Malformed supported data operands use TensorCore's documented `TypeError`
+boundary; unsatisfied well-formed relationships use `ValueError` where
+applicable. Malformed/off-path class-object calls have no promised behavior.
 TensorDSLab does not promise error behavior for deliberate public-API drift.
 
 ## Persistence And Integration
 
 Exact Python classes are process-local semantic identities, not durable
-product labels. Persistence is deferred and will require separately versioned
-labels plus the scientific configuration necessary to interpret a payload.
+product labels. TensorCore now supplies a generic `TensorArtifact` extension
+root, but TensorDSLab persistence remains deferred and will require a concrete
+artifact, separately versioned labels, and the scientific configuration
+necessary to interpret a payload.
 The retired `DigitizedWaveformSpec` sidecar is not carried into the collection;
 durable digitization-config association remains an explicit Design gate.
 

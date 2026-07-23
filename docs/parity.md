@@ -25,6 +25,28 @@ generic-RNG owner.
 CUDA was unavailable, so it adds no GPU or completed-value cross-backend
 evidence. Stage 7 is Merged / Closed, but no observable-specific IV comparison
 or acceptance margin follows merely from implementing the executable boundary.
+User-authorized Maintenance 5 targets exact published TensorCore `0.13.0`
+commit `202d8b1bc6259b8453d3d377570417f2480d782b`, compact semantic axes,
+and source-derived sampling. It changes representation and removes duplicate
+sampling policy; it does not change a donor comparison boundary or parity
+classification.
+
+The exact Maintenance 5 representation-continuity fixture holds the tensor
+payload, tensor axis order, channel-label order, product configs, dtype,
+device, and `CounterRng` fixed while replacing:
+
+```text
+old:
+  SamplingConfig(period=T, count=N)
+  SampleAxis("0ps", "Tps", ..., "(N-1)Tps")
+
+new:
+  SampleAxis(start=0, step=T, count=N)
+```
+
+The accepted comparison requires identical private sampling runtime values,
+RNG requests, and same-stack completed products. This is representation
+continuity, not a new donor-parity classification.
 
 ## Purpose
 
@@ -39,8 +61,10 @@ state, RNG streams, sparse PE-row growth, condition-database loading, fixed
 array rank, or incidental implementation defects.
 
 The semantic-root architecture was introduced against TensorCore `0.7` and is
-now installed against the selected exact TensorCore `0.9.0` dependency. It is
-governed by [Rebuild Architecture](architecture/rebuild.md),
+installed in the current production baseline against exact TensorCore `0.9.0`.
+Maintenance 5 targets the published `0.13.0` compact-axis roots without
+changing scientific behavior. The architecture is governed by
+[Rebuild Architecture](architecture/rebuild.md),
 [Post-Binned Readout Architecture](architecture/readout.md), and
 [TensorCore Integration](architecture/tensors.md). The fixed-`K` section of
 the rebuild architecture is the sole active correlated-avalanche baseline.
@@ -193,8 +217,8 @@ The rebuild's primary in-memory result is one request-selected
 a product is present. A public claim names the exact input and requested result
 product types. A private charge-submodel claim names its ephemeral
 frontier/ledger boundary and observable and must not invent another product
-type. Every claim also names the exact axes, `SamplingConfig`, product config,
-dtype, comparison boundary, and observable.
+type. Every claim also names the exact compact axes, source-derived sampling
+facts, product config, dtype, comparison boundary, and observable.
 
 The Stage 7 builder returns exactly the nonempty product set requested
 by the caller. Privately computed prerequisites and avalanche diagnostics are
@@ -336,7 +360,7 @@ Photoelectrons (binned photon-origin primary PE seeds)
   -> optional terminal S1/S2 charge smearing
   -> Charge -> PureWaveform
 
-Photoelectrons axes/device/shape + SamplingConfig
+Photoelectrons axes/device/shape + source SampleAxis
   -> NoiseWaveform
 
 PureWaveform + NoiseWaveform
@@ -1080,7 +1104,7 @@ cross-backend requirement compares TensorDSLab implementations to one accepted
 TensorDSLab probability contract and is therefore called agreement, not donor
 parity.
 
-Coordinate strings are not RNG identities. Reordering axes or coordinates,
+Semantic coordinates are not RNG identities. Reordering axes or coordinates,
 reindexing payloads, selecting, or invoking arbitrary chunks generally changes
 logical flat positions and therefore sampled values. Positional addresses
 restart for each builder invocation. Product-request changes preserve a common

@@ -45,7 +45,7 @@ deployability, broad compatibility, or conformance finding. The rebuild is an
 intentional pre-deployment replacement, not an amendment of those historical
 work orders.
 
-### TensorCore `0.7` Is The Rebuild Target
+### TensorCore `0.7` Established The Rebuild Roots
 
 The rebuild uses TensorCore's public `TensorAxis`, `TensorField`, and
 `TensorCollection` ordinary-ABC roots. Exact final TensorDSLab leaf types carry
@@ -59,6 +59,16 @@ dependency and proved public imports, runtime construction,
 inherited-constructor static typing, and the operation-owned result-storage
 boundary against both the clean source checkout and an independently archived
 pin. TensorDSLab will not fork TensorCore or reproduce its private mechanics.
+
+Maintenance 2 later installed exact TensorCore `0.9.0` for public RNG and
+same-dtype behavior. User-authorized Maintenance 5 supersedes the installed
+dependency target with published TensorCore `0.13.0` exact commit
+`202d8b1bc6259b8453d3d377570417f2480d782b`. The later version retains the
+accepted tensor roots and RNG surface while adding compact axis
+representations, generic `Scalar`, table roots, `TensorArtifact`, and a
+golden-path structural boundary. Maintenance 5 consumes the compact axes and
+preserved generic mechanics only; it adds no TensorDSLab table, artifact/IO,
+or Pint surface.
 
 ### Exact Types Replace Loose Semantic Namespaces
 
@@ -84,14 +94,23 @@ Every readout field has exactly one `ExampleAxis`, one `ChannelAxis`, and one
 code locates axes by exact type rather than fixed dimension. Dimension-
 preserving products reuse the exact truth axes tuple and exact axis objects.
 
-`SamplingConfig` defines positive integer picosecond period, count, local-zero
-start, and representable exclusive stop. It creates a regular `SampleAxis` of
-canonical left-edge timestamp strings such as `"0ps"` and `"2000ps"`. Hot
-paths use numeric config values and indices, not the coordinate strings.
-Positional RNG likewise uses tensor positions and makes no coordinate-identity
-or permutation-invariance promise.
+Maintenance 5 selects:
 
-The count-only sample representation and `SampleGrid` sidecar are retired.
+- `ExampleAxis(CountAxis)` with a nonempty zero-based local ordinal range;
+- `ChannelAxis(LabelAxis)` with nonempty unique string labels; and
+- `SampleAxis(RegularAxis)` with nonnegative integer-picosecond start,
+  positive step, count at least two, and signed-int64-bounded exclusive stop.
+
+Count and regular coordinates are compact `range` values. The source
+`SampleAxis` is the sole sampling authority; private
+`prepare_sampling(photoelectrons)` derives count, period, and dimension once.
+The complete readout boundary requires example-local `start == 0`, while the
+semantic sample axis may represent a valid nonzero-start subgrid.
+
+`SamplingConfig`, timestamp-string sample coordinates, the earlier count-only
+sample proposal, and `SampleGrid` are retired without shims. Hot paths and
+positional RNG use tensor positions and plain prepared integers, not semantic
+coordinate values.
 
 ### Six Typed Fields Define Readout Products
 
@@ -113,8 +132,8 @@ not part of the rebuild surface.
 Readout simulation accepts one dense `Photoelectrons` field. It has no
 `PhotoelectronsConfig`, Runtime, preparer, or producer. It owns its field and
 its explicit untrusted-ingress deep validator. A future TensorDSLab-owned
-bridge will construct it from an exact accepted TensorG4DS product using the
-caller's sampling policy. That bridge, not `simulate_readout`, owns provenance
+bridge will construct it from an exact accepted TensorG4DS product using a
+bridge-selected compact `SampleAxis`. That bridge, not `simulate_readout`, owns provenance
 mapping, channel mapping, and PE binning.
 
 Dark counts, timing jitter, crosstalk, afterpulses, and smearing are private
@@ -172,8 +191,9 @@ shims.
 
 ### Scientific Configuration Is Immutable And Compositional
 
-`ReadoutConfig` contains one required `SamplingConfig` and optional exact
-product configs. Each product owns its field and its config types. `None`
+`ReadoutConfig` contains only optional exact generated-product configs; the
+source `SampleAxis` owns sampling and `ReadoutConfig()` is valid for a
+truth-only request. Each product owns its field and its config types. `None`
 disables an optional submodel; closed unions of exact config types select real
 alternative models. Each product preparer receives its exact config and
 relevant shared sampling/source facts, then its producer receives the trusted
@@ -189,7 +209,8 @@ immutable `RngKey` role identities.
 ### The Package Tree Is Product-Centered
 
 Shared `ExampleAxis`, `ChannelAxis`, and `SampleAxis` live in
-`common/axes.py`; `SamplingConfig` lives in `common/sampling.py`.
+`common/axes.py`. Maintenance 5 deletes `common/sampling.py` without a
+replacement public sampling module.
 
 `readout/config.py` contains only `ReadoutConfig`;
 `readout/collection.py` contains only `ReadoutCollection`; and
@@ -208,8 +229,8 @@ replacement `_rng.py`. Product Runtime modules never import the cross-product
 collection, config, or public simulation layer.
 
 `SamplingRuntime` is a private dependency-leaf record containing Python
-sample count, period, and dimension values. `prepare_readout` constructs it
-once after validating the source sampling relationship, and temporal product
+sample count, period, and dimension values. `prepare_readout` derives it once
+from the source `SampleAxis` after enforcing complete-input start zero, and temporal product
 Runtimes reference that exact object rather than rediscovering the sample
 dimension. Every ProductRuntime is a concrete final frozen slotted dataclass with no
 Config, prerequisite semantic product, collection, mutable cache, action
@@ -719,6 +740,32 @@ compatibility shim is accepted. Fixed-commit Validation and independent Review
 cleared the exact source and archive forms locally and in separate fresh
 full-A100 allocations. This decision does not authorize the deferred renderer.
 
+### Maintenance 5 Compact Axes And Source-Derived Sampling Is Accepted
+
+The user-authorized
+[Maintenance 5 work order](implementation/maintenance_5_tensorcore_0_13_compact_axes_and_sampling.md)
+accepts one atomic dependency/API migration from exact TensorCore `0.9.0` to
+published `0.13.0` commit
+`202d8b1bc6259b8453d3d377570417f2480d782b`. The three semantic axes adopt
+the generic count, label, and regular representations fixed above.
+`SamplingConfig`, `ReadoutConfig.sampling`, materialized sample timestamp
+strings, and the duplicate source/config agreement check are removed without
+aliases. The source `SampleAxis` becomes the single sampling authority.
+
+The migration preserves arbitrary axis order, complete-readout start zero,
+the public `simulate_readout(...)` signature, private three-field
+`SamplingRuntime`, every product equation, RNG address/call, result
+relationship, and supported device boundary. It also accepts TensorCore
+`0.13.0`'s golden-path rule: supported exact lookup remains, while malformed
+class-object calls have no promised diagnostic. The old
+`collection.field(TensorField)` `TypeError` assertion is deleted rather than
+replaced.
+
+The decision authorizes no Pint, units, table, artifact/IO, integration,
+renderer, Stage 8 measurement, optimization, compatibility shim, release, or
+push. This decision does not itself dispatch production; the exact execution
+lifecycle is recorded only in the work order and implementation index.
+
 ### Completed Stochastic Literals Are Numerical-Stack Qualified
 
 Maintenance 2's completed Gaussian, Poisson, binomial, noise, and Charge
@@ -740,8 +787,7 @@ scientific equation, production code, TensorCore dependency, or historical
 literal. The first Stage 8 executable correctly stopped before accepted
 measurement when its work order over-applied the macOS literals on Della. That
 authority and executable input remain immutable stopped evidence; a later
-Stage 8 restart requires a new authority from the closed Maintenance 4
-baseline.
+Stage 8 restart requires a new authority after Maintenance 5.
 
 ## Superseded
 
@@ -789,12 +835,14 @@ Timing jitter no longer produces a replacement `Photoelectrons` field. It is a
 private optional charge stage after dark-count seed construction. Truth remains
 unchanged and may be returned exactly beside derived charge.
 
-### Count-Only Sampling And Semantic-Coordinate RNG
+### Earlier Sampling Representations And Semantic-Coordinate RNG
 
-The count-only sample axis, collection-level grid sidecar, and coordinate-
-addressed random scheme are retired. Timestamp coordinates carry semantic
-left-edge labels, while numeric sampling facts and position indices drive
-kernels and RNG.
+The Stage 2 count-only sample axis plus collection-level `SampleGrid` sidecar
+was superseded by Stage 3's timestamp-string `SampleAxis` plus
+`SamplingConfig`. Maintenance 5 supersedes that second representation with a
+compact regular integer `SampleAxis` and source-derived sampling preparation.
+Coordinate-addressed random schemes remain retired: tensor-position indices,
+not semantic coordinate values, drive RNG.
 
 ### Bare `seed=`, Central `_RngStream`, And TensorDSLab-Owned Generic RNG
 

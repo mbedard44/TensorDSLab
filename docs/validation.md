@@ -322,6 +322,56 @@ names in live documents, accidental placeholder files, and consistency among
 architecture, design, decisions, parity, validation, and implementation-stage
 records.
 
+## Maintenance 5 Compact-Axis And Sampling Gate
+
+The user-authorized
+[Maintenance 5 work order](implementation/maintenance_5_tensorcore_0_13_compact_axes_and_sampling.md)
+targets exact published TensorCore `0.13.0` commit
+`202d8b1bc6259b8453d3d377570417f2480d782b`. The explicitly labeled
+Historical Stage 3 sections below preserve closed string-axis and
+`SamplingConfig` evidence; they do not define the Maintenance 5 target.
+
+Maintenance 5 Validation and Review must independently prove:
+
+- exact dependency commit, parent, tree, version, 30 root exports, 14 installed
+  files, direct Git pin, source/archive byte identity, and canonical archive;
+- direct final fieldless `ExampleAxis(CountAxis)`,
+  `ChannelAxis(LabelAxis)`, and `SampleAxis(RegularAxis)` leaves;
+- exact inherited keyword-only constructors and TensorCore-first generic
+  validation;
+- nonempty example/channel axes, zero-based example ordinals, exact channel
+  labels, and range-backed nonmaterializing count/sample coordinates;
+- nonnegative sample start, positive step, count at least two, exact
+  signed-int64 exclusive-stop boundary, integer `*_ps` properties, lookup,
+  equality, and hash behavior;
+- arbitrary field axis order and exact generated-product source-axis reuse;
+- complete-input `SampleAxis.start == 0` before RNG, production, or final
+  collection effects, while a nonzero-start semantic subgrid remains
+  constructible;
+- `prepare_sampling(photoelectrons)` deriving the existing three-field
+  `SamplingRuntime` exactly once from the source axis;
+- complete removal of `SamplingConfig`, `common.sampling`,
+  `ReadoutConfig.sampling`, old constructors, exports, aliases, and agreement
+  checks;
+- `ReadoutConfig()` as the valid truth-only config and unchanged generated
+  config closure;
+- unchanged `simulate_readout(...)`, scientific preparation, RNG
+  key/position/ordinal/call behavior, same-stack values, storage, axes,
+  dtype/device, validation, and autograd contracts;
+- supported exact-type collection lookup and missing-key `KeyError`; and
+- deletion without replacement of the off-path
+  `collection.field(TensorField)` exception assertion.
+
+Strict Pyright probes cover int coordinates for Example/Sample, string
+coordinates for Channel, concrete typed axis/field lookup, new constructors,
+retired imports/keywords, and source-derived preparation. Runtime tests own
+exact `bool` rejection because Python typing treats `bool` as `int`.
+
+Implementation runs full local source/archive and static gates. Validation and
+Review each use a separate fresh full-A100 allocation across supported
+PyTorch `2.11` and `2.12`, with no conditional CUDA skips. This evidence is
+functional dependency/axis correctness, not Stage 8 performance evidence.
+
 ## Governance Adoption Checks
 
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`.
@@ -357,9 +407,10 @@ against these checks:
   residency and no-silent-host-materialization Design constraints do not prove
   an implemented package handoff.
 
-Changing the TensorCore dependency and package structure under a focused
-Stage 3 work order does not alter the adopted governance record or create a
-conformance finding.
+Changing the TensorCore dependency and package structure under an authorized
+focused package-local work order, including historical Stage 3 or Maintenance
+5, does not alter the adopted governance record or create a conformance
+finding.
 
 ## Boundary-First Validation
 
@@ -384,7 +435,7 @@ product-owned runtime validators at untrusted ingress and generated-product
 publication boundaries; they do not live in `field.py`, run invisibly in every
 constructor, or remain embedded in production actions.
 
-## Stage 3 Package And Dependency Checks
+## Historical Stage 3 Package And Dependency Checks
 
 Stage 3 must prove:
 
@@ -411,7 +462,7 @@ scalars, and public relationship requirements. Retired `Id`, axis/field IDs,
 buffer, and like-allocation surfaces must be absent from live production and
 tests.
 
-## Ordinary-ABC Semantic Leaf Checks
+## Historical Stage 3 Ordinary-ABC Semantic Leaf Checks
 
 The three axes, six product fields, and `ReadoutCollection` each have
 `__bases__ == (matching_tensor_core_root,)`, directly inheriting exactly one
@@ -442,7 +493,7 @@ calls. Tests must not require a runtime-finality guard or adversarially probe
 subclassing of final classes, class mutation, constructor bypass, direct
 private calls, or custom Torch dispatch. Those uses are unsupported.
 
-## Axis And Sampling Checks
+## Historical Stage 3 Axis And Sampling Checks
 
 ### `ExampleAxis` And `ChannelAxis`
 
@@ -489,11 +540,14 @@ underflow and overflow separately when that bridge is implemented.
 ## Shared Private Requirement Checks
 
 `tensor_dslab.readout.requirements` is the unexported shared relationship
-owner selected by Maintenance 4. The former
+owner selected by Maintenance 4. For supported value and container inputs,
+focused tests prove the retained `TypeError` distinction for malformed values
+and `ValueError` distinction for well-typed values that violate a
+relationship. Malformed or off-path typed class-object arguments are outside
+that promise under TensorCore `0.13.0`'s golden-path boundary. The former
 `tensor_dslab.readout._requirements` path is removed without a shim. Focused
-tests should prove retained or narrowly extracted helpers preserve the
-`TypeError` distinction for malformed types and `ValueError` distinction for
-well-typed values that violate a relationship.
+tests should prove every narrowly extracted helper preserves the applicable
+supported-input distinction.
 
 The shared readout-structure behavior still requires exactly one
 `ExampleAxis`, `ChannelAxis`, and `SampleAxis` in any order and
@@ -502,13 +556,15 @@ order, or an exact base `torch.Tensor` type. Shared floating-dtype behavior
 accepts exactly `torch.float32` or `torch.float64` and rejects
 `torch.float16`, `torch.bfloat16`, and every non-floating dtype.
 
-Public `common.sampling` continues to validate `SamplingConfig` directly and
-must not import private readout requirements or Runtime records. Private
-`readout.runtime.sampling.prepare_sampling(...)` validates the realized source
-`SampleAxis` relationship once and returns a frozen slotted `SamplingRuntime`
-containing Python integer count, period, and dimension. Tests must prove one
-sample-dimension discovery per public request and exact SamplingRuntime object
-identity across temporal ProductRuntime values that retain it.
+Maintenance 5 removes public `common.sampling` and `SamplingConfig` without a
+shim. Private
+`readout.runtime.sampling.prepare_sampling(photoelectrons)` derives the source
+`SampleAxis` relationship once and returns the existing frozen slotted
+`SamplingRuntime` containing Python integer count, period, and dimension.
+Tests must prove one sample-dimension discovery per public request and exact
+`SamplingRuntime` object identity across temporal ProductRuntime values that
+retain it. No product preparation may accept or reconstruct a competing
+sampling policy.
 
 `requirements.py` may contain only behavior shared with exactly identical
 semantics. Product-specific equations and named validators remain in their
@@ -578,8 +634,8 @@ At minimum, cover:
 - `AnalogSaturationConfig` and `AnalogWaveformConfig`;
 - `DigitizedWaveformConfig`, including bit depth 1 through 16, strict input
   voltage ordering, and gain from 0 through 40 dB; and
-- `ReadoutConfig`, including required exact `SamplingConfig` and optional exact
-  product-config components.
+- `ReadoutConfig`, containing only optional exact product-config components;
+  `ReadoutConfig()` is the valid truth-only configuration.
 
 PSD tests at this structural stage cover tuple type, nonempty equal-length
 left-edge/density arrays, zero start, strict edge order, exclusive stop, finite
@@ -629,16 +685,16 @@ Verify deliberate `__all__` values and object identity across:
 - `tensor_dslab.readout`; and
 - the top-level `tensor_dslab` collaborator API.
 
-The top-level package should expose the three axes, `SamplingConfig`, six
-products, all public product configs, `ReadoutConfig`, `ReadoutCollection`, and
-the implemented Stage 7 `simulate_readout`. It must not re-export TensorCore
-generic classes or scalars, requirements, Runtime records, preparation,
-production, validation, or effect actions, retired `0.6` names, or another
-simulation entry point. The readout root and package root must export the same
-`simulate_readout` object exactly once. Runtime/effect `__init__.py` modules
-must import and export nothing; privacy tests inspect facades and `__all__`
-rather than assuming Python prevents deep imports or parent-package
-attributes.
+After Maintenance 5, the top-level package exposes the three compact semantic
+axes, six products, all public product configs, `ReadoutConfig`,
+`ReadoutCollection`, and the implemented Stage 7 `simulate_readout`. It does
+not export `SamplingConfig` or re-export TensorCore generic classes or
+scalars, requirements, Runtime records, preparation, production, validation,
+effect actions, retired `0.6` names, or another simulation entry point. The
+readout root and package root export the same `simulate_readout` object exactly
+once. Runtime/effect `__init__.py` modules import and export nothing; privacy
+tests inspect facades and `__all__` rather than assuming Python prevents deep
+imports or parent-package attributes.
 
 Closed Stage 6 regression checks proved every former product package,
 `readout.types`, the readout root, and the package root were acyclic. Closed
@@ -659,7 +715,10 @@ The selected checker must analyze package and tests against the exact
 TensorCore pin. Positive probes should require concrete inference for:
 
 - each inherited axis and field constructor;
-- `SamplingConfig.build_axis() -> SampleAxis`;
+- `ExampleAxis(count=...) -> ExampleAxis`;
+- `ChannelAxis(labels=...) -> ChannelAxis`;
+- `SampleAxis(start=..., step=..., count=...) -> SampleAxis`;
+- `prepare_sampling(photoelectrons) -> SamplingRuntime`;
 - `ReadoutCollection(fields=...) -> ReadoutCollection`;
 - `readout.field(Charge) -> Charge`;
 - `readout.tensor(Charge) -> torch.Tensor`;
@@ -667,17 +726,18 @@ TensorCore pin. Positive probes should require concrete inference for:
 - `charge.dimension_of(SampleAxis) -> int`.
 
 The work order must report the exact checker/version or explicitly qualify its
-absence. Manual review is not a substitute for the fixed ordinary-ABC static
-probe required to select the dependency.
+absence. Manual review is not a substitute for the fixed Maintenance 5 static
+probes required to adopt the dependency.
 
 ## Result Taxonomy, Storage, And Device Scope
 
-Stage 3 introduces no field-returning operation, so TensorCore's operation-
+Stage 3 introduced no field-returning operation, so TensorCore's operation-
 owned exact-return/storage-sharing/guaranteed-fresh taxonomy has no production
 operation to classify yet. Construction retains the exact caller tensor by
 TensorCore contract; it does not claim a copied or fresh payload. Axis lookup
-returns the exact stored axis. `SamplingConfig.build_axis()` returns an axis,
-not a field result.
+returns the exact stored axis. Under Maintenance 5 the source bridge constructs
+the compact `SampleAxis` directly; private sampling preparation derives
+execution facts and returns no field result.
 
 Every later field-returning operation must classify each successful path and
 separately document subtype, dtype, device, axes, autograd, synchronization,
@@ -731,8 +791,8 @@ archive suites at `198/198/0`.
 
 Those A100 runs establish correctness and same-stack replay only. They ran no
 Stage 8 benchmark, profiler, threshold, kernel-count, memory, or performance
-measurement. Any Stage 8 restart requires a new Design authority from the
-closed Maintenance 4 baseline.
+measurement. Any Stage 8 restart requires a new Design authority after
+Maintenance 5.
 
 Stage 5 does not activate Bernoulli, exponential, Poisson, categorical,
 multinomial, rejection, source-quantum, iterative-generation, Charge-stream,

@@ -45,7 +45,7 @@ closeout. It corrects only the numerical-stack applicability of Maintenance
 2's completed stochastic literals and changes no production, dependency,
 RNG, or scientific contract. The first Stage 8 executable correctly stopped
 before accepted measurement on that test-contract conflict; it cannot resume
-without a new authority from the closed Maintenance 4 baseline. Later GPU
+without a new authority after Maintenance 5. Later GPU
 characterization and integration remain Design targets.
 
 [Maintenance 4](implementation/maintenance_4_runtime_action_ownership.md) is
@@ -57,6 +57,16 @@ validation—without changing `simulate_readout(...)`, scientific behavior,
 RNG addressing, TensorCore `0.9.0`, or the supported device boundary. Exact
 local source/archive evidence and separate fresh Validation and Review
 full-A100 source/archive allocations cleared the final bytes.
+
+[Maintenance 5](implementation/maintenance_5_tensorcore_0_13_compact_axes_and_sampling.md)
+is the user-authorized next migration; its exact lifecycle is recorded in that
+work order and the implementation index. It atomically targets published
+TensorCore `0.13.0` exact
+commit `202d8b1bc6259b8453d3d377570417f2480d782b`, compact
+count/label/regular axis roots, and source-derived sampling. It removes
+`SamplingConfig` and `ReadoutConfig.sampling` without changing readout science,
+RNG addressing, product execution, or `simulate_readout(...)`. The migration
+starts from the closed Maintenance 4 production baseline.
 
 [Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
 Closed through exact implementation candidate
@@ -120,10 +130,15 @@ field. Native input loading, detector-window construction, and PE binning stay
 in the future TensorG4DS bridge. `Photoelectrons` therefore has no config and
 no local producer.
 
-Exact classes carry semantic meaning:
+Exact classes carry semantic meaning. Under the accepted Maintenance 5 target:
 
-- `ExampleAxis`, `ChannelAxis`, and `SampleAxis` directly subclass
-  `TensorAxis`;
+- `ExampleAxis` directly subclasses `CountAxis` and represents nonempty
+  zero-based local ordinals;
+- `ChannelAxis` directly subclasses `LabelAxis` and retains nonempty unique
+  string detector labels;
+- `SampleAxis` directly subclasses `RegularAxis` and stores nonnegative
+  integer-picosecond start, positive step, count at least two, and a bounded
+  exclusive stop;
 - `Photoelectrons`, `Charge`, `PureWaveform`, `NoiseWaveform`,
   `AnalogWaveform`, and `DigitizedWaveform` directly subclass `TensorField`;
 - `ReadoutCollection` directly subclasses `TensorCollection`; and
@@ -133,10 +148,13 @@ There are no loose axis or field constants, product-name registries,
 `TensorLayout`, `SampleGrid`, or collection sidecars in the rebuild. Exact
 field and axis classes carry in-process identity.
 
-`SamplingConfig` owns positive integer `sample_period_ps` and `sample_count`.
-It realizes a regular `SampleAxis` whose canonical string coordinates are the
-left edges `"0ps"`, `"2000ps"`, and so on. Kernels use numeric sampling values
-and integer indices, not timestamp strings, on the hot path.
+The source `SampleAxis(start, step, count)` is the sole sampling authority.
+Count and regular coordinates are nonmaterializing `range` values; channel
+coordinates remain explicit strings. Private `prepare_sampling(photoelectrons)`
+derives count, integer-picosecond period, and tensor dimension exactly once.
+The complete readout boundary requires `start == 0`; a semantic `SampleAxis`
+may otherwise describe a valid nonzero-start subgrid. Kernels use indices and
+plain prepared integers, never semantic coordinates, on the hot path.
 
 Every readout field contains exactly one `ExampleAxis`, one `ChannelAxis`, and
 one `SampleAxis`, in any tensor-dimension order. Fields use `torch.strided`
@@ -152,7 +170,8 @@ Photoelectrons
   -> Charge
        -> PureWaveform
 
-Photoelectrons axes/device/shape + SamplingConfig -> NoiseWaveform
+Photoelectrons axes/device/shape -> source-derived SamplingRuntime
+Photoelectrons + SamplingRuntime -> NoiseWaveform
 PureWaveform + NoiseWaveform
   -> AnalogWaveform
        -> DigitizedWaveform
@@ -276,8 +295,9 @@ non-exported `prepare_<product>`, `produce_<product>`, and
 input and owns only its field and ingress validator. `readout.simulation`
 keeps the one public orchestration function; `readout.runtime.prepare`
 composes the complete private Runtime closure. Generic RNG and distribution
-mechanics remain in the selected TensorCore `0.9.0` dependency, while
-config-owned `RngKey` values select TensorDSLab stochastic roles.
+mechanics entered through the selected TensorCore `0.9.0` dependency and are
+preserved by the exact `0.13.0` Maintenance 5 target, while config-owned
+`RngKey` values select TensorDSLab stochastic roles.
 
 Privacy is export-driven. Runtime paths remain importable Python
 implementation details, but public facades do not export them and they carry
@@ -296,6 +316,10 @@ TensorDSLab dependency pin are complete at `0.9.0` commit
 default-key continuity and removes `types.py`, `_RngStream`, and
 `readout/_random.py` without shims; their Stage 5/6 bytes remain closed
 historical evidence. Maintenance 2 and Stage 7 are Merged / Closed.
+Maintenance 5 replaces that installed pin with exact published TensorCore
+`0.13.0` while preserving the same public RNG/distribution behavior; the
+`0.9.0` statements remain historical ownership evidence rather than the
+post-Maintenance-5 dependency target.
 
 Historically, Stage 6 behavior-neutrally renamed the four Stage 4/5 waveform
 families from `_product.py` / `_product_*` to `_produce.py` / `_produce_*`.
@@ -315,9 +339,9 @@ retain their original private paths as historical evidence.
 - [Correlated-Avalanche Physics](physics/correlated_avalanches.md):
   newcomer-facing explanation of the physical assumptions, aggregate
   statistics, fixed-generation algorithm, and visual tensor example.
-- [TensorCore Integration](architecture/tensors.md): the semantic-root
-  extension introduced at TensorCore `0.7`, the current `0.9.0` RNG boundary,
-  and TensorDSLab result contracts.
+- [TensorCore Integration](architecture/tensors.md): historical semantic-root
+  adoption, the accepted published TensorCore `0.13.0` compact-axis and
+  golden-path boundary, and TensorDSLab result contracts.
 - [Post-Binned Readout](architecture/readout.md): readout product semantics,
   product graph, config ownership, and simulation boundary.
 - [IV-DSLab Parity](parity.md): donor evidence, comparison classes,
@@ -339,6 +363,9 @@ retain their original private paths as historical evidence.
   Review-cleared supplemental candidate
   `b3c7c907004741ba67b8b92a54bbdc8c85216dda`; public API, science,
   dependency, and RNG behavior remain unchanged.
+- [Maintenance 5 Work Order](implementation/maintenance_5_tensorcore_0_13_compact_axes_and_sampling.md):
+  user-authorized TensorCore `0.13.0`, compact-axis, and source-derived
+  sampling migration.
 - [Stage 7 Work Order](implementation/stage_7_public_readout_orchestration.md):
   Merged / Closed public request planning, whole-closure
   preparation, execute-once orchestration, and exact-retention contract.

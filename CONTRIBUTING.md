@@ -21,9 +21,10 @@ Python import: tensor_dslab (accepted on main through Maintenance 4)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
 Package maturity: Maintenance 4 Merged / Closed
-Next production gate: separately authorized future work; Stage 8 remains
-stopped and requires a new Design authority from the closed Maintenance 4
-baseline
+Next production gate: Maintenance 5 TensorCore 0.13 compact axes and
+source-derived sampling; lifecycle is recorded in its work order and index
+Stage 8: separately stopped; any restart requires a new Design authority after
+Maintenance 5
 ```
 
 Stage 1 is Design-complete, and Stage 2 is Merged / Closed on `main` at
@@ -229,7 +230,6 @@ TensorDSLab/
   tensor_dslab/
     common/
       axes.py                 # ExampleAxis, ChannelAxis, SampleAxis
-      sampling.py             # SamplingConfig and canonical sample facts
     readout/
       config.py               # ReadoutConfig
       collection.py           # ReadoutCollection
@@ -281,10 +281,12 @@ as `TensorDSLab`; keep semantic subpackages directly below the import root.
 Do not create placeholder modules to reserve architecture. Add a module only
 when there is a real concept, behavior, or contract to house.
 
-This product-centered tree is the merged Maintenance 4 implementation. It
-combines
-the public ownership established by Maintenance 2 and Stage 7 with
-non-exported product runtime actions. Maintenance 2 is Merged / Closed
+This product-centered tree is the accepted Maintenance 5 target. Its product
+and runtime structure is the merged Maintenance 4 implementation; Maintenance
+5 removes only the redundant public `common/sampling.py` policy owner while
+retaining the private source-derived sampling runtime. It combines the public
+ownership established by Maintenance 2 and Stage 7 with non-exported product
+runtime actions. Maintenance 2 is Merged / Closed
 through exact candidate
 `89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
 `9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`; it realizes the product/module
@@ -310,31 +312,40 @@ validator. There is no global `configs/`, `fields.py`, `builders.py`, generic
 
 ## TensorCore Backbone
 
-Stage 2 used TensorCore `0.6` at its exact recorded pin; that remains historical
-evidence only. Stage 3 selected exact TensorCore `0.7.0` dependency
-`b454d738f6385ce6489d85492a618a3dab139bb6`. The exact selection and fixed
-TensorDSLab consumer probes are package evidence, not a broad compatibility
-claim.
+Stage 2 used TensorCore `0.6` and Stage 3 selected exact TensorCore `0.7.0`
+commit `b454d738f6385ce6489d85492a618a3dab139bb6`; both remain historical
+evidence only. Maintenance 2 selected exact TensorCore `0.9.0` commit
+`4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. User-authorized Maintenance
+5 targets published TensorCore `0.13.0` commit
+`202d8b1bc6259b8453d3d377570417f2480d782b`. Every selection and fixed
+TensorDSLab consumer probe is exact-baseline package evidence, not a broad
+compatibility claim.
 
 Import TensorCore public names from the root `tensor_core` package. Do not
 import implementation modules, fork generic behavior, or re-export generic
 TensorCore helpers through `tensor_dslab.common`.
 
-The rebuild uses three ordinary ABC semantic roots:
+Maintenance 5 uses TensorCore's compact semantic-axis roots plus its existing
+field and collection roots:
 
 ```text
-TensorAxis(coordinates: tuple[str, ...])
+TensorAxis[CoordinateT]
+  CountAxis(*, count: int)
+  RegularAxis(*, start: int, step: int, count: int)
+  LabelAxis(*, labels: tuple[str, ...])
 TensorField(tensor: torch.Tensor, axes: tuple[TensorAxis, ...])
 TensorCollection(fields: Iterable[TensorField])
 ```
 
 TensorCore also owns constrained scalar records, universal representation
-validation, exact-type lookup, and generic relationship helpers. It does not
-own domain products or configuration, and it has no `0.6` ID/layout/metadata
-model, generic selection/movement API, output-buffer/workspace API,
-persistence API, or lifecycle service.
+validation, exact-type lookup, generic relationship helpers, table roots, and
+the generic `TensorArtifact` extension point. It does not own TensorDSLab
+domain products, scientific configuration, artifact format, or IO policy, and
+it has no `0.6` ID/layout/metadata model, generic selection/movement API,
+output-buffer/workspace API, or lifecycle service. Maintenance 5 adopts no
+table or artifact surface.
 
-The exact TensorCore `0.9.0` dependency selected for Maintenance 2 exposes
+The exact TensorCore `0.9.0` dependency selected for Maintenance 2 exposed
 public `RngKey`, `CounterRng`, `Threefry4x32`, `logical_positions`, and
 `require_same_dtype` at
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. TensorCore owns generic
@@ -346,9 +357,11 @@ stochastic roles, scientific position/category lattices, direct
 uniform/Gaussian ordinals, draw-free scientific policy, multinomial
 orchestration, final remainders, count accumulation, and ledgers. Use only
 public TensorCore package-root RNG surfaces; do not copy or import protected
-raw-word or promoted distribution mechanics. The closed Maintenance 2
-implementation pins exact TensorCore `0.9.0`; closed Stage 3 through 6 evidence
-remains scoped to `0.7.0`. TensorDSLab uses
+raw-word or promoted distribution mechanics. Published TensorCore `0.13.0`
+preserves those public RNG contracts while adding compact axes, table roots,
+`TensorArtifact`, `Scalar`, and the golden-path runtime simplification. Closed
+Maintenance 2 evidence remains scoped to exact `0.9.0`, and closed Stage 3
+through 6 evidence remains scoped to `0.7.0`. TensorDSLab uses
 `require_same_dtype` only for semantic-field relationships and retains raw
 tensor requirements plus its private scalar-to-dtype representation helper.
 
@@ -357,9 +370,10 @@ with no mixin or other base, is `@final`, declares `__slots__ = ()`, adds no
 stored fields, does not reapply
 `@dataclass`, inherits the root constructor and behavior, and implements only
 its domain `_require()` narrowing. `ExampleAxis`, `ChannelAxis`, and
-`SampleAxis` are axis leaves; the six readout products are field leaves; and
-`ReadoutCollection` is the collection leaf. Do not invent an intermediate
-`ReadoutField`, generic `Product`, or wrapper hierarchy.
+`SampleAxis` inherit `CountAxis`, `LabelAxis`, and `RegularAxis` respectively;
+the six readout products are `TensorField` leaves; and `ReadoutCollection` is
+the `TensorCollection` leaf. Do not invent an intermediate `ReadoutField`,
+generic `Product`, or wrapper hierarchy.
 
 Because these are ordinary ABC extension points, static analysis, focused
 tests, and Review enforce our leaf declarations. Runtime code validates
@@ -394,18 +408,21 @@ field is constructed once.
 
 ### Coordinates, Indices, And Axes
 
-A coordinate is one exact string in a `TensorAxis`; its tuple position is the
-zero-based tensor index on that dimension. Coordinates and indices are not
-interchangeable. Exact axis class supplies semantic scope, and the ordered axis
-tuple on a field is the complete tensor-dimension order. Code locates a
-dimension by exact axis type rather than by a loose axis-name constant.
+A coordinate is the value represented at one zero-based tensor index.
+Coordinates and indices are not interchangeable. Exact axis class supplies
+semantic scope, and the ordered axis tuple on a field is the complete
+tensor-dimension order. Code locates a dimension by exact axis type rather
+than by a loose axis-name constant.
 
-`ExampleAxis` and `ChannelAxis` hold unique nonempty stable strings.
-`SampleAxis` holds canonical increasing uniform left-edge timestamp strings in
-lowercase integer picoseconds, such as `"0ps"` and `"2000ps"`. The accepted
-full-window builder starts at zero and omits the exclusive terminal edge.
-`SamplingConfig` owns numeric period and sample-count facts; kernels use those
-numeric values and tensor indices rather than parsing timestamp strings.
+`ExampleAxis(CountAxis)` holds identity-free local zero-based ordinals.
+`ChannelAxis(LabelAxis)` holds unique nonempty detector-label strings.
+`SampleAxis(RegularAxis)` holds compact integer-picosecond left edges through
+`start`, `step`, and `count`; the exclusive stop is not itself a coordinate.
+The complete Photoelectrons/readout boundary requires `start == 0`, while the
+semantic axis may represent a valid nonzero-start regular subgrid. Private
+sampling preparation derives numeric execution facts once from this exact
+source axis. There is no duplicate `SamplingConfig`, timestamp parsing, unit
+string, or Pint value in Maintenance 5.
 
 Every readout field has exactly one example, channel, and sample axis, in any
 order. The tuple order is tensor dimension order and therefore also defines
@@ -447,10 +464,10 @@ TensorDSLab.
 The primary readout tensor boundary is `ReadoutCollection`, not a loose product
 tuple or required dataclass adapter. Exact final Python classes provide
 in-process axis and product identity. Source event IDs remain upstream
-provenance; the future bridge explicitly maps them to ordered strings on
-`ExampleAxis` and maps detector channels to `ChannelAxis`. Durable labels are a
-separate deferred artifact contract and must not be inferred implicitly from
-class names.
+provenance; the future bridge maps the selected batch to local ordinal
+`ExampleAxis` positions and maps detector channels to string labels on
+`ChannelAxis`. Durable event identity is a separate deferred artifact or bridge
+contract and must not be inferred from local example ordinals or class names.
 
 `Photoelectrons` is the already-produced dense, binned, photon-origin truth
 input. It never includes dark counts, timing jitter, correlated avalanches, or
@@ -461,7 +478,7 @@ The product graph is:
 
 ```text
 Photoelectrons -> Charge -> PureWaveform
-Photoelectrons axes/device/shape + SamplingConfig -> NoiseWaveform
+Photoelectrons axes/device/shape + source SampleAxis -> NoiseWaveform
 PureWaveform + NoiseWaveform -> AnalogWaveform -> DigitizedWaveform
 ```
 
@@ -501,12 +518,13 @@ thin owner of the public signature, topological produce/validate sequence,
 exact retention, and final collection construction.
 `readout/runtime/prepare.py` owns request parsing, dependency and config
 closure, key uniqueness, and composition of product Runtime values.
-`readout/runtime/sampling.py` is a small private dependency leaf shared by
-request and product preparation. `readout/requirements.py` and every product
-runtime/effect module are non-exported implementation modules. The current
-implementation has no `readout/_random.py` or replacement `_rng.py`; generic
-RNG mechanics come from TensorCore. `common/axes.py` and `common/sampling.py`
-retain only shared semantic axis and sampling contracts.
+`readout/runtime/sampling.py` is a small private source-derived dependency leaf
+shared by request and product preparation. `readout/requirements.py` and every
+product runtime/effect module are non-exported implementation modules. The
+current implementation has no `readout/_random.py` or replacement `_rng.py`;
+generic RNG mechanics come from TensorCore. Under Maintenance 5,
+`common/axes.py` is the sole common sampling-coordinate owner and
+`common/sampling.py` is removed without a shim.
 
 Keep import direction acyclic: TensorCore, common, shared readout requirements,
 product configs/fields, the private source-bound sampling runtime, product
@@ -549,10 +567,11 @@ Execute each prerequisite at most once and retain exactly the requested
 fields. Each exact product config enters its typed preparer; the producer
 receives the trusted ProductRuntime rather than the config again.
 
-`ReadoutConfig` composes one required `SamplingConfig` with optional
-product-specific configs. Config absence is structural. Product configs use
-exact model types rather than string switches. There is no generic `Config`
-ABC merely for uniformity and no `PhotoelectronsConfig`.
+`ReadoutConfig` composes only optional product-specific configs. Sampling is
+source structure, not scientific configuration, so `ReadoutConfig()` is the
+valid truth-only configuration. Config absence is structural. Product configs
+use exact model types rather than string switches. There is no generic
+`Config` ABC merely for uniformity and no `PhotoelectronsConfig`.
 
 The accepted runtime action lifecycle is explicit:
 
@@ -742,16 +761,18 @@ field exactly once.
 Sample-last is an upstream recommendation for readout performance, not a
 universal semantic order. Future Reconstruction and TensorML adapters own their
 explicit product selection, axis reordering/materialization, positional schema,
-and result contracts; TensorCore `0.7` supplies no implicit generic selection
+and result contracts; TensorCore `0.13` supplies no implicit generic selection
 or movement layer.
 
 ## Common Code
 
-`common/` should stay dependency-light and semantic. The rebuild uses it for
-`ExampleAxis`, `ChannelAxis`, `SampleAxis`, and `SamplingConfig` because source
-construction, readout, and future Reconstruction may share those contracts.
-Good later candidates include small value objects and validation primitives
-used by multiple real domains.
+`common/` should stay dependency-light and semantic. Maintenance 5 uses it for
+`ExampleAxis`, `ChannelAxis`, and `SampleAxis` because source construction,
+readout, and future Reconstruction may share those coordinate contracts.
+Sampling execution facts are derived privately from the source axis rather
+than represented by another public common config. Good later candidates
+include small value objects and validation primitives used by multiple real
+domains.
 
 Do not put representation dependencies in top-level `common/` merely because
 multiple domains use tables, arrays, tensors, Parquet, NPZ, JSON, or another
@@ -933,7 +954,8 @@ typed path:
 Once an object has crossed into a valid native record, hot-path functions
 should avoid repeatedly revalidating full object graphs. Product builders may
 still perform narrow function-specific checks, but should not repeat full
-device scans or parse coordinate strings inside kernels. Product preparation
+device scans or materialize/parse compact semantic coordinates inside kernels.
+Product preparation
 owns statically derivable scientific and relationship checks; production owns
 only tensor/RNG execution and correctness-critical dynamic guards; explicit
 product validation owns the completed-result deep scan before any descendant
@@ -984,7 +1006,9 @@ Design. Do not patch around it by inventing architecture inside implementation.
   semantic products, or expose execution methods or mutable caches.
 - Use `value` for primitive payloads on constrained scalar records.
 - Define semantic axes, fields, and collections as direct final fieldless
-  TensorCore leaves with inherited construction.
+  TensorCore leaves with inherited construction. A leaf adds no stored state
+  or overridden root mechanics; it may expose only the explicitly accepted
+  nonstored conveniences owned by its domain contract.
 - `Enum`, `Literal`, `Protocol`, and generics remain useful for non-hot-path
   contracts when they make a public boundary clearer.
 - Keep modules cohesive; split a module when it owns more than one meaningful
@@ -1016,8 +1040,13 @@ Good tests should:
   `__bases__`, with no mixin or other base, is final and fieldless, preserves
   inherited construction, and implements the
   accepted `_require()` narrowing;
-- prove exact example/channel/sample axis classes, coordinate rules, arbitrary
-  semantic axis order, shape agreement, and timestamp/sampling coherence;
+- for Maintenance 5, prove exact `ExampleAxis(CountAxis)`,
+  `ChannelAxis(LabelAxis)`, and `SampleAxis(RegularAxis)` bases, inherited
+  constructors, range-backed nonmaterializing example/sample coordinates,
+  exact channel labels, arbitrary semantic axis order, shape agreement,
+  source-derived sampling, complete-input zero start, `SamplingConfig` and
+  `common.sampling` absence, and retirement of the off-path
+  `field(TensorField)` exception assertion;
 - prove intrinsic leaf dtype/structure checks separately from explicit deep
   scientific value validation;
 - prove `ReadoutCollection` accepts exactly nonempty unordered recognized

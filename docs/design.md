@@ -24,8 +24,13 @@ The accepted rebuild target is specified in
 historical pre-deployment TensorCore `0.6` representation without a
 compatibility layer. Stage 2 and Maintenance 1 remain historical evidence and
 do not constrain the semantic-root architecture introduced against TensorCore
-`0.7` or the currently selected exact TensorCore `0.9.0` dependency to the
-retired representation.
+`0.7`. Maintenance 2's exact TensorCore `0.9.0` pin remains closed historical
+RNG-ownership evidence. User-authorized Maintenance 5 selects published
+TensorCore `0.13.0` exact commit
+`202d8b1bc6259b8453d3d377570417f2480d782b` for compact semantic axes and
+the accepted golden-path structural boundary. TensorCore `0.13.0` also exposes
+generic `Scalar`; Maintenance 5 does not consume it, and the deferred Pint
+stage owns any later TensorDSLab use.
 
 ## Target Collaborator Surface
 
@@ -69,21 +74,26 @@ ReadoutCollection immutable completed requested result
 
 Persistence and IO are not implied by `products` and are deferred.
 
-## TensorCore `0.7` Spine
+## TensorCore Spine
 
-The rebuild uses the public TensorCore `0.7` semantic roots directly:
+Stage 3 introduced TensorCore's semantic tensor roots against exact `0.7.0`.
+Maintenance 5 retains those concepts through the published `0.13.0` public
+surface:
 
 ```text
-TensorAxis       ordered string coordinates
-TensorField      tensor payload plus ordered axes
-TensorCollection immutable fields keyed by exact field type
+TensorAxis[CoordinateT]
+  CountAxis
+  RegularAxis
+  LabelAxis
+TensorField        tensor payload plus ordered semantic axes
+TensorCollection   immutable fields keyed by exact field type
 ```
 
-The Design reference is exact clean TensorCore commit
-`b454d738f6385ce6489d85492a618a3dab139bb6`. A production work order must
-select the exact dependency pin and prove its public imports, runtime
-constructors, inherited-constructor static typing, and operation-owned result
-contracts. This reference is not a broad compatibility claim.
+Exact TensorCore `0.13.0` commit
+`202d8b1bc6259b8453d3d377570417f2480d782b` is the accepted Maintenance 5
+target. Exact consumer probes must establish public imports, constructors,
+typing, archive identity, and scientific continuity. This is not a broad
+compatibility claim.
 
 Every TensorDSLab semantic axis, field, or collection leaf has exactly one
 appropriate TensorCore root in `__bases__`, with no mixin or other base, and is
@@ -93,12 +103,13 @@ owns its exact axis, dtype, device, value-domain, product, and collection
 relationships. Exact Python types replace axis IDs, field IDs, layout records,
 semantic constants, and runtime product-name registries.
 
-TensorCore does not provide generic selection, movement, reconstruction,
-output buffers, workspaces, persistence, or lifecycle management in this
-version. TensorDSLab adds domain behavior only where a real readout operation
-requires it.
+TensorCore `0.13.0` still provides no generic selection, movement,
+reconstruction, output-buffer, workspace, or lifecycle service. It does
+provide generic table roots and `TensorArtifact`; Maintenance 5 adopts neither
+a TensorDSLab table nor an artifact/IO policy. TensorDSLab adds domain behavior
+only where a real readout operation requires it.
 
-The exact TensorCore `0.9.0` dependency selected for Maintenance 2 at
+The exact TensorCore `0.9.0` dependency selected historically for Maintenance 2 at
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59` adds public `RngKey`,
 `CounterRng`, `Threefry4x32`, `logical_positions`, and
 `require_same_dtype` surfaces. TensorCore owns generic counter generation and
@@ -118,7 +129,9 @@ position/category lattices, direct-uniform/Gaussian ordinals, draw-free
 scientific policy, multinomial ordering and final remainders, count
 accumulation, and ledgers. The Maintenance 2 implementation pins the
 exact `0.9.0` dependency; closed Stage 3 through 6 evidence remains scoped to
-the `0.7.0` pin.
+the `0.7.0` pin. TensorCore `0.13.0` preserves those public RNG and
+relationship surfaces; Maintenance 5 changes their dependency location, not
+their TensorDSLab ownership or behavior.
 
 ## Semantic Axes And Sampling
 
@@ -128,20 +141,24 @@ semantically; code locates a dimension by exact axis type rather than a loose
 ID or a fixed position. Builders reuse the exact source axes tuple and axis
 instances for every dimension-preserving generated product.
 
-`SamplingConfig` defines the numeric regular grid:
+Maintenance 5 gives each semantic role the generic representation it needs:
 
-- positive integer `sample_period_ps`;
-- `sample_count >= 2`;
-- example-local start at zero; and
-- a signed-int64-representable exclusive stop.
+- `ExampleAxis(CountAxis)` stores only a nonzero count and exposes zero-based
+  local integer ordinals;
+- `ChannelAxis(LabelAxis)` stores nonempty unique string detector labels; and
+- `SampleAxis(RegularAxis)` stores integer-picosecond `start`, positive
+  `step`, count at least two, and a signed-int64-bounded exclusive stop.
 
-It builds a `SampleAxis` whose ordered coordinates are canonical left-edge
-timestamp strings such as `"0ps"`, `"2000ps"`, and `"4000ps"`. Kernels use
-numeric config values and tensor indices; they do not parse coordinate strings
-on the hot path. Positional RNG likewise uses indices rather than semantic
-labels.
+Count and sample coordinates are nonmaterializing `range` values. The source
+`SampleAxis` is the sole sampling policy. Private
+`prepare_sampling(photoelectrons)` derives count, period, and dimension once.
+The complete readout boundary requires example-local `start == 0`; a semantic
+sample axis may represent a valid nonzero-start subgrid. Kernels and positional
+RNG use tensor indices and plain prepared integers, not semantic coordinate
+values.
 
-The earlier count-only sample axis and `SampleGrid` sidecar are retired.
+`SamplingConfig`, timestamp strings, the earlier count-only sample proposal,
+and `SampleGrid` are retired without shims.
 
 ## Product Semantics
 
@@ -162,7 +179,8 @@ for a possible later firmware or trigger product.
 `Photoelectrons` is an already-produced dense truth input. It has no
 `PhotoelectronsConfig` and no TensorDSLab readout producer. A future explicit
 TensorG4DS bridge will construct it from an accepted upstream product using the
-same sampling policy. Dark counts, timing jitter, crosstalk, afterpulses, and
+bridge-selected compact `SampleAxis`. Dark counts, timing jitter, crosstalk,
+afterpulses, and
 charge smearing never mutate or relabel this truth field.
 
 `ReadoutCollection` is a nonempty immutable completed result containing any
@@ -173,8 +191,9 @@ add, replace, descendant-invalidation, or mutable-output lifecycle.
 
 ## Configuration And Scientific Chain
 
-`ReadoutConfig` composes one required `SamplingConfig` with optional exact
-product configs. Each product config belongs with its product. Optional
+`ReadoutConfig` composes only optional exact generated-product configs. The
+source axis owns sampling, so `ReadoutConfig()` is the valid truth-only
+configuration. Each product config belongs with its product. Optional
 scientific submodels use `None`; alternative algorithms use closed unions of
 exact config types. There is no generic `Config` ABC, string algorithm switch,
 product-level persistence flag, or scientific config containing runtime buffer
@@ -225,7 +244,6 @@ tensor_dslab/
   common/
     __init__.py
     axes.py                  # ExampleAxis, ChannelAxis, SampleAxis
-    sampling.py              # SamplingConfig
 
   readout/
     __init__.py
@@ -283,6 +301,10 @@ tensor_dslab/
       runtime/{__init__.py,prepare.py,produce.py,validate.py}
 ```
 
+Maintenance 5 deletes `common/sampling.py`; `readout/runtime/sampling.py`
+remains the private owner of source-derived `SamplingRuntime` and
+`prepare_sampling(...)`.
+
 This product-centered tree combines the Maintenance 2 public ownership target,
 the Stage 7 public orchestration module, and the merged Maintenance 4 internal
 Runtime/action split. Maintenance 2
@@ -318,10 +340,10 @@ Every ProductRuntime is one concrete final frozen slotted dataclass containing o
 prepared tensors and static execution values. It contains no Config,
 prerequisite semantic product, collection, mutable cache, or execution method.
 There is no Runtime ABC, protocol, registry, generic action framework, or
-string dispatch. One `SamplingRuntime` is constructed after source/sampling
-validation and the exact same object is referenced by temporal product
-Runtimes, so sample count, period, and dimension are bound once per public
-request.
+string dispatch. One `SamplingRuntime` is constructed after source
+`SampleAxis` validation and the exact same object is referenced by temporal
+product Runtimes, so sample count, period, and dimension are bound once per
+public request.
 
 All required ProductRuntime values are prepared before the first producer,
 RNG request, or semantic-output write. Production then performs tensor/RNG

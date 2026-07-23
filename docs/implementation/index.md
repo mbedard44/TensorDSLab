@@ -399,9 +399,10 @@ changing production, tests, dependencies, metadata, governance, architecture,
 or scientific contracts.
 
 Stage 8 still requires a new Design authority and a complete evidence rerun
-from scratch. Following Maintenance 4 closure below, any restart must begin
-from the closed Maintenance 4 baseline; Maintenance 3 did not itself dispatch
-or complete Stage 8.
+from scratch. At Maintenance 3 closeout, Maintenance 4 was the next required
+baseline. The accepted sequence now places Maintenance 5 next; any later
+Stage 8 restart must begin from its closed baseline. Maintenance 3 did not
+itself dispatch or complete Stage 8.
 
 ## Maintenance 4 Production Work Order
 
@@ -456,18 +457,72 @@ storage contracts, autograd behavior, TensorCore dependency, and Maintenance
 runtime actions use clean internal names but appear in no supported facade.
 The old private paths are removed without shims. The work authorizes no
 renderer, IO/artifact surface, integration, workspace, optimization, Stage 8
-restart, compatibility claim, or push. Any later Stage 8 restart requires a
-new Design authority from this closed Maintenance 4 baseline.
+restart, compatibility claim, or push. This was the correct historical
+Maintenance 4 closeout boundary; the accepted sequence now places Maintenance
+5 before any later Stage 8 authority.
 
 ### Later Integration And Artifact Stages
 
 The exact TensorG4DS-to-`Photoelectrons` bridge, TensorML/Reconstruction
 adapters, durable artifacts, and DAG/integration surfaces each require later
 focused Design work. The bridge must own provenance, channel mapping, numeric
-PE binning under `SamplingConfig`, and underflow/overflow accounting without
-native G4DS parsing or TensorG4DS clustering. Model-facing field order and
-artifact identity are consumer/durable contracts rather than implicit
-`ReadoutCollection` membership order.
+PE binning onto the bridge-selected compact `SampleAxis`, and
+underflow/overflow accounting without native G4DS parsing or TensorG4DS
+clustering. Model-facing field order and artifact identity are consumer/durable
+contracts rather than implicit `ReadoutCollection` membership order.
+
+## Maintenance 5 Compact-Axis And Sampling Migration
+
+### [Maintenance 5 TensorCore 0.13 Compact Axes And Sampling](maintenance_5_tensorcore_0_13_compact_axes_and_sampling.md)
+
+Status: **Design-complete / User-authorized / Undispatched**.
+
+Maintenance 5 atomically adopts published TensorCore `0.13.0` exact commit
+`202d8b1bc6259b8453d3d377570417f2480d782b`, migrates
+`ExampleAxis`/`ChannelAxis`/`SampleAxis` to the generic
+`CountAxis`/`LabelAxis`/`RegularAxis` representations, and removes the
+duplicated public `SamplingConfig` policy. Private sampling preparation derives
+count, integer-picosecond period, and dimension once from the source
+`SampleAxis`; the complete readout boundary retains example-local
+`start == 0`.
+
+This is a representation and API migration, not a scientific change. It keeps
+the public `simulate_readout(...)` signature, all product equations and RNG
+addresses, generated result contracts, arbitrary semantic axis order, and the
+existing three-field `SamplingRuntime`. The exact Design authority commit and
+verified execution routes are named in the dispatch handoff. It authorizes no
+Pint, IO/artifact, integration, renderer, Stage 8 measurement, optimization,
+compatibility shim, release claim, or push.
+
+## Candidate Pint Physical Configuration Work
+
+### [Candidate Pint Physical Configuration Boundary](proposed_pint_physical_configuration_boundary.md)
+
+Status: **Design draft / Undispatched**.
+
+This nonoperative candidate records the intended package-local Pint boundary
+for physical configuration after TensorDSLab completes Maintenance 5 against
+the already-published TensorCore `0.13.0` compact-axis and generic-Scalar
+model. Public physical Config fields
+accept scalar Pint quantities with unit-neutral names, copy them into one
+private TensorDSLab registry, and canonicalize them to documented units.
+Product preparation extracts each active required canonical magnitude exactly
+once into unit-suffixed Runtime execution facts. Producers, validators, tensor
+fields, collections, RNG mechanics, and tensor kernels remain unit-free.
+
+The candidate also records TensorDSLab's physical convenience surface over a
+compact integer-picosecond `SampleAxis`: generic axis state remains integer
+`start`, `step`, and `count`, while `start_time`, `sample_period`, `time_at`,
+and exclusive `stop_time` return fresh Pint quantities. It assumes a prior
+retirement of `SamplingConfig` and source-derived sampling preparation.
+
+No exact Pint release, Pint implementation baseline, Maintenance number,
+implementation branch, or production authority is selected. Exact TensorCore
+`0.13.0` commit
+`202d8b1bc6259b8453d3d377570417f2480d782b` is available, but the document
+must be refrozen after Maintenance 5 is Merged / Closed. It authorizes no
+production, tests, dependency change, IO, artifacts, integration, Stage 8
+work, compatibility claim, or push.
 
 ## Expected Stage Discipline
 

@@ -12,14 +12,18 @@ pipeline stage. TensorDSLab owns downstream readout and future reconstruction
 meaning; it does not parse native G4DS files or own TensorG4DS deposit
 clustering, TensorML training, durable IO, or campaign orchestration.
 
-## Implemented Foundation
+## Readout Foundation
 
-The package currently provides the semantic foundation introduced against
-TensorCore `0.7` and now installed against exact TensorCore `0.9.0` for
-post-binned readout:
+The package provides the post-binned readout foundation introduced against
+TensorCore `0.7` and extended through Maintenance 4 on exact TensorCore
+`0.9.0`. The user-authorized
+[Maintenance 5 migration](docs/implementation/maintenance_5_tensorcore_0_13_compact_axes_and_sampling.md)
+adopts exact published TensorCore `0.13.0` commit
+`202d8b1bc6259b8453d3d377570417f2480d782b` and fixes the current target
+surface:
 
-- `ExampleAxis`, `ChannelAxis`, and regular timestamp-backed `SampleAxis`;
-- `SamplingConfig` for zero-start, integer-picosecond left-edge samples;
+- identity-free zero-based `ExampleAxis`, string-label `ChannelAxis`, and
+  compact regular integer-picosecond `SampleAxis`;
 - `Photoelectrons`, `Charge`, `PureWaveform`, `NoiseWaveform`,
   `AnalogWaveform`, and `DigitizedWaveform` fields;
 - product-owned immutable scientific configuration records;
@@ -33,24 +37,19 @@ product registries, or collection sidecars.
 
 ```python
 import torch
-from tensor_core import PositiveInteger
 
 from tensor_dslab import (
     ChannelAxis,
     ExampleAxis,
     Photoelectrons,
     ReadoutCollection,
-    SamplingConfig,
+    SampleAxis,
 )
 
-sampling = SamplingConfig(
-    sample_period_ps=PositiveInteger(2_000),
-    sample_count=PositiveInteger(4),
-)
 axes = (
-    ExampleAxis(coordinates=("event-0",)),
-    ChannelAxis(coordinates=("tile-0",)),
-    sampling.build_axis(),
+    ExampleAxis(count=1),
+    ChannelAxis(labels=("tile-0",)),
+    SampleAxis(start=0, step=2_000, count=4),
 )
 photoelectrons = Photoelectrons(
     tensor=torch.zeros((1, 1, 4), dtype=torch.int64),
@@ -101,22 +100,31 @@ public API, product meaning, scientific equation, stochastic address, result
 law, dependency, or supported
 device boundary.
 
+Maintenance 5 removes `SamplingConfig` and derives private sampling execution
+facts directly from the source `SampleAxis`. It is a clean pre-deployment API
+replacement: there is no legacy constructor, alias, or dual axis model.
+Example coordinates are local ordinals and do not claim durable event identity;
+channel labels retain detector identity. The complete readout boundary—not
+`SampleAxis` construction generally—requires example-local `start == 0`.
+
 The historical [TensorCore consumer proposal](docs/implementation/proposed_tensorcore_counter_rng_and_distributions.md)
 is now fulfilled by published TensorCore `0.9.0` commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The
 [TensorDSLab Maintenance 2 work order](docs/implementation/maintenance_2_rng_and_product_module_ownership_migration.md)
 selects that exact dependency. The closed implementation pins it and completes
-the ownership migration. CUDA was unavailable, so the recorded evidence makes
-no GPU or cross-backend claim.
+the ownership migration. Its original evidence was CPU-only; later
+Maintenance 3 and 4 exact-stack full-A100 runs established functional CUDA
+evidence without creating a broad backend or performance claim.
 
 ## Explicit Exclusions
 
 This package does not yet implement PE binning, TensorG4DS or TensorML
 adapters, IO, caches, `PureWaveformRenderer`, public atomic product transforms,
 `out=`, workspaces, movement/selection helpers, or an allocation-free execution
-path. It makes no GPU-execution, release, deployment,
+path. It makes no GPU-performance or broad-backend, release, deployment,
 backward-compatibility, conformance, or broad cross-package compatibility
-claim. The focused
+claim. Exact Maintenance 3 and 4 full-A100 functional evidence does not imply
+GPU-performance or broad-backend qualification. The focused
 [Stage 7 work order](docs/implementation/stage_7_public_readout_orchestration.md)
 is Merged / Closed; its accepted evidence is eager CPU-only because CUDA was
 unavailable.
