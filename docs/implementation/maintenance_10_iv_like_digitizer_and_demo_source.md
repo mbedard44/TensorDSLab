@@ -317,12 +317,17 @@ dark-count law owns additional seeded events.
 
 ## Implementation Candidate Evidence
 
-Implementation prepared one direct-child candidate from corrected Design
-authority `faed4546e6e946f359e8bada6ede9ba5724eebae`. Its exact tracked scope is
-the ten allowlisted move-expanded paths above: the profile, root environment
-script and deleted old endpoint, two demos, one proof module, two live public
-records, and two lifecycle records. No other production, test, metadata,
-dependency, architecture, governance, or historical-work-order byte changes.
+Implementation prepared a candidate lineage from corrected Design authority
+`faed4546e6e946f359e8bada6ede9ba5724eebae`. Immutable Candidate 1
+`be5ed3a0cd119a1f29962064f118adf58d76abd9` was returned by Validation for a
+missing committed immediate-replay proof. Fixed Candidate 2 is its direct
+child and changes only that allowlisted proof module plus the two lifecycle
+records needed to keep candidate evidence truthful. The cumulative tracked
+scope remains the ten allowlisted move-expanded paths above: the profile, root
+environment script and deleted old endpoint, two demos, one proof module, two
+live public records, and two lifecycle records. No other production, test,
+metadata, dependency, architecture, governance, or historical-work-order byte
+changes.
 
 The final stored notebook has exact code-source SHA-256
 `456656c129e68863bd7158a11824e1cd8c44607a2f7dc969b393fb0ce6b53ac0`
@@ -330,6 +335,11 @@ and whole-notebook SHA-256
 `f2ac47c6914c579d4a5559d31eef0091904cee3f0814d9bae1be9536f00f66dd`.
 It was executed in the exact `tensor_dslab` Conda environment, replayed
 byte-identically after the Matplotlib cache was warm, and visually inspected.
+Candidate 2's committed test now warms one controlled Matplotlib cache,
+executes two immediate notebook replays, removes only permitted transient
+execution timestamp metadata, and requires deterministic serialized identity
+between both replays and the frozen committed notebook. A process-local
+nondeterministic second-replay output mutant is rejected.
 The stored result has `23` cells, `11` consecutively executed code cells,
 seven intentional outputs, one embedded PNG, and zero errors. The figure
 shows the four separated source amplitudes across the complete `10000 ns`
@@ -359,7 +369,7 @@ Hatchling `1.31.0`, and Pyright `1.1.411` includes:
 - fresh wheel SHA-256
   `23a8f8d2362c840e3cf53986fbf4fdcd0b73f19336bbe3afaca509a574279d82`
   and sdist SHA-256
-  `b7d9a2c2587cc2090e52c92cee2d6d94ab264731e97a3e4ac85a6498658b87f4`,
+  `04c015a637c035847cd2a8e5efcb57c77d535704a442afc0de7292c1015b8ceb`,
   with source-identical package bytes;
 - isolated core-wheel proof that Matplotlib/Jupyter are absent, and isolated
   demos-wheel script plus notebook execution from outside the repository

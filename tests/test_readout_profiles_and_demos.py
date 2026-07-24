@@ -1238,40 +1238,105 @@ class ReadoutProfilesAndDemosTest(unittest.TestCase):
             for path in Path.cwd().rglob("*")
             if path.is_file()
         )
+        committed_bytes = Path("demos/readout.ipynb").read_bytes()
         with tempfile.TemporaryDirectory() as directory:
             temporary = Path(directory)
             notebook_path = temporary / "readout.ipynb"
             shutil.copyfile("demos/readout.ipynb", notebook_path)
-            notebook = nbformat.read(notebook_path, as_version=4)
-            with patch.dict(
-                os.environ,
+            matplotlib_directory = temporary / "matplotlib"
+            execution_environment = os.environ.copy()
+            execution_environment.update(
                 {
-                    "MPLBACKEND": "module://matplotlib_inline.backend_inline",
-                    "MPLCONFIGDIR": str(temporary / "matplotlib"),
+                    "MPLBACKEND": (
+                        "module://matplotlib_inline.backend_inline"
+                    ),
+                    "MPLCONFIGDIR": str(matplotlib_directory),
                     "PYTHONDONTWRITEBYTECODE": "1",
-                },
-            ):
-                executed = NotebookClient(
-                    notebook,
-                    timeout=240,
-                    kernel_name="python3",
-                    resources={"metadata": {"path": str(Path.cwd())}},
-                ).execute()
-            display_outputs = tuple(
-                output
-                for cell in executed.cells
-                if cell.cell_type == "code"
-                for output in cell.outputs
-                if output.output_type == "display_data"
+                }
             )
-            self.assertTrue(display_outputs)
-            self.assertTrue(
-                any(
-                    "image/png" in output.data
-                    or "image/svg+xml" in output.data
-                    for output in display_outputs
-                )
+            warmup = subprocess.run(
+                [
+                    sys.executable,
+                    "-B",
+                    "-c",
+                    (
+                        "from matplotlib import pyplot as plt; "
+                        "figure = plt.figure(); "
+                        "figure.canvas.draw(); "
+                        "plt.close(figure)"
+                    ),
+                ],
+                cwd=temporary,
+                env=execution_environment,
+                check=False,
+                capture_output=True,
+                text=True,
             )
+            self.assertEqual(warmup.returncode, 0, warmup.stderr)
+
+            replay_bytes: list[bytes] = []
+            with patch.dict(os.environ, execution_environment, clear=True):
+                for _ in range(2):
+                    executed = NotebookClient(
+                        nbformat.read(notebook_path, as_version=4),
+                        timeout=240,
+                        kernel_name="python3",
+                        resources={"metadata": {"path": str(Path.cwd())}},
+                    ).execute()
+                    code_cells = tuple(
+                        cell
+                        for cell in executed.cells
+                        if cell.cell_type == "code"
+                    )
+                    for cell in code_cells:
+                        cell.metadata.pop("execution", None)
+                    executed.metadata["kernelspec"] = {
+                        "display_name": "Python 3",
+                        "language": "python",
+                        "name": "python3",
+                    }
+                    executed.metadata["language_info"] = {
+                        "name": "python",
+                        "version": "3.14",
+                    }
+                    serialized = (
+                        nbformat.writes(executed) + "\n"
+                    ).encode()
+                    replay_bytes.append(serialized)
+
+                    self.assertEqual(
+                        tuple(cell.execution_count for cell in code_cells),
+                        tuple(range(1, 12)),
+                    )
+                    outputs = tuple(
+                        output
+                        for cell in code_cells
+                        for output in cell.outputs
+                    )
+                    self.assertEqual(len(outputs), 7)
+                    self.assertEqual(
+                        sum(
+                            output.output_type == "display_data"
+                            and "image/png" in output.data
+                            for output in outputs
+                        ),
+                        1,
+                    )
+                    self.assertFalse(
+                        any(
+                            output.output_type == "error"
+                            for output in outputs
+                        )
+                    )
+                    serialized_text = serialized.decode()
+                    for private_value in (
+                        directory,
+                        str(Path.home()),
+                    ):
+                        self.assertNotIn(private_value, serialized_text)
+
+            self.assertEqual(replay_bytes[0], replay_bytes[1])
+            self.assertEqual(replay_bytes[0], committed_bytes)
             self.assertFalse(
                 any(
                     path.suffix.lower() in (".png", ".svg", ".pdf")

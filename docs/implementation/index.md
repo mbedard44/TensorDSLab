@@ -826,20 +826,25 @@ It defers CUDA but authorizes one carefully qualified ordinary GitHub push only
 after the exact Maintenance 10 candidate and its evidence-only closeout are
 cleared and fast-forwarded.
 
-Implementation prepared a direct-child candidate from corrected authority
-`faed4546e6e946f359e8bada6ede9ba5724eebae`. The exact move-expanded scope is
-ten allowlisted paths. Focused source/archive evidence passed at `29/29/0`,
-full source/archive evidence passed at `229` run / `216` passed / `13`
-conditional CUDA skips, TensorCore source/archive passed at `84/82/2`, and
-Pyright was zero-diagnostic with exactly `60` intended negative-fixture errors
-in each dependency form. The exact notebook code/whole SHA-256 values are
+Implementation prepared a candidate lineage from corrected authority
+`faed4546e6e946f359e8bada6ede9ba5724eebae`. Immutable Candidate 1
+`be5ed3a0cd119a1f29962064f118adf58d76abd9` was returned for one missing
+committed immediate-replay identity proof. Fixed Candidate 2 is its direct
+child and adds that proof while the cumulative move-expanded scope remains ten
+allowlisted paths. Its test executes two immediate replays under one controlled
+warm Matplotlib cache and requires deterministic serialized identity with the
+committed notebook. Focused source/archive evidence passed at `29/29/0`, full
+source/archive evidence passed at `229` run / `216` passed / `13` conditional
+CUDA skips, TensorCore source/archive passed at `84/82/2`, and Pyright was
+zero-diagnostic with exactly `60` intended negative-fixture errors in each
+dependency form. The exact notebook code/whole SHA-256 values are
 `456656c129e68863bd7158a11824e1cd8c44607a2f7dc969b393fb0ce6b53ac0`
 and
 `f2ac47c6914c579d4a5559d31eef0091904cee3f0814d9bae1be9536f00f66dd`.
 The fresh wheel/sdist SHA-256 values are
 `23a8f8d2362c840e3cf53986fbf4fdcd0b73f19336bbe3afaca509a574279d82`
 and
-`b7d9a2c2587cc2090e52c92cee2d6d94ab264731e97a3e4ac85a6498658b87f4`.
+`04c015a637c035847cd2a8e5efcb57c77d535704a442afc0de7292c1015b8ceb`.
 Real Conda, isolated core/demo artifact, script, notebook, privacy, scope, and
 hygiene gates passed on eager CPU. CUDA remains unavailable and unclaimed.
 
