@@ -650,6 +650,7 @@ areas are:
 tests/test_charge_correlated_avalanches.py
 tests/test_charge_count_orchestration.py
 tests/test_charge_product.py
+tests/test_charge_timing_jitter.py
 tests/test_deterministic_waveform_products.py
 tests/test_noise_waveform_product.py
 tests/test_package_contracts.py
