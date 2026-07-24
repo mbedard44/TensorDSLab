@@ -733,9 +733,15 @@ PureWaveform + NoiseWaveform = AnalogWaveform -> DigitizedWaveform
 
 The exact `demos` optional extra owns Matplotlib/Jupyter tooling; these packages
 do not become TensorDSLab runtime dependencies. The work order freezes a
-`21`-path maximum scope, three-candidate Implementation/Validation loop,
+`22`-path maximum scope, three-candidate Implementation/Validation loop,
 source/archive, typing, wheel/sdist, script/notebook, plotting, privacy, and
 hygiene evidence, and the later integrated-CUDA-before-first-push sequence.
+The Design-owned authority correction adds only
+`tests/test_tensorcore_0_16_modernization.py` so its existing production-module
+and public-function census can prove the required `60/32/4` target, including
+the precise-module-only `ds20k_veto()` export. Implementation stopped before a
+candidate commit with `I->V 0/3`, and the disjoint correction consumes no loop
+slot.
 It makes no calibration, TensorG4DS, TensorML, IO, accelerator, release,
 deployment, or compatibility claim. The user authorized the exact persistent
 Implementation/Validation/Review route; the package loop remains active until

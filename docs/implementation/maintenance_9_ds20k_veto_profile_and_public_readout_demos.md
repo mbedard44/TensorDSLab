@@ -667,6 +667,38 @@ The candidate may change only:
 4. the focused tests and typing fixture required to prove them; and
 5. the exact synchronized current records listed below.
 
+### Design-owned allowlist amendment
+
+Implementation stopped before any candidate commit or Validation dispatch at
+exact authority `8a8961cfff0d446a83aef3836b384f4f0dfb328b`, with loop accounting
+`I->V 0/3` and `V->I 0/3`. The required new production module makes the
+existing Maintenance 8 census in
+`tests/test_tensorcore_0_16_modernization.py` fail truthfully at its frozen
+`59`-module count. That test also owns the existing public-function census,
+which enumerates only the three facade exports and therefore cannot prove the
+new precise-module-only `ds20k_veto()` function.
+
+The corrected authority adds exactly that existing census test to the
+allowlist and requires its precise-module-aware update. The preserved dirty
+Implementation worktree contains exactly five changed or untracked authorized
+paths:
+
+```text
+pyproject.toml
+tensor_dslab/readout/profiles.py
+demos/readout.py
+demos/readout.ipynb
+tests/typing/maintenance_9_ds20k_veto_profile_and_public_readout_demos.py
+```
+
+Neither allowlisted runtime test has been edited. The authority correction is
+documentation-only and disjoint from those five paths. Implementation may
+fast-forward its exact authority while preserving them only after the usual
+clean-index, exact-parent, disjointness, and post-fast-forward status gates
+pass. This procedural correction consumes no candidate or return slot and
+changes no profile, demonstration, dependency, scientific, API, or evidence
+contract.
+
 ### Exact changed-path allowlist
 
 Metadata:
@@ -693,6 +725,7 @@ Tests and typing:
 ```text
 tests/test_package_contracts.py
 tests/test_readout_profiles_and_demos.py
+tests/test_tensorcore_0_16_modernization.py
 tests/typing/maintenance_9_ds20k_veto_profile_and_public_readout_demos.py
 ```
 
@@ -715,8 +748,8 @@ docs/parity.md
 docs/validation.md
 ```
 
-The maximum candidate scope is exactly `21` logical paths: one metadata path,
-one production path, two demo paths, three test/typing paths, and fourteen
+The maximum candidate scope is exactly `22` logical paths: one metadata path,
+one production path, two demo paths, four test/typing paths, and fourteen
 current-document paths. A candidate need not touch an allowlisted current
 record when no truthful change is required. Any changed path outside this list
 is a hard stop.
@@ -784,6 +817,13 @@ The candidate must prove:
   not require or import Matplotlib/Jupyter packages;
 - exact production-module count `60`, supported public-class count `32`,
   supported public-function count `4`, and own module/symbol docstrings;
+- a precise-module-aware update to the existing Maintenance 8 census: it must
+  enumerate all `60` production modules, preserve the unchanged facade
+  identities, and include `ds20k_veto` through exact
+  `tensor_dslab.readout.profiles.__all__`;
+- exact supported public-function identities
+  `{quantity, quantities, simulate_readout, ds20k_veto}`, with no private,
+  imported-but-unexported, alias, or duplicate function admitted;
 - unchanged `35/5/30` facade identities and downstream import isolation;
 - exact source/wheel/sdist package bytes and isolated wheel behavior;
 - full TensorDSLab source/archive suites with no new skip;
