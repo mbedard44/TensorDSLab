@@ -225,6 +225,72 @@ def _runtime_signature(value: object) -> object:
     return value
 
 
+def _config_nodes(config: ReadoutConfig) -> dict[tuple[str, ...], object]:
+    nodes: dict[tuple[str, ...], object] = {}
+
+    def visit(value: object, path: tuple[str, ...]) -> None:
+        value_type = type(value)
+        if not (
+            is_dataclass(value)
+            and not isinstance(value, type)
+            and value_type.__module__.startswith("tensor_dslab.readout")
+            and value_type.__name__.endswith("Config")
+        ):
+            return
+        nodes[path] = value
+        for field in fields(value):
+            visit(getattr(value, field.name), (*path, field.name))
+
+    visit(config, ())
+    return nodes
+
+
+def _source_construction_ast(
+    statements: list[ast.stmt],
+) -> tuple[str, ...]:
+    selected: list[ast.stmt] = []
+    assigned_names = {"source_generator", "draws", "counts"}
+    for statement in statements:
+        if (
+            isinstance(statement, ast.Assign)
+            and len(statement.targets) == 1
+            and isinstance(statement.targets[0], ast.Name)
+            and statement.targets[0].id in assigned_names
+        ):
+            selected.append(statement)
+        elif (
+            isinstance(statement, ast.Expr)
+            and isinstance(statement.value, ast.Call)
+            and isinstance(statement.value.func, ast.Attribute)
+            and isinstance(statement.value.func.value, ast.Name)
+            and statement.value.func.value.id == "source_generator"
+            and statement.value.func.attr == "manual_seed"
+        ):
+            selected.append(statement)
+    return tuple(
+        ast.dump(statement, include_attributes=False)
+        for statement in selected
+    )
+
+
+_EXPECTED_SOURCE_CONSTRUCTION_AST = _source_construction_ast(
+    ast.parse(
+        """
+source_generator = torch.Generator(device="cpu")
+source_generator.manual_seed(11)
+draws = torch.randint(
+    low=0,
+    high=512,
+    size=shape,
+    dtype=torch.int64,
+    generator=source_generator,
+)
+counts = torch.where(draws < 2, draws + 1, torch.zeros_like(draws))
+"""
+    ).body
+)
+
+
 class ReadoutProfilesAndDemosTest(unittest.TestCase):
     def test_live_api_and_parity_records_classify_the_profile_exactly(self) -> None:
         api = Path("docs/api.md").read_text()
@@ -586,6 +652,32 @@ class ReadoutProfilesAndDemosTest(unittest.TestCase):
             )
         )
 
+    def test_profile_returns_a_fresh_complete_config_tree(self) -> None:
+        first = _config_nodes(ds20k_veto())
+        second = _config_nodes(ds20k_veto())
+        expected = {
+            (): ReadoutConfig,
+            ("charge",): ChargeConfig,
+            ("charge", "dark_count"): DarkCountConfig,
+            ("pure_waveform",): PureWaveformConfig,
+            ("pure_waveform", "model"): VetoPduPulseConfig,
+            ("noise_waveform",): NoiseWaveformConfig,
+            ("noise_waveform", "model"): PsdNoiseConfig,
+            ("analog_waveform",): AnalogWaveformConfig,
+            ("digitized_waveform",): DigitizedWaveformConfig,
+        }
+        self.assertEqual(
+            {path: type(node) for path, node in first.items()},
+            expected,
+        )
+        self.assertEqual(
+            {path: type(node) for path, node in second.items()},
+            expected,
+        )
+        for path in expected:
+            with self.subTest(path=path):
+                self.assertIsNot(first[path], second[path])
+
     def test_factory_has_no_external_or_execution_side_effect(self) -> None:
         environment = os.environ.copy()
         with (
@@ -816,6 +908,154 @@ class ReadoutProfilesAndDemosTest(unittest.TestCase):
             "selected products: ('DigitizedWaveform',)",
         ):
             self.assertIn(name, completed.stdout)
+
+    def test_script_and_notebook_source_and_manual_config_are_exact(self) -> None:
+        script_path = Path("demos/readout.py")
+        script_tree = ast.parse(
+            script_path.read_text(),
+            filename=str(script_path),
+        )
+        main = next(
+            node
+            for node in script_tree.body
+            if isinstance(node, ast.FunctionDef) and node.name == "main"
+        )
+        requested_index = next(
+            index
+            for index, statement in enumerate(main.body)
+            if (
+                isinstance(statement, ast.Assign)
+                and len(statement.targets) == 1
+                and isinstance(statement.targets[0], ast.Name)
+                and statement.targets[0].id == "requested"
+            )
+        )
+        script_source_statements = main.body[:requested_index]
+
+        notebook = nbformat.read("demos/readout.ipynb", as_version=4)
+        notebook_source_cell = next(
+            cell
+            for cell in notebook.cells
+            if cell.cell_type == "code"
+            and "photoelectrons = Photoelectrons(" in cell.source
+        )
+        notebook_source_tree = ast.parse(
+            notebook_source_cell.source,
+            filename="demos/readout.ipynb:source",
+        )
+
+        self.assertEqual(
+            _source_construction_ast(script_source_statements),
+            _EXPECTED_SOURCE_CONSTRUCTION_AST,
+        )
+        self.assertEqual(
+            _source_construction_ast(notebook_source_tree.body),
+            _EXPECTED_SOURCE_CONSTRUCTION_AST,
+        )
+
+        expected_shape = (2, 4, 1280)
+        expected_generator = torch.Generator(device="cpu")
+        expected_generator.manual_seed(11)
+        expected_draws = torch.randint(
+            low=0,
+            high=512,
+            size=expected_shape,
+            dtype=torch.int64,
+            generator=expected_generator,
+        )
+        expected_counts = torch.where(
+            expected_draws < 2,
+            expected_draws + 1,
+            torch.zeros_like(expected_draws),
+        )
+        produced_counts: list[torch.Tensor] = []
+        for label, statements in (
+            ("script", script_source_statements),
+            ("notebook", notebook_source_tree.body),
+        ):
+            with self.subTest(label=label):
+                namespace: dict[str, object] = {
+                    "torch": torch,
+                    "ExampleAxis": ExampleAxis,
+                    "ChannelAxis": ChannelAxis,
+                    "SampleAxis": SampleAxis,
+                    "quantity": quantity,
+                    "Photoelectrons": Photoelectrons,
+                }
+                global_rng_before = torch.random.get_rng_state().clone()
+                module = ast.fix_missing_locations(
+                    ast.Module(body=statements, type_ignores=[])
+                )
+                exec(
+                    compile(
+                        module,
+                        f"demos/readout:{label}-source",
+                        "exec",
+                    ),
+                    namespace,
+                )
+                self.assertTrue(
+                    torch.equal(
+                        torch.random.get_rng_state(),
+                        global_rng_before,
+                    )
+                )
+                self.assertEqual(namespace["shape"], expected_shape)
+                draws = namespace["draws"]
+                counts = namespace["counts"]
+                assert isinstance(draws, torch.Tensor)
+                assert isinstance(counts, torch.Tensor)
+                self.assertTrue(torch.equal(draws, expected_draws))
+                self.assertTrue(torch.equal(counts, expected_counts))
+                source = namespace["photoelectrons"]
+                self.assertIs(type(source), Photoelectrons)
+                assert type(source) is Photoelectrons
+                self.assertIs(source.tensor, counts)
+                self.assertEqual(source.shape, expected_shape)
+                self.assertEqual(
+                    source.axis(ChannelAxis).labels,
+                    ("veto-0", "veto-1", "veto-2", "veto-3"),
+                )
+                self.assertEqual(source.axis(SampleAxis).step, 2000)
+                produced_counts.append(counts)
+        self.assertTrue(torch.equal(produced_counts[0], produced_counts[1]))
+
+        manual_cell = next(
+            cell
+            for cell in notebook.cells
+            if cell.cell_type == "code"
+            and "manual_config = ReadoutConfig(" in cell.source
+        )
+        manual_namespace: dict[str, object] = {
+            "ReadoutConfig": ReadoutConfig,
+            "ChargeConfig": ChargeConfig,
+            "DarkCountConfig": DarkCountConfig,
+            "PureWaveformConfig": PureWaveformConfig,
+            "VetoPduPulseConfig": VetoPduPulseConfig,
+            "NoiseWaveformConfig": NoiseWaveformConfig,
+            "PsdNoiseConfig": PsdNoiseConfig,
+            "AnalogWaveformConfig": AnalogWaveformConfig,
+            "DigitizedWaveformConfig": DigitizedWaveformConfig,
+            "PositiveInteger": PositiveInteger,
+            "NonnegativeFloat": NonnegativeFloat,
+            "quantity": quantity,
+            "quantities": quantities,
+        }
+        exec(
+            compile(
+                manual_cell.source,
+                "demos/readout.ipynb:manual-config",
+                "exec",
+            ),
+            manual_namespace,
+        )
+        manual_config = manual_namespace["manual_config"]
+        self.assertIs(type(manual_config), ReadoutConfig)
+        assert type(manual_config) is ReadoutConfig
+        self.assertEqual(
+            _config_signature(manual_config),
+            _config_signature(ds20k_veto()),
+        )
 
     def test_notebook_is_cleared_and_has_exact_public_narrative(self) -> None:
         notebook = nbformat.read("demos/readout.ipynb", as_version=4)
