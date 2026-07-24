@@ -784,6 +784,15 @@ scientific equations, fixed RNG addressing, execution order, and completed
 field relationships remain unchanged. Integrated CUDA evidence is deferred
 until the exact locally closed TensorCore/TensorDSLab pairing exists.
 
+Maintenance 9 is **Merged / Closed** through exact Review-cleared target
+`2a04942229ab06d2cfc17ab7a5fd09afaf4e3c58`. Its profile and CPU demos are
+consumers of this unchanged readout architecture: they build a dense
+`Photoelectrons` field explicitly, compare manual and factory Config trees,
+request products through `simulate_readout(...)`, and display the pure, noise,
+analog, and digitized relationship. They add no hidden preparation path,
+product action, sampling authority, device policy, or calibrated detector
+claim.
+
 ## Validation
 
 Validation separates universal structure, intrinsic semantics, trust-boundary

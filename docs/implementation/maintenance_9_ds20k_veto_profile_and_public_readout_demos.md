@@ -1,6 +1,6 @@
 # Maintenance 9 DS20k Veto Profile And Public Readout Demos
 
-Status: **Design-complete / User-authorized / Package loop active**.
+Status: **Merged / Closed**.
 
 This is the fixed TensorDSLab Maintenance 9 production work order. It binds
 the exact locally closed Maintenance 8 baseline, exact published TensorCore
@@ -1144,6 +1144,61 @@ unexpected skip, scientific difference, or need for cluster evidence returns
 to Design. No supplemental candidate, allocation, or tool substitution is
 implicit. Design owns a later evidence-only lifecycle closeout over the exact
 fourteen current records only after Review's unchanged fast-forward.
+
+## Final Design Closeout
+
+Maintenance 9 is **Merged / Closed** through exact Review-cleared and
+fast-forwarded Candidate 3
+`2a04942229ab06d2cfc17ab7a5fd09afaf4e3c58`, tree
+`2c4c60f0d3c7c5d9de23a5fa03f9f22dac574d25`. Its exact parent is immutable
+Candidate 2 `f53bd27c50b0de5c0ffb1fda7e5862ac0f8fac7f`; governed pre-merge `main`
+was exact closed Maintenance 8
+`f213c387c5de0b9f508a233ab43336f5dc5439ea`. Review's
+`git merge --ff-only` introduced no merge commit, rewrite, or byte change.
+
+Candidate 2 was returned for two bounded test-proof gaps. Candidate 3 changes
+exactly `tests/test_readout_profiles_and_demos.py`, with `240` insertions and
+no deletions. It proves fresh identity-disjoint nested Config trees, exact
+manual/profile value equivalence, the private CPU generator and exact
+`{0,1,2}` count mapping, unchanged global RNG state, and exact script/notebook
+construction. Review independently killed the cached-Config,
+generator/count-mapping, and notebook value-drift mutants. The complete
+authority-to-Candidate-3 delta is `12` unique paths inside the frozen
+`23`-path allowlist.
+
+Accepted exact local evidence:
+
+- focused source/archive: `29/29/0` each before and after merge;
+- full TensorDSLab source/archive: `229` run / `216` passed / `13`
+  conditional unavailable-CUDA skips each;
+- TensorCore source/archive: `84` run / `82` passed / two conditional
+  unavailable-CUDA skips each;
+- Pyright `1.1.411`: zero diagnostics, with the frozen negative fixture at
+  exact `60` intended diagnostics in both dependency forms;
+- isolated core wheel imports with exact `35/5/30` facades and no demo,
+  Jupyter, or downstream package leakage;
+- isolated demos wheel script execution and installed-wheel notebook
+  execution across all `23` cells, one display output, and zero errors;
+- wheel SHA-256
+  `04eba29e895405afb73518af5025c0e1dd36f644da7a769f52168ef972b53210`;
+- sdist SHA-256
+  `118d8dc29bb74ed50309c90191f98b9b3390de96004a961d03e32e1d707627f4`;
+- exact unchanged Conda and pip inventory SHA-256 values
+  `5400747156d57dd021f2235caf90f0c7020a221a692c40d43a35e631b4494ea0`
+  and `a7dc981a80f0727a54a1585dfd35e6b4ab41acc18a0e29a229002a739947282a`;
+- all `38` Markdown files and `237` relative-link occurrences with zero
+  missing targets; and
+- exact scope, protected-byte, privacy, package-byte, import-isolation,
+  diff, artifact, bytecode, build, and final-cleanliness gates.
+
+The evidence environment was macOS arm64, CPython `3.14.6`, PyTorch `2.13.0`
+CPU, NumPy `2.5.1`, Pint `0.25.3`, Matplotlib `3.11.1`, ipykernel `7.3.0`,
+nbclient `0.11.0`, and nbformat `5.10.4`. CUDA was unavailable. The `13`
+TensorDSLab and two TensorCore skips are explicit qualifications; this closeout
+makes no accelerator, cluster, calibration, performance, compatibility,
+release, deployment, or push claim. The closeout itself changes exactly the
+fourteen authorized current records; all `38` Markdown files and `242`
+post-closeout relative-link occurrences resolve with zero missing targets.
 
 ## CUDA And First-Push Sequence
 

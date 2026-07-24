@@ -118,6 +118,15 @@ modules; and performs bounded syntax, typing, metadata, test, and docstring
 modernization. It preserves all scientific, Pint, RNG, product, and public
 TensorDSLab contracts. CUDA evidence and the first push remain separate.
 
+[Maintenance 9](implementation/maintenance_9_ds20k_veto_profile_and_public_readout_demos.md)
+is **Merged / Closed** through exact Review-cleared target
+`2a04942229ab06d2cfc17ab7a5fd09afaf4e3c58`. It adds the provisional
+`ds20k_veto()` factory, an executable CPU script and notebook, waveform-chain
+plots, and a non-editable `tensor_dslab` Conda setup path while preserving the
+existing simulation and scientific contracts. Full source/archive evidence
+passed at `229/216/13`; the unavailable-CUDA skips authorize no accelerator
+claim or push.
+
 [Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
 Closed through exact implementation candidate
 `3eb8ad19a36308ca2b73d41d219a7a3b4b46c1da` and Review's clean fast-forward

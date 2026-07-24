@@ -9,7 +9,9 @@ role keys are implementation details.
 
 ## Provisional DS20k Veto Profile
 
-Maintenance 9 adds one precise-module public factory:
+Maintenance 9 is **Merged / Closed** through exact Review-cleared target
+`2a04942229ab06d2cfc17ab7a5fd09afaf4e3c58` and adds one precise-module public
+factory:
 
 ```python
 from tensor_dslab.readout.profiles import ds20k_veto

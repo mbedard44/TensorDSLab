@@ -59,6 +59,15 @@ synchronized records; no product, Config, Runtime, scientific, Pint, RNG, or
 public API redesign is accepted. Integrated CUDA and push remain separate user
 decisions.
 
+Maintenance 9 is **Merged / Closed** through exact Review-cleared target
+`2a04942229ab06d2cfc17ab7a5fd09afaf4e3c58` under
+[`maintenance_9_ds20k_veto_profile_and_public_readout_demos.md`](implementation/maintenance_9_ds20k_veto_profile_and_public_readout_demos.md).
+It adds one provisional precise-module Config factory and explicit CPU
+demonstrations of existing semantic-field construction and readout
+orchestration. It does not add a profile registry, calibration authority,
+hidden source builder, alternate simulator, new facade export, or accelerator
+claim.
+
 ## Target Collaborator Surface
 
 The normal workflow is one public function plus named product classes:

@@ -147,6 +147,13 @@ docstring changes only. It does not revise any accepted equation, bound,
 sampling law, Pint rule, RNG address, product relationship, or parity
 classification in this long-form architecture.
 
+Maintenance 9 is **Merged / Closed** through exact Review-cleared target
+`2a04942229ab06d2cfc17ab7a5fd09afaf4e3c58`. The new provisional profile and
+public demonstrations instantiate this architecture without revising it. The
+demo's source, axes, products, dtype, seed, device, and plots remain explicit
+caller choices; its profile values create no run-calibration or new parity
+authority.
+
 TensorDSLab Design historically selected and implemented the following
 Maintenance 2 RNG and module-ownership foundation:
 one caller-constructed TensorCore `CounterRng` per simulation invocation,

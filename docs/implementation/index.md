@@ -706,11 +706,11 @@ TensorDSLab and two TensorCore conditional CUDA skips are explicit
 qualifications. No cluster work, accelerator claim, push, release, or broad
 compatibility claim follows.
 
-## Maintenance 9 Design Authority
+## Maintenance 9 Merged / Closed
 
 ### [Maintenance 9 DS20k Veto Profile And Public Readout Demos](maintenance_9_ds20k_veto_profile_and_public_readout_demos.md)
 
-Status: **Design-complete / User-authorized / Package loop active**.
+Status: **Merged / Closed**.
 
 The fixed work order is based on exact closed Maintenance 8 commit
 `f213c387c5de0b9f508a233ab43336f5dc5439ea`, tree
@@ -765,11 +765,35 @@ preserved authorized paths after the already-running real environment command
 completed successfully. The final disjoint documentation correction requires
 opening setup instructions in Markdown and an environment-read-only first
 Python cell; it likewise consumes no loop slot.
+
+Implementation's immutable Candidate 2 was
+`f53bd27c50b0de5c0ffb1fda7e5862ac0f8fac7f`. Review returned it for two
+committed-proof gaps: nested Config freshness and the exact private-generator,
+count-mapping, global-RNG, and manual/profile-equivalence demonstration
+contracts. Exact Candidate 3
+`2a04942229ab06d2cfc17ab7a5fd09afaf4e3c58`, tree
+`2c4c60f0d3c7c5d9de23a5fa03f9f22dac574d25`, changes only
+`tests/test_readout_profiles_and_demos.py` from Candidate 2. Validation and
+Review independently killed all returned mutants, cleared Candidate 3
+unchanged, and Review fast-forwarded it to local `main`. The cumulative
+authority-to-candidate delta is exactly `12` unique paths within the frozen
+`23`-path allowlist.
+
+Focused TensorDSLab source/archive evidence passed at `29/29/0`; full
+source/archive evidence passed at `229` run / `216` passed / `13` conditional
+CUDA skips; TensorCore source/archive passed at `84/82/2`; Pyright was
+zero-diagnostic and the exact dependency negative fixture produced `60`
+intended diagnostics in both forms. Fresh wheel and sdist SHA-256 values are
+`04eba29e895405afb73518af5025c0e1dd36f644da7a769f52168ef972b53210`
+and `118d8dc29bb74ed50309c90191f98b9b3390de96004a961d03e32e1d707627f4`.
+The isolated demos wheel executed the script and all `23` notebook cells with
+one display output and zero errors. All `38` Markdown files and `237`
+relative-link occurrences had zero missing targets.
+
 It makes no calibration, TensorG4DS, TensorML, IO, accelerator, release,
-deployment, or compatibility claim. The user authorized the exact persistent
-Implementation/Validation/Review route; the package loop remains active until
-an unchanged Review fast-forward and Design closeout. Cluster work and push
-remain unauthorized.
+deployment, or compatibility claim. The `13` TensorDSLab and two TensorCore
+CUDA skips remain explicit. Cluster work and push remain unauthorized until
+the separate integrated-CUDA authority completes.
 
 ## Expected Stage Discipline
 

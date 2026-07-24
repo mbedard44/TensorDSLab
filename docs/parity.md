@@ -243,6 +243,13 @@ provisional value requires a focused scientific/API decision and a newly named
 comparison boundary; it must not be inferred from the factory name or from a
 successful demonstration.
 
+Maintenance 9 is **Merged / Closed** through exact Review-cleared target
+`2a04942229ab06d2cfc17ab7a5fd09afaf4e3c58`. Its complete profile, script,
+notebook, plot, source/archive, and artifact evidence does not strengthen any
+classification in the table above: retained pulse fixtures remain numerical
+parity only over their named waveform boundary, and every illustrative
+profile/demo choice remains Deferred or Not applicable as recorded.
+
 Stage 4's reviewed tests establish the named TPC/Veto pulse checkpoints,
 independent deterministic reference equations, conditional analog composition,
 and representation-mapped ADC behavior in that work order's accepted CPU

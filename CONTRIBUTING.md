@@ -130,6 +130,15 @@ and the Python `3.14.6` / PyTorch `2.13.0` modernization without changing the
 accepted scientific or public package contract. CUDA and push remain
 separate.
 
+[Maintenance 9](docs/implementation/maintenance_9_ds20k_veto_profile_and_public_readout_demos.md)
+is **Merged / Closed** through exact Review-cleared target
+`2a04942229ab06d2cfc17ab7a5fd09afaf4e3c58`. Its provisional profile,
+CPU-only demos, plot, and environment setup exercise the existing public
+construction and orchestration contracts without changing their scientific,
+RNG, dependency, or facade semantics. The exact local gate passed with
+conditional unavailable-CUDA skips; integrated CUDA evidence and the first
+push remain separately authorized.
+
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency
 and no-silent-host-materialization requirements are TensorDSLab Design

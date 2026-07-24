@@ -149,6 +149,15 @@ docstring modernization. It preserves the complete TensorDSLab scientific,
 Pint, RNG, product, and public API behavior. CUDA and push remain separately
 authorized.
 
+[Maintenance 9](docs/implementation/maintenance_9_ds20k_veto_profile_and_public_readout_demos.md)
+is **Merged / Closed** through exact Review-cleared target
+`2a04942229ab06d2cfc17ab7a5fd09afaf4e3c58`. It adds a provisional
+`ds20k_veto()` Config profile and executable CPU script/notebook demonstrations
+of manual versus profile construction and
+`PureWaveform + NoiseWaveform = AnalogWaveform -> DigitizedWaveform`. The
+profile is illustrative rather than calibrated, and the accepted local
+evidence makes no accelerator or push claim.
+
 The historical [TensorCore consumer proposal](docs/implementation/proposed_tensorcore_counter_rng_and_distributions.md)
 is now fulfilled by published TensorCore `0.9.0` commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The

@@ -66,6 +66,13 @@ used here. TensorDSLab's migration is import-, syntax-, metadata-, test-, and
 docstring-only; no axis, field, collection, scalar, table, artifact, Pint, RNG,
 or product contract changes.
 
+Maintenance 9 is **Merged / Closed** through exact Review-cleared target
+`2a04942229ab06d2cfc17ab7a5fd09afaf4e3c58`. Its notebook demonstrates the
+existing construction contract directly: compact axes plus a dense
+`torch.int64` payload form `Photoelectrons`, and later public orchestration
+returns exact typed fields. It adds no axis representation, field relationship,
+movement, alignment, or mutable-storage contract.
+
 The previous TensorCore `0.6` ID/layout/sidecar architecture is historical and
 is intentionally not preserved through aliases.
 

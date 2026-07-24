@@ -522,6 +522,29 @@ typing, Pint/RNG/science continuity, artifact, scope, privacy, protected-byte,
 and hygiene gates passed. The conditional CUDA skips remain explicit and
 authorize no accelerator or push claim.
 
+## Maintenance 9 Profile And Demo Gate
+
+The
+[Maintenance 9 work order](implementation/maintenance_9_ds20k_veto_profile_and_public_readout_demos.md)
+is **Merged / Closed** through exact Review-cleared Candidate 3
+`2a04942229ab06d2cfc17ab7a5fd09afaf4e3c58`, tree
+`2c4c60f0d3c7c5d9de23a5fa03f9f22dac574d25`. Candidate 3 changes only the
+committed profile/demo proof from returned Candidate 2. It locks recursive
+fresh Config identity, exact private CPU-generator and count construction,
+global-RNG preservation, complete manual/profile value equivalence, and the
+executed script/notebook boundary.
+
+Independent source/archive evidence passed at `29/29/0` focused and
+`229/216/13` full; TensorCore passed at `84/82/2`; Pyright was
+zero-diagnostic; and the dependency negative fixture produced exact `60`
+intended diagnostics in both forms. Isolated core and demos wheel gates passed,
+including all `23` notebook cells, one display output, and zero errors.
+Package/source/artifact identity, exact `35/5/30` facades, `60/32/4`
+module/class/function census, environment inventories, documentation, privacy,
+scope, protected bytes, and hygiene all passed. The `13` TensorDSLab and two
+TensorCore CUDA skips are explicit; integrated CUDA and push remain separate
+later authorities.
+
 ## Governance Adoption Checks
 
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`.

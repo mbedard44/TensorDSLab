@@ -323,6 +323,22 @@ is `e5cc70adddaed357298e3e3bc4d95df78d3a55b7`, tree
 `b16c16aac432937f34180c9a4b094b3333924ec7`. Local `main` remains clean and
 unpushed.
 
+Maintenance 9 DS20k Veto Profile And Public Readout Demos is
+**Merged / Closed** under
+`docs/implementation/maintenance_9_ds20k_veto_profile_and_public_readout_demos.md`
+through exact Review-cleared and fast-forwarded target
+`2a04942229ab06d2cfc17ab7a5fd09afaf4e3c58`, tree
+`2c4c60f0d3c7c5d9de23a5fa03f9f22dac574d25`. It adds the precise-module
+`ds20k_veto()` provisional Config factory, CPU-only script and notebook
+demonstrations, plots of the pure/noise/analog/digitized chain, and the
+`tensor_dslab` Conda-environment setup script. It changes no existing
+scientific equation, RNG address, product action, public facade, calibration
+claim, accelerator contract, or TensorCore dependency. Complete local
+source/archive, typing, artifact, environment, script, and notebook evidence
+passed with `13` conditional TensorDSLab and two TensorCore CUDA skips. No
+accelerator or push claim follows; the integrated CUDA gate and first push
+remain separate later authorities.
+
 The first Stage 8 real-CUDA attempt correctly stopped before any accepted
 measurement when its protected-suite gate over-applied those macOS literals to
 the frozen Della Linux/x86_64 stack. Exact Stage 8 authority

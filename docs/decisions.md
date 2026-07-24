@@ -83,6 +83,17 @@ its exact public facades, Pint ownership, scientific preparation, production,
 validation, fixed RNG policy, and product relationships. Fresh integrated
 CUDA evidence and the first push require separate later authority.
 
+### Maintenance 9 Keeps The Profile Provisional And The Demo Explicit
+
+Maintenance 9 is **Merged / Closed** through exact Review-cleared target
+`2a04942229ab06d2cfc17ab7a5fd09afaf4e3c58`. TensorDSLab accepts one
+precise-module `ds20k_veto()` factory as an illustrative Config constructor,
+not a calibration registry or hidden simulation policy. The script and
+notebook construct their own source axes and `Photoelectrons`, select CPU,
+dtype, products, seed, and plot trace explicitly, and use only the existing
+public orchestration surface. Demo dependencies remain optional. Integrated
+CUDA and the first push remain separate decisions.
+
 ### Exact Types Replace Loose Semantic Namespaces
 
 The rebuild has no runtime axis IDs, field IDs, layout records, semantic name
