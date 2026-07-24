@@ -39,9 +39,10 @@ teach:
 6. where future FIL/TensorG4DS input and TensorML output adapters would replace
    the current demonstration boundaries.
 
-This stage is intentionally separate from Maintenance 8. Maintenance 8 remains
-the focused TensorCore `0.16.0`, Python `3.14`, PyTorch `2.13`, syntax,
-dependency, validation-import, and docstring modernization.
+This stage is intentionally separate from
+[Maintenance 8](maintenance_8_python314_tensorcore_0_16_modernization.md).
+Maintenance 8 remains the focused TensorCore `0.16.0`, Python `3.14`, PyTorch
+`2.13`, syntax, dependency, validation-import, and docstring modernization.
 
 ## Sequencing
 

@@ -663,6 +663,33 @@ Review-cleared and fast-forwarded unchanged. The correction reopened no
 implementation, dependency, science, RNG address, test, or public API byte and
 authorized no cluster work or push.
 
+## Maintenance 8 Provisional Design
+
+### [Maintenance 8 Python 3.14 And TensorCore 0.16 Modernization](maintenance_8_python314_tensorcore_0_16_modernization.md)
+
+Status: **Provisional Design / Undispatched / TensorCore 0.16 publication
+pending**.
+
+The record preserves the accepted one-stage modernization after locally closed
+Maintenance 7: exact published TensorCore `0.16.0`, CPython `3.14.6`, PyTorch
+`2.13.0`, NumPy `2.5.1`, Pint `0.25.3`, Hatchling `1.31.0`, Pyright
+`1.1.411`, domain-owned TensorCore validation imports, bounded PEP 695 and
+annotation-model cleanup, descriptive non-underscored type parameters,
+intentional docstrings, and the deferred exact integrated CUDA/first-push
+sequence.
+
+The naming convention distinguishes scoped type parameters from private
+module-level aliases: `DataT` is a `TableColumn` payload parameter, `ColumnT`
+is a concrete semantic column subtype, `FieldT` narrows a field factory, and
+the private quantity-table alias remains `_QuantityField`. The record changes
+no scientific, Pint, RNG, product, Config, Runtime, or public API contract.
+
+Design must bind the exact published TensorCore commit, exact baseline,
+allowlist, artifact identities, evidence commands, lifecycle wording, and loop
+budget before obtaining separate user dispatch. The provisional record itself
+authorizes no implementation, dependency update, cluster work, compatibility
+claim, or push.
+
 ## Provisional Post-Maintenance-8 Planning
 
 ### [Provisional DS20k Veto Profile And Public Readout Demos](proposed_ds20k_veto_profile_and_public_readout_demos.md)
