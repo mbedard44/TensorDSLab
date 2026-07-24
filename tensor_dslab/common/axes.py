@@ -42,6 +42,8 @@ class SampleAxis(RegularAxis):
 
     @classmethod
     def from_period(cls, *, period: Quantity, count: int) -> SampleAxis:
+        """Construct a zero-start sample axis from a physical period."""
+
         if not isinstance(period, pint.Quantity):
             raise TypeError("period must be a Pint Quantity")
         if type(period.magnitude) not in (int, float):
@@ -76,15 +78,23 @@ class SampleAxis(RegularAxis):
 
     @property
     def start_time(self) -> Quantity:
+        """Return the sample-axis start as a fresh picosecond quantity."""
+
         return _integer_quantity(self.start, unit="ps")
 
     @property
     def sample_period(self) -> Quantity:
+        """Return the sample period as a fresh picosecond quantity."""
+
         return _integer_quantity(self.step, unit="ps")
 
     def time_at(self, index: int) -> Quantity:
+        """Return one indexed sample coordinate as a picosecond quantity."""
+
         return _integer_quantity(self.coordinate_at(index), unit="ps")
 
     @property
     def stop_time(self) -> Quantity:
+        """Return the exclusive sample-axis stop as a picosecond quantity."""
+
         return _integer_quantity(self.start + self.step * self.count, unit="ps")

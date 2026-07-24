@@ -29,6 +29,8 @@ class ReadoutCollection(TensorCollection):
 
     @classmethod
     def accepted_field_types(cls) -> frozenset[type[TensorField]]:
+        """Return the exact readout product types accepted by the collection."""
+
         return frozenset(
             {
                 Photoelectrons,

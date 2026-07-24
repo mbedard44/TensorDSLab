@@ -15,6 +15,8 @@ from tensor_dslab.common.units import (
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class AnalogSaturationConfig:
+    """Configure optional lower and upper analog saturation levels."""
+
     minimum: Quantity | None = None
     maximum: Quantity | None = None
     __hash__ = None  # pyright: ignore[reportAssignmentType]
@@ -41,5 +43,7 @@ class AnalogSaturationConfig:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class AnalogWaveformConfig:
+    """Configure analog composition and optional saturation."""
+
     saturation: AnalogSaturationConfig | None = None
     __hash__ = None  # pyright: ignore[reportAssignmentType]

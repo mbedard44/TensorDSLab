@@ -15,6 +15,8 @@ from tensor_dslab.readout.pure_waveform.config import PureWaveformConfig
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ReadoutConfig:
+    """Select configurations for the requested generated readout products."""
+
     charge: ChargeConfig | None = None
     pure_waveform: PureWaveformConfig | None = None
     noise_waveform: NoiseWaveformConfig | None = None

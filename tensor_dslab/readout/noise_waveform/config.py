@@ -22,6 +22,8 @@ class ZeroNoiseConfig:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class WhiteNoiseConfig:
+    """Configure IID Gaussian white noise."""
+
     rms: Quantity
     __hash__ = None  # pyright: ignore[reportAssignmentType]
 
@@ -37,6 +39,8 @@ class WhiteNoiseConfig:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class PsdNoiseConfig:
+    """Configure a one-sided piecewise-constant noise power spectrum."""
+
     frequency_left_edges: Quantity
     frequency_stop: Quantity
     power_density: Quantity
@@ -79,5 +83,7 @@ class PsdNoiseConfig:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class NoiseWaveformConfig:
+    """Select one accepted noise-waveform model."""
+
     model: ZeroNoiseConfig | WhiteNoiseConfig | PsdNoiseConfig
     __hash__ = None  # pyright: ignore[reportAssignmentType]

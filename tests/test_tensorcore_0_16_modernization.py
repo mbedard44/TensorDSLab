@@ -328,14 +328,53 @@ class TensorCore016ModernizationTest(unittest.TestCase):
         self.assertEqual(len(public_classes), 32)
         self.assertEqual(len(public_functions), 3)
         for public_class in public_classes:
+            source_path = inspect.getsourcefile(public_class)
+            self.assertIsNotNone(source_path, public_class.__name__)
+            class_tree = ast.parse(
+                Path(cast(str, source_path)).read_text(),
+                filename=cast(str, source_path),
+            )
+            class_nodes = tuple(
+                node
+                for node in class_tree.body
+                if isinstance(node, ast.ClassDef)
+                and node.name == public_class.__name__
+            )
+            self.assertEqual(len(class_nodes), 1, public_class.__name__)
+            declared_docstring = ast.get_docstring(
+                class_nodes[0],
+                clean=False,
+            )
+            self.assertTrue(declared_docstring, public_class.__name__)
             self.assertTrue(
                 public_class.__dict__.get("__doc__"),
+                public_class.__name__,
+            )
+            self.assertEqual(
+                public_class.__dict__.get("__doc__"),
+                declared_docstring,
                 public_class.__name__,
             )
             get_type_hints(public_class)
         for public_function in public_functions:
             self.assertTrue(public_function.__doc__, public_function.__name__)
             get_type_hints(public_function)
+
+        public_operations = (
+            SampleAxis.from_period,
+            SampleAxis.start_time.fget,
+            SampleAxis.sample_period.fget,
+            SampleAxis.time_at,
+            SampleAxis.stop_time.fget,
+            tensor_dslab.ReadoutCollection.accepted_field_types,
+        )
+        self.assertEqual(len(public_operations), 6)
+        for operation in public_operations:
+            self.assertIsNotNone(operation)
+            self.assertTrue(
+                cast(object, operation).__doc__,
+                repr(operation),
+            )
 
     def test_requirements_relocation_and_direct_readout_module_shape(self) -> None:
         self.assertIsNone(

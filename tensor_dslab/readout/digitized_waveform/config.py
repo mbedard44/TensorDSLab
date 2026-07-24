@@ -15,6 +15,8 @@ from tensor_dslab.common.units import (
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DigitizedWaveformConfig:
+    """Configure the ADC range, depth, and analog gain."""
+
     bit_depth: PositiveInteger
     input_minimum: Quantity
     input_maximum: Quantity

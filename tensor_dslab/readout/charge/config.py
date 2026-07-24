@@ -17,6 +17,8 @@ from tensor_dslab.common.units import _canonicalize_quantity_fields
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class TimingJitterConfig:
+    """Configure Gaussian photoelectron timing jitter."""
+
     sigma: Quantity
     __hash__ = None  # pyright: ignore[reportAssignmentType]
 
@@ -32,6 +34,8 @@ class TimingJitterConfig:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DarkCountConfig:
+    """Configure independent dark-count generation."""
+
     rate: Quantity
     __hash__ = None  # pyright: ignore[reportAssignmentType]
 
@@ -47,6 +51,8 @@ class DarkCountConfig:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class FixedDelayConfig:
+    """Configure one fixed phase-marginalized crosstalk delay."""
+
     delay: Quantity
     __hash__ = None  # pyright: ignore[reportAssignmentType]
 
@@ -62,6 +68,8 @@ class FixedDelayConfig:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ExponentialDelayConfig:
+    """Configure one exponential phase-marginalized crosstalk delay."""
+
     mean_delay: Quantity
     __hash__ = None  # pyright: ignore[reportAssignmentType]
 
@@ -77,6 +85,8 @@ class ExponentialDelayConfig:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DirectCrosstalkConfig:
+    """Configure direct prompt crosstalk branching."""
+
     mean_offspring_per_parent: NonnegativeFloat
     delay: FixedDelayConfig | ExponentialDelayConfig
     __hash__ = None  # pyright: ignore[reportAssignmentType]
@@ -85,6 +95,8 @@ class DirectCrosstalkConfig:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DelayedCrosstalkConfig:
+    """Configure delayed crosstalk branching and delay law."""
+
     mean_offspring_per_parent: NonnegativeFloat
     delay: FixedDelayConfig | ExponentialDelayConfig
     __hash__ = None  # pyright: ignore[reportAssignmentType]
@@ -93,6 +105,8 @@ class DelayedCrosstalkConfig:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class AfterpulseRecoveryConfig:
+    """Configure afterpulse recovery as a function of delay."""
+
     time_constant: Quantity
     __hash__ = None  # pyright: ignore[reportAssignmentType]
 
@@ -108,6 +122,8 @@ class AfterpulseRecoveryConfig:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class AfterpulseConfig:
+    """Configure afterpulse branching, delay, and optional recovery."""
+
     probability: Probability
     mean_delay: Quantity
     recovery: AfterpulseRecoveryConfig | None = None
@@ -125,6 +141,8 @@ class AfterpulseConfig:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class CorrelatedAvalancheConfig:
+    """Compose the accepted correlated-avalanche mechanisms."""
+
     maximum_generations: NonnegativeInteger
     direct_crosstalk: DirectCrosstalkConfig | None = None
     delayed_crosstalk: DelayedCrosstalkConfig | None = None
@@ -135,6 +153,8 @@ class CorrelatedAvalancheConfig:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ChargeSmearingConfig:
+    """Configure relative Gaussian charge-response smearing."""
+
     relative_sigma: NonnegativeFloat
     __hash__ = None  # pyright: ignore[reportAssignmentType]
 
@@ -142,6 +162,8 @@ class ChargeSmearingConfig:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ChargeConfig:
+    """Compose the enabled aggregate charge effects."""
+
     dark_count: DarkCountConfig | None = None
     timing_jitter: TimingJitterConfig | None = None
     correlated_avalanches: CorrelatedAvalancheConfig | None = None

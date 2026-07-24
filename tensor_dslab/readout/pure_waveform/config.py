@@ -15,6 +15,8 @@ from tensor_dslab.common.units import (
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class TpcFebSnrPulseConfig:
+    """Configure the calibrated TPC FEB SNR pulse model."""
+
     fast_time_constant: Quantity
     slow_time_constant: Quantity
     support_time: Quantity
@@ -40,6 +42,8 @@ class TpcFebSnrPulseConfig:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class VetoPduPulseConfig:
+    """Configure the calibrated veto PDU pulse model."""
+
     gaussian_center: Quantity
     gaussian_width: Quantity
     edge_offset_1: Quantity
@@ -69,5 +73,7 @@ class VetoPduPulseConfig:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class PureWaveformConfig:
+    """Select one accepted pure-waveform pulse model."""
+
     model: TpcFebSnrPulseConfig | VetoPduPulseConfig
     __hash__ = None  # pyright: ignore[reportAssignmentType]
