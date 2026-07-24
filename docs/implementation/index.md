@@ -620,6 +620,10 @@ caller continues to select realizations through `CounterRng.seed`. Readout
 composition, Pint/physical policy, product validation, scientific count
 arithmetic, ledgers, role streams, raw address values, word schedules, and
 public exports remain TensorDSLab-owned.
+The sole remaining readout-domain structural requirement moves without a shim
+from `readout/requirements.py` to the non-exported
+`readout/runtime/requirements.py`, leaving the readout root organized around
+its golden-path Config, collection, simulation, facade, and product packages.
 Maintenance 7 also pins NumPy `2.3.5` for physical-configuration vector
 storage, changes `quantities(...)` and the two PSD vector fields to one
 canonical array-backed Pint Quantity each, and strips those arrays to plain

@@ -149,10 +149,11 @@ domain-owned `require_readout_structure(...)`, then call
 eager scalar representability import `require_representable_float` directly
 from TensorCore. TensorDSLab does not re-export or wrap either helper.
 
-`require_readout_structure(...)` remains in
-`tensor_dslab.readout.requirements`. It continues to require exactly one
-`ExampleAxis`, `ChannelAxis`, and `SampleAxis` in arbitrary dimension order.
-Its generic dense-layout clause composes:
+`require_readout_structure(...)` moves without a shim from
+`tensor_dslab.readout.requirements` to the non-exported
+`tensor_dslab.readout.runtime.requirements`. It continues to require exactly
+one `ExampleAxis`, `ChannelAxis`, and `SampleAxis` in arbitrary dimension
+order. Its generic dense-layout clause composes:
 
 ```python
 require_field_layout(field, torch.strided)
@@ -161,7 +162,12 @@ require_field_layout(field, torch.strided)
 TensorCore does not own the unordered readout axis set. The change may adopt
 TensorCore's generic private diagnostic wording for dtype/layout mismatch, but
 the existing TypeError-versus-ValueError relationship categories and every
-supported acceptance/rejection case remain fixed.
+supported acceptance/rejection case remain fixed. Product field constructors
+import this narrow shared requirement from the precise runtime leaf; the empty
+`readout.runtime` facade exports nothing and loads no orchestration module.
+The move leaves `readout/` itself organized around the golden-path
+`config.py`, `collection.py`, and `simulation.py` modules plus its facade and
+product packages.
 
 ### Charge count domain
 
@@ -602,6 +608,7 @@ tensor_dslab/common/units.py
 tensor_dslab/readout/requirements.py
 tensor_dslab/readout/runtime/keys.py
 tensor_dslab/readout/runtime/prepare.py
+tensor_dslab/readout/runtime/requirements.py
 tensor_dslab/readout/analog_waveform/config.py
 tensor_dslab/readout/analog_waveform/field.py
 tensor_dslab/readout/charge/config.py
@@ -626,9 +633,14 @@ tensor_dslab/readout/analog_waveform/runtime/prepare.py
 tensor_dslab/readout/digitized_waveform/runtime/prepare.py
 ```
 
-No other production or metadata path is authorized. The target adds exactly
-one package file and removes no package file. Package-root and product-facade
-bytes are protected; every common/readout path not named above is protected.
+No other production or metadata path is authorized. The target removes
+`readout/requirements.py`, adds its precise
+`readout/runtime/requirements.py` replacement, and adds
+`readout/runtime/keys.py`: two added paths, one removed path, and exactly one
+net new tracked package file. No compatibility module or re-export preserves
+the retired requirements path. Package-root, readout/product facades, and
+`readout/runtime/__init__.py` are protected; every common/readout path not
+named above is protected.
 
 Implementation may update only focused tests that exercise the changed
 contracts. The candidate handoff must enumerate their exact paths. Expected
@@ -679,6 +691,13 @@ alter protected scientific fixtures merely to make the migration pass.
 - unchanged `quantity(...)` scalar typing and changed
   `quantities(...) -> Quantity` vector typing;
 - exactly one new non-exported `readout/runtime/keys.py`;
+- `readout/requirements.py` is absent,
+  `readout/runtime/requirements.py` is present and non-exported, all internal
+  imports use the precise new path, and no compatibility shim exists;
+- the only direct production modules beneath `tensor_dslab/readout/` are
+  `__init__.py`, `config.py`, `collection.py`, and `simulation.py`; runtime
+  mechanics remain beneath `readout/runtime/` and product behavior remains
+  beneath its owning product package;
 - no `logical_positions`, local duplicate of an adopted TensorCore generic
   helper, compatibility alias, wrapper, or private TensorCore import in
   production; and
@@ -687,8 +706,8 @@ alter protected scientific fixtures merely to make the migration pass.
 ### Validation ownership
 
 - all six fields delegate exact dtype policy to `require_field_dtype`;
-- readout structure delegates only generic layout policy while retaining the
-  exact downstream axis set;
+- the relocated runtime readout-structure requirement delegates only generic
+  layout policy while retaining the exact downstream axis set;
 - every representability caller uses TensorCore's exact helper and retains its
   scientific postcondition checks;
 - Charge source/effect count-domain calls use the exact public
@@ -944,6 +963,8 @@ Maintenance 7 is complete only when:
 - exact NumPy `2.3.5` is pinned, `quantities(...)` and both PSD vector fields
   use canonical copied one-dimensional Quantity arrays, and preparation strips
   them before Runtime construction;
+- the root readout requirements module is retired without a shim and its sole
+  remaining domain requirement lives in the non-exported runtime leaf;
 - both pulse Configs store positive canonical amplitude magnitudes,
   preparation applies fixed negative polarity exactly once, and calibrated
   negative-going outputs remain exact;
