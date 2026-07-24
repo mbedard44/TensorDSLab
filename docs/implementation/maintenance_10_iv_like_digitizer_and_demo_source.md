@@ -19,6 +19,8 @@ The user accepted this refinement before TensorDSLab's first GitHub push:
 
 - use an IV-DSLab-like illustrative digitizer in the provisional
   `ds20k_veto()` profile;
+- move the project environment creator from `demos/create_environment.sh` to
+  repository-root `create_environment.sh`;
 - extend the demo source window to `10000 ns` at the existing `2 ns`
   period;
 - replace the sparse random upstream source with four explicit, separated
@@ -110,6 +112,37 @@ four exact upstream `Photoelectrons` deposits from later modeled Charge
 events. They must not claim that the completed `Charge` trace contains only
 four nonzero cells.
 
+### Project Environment Script
+
+Move `demos/create_environment.sh` to repository-root
+`create_environment.sh` with executable mode `100755`. The old path must be
+absent, without a forwarding script, symlink, alias, duplicate, or deprecation
+shim.
+
+The script's environment contract remains unchanged:
+
+- optional positional environment name, defaulting to `tensor_dslab`;
+- exact CPython `3.14.6`;
+- Conda Forge only, no default packages;
+- non-editable installation of the local `.[demos]` extra;
+- refusal to replace an existing environment;
+- exact dependency/profile smoke check;
+- no shell activation, kernel registration, CUDA selection, or project
+  mutation; and
+- printed follow-up activation, repository-change, and demo-run commands.
+
+Because the script now lives at repository root, its resolved
+`repository_root` is its own directory, not its parent. It must work when
+invoked from any current directory as:
+
+```bash
+./create_environment.sh [environment-name]
+```
+
+The notebook opening Markdown and every live setup instruction/proof must use
+`./create_environment.sh`. Historical Maintenance 9 records retain the old
+path as a truthful record of the closed stage and must not be rewritten.
+
 ### Manual/Profile Equivalence
 
 The notebook's manual `ReadoutConfig` must use the exact profile digitizer
@@ -142,7 +175,7 @@ spines use black; no purple Charge styling is accepted.
 
 The x-axis must cover the full source window in nanoseconds. Stored notebook
 outputs must come from a real execution in the exact `tensor_dslab` Conda
-environment created by `demos/create_environment.sh`, using CPU only. The
+environment created by `create_environment.sh`, using CPU only. The
 committed notebook must have:
 
 - exactly `23` cells and `11` code cells;
@@ -202,6 +235,8 @@ adapter, alternate ADC implementation, compatibility shim, or new export.
 Implementation may change only:
 
 - `tensor_dslab/readout/profiles.py`
+- `create_environment.sh`
+- `demos/create_environment.sh` (deletion half of the exact move)
 - `demos/readout.py`
 - `demos/readout.ipynb`
 - `tests/test_readout_profiles_and_demos.py`
@@ -210,9 +245,11 @@ Implementation may change only:
 - `docs/implementation/index.md`
 - `docs/implementation/maintenance_10_iv_like_digitizer_and_demo_source.md`
 
-The first four paths own implementation and committed proof. Documentation
-changes synchronize only the exact provisional values, source/grid,
-qualification, evidence, and lifecycle-neutral candidate state.
+The production profile, environment-script move endpoints, and two demo paths
+own implementation behavior. The one test path owns committed proof.
+Documentation changes synchronize only the exact provisional values,
+source/grid, setup path, qualification, evidence, and lifecycle-neutral
+candidate state.
 
 All other production, test, demo, dependency, metadata, architecture,
 governance, historical-work-order, parity sections, and package bytes are
@@ -227,17 +264,20 @@ Implementation must:
 1. start from the exact committed Design authority and remain its clean direct
    child for Candidate 1;
 2. update the profile, both demo forms, synchronized public API/parity text,
-   and the one exact proof module;
-3. execute `demos/readout.py` from the project root in the real
+   exact environment-script move, and the one exact proof module;
+3. run `bash -n create_environment.sh`, verify mode `100755`, independently
+   exercise its fake-Conda contract, and create one fresh role-private real
+   environment from outside the repository;
+4. execute `demos/readout.py` from the project root in the real
    `tensor_dslab` environment;
-4. execute `demos/readout.ipynb` in place with nbclient, remove execution
+5. execute `demos/readout.ipynb` in place with nbclient, remove execution
    timestamp metadata, verify one PNG/zero errors, and replay it immediately;
-5. visually inspect the embedded figure for the four amplitude levels, full
+6. visually inspect the embedded figure for the four amplitude levels, full
    `10000 ns` window, black Charge spikes, Analog-only panel, and legibility;
-6. freeze exact source/notebook hashes only after the final replay;
-7. run the focused and full accepted source/archive suites, exact Pyright,
+7. freeze exact source/notebook hashes only after the final replay;
+8. run the focused and full accepted source/archive suites, exact Pyright,
    package/import/privacy, Markdown/link/fence, diff, and hygiene gates; and
-8. commit one immutable candidate and dispatch it to persistent Validation.
+9. commit one immutable candidate and dispatch it to persistent Validation.
 
 No cluster allocation is authorized. The candidate must record the existing
 `13` TensorDSLab and two TensorCore unavailable-CUDA skips without creating an
@@ -249,6 +289,9 @@ Committed tests must prove:
 
 - exact profile digitizer wrapper types, canonical units/magnitudes, freshness,
   and complete manual/profile signature equality;
+- exact root environment-script path/mode/content, absent old path, correct
+  repository-root resolution, unchanged fake-Conda behavior, and updated
+  notebook setup instruction;
 - exact script/notebook AST for `torch.zeros(...)` and the four assignments;
 - shape `(2, 4, 5000)`, exact SampleAxis state/stop, source tensor identity,
   exact nonzero coordinates/values, total `10`, and unchanged global RNG;

@@ -804,8 +804,9 @@ Status: Active fixed work order; execution requires exact role handoffs.
 Maintenance 10 starts from exact clean Maintenance 9 closeout
 `3466c2d59be359ffa537848c8abba4d1405f338f`. It changes only the provisional
 `ds20k_veto()` digitizer to the accepted illustrative 16-bit
-`[-3900, 100] mV` / `3.5218 dB` values and replaces the demo's sparse random
-source with explicit separated `1`, `2`, `3`, and `4` PE deposits on a
+`[-3900, 100] mV` / `3.5218 dB` values, moves the environment creator to
+repository-root `create_environment.sh`, and replaces the demo's sparse
+random source with explicit separated `1`, `2`, `3`, and `4` PE deposits on a
 `2 ns` / `5000`-sample (`10000 ns`) CPU grid. Manual/profile equivalence,
 the public workflow, seeded dark-count/noise behavior, Analog recomposition,
 black Charge overlays, and provisional/non-calibration classification remain
