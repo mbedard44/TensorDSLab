@@ -138,7 +138,8 @@ the former requirements path is superseded by this paragraph. Every role
 stream, raw position value/order, word schedule, other scientific limit,
 product action, and facade remains unchanged.
 
-Maintenance 8 is **Design-complete / User-authorized / Package loop active** under its exact
+Maintenance 8 is **Merged / Closed** through exact Review-cleared target
+`e5cc70adddaed357298e3e3bc4d95df78d3a55b7` under its exact
 fixed work order. It adopts published TensorCore `0.16.0` containing commit
 `e05324699892a8bcea024375720bfae1ed9569cc` and Python `3.14.6` /
 PyTorch `2.13.0` through dependency-import, typing-syntax, metadata, test, and

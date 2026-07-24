@@ -140,13 +140,14 @@ same-stack stochastic results remain unchanged. Complete local Review evidence
 passed with `13` conditional CUDA skips, so no accelerator claim follows.
 
 [Maintenance 8](docs/implementation/maintenance_8_python314_tensorcore_0_16_modernization.md)
-is **Design-complete / User-authorized / Package loop active**. Its exact fixed target is the
+is **Merged / Closed** through exact Review-cleared target
+`e5cc70adddaed357298e3e3bc4d95df78d3a55b7`. Its exact dependency is the
 published TensorCore `0.16.0` containing commit
 `e05324699892a8bcea024375720bfae1ed9569cc` plus the Python `3.14.6`,
 PyTorch `2.13.0`, domain-validation-import, typing-syntax, and intentional
 docstring modernization. It preserves the complete TensorDSLab scientific,
-Pint, RNG, product, and public API behavior. Implementation uses the exact
-fixed route; CUDA and push remain separately authorized.
+Pint, RNG, product, and public API behavior. CUDA and push remain separately
+authorized.
 
 The historical [TensorCore consumer proposal](docs/implementation/proposed_tensorcore_counter_rng_and_distributions.md)
 is now fulfilled by published TensorCore `0.9.0` commit

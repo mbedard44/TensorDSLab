@@ -73,7 +73,8 @@ or Pint surface. Maintenance 6 retains the exact pin and consumes only
 
 ### Maintenance 8 Modernizes Without Changing Domain Semantics
 
-Maintenance 8 is **Design-complete / User-authorized / Package loop active**. TensorDSLab
+Maintenance 8 is **Merged / Closed** through exact Review-cleared target
+`e5cc70adddaed357298e3e3bc4d95df78d3a55b7`. TensorDSLab
 selects exact published TensorCore `0.16.0` containing commit
 `e05324699892a8bcea024375720bfae1ed9569cc`, CPython `3.14.6`, and
 PyTorch `2.13.0`. The accepted change is one bounded dependency/import,

@@ -494,7 +494,8 @@ performance evidence.
 
 The
 [Maintenance 8 work order](implementation/maintenance_8_python314_tensorcore_0_16_modernization.md)
-is **Design-complete / User-authorized / Package loop active**. It binds exact published
+is **Merged / Closed** through exact Review-cleared target
+`e5cc70adddaed357298e3e3bc4d95df78d3a55b7`. It binds exact published
 TensorCore `0.16.0` containing commit
 `e05324699892a8bcea024375720bfae1ed9569cc`, CPython `3.14.6`,
 PyTorch `2.13.0`, NumPy `2.5.1`, Pint `0.25.3`, Hatchling `1.31.0`, and
@@ -508,6 +509,18 @@ functional and static evidence, exact protected-byte and scope checks, and
 zero new CUDA claim. Scientific equations, Pint normalization, fixed RNG
 addresses, product actions, public facades, integrated CUDA, and push remain
 protected or separately authorized.
+
+Fixed-commit Validation and independent Review cleared exact Candidate 2
+`e5cc70adddaed357298e3e3bc4d95df78d3a55b7`, tree
+`b16c16aac432937f34180c9a4b094b3333924ec7`, and Review fast-forwarded it
+unchanged. Focused source/archive totals were `105/100/5`; full source/archive
+totals were `215/202/13` before and after merge; TensorCore was `84/82/2`;
+Pyright was zero-diagnostic; and the frozen dependency negative fixture
+reported exact `60` intended errors in both forms. Isolated wheel evidence was
+`33/33`. All docstring, normalized-AST, dependency export, precise-import,
+typing, Pint/RNG/science continuity, artifact, scope, privacy, protected-byte,
+and hygiene gates passed. The conditional CUDA skips remain explicit and
+authorize no accelerator or push claim.
 
 ## Governance Adoption Checks
 

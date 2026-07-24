@@ -663,13 +663,17 @@ Review-cleared and fast-forwarded unchanged. The correction reopened no
 implementation, dependency, science, RNG address, test, or public API byte and
 authorized no cluster work or push.
 
-## Maintenance 8 Design Authority
+## Maintenance 8 Merged / Closed
 
 ### [Maintenance 8 Python 3.14 And TensorCore 0.16 Modernization](maintenance_8_python314_tensorcore_0_16_modernization.md)
 
-Status: **Design-complete / User-authorized / Package loop active**.
+Status: **Merged / Closed**.
 
-The fixed work order binds locally closed Maintenance 7 and exact published
+The exact Review-cleared and fast-forwarded target is
+`e5cc70adddaed357298e3e3bc4d95df78d3a55b7`, tree
+`b16c16aac432937f34180c9a4b094b3333924ec7`; immutable Candidate 1 is
+`5b0cb83f000934a795ba9d5e3bb42b52ceb2722e`. The fixed work order binds
+locally closed Maintenance 7 and exact published
 TensorCore `0.16.0` containing commit
 `e05324699892a8bcea024375720bfae1ed9569cc`, CPython `3.14.6`, PyTorch
 `2.13.0`, NumPy `2.5.1`, Pint `0.25.3`, Hatchling `1.31.0`, and Pyright
@@ -690,17 +694,23 @@ is a concrete semantic column subtype, `FieldT` narrows a field factory, and
 the private quantity-table alias remains `_QuantityField`. The record changes
 no scientific, Pint, RNG, product, Config, Runtime, or public API contract.
 
-The user authorized the exact persistent Implementation/Validation/Review
-route. The package loop remains active until an unchanged Review fast-forward
-and Design closeout; this branch/main-neutral lifecycle wording remains true
-through candidate dispatch and merge. No cluster work, push, release, or
-compatibility claim is authorized.
+Implementation, fixed-commit Validation, and independent Review cleared exact
+Candidate 2 before Review's unchanged fast-forward. Complete source/archive
+evidence passed at `215/202/13`, the focused matrix at `105/100/5`, Pyright at
+zero diagnostics, and the frozen dependency negative fixture at exact `60`
+intended diagnostics in both forms. All `32` public classes, `3` public
+functions, and six public operations own truthful docstrings. Exact dependency
+exports, Python 3.14 typing, normalized-AST equivalence, artifacts, imports,
+privacy, protected bytes, and repository hygiene are clear. The `13`
+TensorDSLab and two TensorCore conditional CUDA skips are explicit
+qualifications. No cluster work, accelerator claim, push, release, or broad
+compatibility claim follows.
 
 ## Provisional Post-Maintenance-8 Planning
 
 ### [Provisional DS20k Veto Profile And Public Readout Demos](proposed_ds20k_veto_profile_and_public_readout_demos.md)
 
-Status: **Provisional Design notes / Deferred until Maintenance 8 closes**.
+Status: **Provisional Design notes / Post-Maintenance-8 promotion pending**.
 This non-operative record preserves the accepted direction for a later
 package-owned `ds20k_veto()` demonstration profile plus
 `demos/readout.py` and `demos/readout.ipynb`. It records the provisional Veto
@@ -714,6 +724,11 @@ post-Maintenance-8 baseline, promote a production calibration, create an IO or
 TensorML adapter, issue cluster authority, or authorize a push. Design must
 reconcile it against the exact closed Maintenance 8 bytes and obtain explicit
 user dispatch before it becomes a production work order.
+
+Maintenance 8 is now closed, satisfying that proposal's dependency
+prerequisite. The proposal itself remains non-operative until Design rebases
+its separately preserved provisional branch onto the exact closeout, performs
+the promised post-Maintenance-8 audit, and obtains separate user dispatch.
 
 ## Expected Stage Discipline
 

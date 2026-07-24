@@ -55,7 +55,8 @@ through exact Review-cleared target
 Merged / Closed under Maintenance 7 through exact target
 `205182f0c7a4359cece79211ad22b47b522c34e3`.
 
-Maintenance 8 is **Design-complete / User-authorized / Package loop active**. Its fixed
+Maintenance 8 is **Merged / Closed** through exact Review-cleared target
+`e5cc70adddaed357298e3e3bc4d95df78d3a55b7`. Its fixed
 dependency target is exact published TensorCore `0.16.0` containing commit
 `e05324699892a8bcea024375720bfae1ed9569cc`. The dependency removes the
 central validation package and root requirement re-exports in favor of exact

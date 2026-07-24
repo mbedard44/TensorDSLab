@@ -776,7 +776,8 @@ synchronize CUDA as an accepted correctness-first cost. Outside those checks,
 same-stream consumers use normal PyTorch ordering and cross-stream consumers
 establish an explicit dependency.
 
-Maintenance 8 is **Design-complete / User-authorized / Package loop active**. Its exact
+Maintenance 8 is **Merged / Closed** through exact Review-cleared target
+`e5cc70adddaed357298e3e3bc4d95df78d3a55b7`. Its exact
 published TensorCore `0.16.0` and Python `3.14` modernization work order is
 mechanical at this boundary: product preparation, production, validation,
 scientific equations, fixed RNG addressing, execution order, and completed

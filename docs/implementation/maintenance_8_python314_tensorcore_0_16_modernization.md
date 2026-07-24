@@ -1,14 +1,16 @@
 # Maintenance 8 Python 3.14 And TensorCore 0.16 Modernization
 
-Status: **Design-complete / User-authorized / Package loop active**.
+Status: **Merged / Closed**.
 
-This is the fixed TensorDSLab Maintenance 8 production work order. It binds
+This fixed TensorDSLab Maintenance 8 production work order is closed through
+exact Review-cleared and fast-forwarded Candidate 2
+`e5cc70adddaed357298e3e3bc4d95df78d3a55b7`, tree
+`b16c16aac432937f34180c9a4b094b3333924ec7`. It binds
 the exact published TensorCore `0.16.0` dependency, exact locally closed
 TensorDSLab Maintenance 7 production baseline, complete changed-path
 allowlist, protected bytes, evidence matrix, loop budget, and merge authority.
-It is not Implementation dispatch until the user explicitly authorizes the
-route. It grants no cluster, push, release, deployment, or broad compatibility
-authority.
+The completed package loop granted no cluster, push, release, deployment, or
+broad compatibility authority.
 
 Stable key:
 
@@ -810,18 +812,65 @@ The provisional DS20k Veto profile and demos remain a separate later stage
 under
 [Provisional DS20k Veto Profile And Public Readout Demos](proposed_ds20k_veto_profile_and_public_readout_demos.md).
 
-## Dispatch Gate
+## Final Disposition And Evidence
 
-The Design authority is the exact lifecycle-only direct-child commit that
-records user authorization while preserving the fixed work-order contract.
-Its hash and tree are carried in the immutable dispatch handoff because a Git
-commit cannot truthfully contain its own hash. Implementation must prove that
-exact authority as its direct parent before editing.
+The exact Design authority was
+`8006f92d556c93a68d6669b09390818563234cf5`, tree
+`67740d12e57c86c7e5d13ed8a9ba3bd7fd030e28`. Immutable Candidate 1 was
+`5b0cb83f000934a795ba9d5e3bb42b52ceb2722e`, tree
+`308ceb28ecd749cc13b05c08360606cee9fa115d`. Validation returned its one
+docstring-proof finding through the ordinary loop, and exact Candidate 2 was
+its direct child. Candidate 1 remained immutable.
 
-The user authorized the persistent Implementation/Validation/Review route.
-The package loop is active until an unchanged Review fast-forward and Design
-closeout; this branch/main-neutral status remains true throughout intermediate
-candidate states. Dispatch must name the exact authority commit/tree, confirm
-all execution roles are Active, and state that CUDA and push remain
-unauthorized. If any later TensorCore or TensorDSLab byte contradicts this
-contract, stop and return the conflict to both package Design authorities.
+Independent Review found no remaining production, API, typing, dependency,
+science, RNG, documentation, scope, privacy, artifact, or hygiene issue.
+Review fast-forwarded exact unchanged Candidate 2 to the governed clean local
+`main` with `git merge --ff-only`; there is no merge commit or byte rewrite.
+
+Accepted local evidence on macOS `15.7.4` arm64 with CPython `3.14.6`,
+PyTorch `2.13.0` eager CPU, NumPy `2.5.1`, Pint `0.25.3`, Hatchling `1.31.0`,
+and Pyright `1.1.411` includes:
+
+- exact input artifact SHA-256 values:
+  `cec3d6283b59fa1d2a453b57719d3a95f2e7677408f3b213fc950e708f41182d`
+  for the CPython conda package,
+  `d849b390e07d8d333ce8ecaf91b273c656c598379a19c9acf1318a883f6b391c`
+  for the Torch wheel,
+  `efd736408cc97c79b9e6917338dfc8f06013b2274f992e96b1d9a81a71e2a2c2`
+  for the NumPy wheel,
+  `27eb25143bd5de9fcc4d5a4b484f16faf6b4615aa93ece6b3373a8c1a3c1b97d`
+  for the Pint wheel,
+  `aac80bec8b6fe35e8480f1c335be8910fa210a0e6f735a139be205dadcacb544`
+  for the Hatchling wheel, and
+  `dc7c72a8e2700c55baa127554040e067041ea53ccfd50bf96308cc4291c7d5d9`
+  for the Pyright wheel;
+- exact TensorCore `0.16.0` source/archive identity and
+  `21/7/3/7/15/3/4/1` export surfaces;
+- TensorCore `84/82/2` source-suite totals;
+- TensorDSLab focused source/archive `105/100/5` each;
+- TensorDSLab full source/archive `215/202/13` before and after merge;
+- Pyright zero errors, warnings, or informations in both dependency forms;
+- exact `60` intended negative-fixture diagnostics in both forms;
+- executable-equivalent normalized production ASTs after removing only the
+  authorized imports, docstrings, `@override`, and private PEP 695 alias;
+- truthful own docstrings for all `32` public classes, all `3` public
+  functions, and six public operations;
+- exact `35/5/30` TensorDSLab facade identities and downstream import
+  isolation;
+- exact Candidate 1-to-2 proof delta of nine allowlisted paths and `+93/-0`,
+  with the authority-to-Candidate 2 rename-expanded `85` endpoints all inside
+  the frozen `98`-path ceiling;
+- isolated wheel evidence at `33/33`;
+- wheel size `58136` bytes and SHA-256
+  `18969eda0b260fd6944149fa274ccfa720da77ee7fc4176099afe485863bb3f2`;
+- sdist size `653202` bytes and SHA-256
+  `5e4af34254e4d29b3fce1ce30dc9ece3d5147a1b97c7b0d7dde311140fb4a914`;
+  and
+- exact scope, protected-byte, privacy, links, diff, artifact, bytecode, build,
+  and final-cleanliness gates.
+
+The `13` TensorDSLab and two TensorCore conditional CUDA skips are explicit
+unavailable-CUDA qualifications. No accelerator, cluster, performance,
+release, deployment, broad compatibility, or push claim follows. The exact
+integrated CUDA matrix and first TensorDSLab push remain separate later
+authorities.

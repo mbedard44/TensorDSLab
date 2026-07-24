@@ -308,7 +308,7 @@ so Maintenance 7 itself makes no fresh accelerator claim. Local `main` remains
 unpushed.
 
 Maintenance 8 Python 3.14 And TensorCore 0.16 Modernization is
-**Design-complete / User-authorized / Package loop active** under
+**Merged / Closed** under
 `docs/implementation/maintenance_8_python314_tensorcore_0_16_modernization.md`.
 Its fixed work order selects exact published TensorCore `0.16.0` containing
 commit `e05324699892a8bcea024375720bfae1ed9569cc`, CPython `3.14.6`,
@@ -318,7 +318,10 @@ mechanical Python 3.14 typing syntax, intentional docstrings, tests, metadata,
 and synchronized records. It changes no scientific, Pint, RNG, product,
 Runtime, producer, validator, or public TensorDSLab contract. Its local package
 loop makes no CUDA claim; the exact integrated CUDA gate and first push remain
-separate later authorities.
+separate later authorities. Its exact Review-cleared and fast-forwarded target
+is `e5cc70adddaed357298e3e3bc4d95df78d3a55b7`, tree
+`b16c16aac432937f34180c9a4b094b3333924ec7`. Local `main` remains clean and
+unpushed.
 
 The first Stage 8 real-CUDA attempt correctly stopped before any accepted
 measurement when its protected-suite gate over-applied those macOS literals to

@@ -123,11 +123,12 @@ local package gate makes no fresh CUDA claim; separately authorized integrated
 CUDA evidence remains required before any push.
 
 [Maintenance 8](docs/implementation/maintenance_8_python314_tensorcore_0_16_modernization.md)
-is **Design-complete / User-authorized / Package loop active**. It freezes exact published
+is **Merged / Closed** through exact Review-cleared target
+`e5cc70adddaed357298e3e3bc4d95df78d3a55b7`. It freezes exact published
 TensorCore `0.16.0` commit `e05324699892a8bcea024375720bfae1ed9569cc`
 and the Python `3.14.6` / PyTorch `2.13.0` modernization without changing the
-accepted scientific or public package contract. The exact package route is
-active; CUDA and push remain separate.
+accepted scientific or public package contract. CUDA and push remain
+separate.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency
