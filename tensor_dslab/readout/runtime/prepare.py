@@ -87,24 +87,6 @@ def _require_config_closure(
             raise ValueError(f"{name} requires its product configuration")
 
 
-def _require_unique_rng_keys(
-    *,
-    charge: ChargeRuntime | None,
-    noise: NoiseWaveformRuntime | None,
-) -> None:
-    roles = (
-        (() if charge is None else charge.rng_roles)
-        + (() if noise is None else noise.rng_roles)
-    )
-    for index, (role, key) in enumerate(roles):
-        for previous_role, previous_key in roles[:index]:
-            if key == previous_key:
-                raise ValueError(
-                    "distinct stochastic roles require distinct RNG keys: "
-                    f"{previous_role} and {role}"
-                )
-
-
 def prepare_readout(
     photoelectrons: Photoelectrons,
     *,
@@ -200,7 +182,6 @@ def prepare_readout(
             device=device,
         )
 
-    _require_unique_rng_keys(charge=charge_runtime, noise=noise_runtime)
     return requested, ReadoutRuntime(
         charge=charge_runtime,
         pure_waveform=pure_runtime,

@@ -40,11 +40,11 @@ from tensor_dslab import (
 
 
 time = quantity(2, "ns")
-voltage = quantity(-1, "mV")
+voltage = quantity(1, "mV")
 frequency = quantity(1.0e6, "Hz")
 density = quantity(1.0e-9, "mV ** 2 / Hz")
 assert_type(time, Quantity)
-assert_type(quantities((1, 2.0), "ns"), tuple[Quantity, ...])
+assert_type(quantities((1, 2.0), "ns"), Quantity)
 
 axis = SampleAxis.from_period(period=time, count=4)
 assert_type(axis, SampleAxis)
@@ -103,9 +103,9 @@ assert_type(PureWaveformConfig(model=veto), PureWaveformConfig)
 
 white = WhiteNoiseConfig(rms=quantity(1, "mV"))
 psd = PsdNoiseConfig(
-    frequency_left_edges=(quantity(0, "Hz"), frequency),
+    frequency_left_edges=quantities((0, 1.0e6), "Hz"),
     frequency_stop=quantity(3.0e8, "Hz"),
-    power_density=(density, density),
+    power_density=quantities((1.0e-9, 1.0e-9), "mV ** 2 / Hz"),
 )
 noise = NoiseWaveformConfig(model=white)
 assert_type(NoiseWaveformConfig(model=psd), NoiseWaveformConfig)
@@ -135,7 +135,7 @@ assert charge.dark_count is not None
 assert_type(charge.dark_count.rate, Quantity)
 assert_type(tpc.fast_time_constant, Quantity)
 assert_type(white.rms, Quantity)
-assert_type(psd.frequency_left_edges, tuple[Quantity, ...])
+assert_type(psd.frequency_left_edges, Quantity)
 assert analog.saturation is not None
 assert_type(analog.saturation.minimum, Quantity | None)
 assert_type(digitized.input_minimum, Quantity)

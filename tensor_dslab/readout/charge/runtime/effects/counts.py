@@ -3,20 +3,12 @@ from __future__ import annotations
 import math
 
 import torch
-from tensor_core import CounterRng, RngKey, logical_positions
+from tensor_core import CounterRng, RngKey, RngPositions
+from tensor_core.validation.random import require_count_tensor
 
 
 MAX_COUNT = (1 << 53) - 1
 MAX_POISSON_MEAN = 1.0e8
-
-
-def require_count_domain(counts: torch.Tensor, *, field: str) -> None:
-    if counts.dtype is not torch.int64:
-        raise TypeError(f"{field} must have dtype torch.int64")
-    if bool(torch.any(counts < 0).item()) or bool(
-        torch.any(counts > MAX_COUNT).item()
-    ):
-        raise ValueError(f"{field} exceeds the accepted Charge count domain")
 
 
 def checked_add(
@@ -53,27 +45,16 @@ def checked_subtract(
     return left - right
 
 
-def require_tensor_allocation(
-    shape: tuple[int, ...],
-    *,
-    element_size: int,
-    field: str,
-) -> int:
-    count = math.prod(shape)
-    if count <= 0 or count > (1 << 63) - 1:
-        raise ValueError(f"{field} element count exceeds the accepted range")
-    if count * element_size > (1 << 63) - 1:
-        raise ValueError(f"{field} byte count exceeds the accepted range")
-    return count
-
-
 def original_positions(
     shape: tuple[int, ...],
     *,
     sample_dimension: int,
     device: torch.device,
-) -> torch.Tensor:
-    return logical_positions(shape, device=device).movedim(sample_dimension, -1)
+) -> RngPositions:
+    return RngPositions.from_shape(shape, device=device).movedim(
+        sample_dimension,
+        -1,
+    )
 
 
 def checked_rate_product(
@@ -109,7 +90,7 @@ def draw_ordered_categories(
     *,
     success_masses: tuple[float | torch.Tensor, ...],
     failure_masses: tuple[float | torch.Tensor, ...],
-    positions: tuple[torch.Tensor, ...],
+    positions: tuple[RngPositions, ...],
     rng: CounterRng,
     key: RngKey,
     field: str,
@@ -118,7 +99,7 @@ def draw_ordered_categories(
         len(success_masses) == len(failure_masses) == len(positions)
     ):
         raise ValueError(f"{field} category plans must have equal lengths")
-    require_count_domain(counts, field=f"{field} input")
+    require_count_tensor(counts, f"{field} input")
     remaining = counts.clone()
     categories: list[torch.Tensor] = []
     for success_mass, failure_mass, category_positions in zip(

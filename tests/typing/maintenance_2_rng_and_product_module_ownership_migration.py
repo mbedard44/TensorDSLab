@@ -5,13 +5,12 @@ from typing import assert_type
 import torch
 from tensor_core import (
     NonnegativeFloat,
-    PositiveFloat,
     RngKey,
+    RngPositions,
     Threefry4x32,
 )
 
 from tensor_dslab import (
-    quantities,
     quantity,
     Charge,
     ChargeConfig,
@@ -36,6 +35,7 @@ from tensor_dslab.readout.runtime.sampling import (
     SamplingRuntime,
     prepare_sampling,
 )
+from tensor_dslab.readout.runtime.keys import WHITE_NOISE_RNG_KEY
 
 def _mv(value: int | float):
     return quantity(value, "mV")
@@ -51,7 +51,8 @@ source = Photoelectrons(
     axes=axes,
 )
 rng = Threefry4x32(seed=17)
-key = RngKey(namespace=0x54445331, stream=101)
+assert_type(WHITE_NOISE_RNG_KEY, RngKey)
+assert_type(RngPositions.from_shape((1, 1, 4), device="cpu"), RngPositions)
 
 sampling_runtime = prepare_sampling(source)
 assert_type(sampling_runtime, SamplingRuntime)
@@ -59,7 +60,6 @@ noise_runtime = prepare_noise_waveform(
     NoiseWaveformConfig(
         model=WhiteNoiseConfig(
             rms=_mv(1.0),
-            rng_key=key,
         )
     ),
     sampling=sampling_runtime,
@@ -75,7 +75,6 @@ charge_runtime = prepare_charge(
     ChargeConfig(
         smearing=ChargeSmearingConfig(
             relative_sigma=NonnegativeFloat(0.1),
-            rng_key=key,
         )
     ),
     photoelectrons=source,

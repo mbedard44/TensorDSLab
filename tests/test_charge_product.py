@@ -17,7 +17,6 @@ from tensor_core import (
     Probability,
     RngKey,
     Threefry4x32,
-    logical_positions,
 )
 
 from tensor_dslab import (
@@ -50,6 +49,7 @@ from tensor_dslab.readout.charge.runtime.effects import smearing as smearing_eff
 from tensor_dslab.readout.charge.runtime.prepare import prepare_charge
 from tensor_dslab.readout.charge.runtime.validate import validate_charge
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime, prepare_sampling
+from tensor_dslab.readout.runtime.keys import CHARGE_SMEARING_RNG_KEY
 
 
 def _ns(value: int | float):
@@ -814,12 +814,16 @@ class ChargeSmearingTest(unittest.TestCase):
         )
         self.assertTrue(_RecordingRng.calls)
         self.assertTrue(
-            all(call[0] == smearing.rng_key for call in _RecordingRng.calls)
+            all(
+                call[0] == CHARGE_SMEARING_RNG_KEY
+                for call in _RecordingRng.calls
+            )
         )
-        expected_positions = logical_positions(
-            tuple(source.tensor.shape),
+        expected_positions = torch.arange(
+            source.tensor.numel(),
+            dtype=torch.int64,
             device=source.tensor.device,
-        )
+        ).reshape(source.tensor.shape)
         self.assertTrue(
             all(
                 torch.equal(call[1], expected_positions)

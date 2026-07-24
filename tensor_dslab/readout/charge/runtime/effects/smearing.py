@@ -5,10 +5,10 @@ from dataclasses import dataclass
 from typing import final
 
 import torch
-from tensor_core import CounterRng, RngKey, logical_positions
+from tensor_core import CounterRng, RngKey, RngPositions, require_representable_float
 
-from tensor_dslab.readout.requirements import require_representable_float
 from tensor_dslab.readout.charge.config import ChargeSmearingConfig
+from tensor_dslab.readout.runtime.keys import CHARGE_SMEARING_RNG_KEY
 
 
 @final
@@ -98,7 +98,7 @@ def prepare_charge_smearing(
             ledger_bound=ledger_bound,
             device=device,
         ),
-        rng_key=config.rng_key,
+        rng_key=CHARGE_SMEARING_RNG_KEY,
     )
 
 
@@ -124,7 +124,10 @@ def simulate_charge_smearing(
         return charge_pe
     if runtime.represented_sigma <= 0.0:
         raise ValueError("charge-smearing width is invalid in the Charge dtype")
-    positions = logical_positions(tuple(charge_pe.shape), device=charge_pe.device)
+    positions = RngPositions.from_shape(
+        tuple(charge_pe.shape),
+        device=charge_pe.device,
+    )
     sigma = torch.tensor(
         runtime.represented_sigma,
         dtype=charge_pe.dtype,

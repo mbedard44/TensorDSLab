@@ -245,7 +245,7 @@ def _analog(
 def _tpc_config(
     *,
     support_time: float = 3_000.0,
-    peak_mv: float = -7.0,
+    peak_mv: float = 7.0,
 ) -> PureWaveformConfig:
     return PureWaveformConfig(
         model=TpcFebSnrPulseConfig(
@@ -267,7 +267,7 @@ def _veto_config() -> PureWaveformConfig:
             edge_offset_2=_ns(-176.50),
             edge_width_2=_ns(45.69),
             support_time=_ns(2020.27),
-            peak_voltage_per_photoelectron=_mv(-14.5912372),
+            peak_voltage_per_photoelectron=_mv(14.5912372),
         )
     )
 
@@ -310,7 +310,9 @@ def _reference_coefficients(
     retained = raw[: sampling.sample_count]
     return torch.tensor(
         [
-            value / normalization * model.peak_voltage_per_photoelectron.magnitude
+            -value
+            / normalization
+            * model.peak_voltage_per_photoelectron.magnitude
             for value in retained
         ],
         dtype=dtype,
@@ -586,7 +588,7 @@ class DeterministicWaveformProductsTest(unittest.TestCase):
 
     def test_pure_waveform_support_is_left_closed_right_open(self) -> None:
         sampling = _sampling(count=4)
-        config = _tpc_config(support_time=16.0, peak_mv=-2.0)
+        config = _tpc_config(support_time=16.0, peak_mv=2.0)
         charge = _charge([1.0, 0.0, 0.0, 0.0], sampling, dtype=torch.float64)
         result = _produce_pure_waveform(
             charge,

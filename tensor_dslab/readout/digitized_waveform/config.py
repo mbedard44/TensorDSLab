@@ -7,7 +7,7 @@ from pint import Quantity
 from tensor_core import FiniteFloat, NonnegativeFloat, PositiveInteger
 
 from tensor_dslab.common.units import (
-    _canonical_quantity,
+    _canonicalize_quantity_fields,
     canonical_magnitude,
 )
 
@@ -22,24 +22,11 @@ class DigitizedWaveformConfig:
     __hash__ = None  # pyright: ignore[reportAssignmentType]
 
     def __post_init__(self) -> None:
-        object.__setattr__(
+        _canonicalize_quantity_fields(
             self,
-            "input_minimum",
-            _canonical_quantity(
-                self.input_minimum,
-                unit="mV",
-                field="DigitizedWaveformConfig.input_minimum",
-                constraint=FiniteFloat,
-            ),
-        )
-        object.__setattr__(
-            self,
-            "input_maximum",
-            _canonical_quantity(
-                self.input_maximum,
-                unit="mV",
-                field="DigitizedWaveformConfig.input_maximum",
-                constraint=FiniteFloat,
+            scalar_fields=(
+                ("input_minimum", "mV", FiniteFloat),
+                ("input_maximum", "mV", FiniteFloat),
             ),
         )
         if self.bit_depth.value > 16:

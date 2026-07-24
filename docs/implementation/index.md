@@ -601,7 +601,11 @@ Local `main` remains unpushed pending that adoption and those integrated gates.
 
 ### [Maintenance 7 TensorCore 0.15 Adoption](maintenance_7_tensorcore_0_15_adoption.md)
 
-Status: **User-authorized / Dispatched**.
+Status: **Implementation candidate / fixed-commit Validation pending** while
+these bytes are absent from `main`. If these exact bytes are present unchanged
+on `main`, Review's clean fast-forward has completed and final Design
+acceptance remains pending until this index and the work order record
+**Merged / Closed**.
 
 Maintenance 7 starts from exact clean local Maintenance 6 Design-closeout
 baseline `65bb55bf98bb37a129a950d93a0bdb9b0d3f2971`, tree
@@ -636,6 +640,17 @@ The package Implementation/Validation/Review loop is local-only and makes no
 new CUDA claim. After exact adoption closeout, a separate authority runs
 package-owned two-Torch-minor CUDA matrices on the exact integrated pairing.
 TensorDSLab remains unpushed until both gates close.
+
+Candidate 1 is one clean direct child of corrected Design authority
+`ad6172b69fc86a97ba96f1751757ea33e59fef5d`; its exact commit and tree are
+recorded in the immutable Validation handoff. Implementation's exact
+TensorCore source/archive matrix passed the focused affected suite at
+`185/173/12` and full discovery at `213/200/13`. Pyright `1.1.411` reported
+zero diagnostics against both dependency forms, and the external negative
+typing probe produced the same `16` required diagnostics in both forms.
+Exact dependency artifacts, address/key/quantity mutations, import/privacy,
+scope/protected-byte, diff, build, artifact, and hygiene gates were also
+exercised. CUDA was unavailable locally and no accelerator claim follows.
 
 ## Expected Stage Discipline
 

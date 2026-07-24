@@ -7,7 +7,7 @@ from pint import Quantity
 from tensor_core import FiniteFloat
 
 from tensor_dslab.common.units import (
-    _canonical_quantity,
+    _canonicalize_quantity_fields,
     canonical_magnitude,
 )
 
@@ -20,28 +20,13 @@ class AnalogSaturationConfig:
     __hash__ = None  # pyright: ignore[reportAssignmentType]
 
     def __post_init__(self) -> None:
-        if self.minimum is not None:
-            object.__setattr__(
-                self,
-                "minimum",
-                _canonical_quantity(
-                    self.minimum,
-                    unit="mV",
-                    field="AnalogSaturationConfig.minimum",
-                    constraint=FiniteFloat,
-                ),
-            )
-        if self.maximum is not None:
-            object.__setattr__(
-                self,
-                "maximum",
-                _canonical_quantity(
-                    self.maximum,
-                    unit="mV",
-                    field="AnalogSaturationConfig.maximum",
-                    constraint=FiniteFloat,
-                ),
-            )
+        _canonicalize_quantity_fields(
+            self,
+            scalar_fields=(
+                ("minimum", "mV", FiniteFloat),
+                ("maximum", "mV", FiniteFloat),
+            ),
+        )
         if self.minimum is None and self.maximum is None:
             raise ValueError("analog saturation requires at least one bound")
         if (

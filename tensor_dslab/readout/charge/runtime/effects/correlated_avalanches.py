@@ -5,11 +5,16 @@ from dataclasses import dataclass
 from typing import final
 
 import torch
-from tensor_core import CounterRng, RngKey
+from tensor_core import (
+    CounterRng,
+    RngKey,
+    RngPositions,
+    require_representable_float,
+)
+from tensor_core.validation.random import require_count_tensor
 
 from tensor_dslab.common.units import canonical_magnitude
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime
-from tensor_dslab.readout.requirements import require_representable_float
 from tensor_dslab.readout.charge.config import CorrelatedAvalancheConfig
 from tensor_dslab.readout.charge.runtime.effects.counts import (
     MAX_COUNT,
@@ -17,8 +22,6 @@ from tensor_dslab.readout.charge.runtime.effects.counts import (
     checked_rate_product,
     draw_ordered_categories,
     original_positions,
-    require_count_domain,
-    require_tensor_allocation,
 )
 from tensor_dslab.readout.charge.runtime.effects.delays import (
     AfterpulseRuntime,
@@ -26,6 +29,13 @@ from tensor_dslab.readout.charge.runtime.effects.delays import (
     prepare_afterpulse_recovery,
     prepare_delay,
     prepare_exponential_delay,
+)
+from tensor_dslab.readout.runtime.keys import (
+    AFTERPULSE_RNG_KEY,
+    DELAYED_CROSSTALK_OVERFLOW_RNG_KEY,
+    DELAYED_CROSSTALK_RETAINED_RNG_KEY,
+    DIRECT_CROSSTALK_OVERFLOW_RNG_KEY,
+    DIRECT_CROSSTALK_RETAINED_RNG_KEY,
 )
 
 
@@ -226,12 +236,12 @@ def prepare_correlated_avalanches(
         direct_retained_rng_key=(
             None
             if direct is None or config.direct_crosstalk is None
-            else config.direct_crosstalk.retained_rng_key
+            else DIRECT_CROSSTALK_RETAINED_RNG_KEY
         ),
         direct_overflow_rng_key=(
             None
             if direct is None or config.direct_crosstalk is None
-            else config.direct_crosstalk.overflow_rng_key
+            else DIRECT_CROSSTALK_OVERFLOW_RNG_KEY
         ),
         delayed_mean=(
             None
@@ -241,12 +251,12 @@ def prepare_correlated_avalanches(
         delayed_retained_rng_key=(
             None
             if delayed is None or config.delayed_crosstalk is None
-            else config.delayed_crosstalk.retained_rng_key
+            else DELAYED_CROSSTALK_RETAINED_RNG_KEY
         ),
         delayed_overflow_rng_key=(
             None
             if delayed is None or config.delayed_crosstalk is None
-            else config.delayed_crosstalk.overflow_rng_key
+            else DELAYED_CROSSTALK_OVERFLOW_RNG_KEY
         ),
         afterpulse_probability=(
             None
@@ -256,7 +266,7 @@ def prepare_correlated_avalanches(
         afterpulse_rng_key=(
             None
             if afterpulse is None or config.afterpulse is None
-            else config.afterpulse.rng_key
+            else AFTERPULSE_RNG_KEY
         ),
     )
 
@@ -264,7 +274,7 @@ def prepare_correlated_avalanches(
 def _draw_crosstalk(
     frontier: torch.Tensor,
     *,
-    positions: torch.Tensor,
+    positions: RngPositions,
     runtime: DelayRuntime,
     mean: float,
     retained_key: RngKey,
@@ -299,7 +309,7 @@ def _draw_crosstalk(
         mean,
         field=f"{field} overflow",
     )
-    generation_positions = positions + generation_index * tensor_numel
+    generation_positions = positions.offset(generation_index * tensor_numel)
     retained = rng.poisson(
         mean=retained_rate,
         key=retained_key,
@@ -318,7 +328,7 @@ def _draw_crosstalk(
 def _draw_afterpulses(
     frontier: torch.Tensor,
     *,
-    positions: torch.Tensor,
+    positions: RngPositions,
     runtime: AfterpulseRuntime,
     probability: float,
     rng_key: RngKey,
@@ -336,11 +346,11 @@ def _draw_afterpulses(
 
     for source in range(sample_count):
         source_counts = frontier[..., source]
-        source_positions = positions[..., source]
+        source_positions = positions.select(-1, source)
         shape = tuple(source_counts.shape)
         success_masses: list[torch.Tensor] = []
         failure_masses: list[torch.Tensor] = []
-        category_positions: list[torch.Tensor] = []
+        category_positions: list[RngPositions] = []
         for offset in range(sample_count - source):
             success = probability * runtime.delay.probabilities[offset]
             later = (1.0 - probability) + probability * runtime.delay.right_tails[
@@ -363,8 +373,13 @@ def _draw_afterpulses(
                 )
             )
             category_positions.append(
-                (generation_index * (sample_count + 1) + offset) * tensor_numel
-                + source_positions
+                source_positions.offset(
+                    (
+                        generation_index * (sample_count + 1)
+                        + offset
+                    )
+                    * tensor_numel
+                )
             )
 
         first_outside = sample_count - source
@@ -385,9 +400,13 @@ def _draw_afterpulses(
             )
         )
         category_positions.append(
-            (generation_index * (sample_count + 1) + sample_count)
-            * tensor_numel
-            + source_positions
+            source_positions.offset(
+                (
+                    generation_index * (sample_count + 1)
+                    + sample_count
+                )
+                * tensor_numel
+            )
         )
         *drawn_categories, _stop = draw_ordered_categories(
             source_counts,
@@ -485,7 +504,7 @@ def simulate_correlated_avalanches(
     runtime: CorrelatedAvalancheRuntime,
     rng: CounterRng,
 ) -> _CorrelatedAvalancheResult:
-    require_count_domain(seed_avalanches, field="correlated-avalanche roots")
+    require_count_tensor(seed_avalanches, "correlated-avalanche roots")
     if sample_dimension < 0 or sample_dimension >= seed_avalanches.ndim:
         raise ValueError("sample_dimension is outside the root rank")
     if seed_avalanches.shape[sample_dimension] != runtime.sample_count:

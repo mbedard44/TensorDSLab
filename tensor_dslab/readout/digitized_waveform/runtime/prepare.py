@@ -5,12 +5,12 @@ import math
 from typing import final
 
 import torch
+from tensor_core import require_representable_float
 
 from tensor_dslab.common.units import canonical_magnitude
 from tensor_dslab.readout.digitized_waveform.config import (
     DigitizedWaveformConfig,
 )
-from tensor_dslab.readout.requirements import require_representable_float
 
 
 @final

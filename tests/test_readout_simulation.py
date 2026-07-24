@@ -72,6 +72,10 @@ import tensor_dslab.readout.pure_waveform.runtime.produce as pure_producer
 import tensor_dslab.readout.pure_waveform.runtime.validate as pure_validator
 import tensor_dslab.readout.runtime.prepare as readout_preparer
 from tensor_dslab.readout.runtime.prepare import ReadoutRuntime
+from tensor_dslab.readout.runtime.keys import (
+    DARK_COUNT_RNG_KEY,
+    WHITE_NOISE_RNG_KEY,
+)
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime, prepare_sampling
 from tests.readout_fixtures import ForeignField
 
@@ -309,7 +313,7 @@ def _pure_config(*, support_time: float = 3.0) -> PureWaveformConfig:
             fast_time_constant=_ns(1.0),
             slow_time_constant=_ns(2.0),
             support_time=_ns(support_time),
-            peak_voltage_per_photoelectron=_mv(-2.0),
+            peak_voltage_per_photoelectron=_mv(2.0),
         )
     )
 
@@ -726,9 +730,9 @@ class ReadoutRequestAndClosureTest(unittest.TestCase):
         invalid_pure = _pure_config(support_time=0.5)
         invalid_noise = NoiseWaveformConfig(
             model=PsdNoiseConfig(
-                frequency_left_edges=(_hz(0.0),),
+                frequency_left_edges=quantities((0.0,), "Hz"),
                 frequency_stop=_hz(1.0),
-                power_density=(_density(1.0),),
+                power_density=quantities((1.0,), "mV ** 2 / Hz"),
             )
         )
         invalid_analog = AnalogWaveformConfig(
@@ -1006,9 +1010,9 @@ class ReadoutPreparationAndValidationTest(unittest.TestCase):
             complete,
             noise_waveform=NoiseWaveformConfig(
                 model=PsdNoiseConfig(
-                    frequency_left_edges=(_hz(0.0),),
+                    frequency_left_edges=quantities((0.0,), "Hz"),
                     frequency_stop=_hz(1.0),
-                    power_density=(_density(1.0),),
+                    power_density=quantities((1.0,), "mV ** 2 / Hz"),
                 )
             ),
         )
@@ -1356,9 +1360,12 @@ class ReadoutRngContractTest(unittest.TestCase):
                 "PSD",
                 NoiseWaveformConfig(
                     model=PsdNoiseConfig(
-                        frequency_left_edges=(_hz(0.0),),
+                        frequency_left_edges=quantities((0.0,), "Hz"),
                         frequency_stop=_hz(500_000_000.0),
-                        power_density=(_density(1.0e-9),),
+                        power_density=quantities(
+                            (1.0e-9,),
+                            "mV ** 2 / Hz",
+                        ),
                     )
                 ),
             ),
@@ -1397,258 +1404,28 @@ class ReadoutRngContractTest(unittest.TestCase):
                     direct_noise_calls,
                 )
 
-    def test_every_structural_noop_charge_role_participates_in_key_collisions(
-        self,
-    ) -> None:
+    def test_fixed_role_keys_need_no_request_collision_admission(self) -> None:
         sampling = _sampling()
         source = _photoelectrons(sampling)
-        shared = RngKey(namespace=0xABCDEF01, stream=1)
-        other = RngKey(namespace=0xABCDEF01, stream=2)
-        delay = FixedDelayConfig(delay=_ns(0.0))
-        role_configs = (
-            ChargeConfig(
-                dark_count=DarkCountConfig(
-                    rate=_hz(0.0),
-                    rng_key=shared,
-                )
-            ),
-            ChargeConfig(
-                timing_jitter=TimingJitterConfig(
-                    sigma=_ns(0.0),
-                    rng_key=shared,
-                )
-            ),
-            ChargeConfig(
-                correlated_avalanches=CorrelatedAvalancheConfig(
-                    maximum_generations=NonnegativeInteger(0),
-                    direct_crosstalk=DirectCrosstalkConfig(
-                        mean_offspring_per_parent=NonnegativeFloat(0.0),
-                        delay=delay,
-                        retained_rng_key=shared,
-                        overflow_rng_key=other,
-                    ),
-                )
-            ),
-            ChargeConfig(
-                correlated_avalanches=CorrelatedAvalancheConfig(
-                    maximum_generations=NonnegativeInteger(0),
-                    direct_crosstalk=DirectCrosstalkConfig(
-                        mean_offspring_per_parent=NonnegativeFloat(0.0),
-                        delay=delay,
-                        retained_rng_key=other,
-                        overflow_rng_key=shared,
-                    ),
-                )
-            ),
-            ChargeConfig(
-                correlated_avalanches=CorrelatedAvalancheConfig(
-                    maximum_generations=NonnegativeInteger(0),
-                    delayed_crosstalk=DelayedCrosstalkConfig(
-                        mean_offspring_per_parent=NonnegativeFloat(0.0),
-                        delay=delay,
-                        retained_rng_key=shared,
-                        overflow_rng_key=other,
-                    ),
-                )
-            ),
-            ChargeConfig(
-                correlated_avalanches=CorrelatedAvalancheConfig(
-                    maximum_generations=NonnegativeInteger(0),
-                    delayed_crosstalk=DelayedCrosstalkConfig(
-                        mean_offspring_per_parent=NonnegativeFloat(0.0),
-                        delay=delay,
-                        retained_rng_key=other,
-                        overflow_rng_key=shared,
-                    ),
-                )
-            ),
-            ChargeConfig(
-                correlated_avalanches=CorrelatedAvalancheConfig(
-                    maximum_generations=NonnegativeInteger(0),
-                    afterpulse=AfterpulseConfig(
-                        probability=Probability(0.0),
-                        mean_delay=_ns(1.0),
-                        rng_key=shared,
-                    ),
-                )
-            ),
-            ChargeConfig(
-                smearing=ChargeSmearingConfig(
-                    relative_sigma=NonnegativeFloat(0.0),
-                    rng_key=shared,
-                )
-            ),
-        )
-        noise = NoiseWaveformConfig(
-            model=WhiteNoiseConfig(
-                rms=_mv(1.0),
-                rng_key=shared,
-            )
-        )
-        for charge in role_configs:
-            with self.subTest(charge=charge):
-                rng = _FailingRng(seed=0)
-                with ExitStack() as stack:
-                    producer_mocks = tuple(
-                        stack.enter_context(patch.object(simulation, name))
-                        for name, _ in PRODUCERS
-                    )
-                    with self.assertRaises(ValueError):
-                        simulate_readout(
-                            source,
-                            products=(Charge, NoiseWaveform),
-                            config=_config(
-                                charge=charge,
-                                noise=noise,
-                            ),
-                            rng=rng,
-                        )
-                self.assertEqual(rng.calls, 0)
-                for producer_mock in producer_mocks:
-                    producer_mock.assert_not_called()
-
-    def test_zero_absent_and_unrequested_branches_contribute_no_key(self) -> None:
-        sampling = _sampling()
-        source = _photoelectrons(sampling)
-        shared = RngKey(namespace=0x54445331, stream=0x0000_0001)
-        charge = ChargeConfig(
-            dark_count=DarkCountConfig(
-                rate=_hz(0.0),
-                rng_key=shared,
-            )
-        )
-        white = NoiseWaveformConfig(
-            model=WhiteNoiseConfig(
-                rms=_mv(1.0),
-                rng_key=shared,
-            )
-        )
-        zero = NoiseWaveformConfig(model=ZeroNoiseConfig())
-        zero_runtime = noise_preparer.prepare_noise_waveform(
-            zero,
-            sampling=prepare_sampling(source),
-            shape=source.shape,
-            floating_dtype=torch.float32,
-            device=source.tensor.device,
-        )
-        self.assertEqual(zero_runtime.rng_roles, ())
-
-        rng = _FailingRng(seed=0)
+        self.assertNotEqual(DARK_COUNT_RNG_KEY, WHITE_NOISE_RNG_KEY)
+        self.assertFalse(hasattr(readout_preparer, "_require_unique_rng_keys"))
         result = simulate_readout(
             source,
             products=(Charge, NoiseWaveform),
-            config=_config(charge=charge, noise=zero),
-            rng=rng,
-        )
-        self.assertEqual(result.field_types, frozenset({Charge, NoiseWaveform}))
-        self.assertEqual(rng.calls, 0)
-
-        charge_only = simulate_readout(
-            source,
-            products=(Charge,),
-            config=_config(charge=charge, noise=white),
-            rng=_FailingRng(seed=0),
-        )
-        self.assertEqual(charge_only.field_types, frozenset({Charge}))
-
-        _RecordingRng.reset()
-        noise_only = simulate_readout(
-            source,
-            products=(NoiseWaveform,),
-            config=_config(charge=charge, noise=white),
-            rng=_RecordingRng(seed=0),
-        )
-        self.assertEqual(noise_only.field_types, frozenset({NoiseWaveform}))
-        self.assertGreater(len(_RecordingRng.calls), 0)
-
-        for stream in range(0x0000_0002, 0x0000_000B):
-            with self.subTest(absent_default_stream=stream):
-                reused_key = RngKey(namespace=0x54445331, stream=stream)
-                reused_white = NoiseWaveformConfig(
-                    model=WhiteNoiseConfig(
-                        rms=_mv(1.0),
-                        rng_key=reused_key,
-                    )
-                )
-                _RecordingRng.reset()
-                absent_roles = simulate_readout(
-                    source,
-                    products=(Charge, NoiseWaveform),
-                    config=_config(
-                        charge=ChargeConfig(),
-                        noise=reused_white,
-                    ),
-                    rng=_RecordingRng(seed=0),
-                )
-                self.assertEqual(
-                    absent_roles.field_types,
-                    frozenset({Charge, NoiseWaveform}),
-                )
-                self.assertGreater(len(_RecordingRng.calls), 0)
-                for call_key, _, _, _ in _RecordingRng.calls:
-                    self.assertEqual(call_key, reused_key)
-
-    def test_psd_and_intra_charge_role_collisions_are_rejected(self) -> None:
-        sampling = _sampling()
-        source = _photoelectrons(sampling)
-        left = RngKey(namespace=0xABCDEF04, stream=1)
-        right = RngKey(namespace=0xABCDEF04, stream=1)
-        self.assertIsNot(left, right)
-        self.assertEqual(left, right)
-        dark = DarkCountConfig(
-            rate=_hz(2.5e8),
-            rng_key=left,
-        )
-        psd = NoiseWaveformConfig(
-            model=PsdNoiseConfig(
-                frequency_left_edges=(_hz(0.0),),
-                frequency_stop=_hz(500_000_000.0),
-                power_density=(_density(1.0e-9),),
-                rng_key=right,
-            )
-        )
-        cases = (
-            (
-                (Charge, NoiseWaveform),
-                _config(
-                    charge=ChargeConfig(dark_count=dark),
-                    noise=psd,
+            config=_config(
+                charge=ChargeConfig(
+                    dark_count=DarkCountConfig(rate=_hz(2.5e8))
+                ),
+                noise=NoiseWaveformConfig(
+                    model=WhiteNoiseConfig(rms=_mv(0.25))
                 ),
             ),
-            (
-                (Charge,),
-                _config(
-                    charge=ChargeConfig(
-                        dark_count=dark,
-                        smearing=ChargeSmearingConfig(
-                            relative_sigma=NonnegativeFloat(0.0),
-                            rng_key=left,
-                        ),
-                    ),
-                ),
-            ),
+            rng=Threefry4x32(seed=7),
         )
-        for requested, config in cases:
-            with self.subTest(requested=requested):
-                rng = _FailingRng(seed=0)
-                with ExitStack() as stack:
-                    producer_mocks = tuple(
-                        stack.enter_context(patch.object(simulation, name))
-                        for name, _ in PRODUCERS
-                    )
-                    with self.assertRaisesRegex(
-                        ValueError,
-                        "distinct stochastic roles",
-                    ):
-                        simulate_readout(
-                            source,
-                            products=requested,
-                            config=config,
-                            rng=rng,
-                        )
-                self.assertEqual(rng.calls, 0)
-                for producer_mock in producer_mocks:
-                    producer_mock.assert_not_called()
+        self.assertEqual(
+            result.field_types,
+            frozenset((Charge, NoiseWaveform)),
+        )
 
 
 class ReadoutCompositionAndStorageTest(unittest.TestCase):
@@ -1665,10 +1442,7 @@ class ReadoutCompositionAndStorageTest(unittest.TestCase):
         self.assertIs(type(noise_config.model), WhiteNoiseConfig)
         assert charge_config.dark_count is not None
         assert type(noise_config.model) is WhiteNoiseConfig
-        self.assertNotEqual(
-            charge_config.dark_count.rng_key,
-            noise_config.model.rng_key,
-        )
+        self.assertNotEqual(DARK_COUNT_RNG_KEY, WHITE_NOISE_RNG_KEY)
         seed = 0x0123_4567_89AB_CDEF
         dtype = torch.float64
 
@@ -2004,40 +1778,29 @@ class ReadoutSimulationCudaTest(unittest.TestCase):
         self.assertIs(noise.axes, source.axes)
         _assert_no_storage_overlap(self, noise.tensor, source.tensor)
 
-    def test_key_collision_fails_before_cuda_execution(self) -> None:
+    def test_fixed_role_keys_execute_together_on_cuda(self) -> None:
         sampling = _sampling()
         source = _photoelectrons(sampling, device="cuda")
-        shared = RngKey(namespace=0xABCDEF03, stream=1)
         config = _config(
             charge=ChargeConfig(
                 dark_count=DarkCountConfig(
-                    rate=_hz(0.0),
-                    rng_key=shared,
+                    rate=_hz(2.5e8),
                 )
             ),
             noise=NoiseWaveformConfig(
                 model=WhiteNoiseConfig(
                     rms=_mv(0.5),
-                    rng_key=shared,
                 )
             ),
         )
-        rng = _FailingRng(seed=0)
-        with ExitStack() as stack:
-            producer_mocks = tuple(
-                stack.enter_context(patch.object(simulation, name))
-                for name, _ in PRODUCERS
-            )
-            with self.assertRaises(ValueError):
-                simulate_readout(
-                    source,
-                    products=(Charge, NoiseWaveform),
-                    config=config,
-                    rng=rng,
-                )
-        self.assertEqual(rng.calls, 0)
-        for producer_mock in producer_mocks:
-            producer_mock.assert_not_called()
+        result = simulate_readout(
+            source,
+            products=(Charge, NoiseWaveform),
+            config=config,
+            rng=Threefry4x32(seed=0),
+        )
+        for field_type in (Charge, NoiseWaveform):
+            self.assertEqual(result.field(field_type).tensor.device.type, "cuda")
 
 
 if __name__ == "__main__":

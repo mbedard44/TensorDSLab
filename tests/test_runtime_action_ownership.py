@@ -176,9 +176,9 @@ def _config(*, psd: bool = False) -> ReadoutConfig:
     noise = (
         NoiseWaveformConfig(
             model=PsdNoiseConfig(
-                frequency_left_edges=(_hz(0.0),),
+                frequency_left_edges=quantities((0.0,), "Hz"),
                 frequency_stop=_hz(300_000_000.0),
-                power_density=(_density(1.0e-9),),
+                power_density=quantities((1.0e-9,), "mV ** 2 / Hz"),
             )
         )
         if psd
@@ -191,7 +191,7 @@ def _config(*, psd: bool = False) -> ReadoutConfig:
                 fast_time_constant=_ns(1.0),
                 slow_time_constant=_ns(2.0),
                 support_time=_ns(6.0),
-                peak_voltage_per_photoelectron=_mv(-1.0),
+                peak_voltage_per_photoelectron=_mv(1.0),
             )
         ),
         noise_waveform=noise,

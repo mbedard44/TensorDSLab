@@ -9,6 +9,7 @@ from typing import Any, cast, ClassVar
 import unittest
 from unittest.mock import patch
 
+import numpy as np
 import pint
 from pint import Quantity
 import torch
@@ -131,7 +132,7 @@ def _valid_configs() -> tuple[Any, ...]:
         fast_time_constant=_ns(1.0),
         slow_time_constant=_ns(2.0),
         support_time=_ns(6.0),
-        peak_voltage_per_photoelectron=_mv(-1.0),
+        peak_voltage_per_photoelectron=_mv(1.0),
     )
     veto = VetoPduPulseConfig(
         gaussian_center=_ns(0.0),
@@ -141,7 +142,7 @@ def _valid_configs() -> tuple[Any, ...]:
         edge_offset_2=_ns(1.0),
         edge_width_2=_ns(1.0),
         support_time=_ns(6.0),
-        peak_voltage_per_photoelectron=_mv(-1.0),
+        peak_voltage_per_photoelectron=_mv(1.0),
     )
     zero = ZeroNoiseConfig()
     white = WhiteNoiseConfig(rms=_mv(1.0))
@@ -206,12 +207,15 @@ class PintPhysicalConfigurationTest(unittest.TestCase):
         second = quantity(2.0, "ns")
         group = quantities((1, 2.0), "mV")
         self.assertIs(first._REGISTRY, second._REGISTRY)
-        self.assertTrue(all(value._REGISTRY is first._REGISTRY for value in group))
-        self.assertIsNot(group[0], group[1])
+        self.assertIs(group._REGISTRY, first._REGISTRY)
         self.assertIs(pint.get_application_registry(), application_registry)
         self.assertEqual(first.magnitude, 2.0)
         self.assertIs(type(first.magnitude), float)
         self.assertAlmostEqual(first.to("ps").magnitude, 2_000.0)
+        self.assertIs(type(group.magnitude), np.ndarray)
+        self.assertIs(group.magnitude.dtype, np.dtype(np.float64))
+        self.assertFalse(group.magnitude.flags.writeable)
+        np.testing.assert_array_equal(group.magnitude, np.array((1.0, 2.0)))
 
         for invalid in (True, "1", None, object()):
             with self.subTest(magnitude=invalid):
@@ -224,7 +228,9 @@ class PintPhysicalConfigurationTest(unittest.TestCase):
             with self.subTest(container=type(invalid).__name__):
                 with self.assertRaises(TypeError):
                     quantities(cast(Any, invalid), "ns")
-        self.assertEqual(quantities((), "ns"), ())
+        empty = quantities((), "ns")
+        self.assertEqual(empty.magnitude.shape, (0,))
+        self.assertFalse(empty.magnitude.flags.writeable)
         with self.assertRaises(ValueError):
             quantities((), "")
 
@@ -339,33 +345,30 @@ class PintPhysicalConfigurationTest(unittest.TestCase):
         )
         self.assertEqual(len(cases), 26)
         external = pint.UnitRegistry(cache_folder=None)
+        vector_fields = {"frequency_left_edges", "power_density"}
         for config, field_name, unit in cases:
             with self.subTest(config=type(config).__name__, field=field_name):
                 value = getattr(config, field_name)
-                values = value if type(value) is tuple else (value,)
-                self.assertTrue(values)
-                for item in values:
-                    self.assertIsInstance(item, Quantity)
-                    self.assertIs(type(item.magnitude), float)
-                    self.assertEqual(item.units, quantity(1, unit).units)
-                raw = tuple(1.0 for _ in values) if type(value) is tuple else 1.0
-                wrong = (
-                    tuple(external.Quantity(1.0, "kg") for _ in values)
-                    if type(value) is tuple
-                    else external.Quantity(1.0, "kg")
-                )
-                nonscalar = (
-                    tuple(external.Quantity([1.0], unit) for _ in values)
-                    if type(value) is tuple
-                    else external.Quantity([1.0], unit)
-                )
-                nonfinite = (
-                    tuple(
-                        external.Quantity(float("nan"), unit) for _ in values
+                self.assertIsInstance(value, Quantity)
+                self.assertEqual(value.units, quantity(1, unit).units)
+                if field_name in vector_fields:
+                    self.assertIs(type(value.magnitude), np.ndarray)
+                    self.assertEqual(value.magnitude.ndim, 1)
+                    self.assertIs(value.magnitude.dtype, np.dtype(np.float64))
+                    self.assertFalse(value.magnitude.flags.writeable)
+                    raw: object = (1.0, 1.0)
+                    wrong = external.Quantity(np.array((1.0, 1.0)), "kg")
+                    nonscalar = external.Quantity(1.0, unit)
+                    nonfinite = external.Quantity(
+                        np.array((1.0, float("nan"))),
+                        unit,
                     )
-                    if type(value) is tuple
-                    else external.Quantity(float("nan"), unit)
-                )
+                else:
+                    self.assertIs(type(value.magnitude), float)
+                    raw = 1.0
+                    wrong = external.Quantity(1.0, "kg")
+                    nonscalar = external.Quantity([1.0], unit)
+                    nonfinite = external.Quantity(float("nan"), unit)
                 with self.assertRaises(TypeError):
                     replace(config, **{field_name: raw})
                 with self.assertRaises(ValueError):
@@ -386,12 +389,18 @@ class PintPhysicalConfigurationTest(unittest.TestCase):
             (
                 psd,
                 "frequency_left_edges",
-                (_hz(-1), psd.frequency_left_edges[1]),
+                quantities(
+                    (-1, float(psd.frequency_left_edges.magnitude[1])),
+                    "Hz",
+                ),
             ),
             (
                 psd,
                 "power_density",
-                (_density(-1), psd.power_density[1]),
+                quantities(
+                    (-1, float(psd.power_density.magnitude[1])),
+                    "mV ** 2 / Hz",
+                ),
             ),
         )
         positive = (
@@ -412,10 +421,14 @@ class PintPhysicalConfigurationTest(unittest.TestCase):
             (tpc, "fast_time_constant", _ns(0)),
             (tpc, "slow_time_constant", _ns(0)),
             (tpc, "support_time", _ns(0)),
+            (tpc, "peak_voltage_per_photoelectron", _mv(0)),
+            (tpc, "peak_voltage_per_photoelectron", _mv(-1)),
             (veto, "gaussian_width", _ns(0)),
             (veto, "edge_width_1", _ns(0)),
             (veto, "edge_width_2", _ns(0)),
             (veto, "support_time", _ns(0)),
+            (veto, "peak_voltage_per_photoelectron", _mv(0)),
+            (veto, "peak_voltage_per_photoelectron", _mv(-1)),
             (WhiteNoiseConfig(rms=_mv(1)), "rms", _mv(0)),
             (psd, "frequency_stop", _hz(0)),
         )
@@ -428,7 +441,7 @@ class PintPhysicalConfigurationTest(unittest.TestCase):
                 fast_time_constant=_ns(2),
                 slow_time_constant=_ns(1),
                 support_time=_ns(6),
-                peak_voltage_per_photoelectron=_mv(-1),
+                peak_voltage_per_photoelectron=_mv(1),
             )
         with self.assertRaises(ValueError):
             AnalogSaturationConfig(minimum=_mv(1), maximum=_mv(1))
@@ -640,7 +653,7 @@ class PintPhysicalConfigurationTest(unittest.TestCase):
             fast_time_constant=_ns(1),
             slow_time_constant=_ns(2),
             support_time=_ns(6),
-            peak_voltage_per_photoelectron=_mv(-1),
+            peak_voltage_per_photoelectron=_mv(1),
         )
         veto = VetoPduPulseConfig(
             gaussian_center=_ns(0),
@@ -650,7 +663,7 @@ class PintPhysicalConfigurationTest(unittest.TestCase):
             edge_offset_2=_ns(1),
             edge_width_2=_ns(1),
             support_time=_ns(6),
-            peak_voltage_per_photoelectron=_mv(-1),
+            peak_voltage_per_photoelectron=_mv(1),
         )
         for model, expected in ((tpc, 4), (veto, 8)):
             with self.subTest(pulse=type(model).__name__):
@@ -680,11 +693,18 @@ class PintPhysicalConfigurationTest(unittest.TestCase):
                 device=torch.device("cpu"),
             )
             self.assertEqual(extracted.call_count, 1)
-        with patch.object(
-            noise,
-            "canonical_magnitude",
-            wraps=unit_boundary.canonical_magnitude,
-        ) as extracted:
+        with (
+            patch.object(
+                noise,
+                "canonical_magnitude",
+                wraps=unit_boundary.canonical_magnitude,
+            ) as scalar_extracted,
+            patch.object(
+                noise,
+                "canonical_magnitudes",
+                wraps=unit_boundary.canonical_magnitudes,
+            ) as vectors_extracted,
+        ):
             noise.prepare_noise_waveform(
                 NoiseWaveformConfig(
                     model=PsdNoiseConfig(
@@ -701,7 +721,8 @@ class PintPhysicalConfigurationTest(unittest.TestCase):
                 floating_dtype=torch.float64,
                 device=torch.device("cpu"),
             )
-            self.assertEqual(extracted.call_count, 5)
+            self.assertEqual(scalar_extracted.call_count, 1)
+            self.assertEqual(vectors_extracted.call_count, 2)
 
         with patch.object(
             analog,
@@ -910,7 +931,7 @@ class PintPhysicalConfigurationTest(unittest.TestCase):
             "require_one_of_exact",
         }
         requirements_tree = ast.parse(
-            Path("tensor_dslab/readout/requirements.py").read_text()
+            Path("tensor_dslab/readout/runtime/requirements.py").read_text()
         )
         self.assertFalse(
             retired_requirements

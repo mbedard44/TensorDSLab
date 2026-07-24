@@ -1,9 +1,56 @@
 # Maintenance 7 TensorCore 0.15 Adoption Work Order
 
-Status: **User-authorized / Dispatched**.
+Status: **Implementation candidate / fixed-commit Validation pending** while
+these bytes are absent from `main`. If these exact bytes are present unchanged
+on `main`, Review's clean fast-forward has completed and final Design
+acceptance remains pending until this work order and the implementation index
+record **Merged / Closed**.
 
 Stable work-order key:
 `TensorDSLab/maintenance-7-tensorcore-0-15-adoption`.
+
+## Implementation Candidate Evidence
+
+Implementation completed Candidate 1 as one clean direct child of exact
+corrected Design authority
+`ad6172b69fc86a97ba96f1751757ea33e59fef5d`. The exact candidate commit and
+tree are fixed in the immutable Validation handoff.
+
+The local evidence environment was Python `3.13.11`, PyTorch `2.12.1`, eager
+CPU, macOS `15.7.4` arm64, exact Pint `0.25.3`, and exact NumPy `2.3.5`, with
+CUDA unavailable. Implementation independently reconstructed exact TensorCore
+`0.15.0` source at commit
+`0f974e9e7f52125bbe829e124beb24e69de811d3`, parent
+`983a37fd5996c24c1fad3eeec994d365686dac6f`, and tree
+`587ff59711255c027a85cfef883422d40ea5dcda`. Its fresh canonical no-prefix ZIP
+was `439969` bytes with SHA-256
+`4af0210adf23d6e81a1da725889e223c5b151bb37779b7820ea4281c0a43c2fb`,
+and source/archive package bytes compared equal.
+
+The exact Pint `0.25.3` wheel and sdist retained SHA-256
+`27eb25143bd5de9fcc4d5a4b484f16faf6b4615aa93ece6b3373a8c1a3c1b97d`
+and
+`f8f5df6cf65314d74da1ade1bf96f8e3e4d0c41b51577ac53c49e7d44ca5acee`.
+Exact NumPy `2.3.5` macOS arm64 wheels for CPython `3.11` and `3.13` had
+SHA-256
+`ffe22d2b05504f786c867c8395de703937f934272eb67586817b46188b4ded6d`
+and
+`ccc933afd4d20aad3c00bcef049cb40049f7f196e0397f1109dba6fed63267b0`,
+respectively.
+
+Against both exact TensorCore source and archive forms, the focused affected
+matrix ran `185` tests with `173` passed and `12` expected unavailable-CUDA
+skips; full discovery ran `213` tests with `200` passed and `13` expected
+unavailable-CUDA skips. Pyright `1.1.411` standard mode reported zero errors,
+warnings, or informations in both forms, and the external negative typing
+probe produced the same `16` required diagnostics in both forms.
+
+Dependency, facade/export, import-isolation, public-TensorCore import,
+RngPositions/address, fixed-key, Runtime/Pint/NumPy privacy, retired-surface,
+mutation, exact-scope, protected-byte, diff, build, artifact, bytecode, and
+repository-cleanliness gates are required to remain clear on the frozen
+candidate. This evidence makes no accelerator, performance, release,
+deployment, conformance, or broad compatibility claim.
 
 ## Authority And Baseline
 

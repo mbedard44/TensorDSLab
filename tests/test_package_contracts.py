@@ -39,7 +39,7 @@ from tensor_dslab import (
 
 
 class PackageContractTest(unittest.TestCase):
-    def test_tensorcore_0_13_public_surface_and_topology_are_exact(self) -> None:
+    def test_tensorcore_0_15_public_surface_and_topology_are_exact(self) -> None:
         self.assertEqual(
             tensor_core.__all__,
             (
@@ -63,13 +63,17 @@ class PackageContractTest(unittest.TestCase):
                 "PositiveFloat",
                 "PositiveInteger",
                 "Probability",
-                "logical_positions",
+                "RngPositions",
                 "require_axis_signature",
+                "require_exact_integer",
+                "require_field_dtype",
+                "require_field_layout",
                 "require_finite_real",
                 "require_field_types",
                 "require_integer",
                 "require_nonnegative_integer",
                 "require_positive_integer",
+                "require_representable_float",
                 "require_same_axes",
                 "require_same_device",
                 "require_same_dtype",
@@ -86,25 +90,36 @@ class PackageContractTest(unittest.TestCase):
             ),
             (
                 "__init__.py",
-                "artifacts.py",
                 "py.typed",
-                "random.py",
+                "random/__init__.py",
+                "random/distributions/__init__.py",
+                "random/distributions/continuous.py",
+                "random/distributions/counts.py",
+                "random/key.py",
+                "random/positions.py",
+                "random/rng.py",
+                "random/threefry.py",
                 "scalars.py",
                 "table/__init__.py",
                 "table/collection.py",
                 "table/column.py",
                 "table/field.py",
                 "tensor/__init__.py",
+                "tensor/artifact.py",
                 "tensor/axis.py",
                 "tensor/collection.py",
                 "tensor/field.py",
-                "validation.py",
+                "validation/__init__.py",
+                "validation/axis.py",
+                "validation/numeric.py",
+                "validation/random.py",
+                "validation/tensor.py",
             ),
         )
         dependency_metadata = tomllib.loads(
             (package_root.parent / "pyproject.toml").read_text()
         )
-        self.assertEqual(dependency_metadata["project"]["version"], "0.13.0")
+        self.assertEqual(dependency_metadata["project"]["version"], "0.15.0")
         self.assertEqual(
             dependency_metadata["project"]["requires-python"],
             ">=3.11",
@@ -124,9 +139,10 @@ class PackageContractTest(unittest.TestCase):
         self.assertEqual(
             project["dependencies"],
             [
+                "numpy==2.3.5",
                 "pint==0.25.3",
                 "torch",
-                "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@202d8b1bc6259b8453d3d377570417f2480d782b",
+                "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@0f974e9e7f52125bbe829e124beb24e69de811d3",
             ],
         )
         self.assertEqual(
@@ -396,7 +412,7 @@ class PackageContractTest(unittest.TestCase):
             "CounterRng",
             "RngKey",
             "Threefry4x32",
-            "logical_positions",
+            "RngPositions",
             "require_same_dtype",
         )
         for module in (tensor_dslab, common, readout):
@@ -516,16 +532,29 @@ class PackageContractTest(unittest.TestCase):
                     self.assertFalse(hasattr(module, name))
 
     def test_production_uses_only_public_tensorcore_imports(self) -> None:
-        public_names = frozenset(tensor_core.__all__)
+        import tensor_core.validation as validation
+        import tensor_core.validation.random as random_validation
+
+        public_names = {
+            "tensor_core": frozenset(tensor_core.__all__),
+            "tensor_core.validation": frozenset(validation.__all__),
+            "tensor_core.validation.random": frozenset(
+                random_validation.__all__
+            ),
+        }
         for path in Path("tensor_dslab").rglob("*.py"):
             tree = ast.parse(path.read_text(), filename=str(path))
             for node in ast.walk(tree):
                 if isinstance(node, ast.ImportFrom) and node.module is not None:
                     if node.module.startswith("tensor_core"):
-                        self.assertEqual(node.module, "tensor_core", str(path))
+                        self.assertIn(node.module, public_names, str(path))
                         for alias in node.names:
                             self.assertNotEqual(alias.name, "*", str(path))
-                            self.assertIn(alias.name, public_names, str(path))
+                            self.assertIn(
+                                alias.name,
+                                public_names[node.module],
+                                str(path),
+                            )
                 elif isinstance(node, ast.Import):
                     for alias in node.names:
                         self.assertFalse(
@@ -691,8 +720,9 @@ class PackageContractTest(unittest.TestCase):
             "tensor_dslab.readout.digitized_waveform.runtime.validate",
             "tensor_dslab.readout.config",
             "tensor_dslab.readout.collection",
-            "tensor_dslab.readout.requirements",
             "tensor_dslab.readout.runtime",
+            "tensor_dslab.readout.runtime.keys",
+            "tensor_dslab.readout.runtime.requirements",
             "tensor_dslab.readout.runtime.sampling",
             "tensor_dslab.readout.runtime.prepare",
             "tensor_dslab.readout.simulation",

@@ -63,7 +63,7 @@ def make_tpc_config() -> TpcFebSnrPulseConfig:
         fast_time_constant=_ns(83.0),
         slow_time_constant=_ns(383.0),
         support_time=_ns(3000.0),
-        peak_voltage_per_photoelectron=_mv(-7.0),
+        peak_voltage_per_photoelectron=_mv(7.0),
     )
 
 
@@ -76,21 +76,15 @@ def make_veto_config() -> VetoPduPulseConfig:
         edge_offset_2=_ns(-176.50),
         edge_width_2=_ns(45.69),
         support_time=_ns(2020.27),
-        peak_voltage_per_photoelectron=_mv(-14.5912372),
+        peak_voltage_per_photoelectron=_mv(14.5912372),
     )
 
 
 def make_psd_config() -> PsdNoiseConfig:
     return PsdNoiseConfig(
-        frequency_left_edges=(
-            _hz(0.0),
-            _hz(1.0),
-        ),
+        frequency_left_edges=quantities((0.0, 1.0), "Hz"),
         frequency_stop=_hz(2.0),
-        power_density=(
-            _density(0.0),
-            _density(1.0),
-        ),
+        power_density=quantities((0.0, 1.0), "mV ** 2 / Hz"),
     )
 
 
@@ -246,7 +240,7 @@ class ReadoutConfigsTest(unittest.TestCase):
                 fast_time_constant=_ns(10.0),
                 slow_time_constant=_ns(10.0),
                 support_time=_ns(100.0),
-                peak_voltage_per_photoelectron=_mv(-1.0),
+                peak_voltage_per_photoelectron=_mv(1.0),
             )
         with self.assertRaises(ValueError):
             TpcFebSnrPulseConfig(

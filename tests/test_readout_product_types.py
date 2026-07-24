@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import unittest
-from unittest.mock import patch
 
 import torch
-from tensor_core import TensorAxis, TensorField
+from tensor_core import (
+    TensorAxis,
+    TensorField,
+    require_field_dtype,
+    require_representable_float,
+)
 
 from tensor_dslab.common import ChannelAxis, ExampleAxis, SampleAxis
 from tensor_dslab.readout import (
@@ -15,11 +19,6 @@ from tensor_dslab.readout import (
     NoiseWaveform,
     Photoelectrons,
     PureWaveform,
-)
-from tensor_dslab.readout.requirements import (
-    require_dtype,
-    require_floating_dtype,
-    require_representable_float,
 )
 from tensor_dslab.readout.analog_waveform.runtime.validate import (
     validate_analog_waveform as require_valid_analog,
@@ -70,7 +69,6 @@ def _charge_runtime(source: Photoelectrons, dtype: torch.dtype) -> ChargeRuntime
     return ChargeRuntime(
         sampling=_sampling_runtime(source),
         floating_dtype=dtype,
-        rng_roles=(),
         dark=None,
         timing_jitter=None,
         correlated_avalanches=None,
@@ -88,7 +86,6 @@ def _noise_runtime(
         floating_dtype=dtype,
         sampling=_sampling_runtime(source),
         model=ZeroNoiseRuntime(),
-        rng_roles=(),
     )
 
 
@@ -321,26 +318,16 @@ class ReadoutProductTypesTest(unittest.TestCase):
 
     def test_shared_private_requirements_have_exact_relationship_behavior(self) -> None:
         photoelectrons = make_product(Photoelectrons)
-        require_dtype(photoelectrons, torch.int64)
+        require_field_dtype(photoelectrons, torch.int64)
         with self.assertRaises(ValueError):
-            require_dtype(photoelectrons, torch.int32)
+            require_field_dtype(photoelectrons, torch.int32)
         charge = make_product(Charge)
-        require_floating_dtype(charge)
+        require_field_dtype(charge, torch.float32, torch.float64)
 
-        real_tensor = torch.tensor
-        with patch(
-            "tensor_dslab.readout.requirements.torch.tensor",
-            wraps=real_tensor,
-        ) as tensor_call:
-            represented = require_representable_float(
-                0.1,
-                dtype=torch.float32,
-                field="scalar",
-            )
-        tensor_call.assert_called_once_with(
+        represented = require_representable_float(
             0.1,
             dtype=torch.float32,
-            device="cpu",
+            field="scalar",
         )
         self.assertEqual(
             represented,

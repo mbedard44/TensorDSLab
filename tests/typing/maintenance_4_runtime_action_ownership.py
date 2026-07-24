@@ -84,7 +84,7 @@ config = ReadoutConfig(
             fast_time_constant=_ns(1.0),
             slow_time_constant=_ns(2.0),
             support_time=_ns(6.0),
-            peak_voltage_per_photoelectron=_mv(-1.0),
+            peak_voltage_per_photoelectron=_mv(1.0),
         )
     ),
     noise_waveform=NoiseWaveformConfig(model=ZeroNoiseConfig()),

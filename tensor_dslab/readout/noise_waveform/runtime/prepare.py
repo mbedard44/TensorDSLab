@@ -5,15 +5,19 @@ import math
 from typing import final
 
 import torch
-from tensor_core import RngKey
+from tensor_core import RngKey, require_representable_float
+from tensor_core.validation import require_shape_span
 
-from tensor_dslab.common.units import canonical_magnitude
-from tensor_dslab.readout.requirements import require_representable_float
+from tensor_dslab.common.units import canonical_magnitude, canonical_magnitudes
 from tensor_dslab.readout.noise_waveform.config import (
     NoiseWaveformConfig,
     PsdNoiseConfig,
     WhiteNoiseConfig,
     ZeroNoiseConfig,
+)
+from tensor_dslab.readout.runtime.keys import (
+    PSD_NOISE_RNG_KEY,
+    WHITE_NOISE_RNG_KEY,
 )
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 
@@ -46,12 +50,6 @@ class NoiseWaveformRuntime:
     floating_dtype: torch.dtype
     sampling: SamplingRuntime
     model: ZeroNoiseRuntime | WhiteNoiseRuntime | PsdNoiseRuntime
-    rng_roles: tuple[tuple[str, RngKey], ...]
-
-
-def _require_position_count(count: int, *, field: str) -> None:
-    if count < 0 or count >= 1 << 63:
-        raise ValueError(f"{field} exceeds the accepted logical-position range")
 
 
 def _prepare_white_rms(value: float, *, dtype: torch.dtype) -> float:
@@ -151,7 +149,7 @@ def prepare_noise_waveform(
     device: torch.device,
 ) -> NoiseWaveformRuntime:
     output_count = math.prod(shape)
-    _require_position_count(output_count, field="output")
+    require_shape_span(shape, "noise output", upper=1 << 63)
     model = config.model
 
     if type(model) is ZeroNoiseConfig:
@@ -161,7 +159,6 @@ def prepare_noise_waveform(
             floating_dtype=floating_dtype,
             sampling=sampling,
             model=ZeroNoiseRuntime(),
-            rng_roles=(),
         )
     elif type(model) is WhiteNoiseConfig:
         represented_rms = _prepare_white_rms(
@@ -174,19 +171,16 @@ def prepare_noise_waveform(
             floating_dtype=floating_dtype,
             sampling=sampling,
             model=WhiteNoiseRuntime(
-                rng_key=model.rng_key,
+                rng_key=WHITE_NOISE_RNG_KEY,
                 represented_rms_mv=represented_rms,
             ),
-            rng_roles=(("noise.white", model.rng_key),),
         )
     elif type(model) is PsdNoiseConfig:
-        frequency_left_edges_hz = tuple(
-            canonical_magnitude(value) for value in model.frequency_left_edges
+        frequency_left_edges_hz = canonical_magnitudes(
+            model.frequency_left_edges
         )
         frequency_stop_hz = canonical_magnitude(model.frequency_stop)
-        power_density_mv2_per_hz = tuple(
-            canonical_magnitude(value) for value in model.power_density
-        )
+        power_density_mv2_per_hz = canonical_magnitudes(model.power_density)
         represented_power_values = _prepare_psd_powers(
             frequency_left_edges_hz,
             frequency_stop_hz,
@@ -195,10 +189,10 @@ def prepare_noise_waveform(
             dtype=floating_dtype,
         )
         row_count = output_count // sampling.sample_count
-        coefficient_position_count = row_count * len(represented_power_values)
-        _require_position_count(
-            coefficient_position_count,
-            field="PSD coefficient",
+        require_shape_span(
+            (row_count, len(represented_power_values)),
+            "PSD coefficient",
+            upper=1 << 63,
         )
         represented_powers = torch.tensor(
             represented_power_values,
@@ -211,10 +205,9 @@ def prepare_noise_waveform(
             floating_dtype=floating_dtype,
             sampling=sampling,
             model=PsdNoiseRuntime(
-                rng_key=model.rng_key,
+                rng_key=PSD_NOISE_RNG_KEY,
                 represented_powers_mv2=represented_powers,
             ),
-            rng_roles=(("noise.psd", model.rng_key),),
         )
     else:
         raise TypeError("NoiseWaveformConfig.model is not recognized")

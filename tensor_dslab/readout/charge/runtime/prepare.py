@@ -4,17 +4,14 @@ from dataclasses import dataclass
 from typing import final
 
 import torch
-from tensor_core import RngKey
+from tensor_core.validation import require_tensor_allocation
+from tensor_core.validation.random import require_count_tensor
 
 from tensor_dslab.readout.charge.config import ChargeConfig
 from tensor_dslab.readout.charge.runtime.effects.correlated_avalanches import (
     CorrelatedAvalancheRuntime,
     prepare_correlated_avalanches,
     prepare_ledger_envelope,
-)
-from tensor_dslab.readout.charge.runtime.effects.counts import (
-    require_count_domain,
-    require_tensor_allocation,
 )
 from tensor_dslab.readout.charge.runtime.effects.dark_counts import (
     DarkCountRuntime,
@@ -37,7 +34,6 @@ from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 class ChargeRuntime:
     sampling: SamplingRuntime
     floating_dtype: torch.dtype
-    rng_roles: tuple[tuple[str, RngKey], ...]
     dark: DarkCountRuntime | None
     timing_jitter: TimingJitterRuntime | None
     correlated_avalanches: CorrelatedAvalancheRuntime | None
@@ -54,55 +50,20 @@ def prepare_charge(
     device = photoelectrons.tensor.device
 
     source = photoelectrons.tensor
-    require_count_domain(source, field="Photoelectrons source")
+    require_count_tensor(source, "Photoelectrons source")
     shape = tuple(source.shape)
     tensor_numel = require_tensor_allocation(
         shape,
+        "Charge source",
         element_size=source.element_size(),
-        field="Charge source",
+        upper=1 << 63,
     )
     require_tensor_allocation(
         shape,
+        "Charge output",
         element_size=torch.empty((), dtype=floating_dtype).element_size(),
-        field="Charge output",
+        upper=1 << 63,
     )
-    rng_roles: list[tuple[str, RngKey]] = []
-    if config.dark_count is not None:
-        rng_roles.append(("dark count", config.dark_count.rng_key))
-    if config.timing_jitter is not None:
-        rng_roles.append(("timing jitter", config.timing_jitter.rng_key))
-    correlated_config = config.correlated_avalanches
-    if correlated_config is not None:
-        if correlated_config.direct_crosstalk is not None:
-            rng_roles.extend(
-                (
-                    (
-                        "direct crosstalk retained",
-                        correlated_config.direct_crosstalk.retained_rng_key,
-                    ),
-                    (
-                        "direct crosstalk overflow",
-                        correlated_config.direct_crosstalk.overflow_rng_key,
-                    ),
-                )
-            )
-        if correlated_config.delayed_crosstalk is not None:
-            rng_roles.extend(
-                (
-                    (
-                        "delayed crosstalk retained",
-                        correlated_config.delayed_crosstalk.retained_rng_key,
-                    ),
-                    (
-                        "delayed crosstalk overflow",
-                        correlated_config.delayed_crosstalk.overflow_rng_key,
-                    ),
-                )
-            )
-        if correlated_config.afterpulse is not None:
-            rng_roles.append(("afterpulse", correlated_config.afterpulse.rng_key))
-    if config.smearing is not None:
-        rng_roles.append(("charge smearing", config.smearing.rng_key))
 
     dark = (
         None
@@ -150,7 +111,6 @@ def prepare_charge(
     return ChargeRuntime(
         sampling=sampling,
         floating_dtype=floating_dtype,
-        rng_roles=tuple(rng_roles),
         dark=dark,
         timing_jitter=timing_jitter,
         correlated_avalanches=correlated_avalanches,

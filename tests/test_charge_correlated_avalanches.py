@@ -18,6 +18,7 @@ from tensor_core import (
     RngKey,
     Threefry4x32,
 )
+from tensor_core.validation import require_tensor_allocation
 
 from tensor_dslab import (
     quantities,
@@ -951,32 +952,36 @@ class CorrelatedAvalancheEnvelopeTest(unittest.TestCase):
 
     def test_allocation_byte_and_element_products_have_exact_boundaries(self) -> None:
         self.assertEqual(
-            count_effect.require_tensor_allocation(
+            require_tensor_allocation(
                 ((1 << 63) - 1,),
+                "test",
                 element_size=1,
-                field="test",
+                upper=1 << 63,
             ),
             (1 << 63) - 1,
         )
         with self.assertRaises(ValueError):
-            count_effect.require_tensor_allocation(
+            require_tensor_allocation(
                 (1 << 63,),
+                "test",
                 element_size=1,
-                field="test",
+                upper=1 << 63,
             )
         self.assertEqual(
-            count_effect.require_tensor_allocation(
+            require_tensor_allocation(
                 ((1 << 60) - 1,),
+                "test",
                 element_size=8,
-                field="test",
+                upper=1 << 63,
             ),
             (1 << 60) - 1,
         )
         with self.assertRaises(ValueError):
-            count_effect.require_tensor_allocation(
+            require_tensor_allocation(
                 (1 << 60,),
+                "test",
                 element_size=8,
-                field="test",
+                upper=1 << 63,
             )
 
     def test_ledger_depth_boundaries_match_the_independent_equation(self) -> None:

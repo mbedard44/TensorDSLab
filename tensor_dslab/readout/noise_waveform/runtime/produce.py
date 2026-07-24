@@ -3,7 +3,7 @@ from __future__ import annotations
 import math
 
 import torch
-from tensor_core import CounterRng, RngKey, logical_positions
+from tensor_core import CounterRng, RngKey, RngPositions
 
 from tensor_dslab.readout.noise_waveform.field import NoiseWaveform
 from tensor_dslab.readout.noise_waveform.runtime.prepare import (
@@ -24,7 +24,7 @@ def _white_noise(
     rng_key: RngKey,
     represented_rms: float,
 ) -> torch.Tensor:
-    positions = logical_positions(shape, device=device)
+    positions = RngPositions.from_shape(shape, device=device)
     return rng.gaussian(
         mean=0.0,
         standard_deviation=represented_rms,
@@ -52,10 +52,10 @@ def _psd_noise(
     non_sample_shape = shape[:sample_dimension] + shape[sample_dimension + 1 :]
     row_count = math.prod(non_sample_shape)
 
-    positions = logical_positions(
+    positions = RngPositions.from_shape(
         (row_count, frequency_count),
         device=device,
-    )[:, 1:]
+    ).slice(1, 1, None)
     normals = rng.gaussian(
         mean=0.0,
         standard_deviation=1.0,

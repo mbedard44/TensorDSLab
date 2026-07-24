@@ -6,7 +6,8 @@ from fractions import Fraction
 from typing import final
 
 import torch
-from tensor_core import CounterRng, RngKey, logical_positions
+from tensor_core import CounterRng, RngKey, RngPositions
+from tensor_core.validation.random import require_count_tensor
 
 from tensor_dslab.common.units import canonical_magnitude
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime
@@ -14,8 +15,8 @@ from tensor_dslab.readout.charge.config import DarkCountConfig
 from tensor_dslab.readout.charge.runtime.effects.counts import (
     MAX_POISSON_MEAN,
     checked_add,
-    require_count_domain,
 )
+from tensor_dslab.readout.runtime.keys import DARK_COUNT_RNG_KEY
 
 
 @final
@@ -56,7 +57,7 @@ def prepare_dark_counts(
             canonical_magnitude(config.rate),
             sampling=sampling,
         ),
-        rng_key=config.rng_key,
+        rng_key=DARK_COUNT_RNG_KEY,
     )
 
 
@@ -66,10 +67,10 @@ def simulate_dark_counts(
     runtime: DarkCountRuntime,
     rng: CounterRng,
 ) -> torch.Tensor:
-    require_count_domain(counts, field="dark-count input")
+    require_count_tensor(counts, "dark-count input")
     if runtime.mean == 0.0:
         return counts
-    positions = logical_positions(tuple(counts.shape), device=counts.device)
+    positions = RngPositions.from_shape(tuple(counts.shape), device=counts.device)
     sampled = rng.poisson(
         mean=runtime.mean,
         key=runtime.rng_key,

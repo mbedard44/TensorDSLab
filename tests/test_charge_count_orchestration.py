@@ -5,7 +5,9 @@ from typing import ClassVar
 import unittest
 
 import torch
-from tensor_core import CounterRng, RngKey, Threefry4x32, logical_positions
+from tensor_core import CounterRng, RngKey, RngPositions, Threefry4x32
+from tensor_core.validation import require_tensor_allocation
+from tensor_core.validation.random import require_count_tensor
 
 from tensor_dslab.readout.charge.runtime.effects.counts import (
     MAX_COUNT,
@@ -13,8 +15,6 @@ from tensor_dslab.readout.charge.runtime.effects.counts import (
     checked_subtract,
     draw_ordered_categories,
     original_positions,
-    require_count_domain,
-    require_tensor_allocation,
 )
 
 
@@ -116,7 +116,7 @@ def _draw_q32(
     device: torch.device | str = "cpu",
 ) -> torch.Tensor:
     total = torch.full((examples,), 32, dtype=torch.int64, device=device)
-    basis = logical_positions(tuple(total.shape), device=total.device)
+    basis = RngPositions.from_shape(tuple(total.shape), device=total.device)
     masses = ((0.10, 0.90), (0.15, 0.75), (0.20, 0.55))
     categories = draw_ordered_categories(
         total,
@@ -129,7 +129,7 @@ def _draw_q32(
             for _, later in masses
         ),
         positions=tuple(
-            basis + category * total.numel()
+            basis.offset(category * total.numel())
             for category in range(len(masses))
         ),
         rng=Threefry4x32(seed=seed),
@@ -142,15 +142,15 @@ def _draw_q32(
 class ChargeCountDomainTest(unittest.TestCase):
     def test_count_domain_andchecked_add_subtract_boundaries(self) -> None:
         accepted = torch.tensor((0, MAX_COUNT), dtype=torch.int64)
-        require_count_domain(accepted, field="accepted")
+        require_count_tensor(accepted, "accepted")
         with self.assertRaises(TypeError):
-            require_count_domain(accepted.to(torch.int32), field="dtype")
+            require_count_tensor(accepted.to(torch.int32), "dtype")
         with self.assertRaises(ValueError):
-            require_count_domain(torch.tensor((-1,), dtype=torch.int64), field="low")
+            require_count_tensor(torch.tensor((-1,), dtype=torch.int64), "low")
         with self.assertRaises(ValueError):
-            require_count_domain(
+            require_count_tensor(
                 torch.tensor((MAX_COUNT + 1,), dtype=torch.int64),
-                field="high",
+                "high",
             )
 
         left = torch.tensor((0, MAX_COUNT - 1), dtype=torch.int64)
@@ -182,34 +182,58 @@ class ChargeCountDomainTest(unittest.TestCase):
 
     def test_allocation_and_original_position_boundaries(self) -> None:
         self.assertEqual(
-            require_tensor_allocation((2, 3, 4), element_size=8, field="small"),
+            require_tensor_allocation(
+                (2, 3, 4),
+                "small",
+                element_size=8,
+                upper=1 << 63,
+            ),
             24,
         )
         with self.assertRaises(ValueError):
             require_tensor_allocation(
                 (1 << 62,),
+                "bytes",
                 element_size=8,
-                field="bytes",
+                upper=1 << 63,
             )
         with self.assertRaises(ValueError):
             require_tensor_allocation(
                 (1 << 62, 2),
+                "elements",
                 element_size=1,
-                field="elements",
+                upper=1 << 63,
             )
 
-        expected = logical_positions((2, 3, 4), device="cpu").movedim(1, -1)
+        _RecordingRng.calls = []
         actual = original_positions(
             (2, 3, 4),
             sample_dimension=1,
             device=torch.device("cpu"),
         )
-        self.assertTrue(torch.equal(actual, expected))
+        self.assertIs(type(actual), RngPositions)
+        self.assertEqual(actual.shape, (2, 4, 3))
+        _RecordingRng(seed=0).uniform(
+            key=_KEY,
+            positions=actual,
+            dtype=torch.float64,
+            quantum=0,
+            ordinal=0,
+            count=1,
+        )
+        self.assertTrue(
+            torch.equal(
+                _RecordingRng.calls[0][1],
+                torch.arange(24, dtype=torch.int64)
+                .reshape(2, 3, 4)
+                .movedim(1, -1),
+            )
+        )
 
 
 class OrderedMultinomialOrchestrationTest(unittest.TestCase):
     def test_zero_one_and_no_count_categories_are_draw_free(self) -> None:
-        positions = (torch.arange(8, dtype=torch.int64),)
+        positions = (RngPositions.from_shape((8,), device="cpu"),)
         failing = _FailingRng(seed=0)
         zeros = torch.zeros(8, dtype=torch.int64)
         zero_category, zero_remainder = draw_ordered_categories(
@@ -252,7 +276,10 @@ class OrderedMultinomialOrchestrationTest(unittest.TestCase):
         _RecordingRng.calls = []
         counts = torch.full((5,), 5, dtype=torch.int64)
         basis = torch.tensor((11, 13, 17, 19, 23), dtype=torch.int64)
-        positions = tuple(basis + category * 100 for category in range(3))
+        positions = tuple(
+            RngPositions.from_tensor(basis).offset(category * 100)
+            for category in range(3)
+        )
         categories = draw_ordered_categories(
             counts,
             success_masses=(0.2, 0.3, 0.1),
@@ -269,7 +296,7 @@ class OrderedMultinomialOrchestrationTest(unittest.TestCase):
         self.assertEqual(tuple(call[3] for call in _RecordingRng.calls), (0, 0, 0))
         for actual, expected in zip(
             (call[1] for call in _RecordingRng.calls),
-            positions,
+            (basis + category * 100 for category in range(3)),
             strict=True,
         ):
             self.assertTrue(torch.equal(actual, expected))

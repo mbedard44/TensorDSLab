@@ -5,7 +5,14 @@ import unittest
 from unittest.mock import patch
 
 import torch
-from tensor_core import CounterRng, NonnegativeFloat, PositiveInteger, Threefry4x32
+from tensor_core import (
+    CounterRng,
+    NonnegativeFloat,
+    PositiveInteger,
+    RngKey,
+    RngPositions,
+    Threefry4x32,
+)
 
 from tensor_dslab import TimingJitterConfig, quantity
 from tensor_dslab.readout.charge.runtime.effects import (
@@ -17,6 +24,28 @@ from tensor_dslab.readout.charge.runtime.effects.timing_jitter import (
     simulate_timing_jitter as simulate_timing_jitter_prepared,
 )
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime
+
+
+class _PositionRecordingRng(CounterRng):
+    __slots__ = ()
+
+    calls: list[torch.Tensor] = []
+
+    def _generate_block(
+        self,
+        *,
+        key: RngKey,
+        positions: torch.Tensor,
+        quantum: int,
+        block: int,
+    ) -> torch.Tensor:
+        del key, quantum, block
+        type(self).calls.append(positions.clone())
+        return torch.zeros(
+            positions.shape + (4,),
+            dtype=torch.int64,
+            device=positions.device,
+        )
 
 
 def _ns(value: int | float):
@@ -338,13 +367,19 @@ class TimingJitterSimulationTest(unittest.TestCase):
     def test_category_calls_use_increasing_targets_andoriginal_positions(self) -> None:
         sampling = _sampling()
         counts = torch.ones((1, 1, 4), dtype=torch.int64)
-        calls: list[torch.Tensor] = []
+        _PositionRecordingRng.calls = []
         original = timing_jitter.draw_ordered_categories
 
         def record(*args: object, **kwargs: object) -> torch.Tensor:
             positions = kwargs["positions"]
             assert type(positions) is tuple and len(positions) == 1
-            calls.append(positions[0].clone())
+            position = positions[0]
+            assert type(position) is RngPositions
+            _PositionRecordingRng(seed=0).uniform(
+                key=RngKey(namespace=0, stream=0),
+                positions=position,
+                dtype=torch.float64,
+            )
             return original(*args, **kwargs)  # type: ignore[arg-type]
 
         with patch.object(
@@ -359,6 +394,7 @@ class TimingJitterSimulationTest(unittest.TestCase):
                 config=TimingJitterConfig(sigma=_ns(1.0)),
                 rng=Threefry4x32(seed=9),
             )
+        calls = _PositionRecordingRng.calls
         self.assertEqual(len(calls), 16)
         self.assertEqual(
             [int(call.item()) for call in calls[:4]],

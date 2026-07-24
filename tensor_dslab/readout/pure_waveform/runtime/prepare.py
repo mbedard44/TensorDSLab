@@ -5,9 +5,9 @@ import math
 from typing import final
 
 import torch
+from tensor_core import require_representable_float
 
 from tensor_dslab.common.units import canonical_magnitude
-from tensor_dslab.readout.requirements import require_representable_float
 from tensor_dslab.readout.pure_waveform.config import (
     PureWaveformConfig,
     TpcFebSnrPulseConfig,
@@ -108,7 +108,7 @@ def prepare_pure_waveform(
         fast_time_constant_ns = canonical_magnitude(model.fast_time_constant)
         slow_time_constant_ns = canonical_magnitude(model.slow_time_constant)
         support_time_ns = canonical_magnitude(model.support_time)
-        peak_voltage_mv_per_pe = canonical_magnitude(
+        signed_peak_voltage_mv_per_pe = -canonical_magnitude(
             model.peak_voltage_per_photoelectron
         )
         raw_at = lambda time_ns: _tpc_raw(
@@ -124,7 +124,7 @@ def prepare_pure_waveform(
         edge_offset_2_ns = canonical_magnitude(model.edge_offset_2)
         edge_width_2_ns = canonical_magnitude(model.edge_width_2)
         support_time_ns = canonical_magnitude(model.support_time)
-        peak_voltage_mv_per_pe = canonical_magnitude(
+        signed_peak_voltage_mv_per_pe = -canonical_magnitude(
             model.peak_voltage_per_photoelectron
         )
         raw_at = lambda time_ns: _veto_raw(
@@ -158,7 +158,7 @@ def prepare_pure_waveform(
         raise ValueError("pulse template sampled extremum must be finite and nonzero")
 
     rounded_peak = require_representable_float(
-        peak_voltage_mv_per_pe,
+        signed_peak_voltage_mv_per_pe,
         dtype=floating_dtype,
         field="pulse normalized extremum",
     )
@@ -168,7 +168,7 @@ def prepare_pure_waveform(
     coefficient_count = min(template_sample_count, sampling.sample_count)
     rounded_coefficients = [
         require_representable_float(
-            value / normalization * peak_voltage_mv_per_pe,
+            value / normalization * signed_peak_voltage_mv_per_pe,
             dtype=floating_dtype,
             field=f"pulse coefficient[{index}]",
         )

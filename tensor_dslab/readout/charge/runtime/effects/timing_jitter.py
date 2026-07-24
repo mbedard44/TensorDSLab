@@ -6,6 +6,7 @@ from typing import final
 
 import torch
 from tensor_core import CounterRng, RngKey
+from tensor_core.validation.random import require_count_tensor
 
 from tensor_dslab.common.units import canonical_magnitude
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime
@@ -14,8 +15,8 @@ from tensor_dslab.readout.charge.runtime.effects.counts import (
     checked_add,
     draw_ordered_categories,
     original_positions,
-    require_count_domain,
 )
+from tensor_dslab.readout.runtime.keys import TIMING_JITTER_RNG_KEY
 
 
 _MAX_SAMPLE_COUNT = 8192
@@ -142,7 +143,7 @@ def prepare_timing_jitter(
     return TimingJitterRuntime(
         tuple(probabilities),
         tuple(left_tails),
-        config.rng_key,
+        TIMING_JITTER_RNG_KEY,
     )
 
 
@@ -153,7 +154,7 @@ def simulate_timing_jitter(
     runtime: TimingJitterRuntime,
     rng: CounterRng,
 ) -> torch.Tensor:
-    require_count_domain(counts, field="timing-jitter input")
+    require_count_tensor(counts, "timing-jitter input")
     if sample_dimension < 0 or sample_dimension >= counts.ndim:
         raise ValueError("sample_dimension is outside the count rank")
     sample_count = len(runtime.probabilities)
@@ -208,7 +209,9 @@ def simulate_timing_jitter(
                 source_remaining,
                 success_masses=(success_mass,),
                 failure_masses=(later_mass,),
-                positions=(positions[..., source] + target * total_count,),
+                positions=(
+                    positions.select(-1, source).offset(target * total_count),
+                ),
                 rng=rng,
                 key=runtime.rng_key,
                 field="timing jitter",

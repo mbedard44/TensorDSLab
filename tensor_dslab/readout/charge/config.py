@@ -9,28 +9,22 @@ from tensor_core import (
     NonnegativeInteger,
     PositiveFloat,
     Probability,
-    RngKey,
 )
 
-from tensor_dslab.common.units import _canonical_quantity
+from tensor_dslab.common.units import _canonicalize_quantity_fields
 
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class TimingJitterConfig:
     sigma: Quantity
-    rng_key: RngKey = RngKey(namespace=0x54445331, stream=0x0000_0008)
     __hash__ = None  # pyright: ignore[reportAssignmentType]
 
     def __post_init__(self) -> None:
-        object.__setattr__(
+        _canonicalize_quantity_fields(
             self,
-            "sigma",
-            _canonical_quantity(
-                self.sigma,
-                unit="ns",
-                field="TimingJitterConfig.sigma",
-                constraint=NonnegativeFloat,
+            scalar_fields=(
+                ("sigma", "ns", NonnegativeFloat),
             ),
         )
 
@@ -39,18 +33,13 @@ class TimingJitterConfig:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DarkCountConfig:
     rate: Quantity
-    rng_key: RngKey = RngKey(namespace=0x54445331, stream=0x0000_0003)
     __hash__ = None  # pyright: ignore[reportAssignmentType]
 
     def __post_init__(self) -> None:
-        object.__setattr__(
+        _canonicalize_quantity_fields(
             self,
-            "rate",
-            _canonical_quantity(
-                self.rate,
-                unit="Hz",
-                field="DarkCountConfig.rate",
-                constraint=NonnegativeFloat,
+            scalar_fields=(
+                ("rate", "Hz", NonnegativeFloat),
             ),
         )
 
@@ -62,14 +51,10 @@ class FixedDelayConfig:
     __hash__ = None  # pyright: ignore[reportAssignmentType]
 
     def __post_init__(self) -> None:
-        object.__setattr__(
+        _canonicalize_quantity_fields(
             self,
-            "delay",
-            _canonical_quantity(
-                self.delay,
-                unit="ns",
-                field="FixedDelayConfig.delay",
-                constraint=NonnegativeFloat,
+            scalar_fields=(
+                ("delay", "ns", NonnegativeFloat),
             ),
         )
 
@@ -81,14 +66,10 @@ class ExponentialDelayConfig:
     __hash__ = None  # pyright: ignore[reportAssignmentType]
 
     def __post_init__(self) -> None:
-        object.__setattr__(
+        _canonicalize_quantity_fields(
             self,
-            "mean_delay",
-            _canonical_quantity(
-                self.mean_delay,
-                unit="ns",
-                field="ExponentialDelayConfig.mean_delay",
-                constraint=PositiveFloat,
+            scalar_fields=(
+                ("mean_delay", "ns", PositiveFloat),
             ),
         )
 
@@ -98,21 +79,7 @@ class ExponentialDelayConfig:
 class DirectCrosstalkConfig:
     mean_offspring_per_parent: NonnegativeFloat
     delay: FixedDelayConfig | ExponentialDelayConfig
-    retained_rng_key: RngKey = RngKey(
-        namespace=0x54445331,
-        stream=0x0000_0004,
-    )
-    overflow_rng_key: RngKey = RngKey(
-        namespace=0x54445331,
-        stream=0x0000_0005,
-    )
     __hash__ = None  # pyright: ignore[reportAssignmentType]
-
-    def __post_init__(self) -> None:
-        if self.retained_rng_key == self.overflow_rng_key:
-            raise ValueError(
-                "DirectCrosstalkConfig retained and overflow RNG keys must differ"
-            )
 
 
 @final
@@ -120,21 +87,7 @@ class DirectCrosstalkConfig:
 class DelayedCrosstalkConfig:
     mean_offspring_per_parent: NonnegativeFloat
     delay: FixedDelayConfig | ExponentialDelayConfig
-    retained_rng_key: RngKey = RngKey(
-        namespace=0x54445331,
-        stream=0x0000_0006,
-    )
-    overflow_rng_key: RngKey = RngKey(
-        namespace=0x54445331,
-        stream=0x0000_0007,
-    )
     __hash__ = None  # pyright: ignore[reportAssignmentType]
-
-    def __post_init__(self) -> None:
-        if self.retained_rng_key == self.overflow_rng_key:
-            raise ValueError(
-                "DelayedCrosstalkConfig retained and overflow RNG keys must differ"
-            )
 
 
 @final
@@ -144,14 +97,10 @@ class AfterpulseRecoveryConfig:
     __hash__ = None  # pyright: ignore[reportAssignmentType]
 
     def __post_init__(self) -> None:
-        object.__setattr__(
+        _canonicalize_quantity_fields(
             self,
-            "time_constant",
-            _canonical_quantity(
-                self.time_constant,
-                unit="ns",
-                field="AfterpulseRecoveryConfig.time_constant",
-                constraint=PositiveFloat,
+            scalar_fields=(
+                ("time_constant", "ns", PositiveFloat),
             ),
         )
 
@@ -162,18 +111,13 @@ class AfterpulseConfig:
     probability: Probability
     mean_delay: Quantity
     recovery: AfterpulseRecoveryConfig | None = None
-    rng_key: RngKey = RngKey(namespace=0x54445331, stream=0x0000_0009)
     __hash__ = None  # pyright: ignore[reportAssignmentType]
 
     def __post_init__(self) -> None:
-        object.__setattr__(
+        _canonicalize_quantity_fields(
             self,
-            "mean_delay",
-            _canonical_quantity(
-                self.mean_delay,
-                unit="ns",
-                field="AfterpulseConfig.mean_delay",
-                constraint=PositiveFloat,
+            scalar_fields=(
+                ("mean_delay", "ns", PositiveFloat),
             ),
         )
 
@@ -192,7 +136,6 @@ class CorrelatedAvalancheConfig:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ChargeSmearingConfig:
     relative_sigma: NonnegativeFloat
-    rng_key: RngKey = RngKey(namespace=0x54445331, stream=0x0000_000A)
     __hash__ = None  # pyright: ignore[reportAssignmentType]
 
 

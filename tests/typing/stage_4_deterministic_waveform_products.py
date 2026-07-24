@@ -69,7 +69,7 @@ pure_config = PureWaveformConfig(
         fast_time_constant=_ns(83.0),
         slow_time_constant=_ns(383.0),
         support_time=_ns(3_000.0),
-        peak_voltage_per_photoelectron=_mv(-7.0),
+        peak_voltage_per_photoelectron=_mv(7.0),
     )
 )
 sampling_runtime = SamplingRuntime(

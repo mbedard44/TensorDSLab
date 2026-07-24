@@ -2,12 +2,10 @@ from __future__ import annotations
 
 from typing import final
 
-from tensor_core import TensorField
-
 import torch
+from tensor_core import TensorField, require_field_dtype
 
-from tensor_dslab.readout.requirements import (
-    require_dtype,
+from tensor_dslab.readout.runtime.requirements import (
     require_readout_structure,
 )
 
@@ -18,4 +16,4 @@ class DigitizedWaveform(TensorField):
 
     def _require(self) -> None:
         require_readout_structure(self)
-        require_dtype(self, torch.int32)
+        require_field_dtype(self, torch.int32)

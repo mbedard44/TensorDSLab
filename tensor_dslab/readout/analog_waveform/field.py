@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from typing import final
 
-from tensor_core import TensorField
+import torch
+from tensor_core import TensorField, require_field_dtype
 
-from tensor_dslab.readout.requirements import (
-    require_floating_dtype,
+from tensor_dslab.readout.runtime.requirements import (
     require_readout_structure,
 )
 
@@ -16,4 +16,4 @@ class AnalogWaveform(TensorField):
 
     def _require(self) -> None:
         require_readout_structure(self)
-        require_floating_dtype(self)
+        require_field_dtype(self, torch.float32, torch.float64)
