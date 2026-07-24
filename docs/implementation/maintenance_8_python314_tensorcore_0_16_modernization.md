@@ -108,29 +108,10 @@ real TensorDSLab CI surface, that requires a separate explicit scope decision.
 
 ## TensorCore 0.16 Adoption
 
-TensorCore `0.16.0` deliberately removes the central
-`tensor_core.validation` package and moves validation requirements to their
-owning domains. Maintenance 8 must migrate the exact precise imports:
-
-```python
-from tensor_core.tensor.validation import (
-    require_shape_span,
-    require_tensor_allocation,
-)
-from tensor_core.random.validation import require_count_tensor
-```
-
-The corresponding retired imports must disappear without aliases or local
-forwarders:
-
-```python
-from tensor_core.validation import require_shape_span
-from tensor_core.validation.random import require_count_tensor
-```
-
-Canonical imports of the accepted curated TensorCore root API remain root
-imports. In particular, TensorDSLab need not rewrite root imports merely
-because the definitions now live in domain packages:
+TensorCore `0.16.0` deliberately removes both the central
+`tensor_core.validation` package and every requirement re-export from the
+curated package root. The root remains canonical only for semantic classes and
+types:
 
 ```python
 from tensor_core import (
@@ -141,29 +122,80 @@ from tensor_core import (
     RngPositions,
     Scalar,
     TensorField,
+)
+```
+
+All retained requirements use their precise owning domains. Maintenance 8
+must migrate the exact imports:
+
+```python
+from tensor_core.tensor.validation import (
     require_field_dtype,
     require_field_layout,
+    require_field_types,
     require_representable_float,
     require_same_axes,
     require_same_device,
     require_same_dtype,
+    require_shape_span,
+    require_tensor_allocation,
 )
+from tensor_core.random.validation import require_count_tensor
 ```
 
-The final dependency audit must verify the published TensorCore surfaces
-selected by its own closeout, provisionally:
+The seven retained requirements currently imported from the TensorCore root
+occur `27` times in the Maintenance 7 source: `20` production imports and `7`
+test imports. Every occurrence of `require_field_dtype`,
+`require_field_layout`, `require_field_types`,
+`require_representable_float`, `require_same_axes`, `require_same_device`, and
+`require_same_dtype` must move to `tensor_core.tensor.validation`.
 
-- exact `34`-name curated `tensor_core` root;
+The corresponding root and retired-package imports must disappear without
+aliases or local forwarders:
+
+```python
+from tensor_core import require_field_dtype, require_same_dtype
+from tensor_core.validation import require_shape_span
+from tensor_core.validation.random import require_count_tensor
+```
+
+The final dependency audit must verify these exact public surfaces:
+
+- exact `21`-name semantic-class/type `tensor_core` root;
 - exact `7`-name `tensor_core.scalar` surface;
-- exact `5`-name `tensor_core.scalar.validation` surface;
-- exact `14`-name `tensor_core.tensor.validation` surface;
-- exact one-name `tensor_core.random.validation` surface; and
-- exact domain-owned package topology with no `tensor_core.validation`
-  compatibility package.
+- exact `3`-name `tensor_core.scalar.validation` surface;
+- exact `7`-name `tensor_core.tensor` surface;
+- exact `15`-name `tensor_core.tensor.validation` surface;
+- exact `3`-name `tensor_core.table` surface;
+- exact `4`-name `tensor_core.random` surface;
+- exact one-name `tensor_core.random.validation` surface;
+- exact `26`-file domain-owned package topology; and
+- no `tensor_core.validation` compatibility package, root requirement alias,
+  or forwarding assignment.
 
-Maintenance 8 changes no TensorCore validator signature, candidate domain,
-return, exception category, validation order, allocation/no-effect promise,
-range law, reduction, host-extraction, or synchronization boundary.
+These counts are the accepted consumer boundary of the pre-publication
+TensorCore Design candidate. The dependency pin remains unset until the exact
+same contract is implemented, closed, published, and independently verified
+on live `origin/main`.
+
+TensorCore `0.16.0` also adds public
+`tensor_core.tensor.validation.require_index(...)` for strict nonnegative
+indices used internally by axes, `TensorField.axis_at()`, and
+`RngPositions.select()`. Maintenance 8 must prove the dependency surface and
+preserved strict-index behavior, but TensorDSLab production does not import or
+call `require_index()` directly.
+
+The free `require_positive_integer()` and `require_nonnegative_integer()`
+functions are absent from the final scalar-validation surface. TensorDSLab
+does not consume them. `PositiveInteger` and `NonnegativeInteger` remain
+semantic root imports and preserve their exact construction, `require()`,
+`accepts()`, normalization, and diagnostic behavior.
+
+Maintenance 8 adopts these exact import/export and additive-index changes; it
+does not alter them. Every retained validator preserves its accepted
+signature, candidate domain, return, exception category, validation order,
+allocation/no-effect promise, range law, reduction, host-extraction, and
+synchronization boundary.
 
 ## Validation Ownership Preserved
 
@@ -443,7 +475,21 @@ The fixed work order should require, at minimum:
 
 - complete focused and full TensorDSLab source/archive suites;
 - complete TensorCore dependency suite in the accepted local environment;
-- exact public export and import-isolation checks;
+- exact `21/7/3/7/15/3/4/1` dependency export tuples and import-isolation
+  checks;
+- proof that all `13` former requirement re-exports are absent from the
+  TensorCore root, the `11` retained requirements are available only from
+  their accepted domain modules, and the two sign-specific free requirements
+  are absent completely;
+- proof that `require_index()` is present in
+  `tensor_core.tensor.validation`, absent from the TensorCore root, and
+  preserves strict nonnegative axis/field/RngPositions index behavior;
+- proof that TensorDSLab production does not import `require_index()`
+  directly;
+- proof that the seven retained TensorDSLab requirements use only
+  `tensor_core.tensor.validation`;
+- proof that the removed free positive/nonnegative integer requirements are
+  absent while the two Scalar leaves preserve exact behavior;
 - Config scalar/vector quantity normalization and registry-copy evidence;
 - prepared Runtime and producer Pint/NumPy privacy;
 - exact `RngPositions`, namespace/key, address, and no-global-RNG evidence;
