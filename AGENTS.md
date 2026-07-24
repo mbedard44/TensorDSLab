@@ -289,13 +289,16 @@ is a separate adoption of published TensorCore `0.15.0` exact commit
 `0f974e9e7f52125bbe829e124beb24e69de811d3`; only after that adoption and the
 exact integrated CUDA gates close may TensorDSLab be pushed.
 
-Maintenance 7 TensorCore 0.15 Adoption is **Candidate 1 Validation-cleared /
-Review-returned for a Design-owned package-source correction** under
+Maintenance 7 TensorCore 0.15 Adoption is in a **Design-owned package-source
+correction route** under
 `docs/implementation/maintenance_7_tensorcore_0_15_adoption.md`. Exact
-immutable Candidate 1 is
+immutable Candidate 1 was Validation-cleared and Review-returned at
 `68c2f62c2ce354dd6c92fde28b020c0ce71881d6`; one documentation-only direct
-child is pending Validation before Review recheck. Its focused
-target pins exact published TensorCore `0.15.0` commit
+descendant lineage carries the package-source correction without changing its
+production or test bytes. Before an unchanged Review fast-forward, an exact
+correction target requires fixed-commit Validation and Review; after that
+fast-forward, the same bytes await Design closeout. Its focused target pins
+exact published TensorCore `0.15.0` commit
 `0f974e9e7f52125bbe829e124beb24e69de811d3`, replaces raw
 `logical_positions(...)` use with `RngPositions`, imports matching generic
 validation requirements from TensorCore, and centralizes the unchanged

@@ -567,8 +567,11 @@ is **Merged / Closed** through exact Review-cleared target
 `0257fb477ee04556ebbe26351123ae610b5d7925`. It implements only the bounded
 Pint/config/runtime scope; no Stage 8 rerun, IO/artifact surface, integration,
 or push follows. TensorCore `0.15.0` adoption is the active package gate with
-Candidate 1 Validation-cleared / Review-returned for Design documentation.
+Candidate 1 historically Validation-cleared / Review-returned for Design
+documentation.
 [Maintenance 7](implementation/maintenance_7_tensorcore_0_15_adoption.md) is
-the exact work order for that adoption. One documentation-only direct child is
-pending Validation before Review recheck. It does not authorize cluster work
-or a push.
+the exact work order for that adoption. Its documentation-only correction
+lineage preserves Candidate 1's production and test bytes. A pre-merge target
+requires fixed-commit Validation and Review; after an unchanged Review
+fast-forward, the same bytes await Design closeout. It does not authorize
+cluster work or a push.

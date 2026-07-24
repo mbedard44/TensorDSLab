@@ -907,9 +907,11 @@ exact Review-cleared target `0257fb477ee04556ebbe26351123ae610b5d7925`;
 it owns the physical Config representation and bounded runtime-admission
 cleanup. The separate TensorCore `0.15.0` adoption now has Candidate 1
 Validation-cleared / Review-returned for a Design documentation correction.
-One exact direct-child documentation candidate is pending Validation before
-Review recheck. Its local package loop intentionally makes no fresh CUDA claim;
-the exact integrated CUDA gate follows only after adoption closeout.
+Its documentation-only correction lineage preserves the exact production and
+test bytes. A pre-merge correction target requires fixed-commit Validation and
+Review; after an unchanged Review fast-forward, the same bytes await Design
+closeout. Its local package loop intentionally makes no fresh CUDA claim; the
+exact integrated CUDA gate follows only after adoption closeout.
 
 ## Return To Design Before
 

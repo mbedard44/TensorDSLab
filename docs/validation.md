@@ -446,13 +446,15 @@ qualify only that exact integrated pairing.
 The
 [Maintenance 7 work order](implementation/maintenance_7_tensorcore_0_15_adoption.md)
 has exact immutable Candidate 1
-`68c2f62c2ce354dd6c92fde28b020c0ce71881d6` **Validation-cleared /
-Review-returned for a Design-owned package-source correction**. One exact
-documentation-only direct child is pending fixed-commit Validation before
-Review recheck.
+`68c2f62c2ce354dd6c92fde28b020c0ce71881d6`, which was
+**Validation-cleared / Review-returned for a Design-owned package-source
+correction**. Its documentation-only correction lineage preserves Candidate
+1's production and test bytes. A pre-merge correction target requires
+fixed-commit Validation and Review; after an unchanged Review fast-forward, the
+same bytes await Design closeout.
 
-For the supplemental candidate, local fixed-commit Validation and independent
-Review must retain Candidate 1's complete gate and additionally
+For every pre-merge correction target, local fixed-commit Validation and
+independent Review must retain Candidate 1's complete gate and additionally
 prove:
 
 - exact published TensorCore `0.15.0` commit/tree/version, 34 package-root

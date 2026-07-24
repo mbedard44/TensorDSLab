@@ -108,7 +108,7 @@ unit-free. Local `main` remains unpushed pending the separate TensorCore
 
 [Maintenance 7](docs/implementation/maintenance_7_tensorcore_0_15_adoption.md)
 has exact immutable Candidate 1
-`68c2f62c2ce354dd6c92fde28b020c0ce71881d6` Validation-cleared and
+`68c2f62c2ce354dd6c92fde28b020c0ce71881d6`, which was Validation-cleared and
 Review-returned for one Design-owned package-source correction. The candidate
 adopts exact published TensorCore `0.15.0`, replaces
 `logical_positions(...)` with validated `RngPositions`, uses TensorCore's
@@ -117,9 +117,12 @@ unchanged readout RNG namespace and role keys. It also makes pulse Configs
 store positive amplitude magnitudes and applies fixed DS20k negative polarity
 once in preparation, preserving calibrated rendered results. Streams,
 addresses, other science, Pint ownership, products, and facades remain
-unchanged. One documentation-only direct child is pending Validation before
-Review recheck. The local package gate makes no fresh CUDA claim; separately
-authorized integrated CUDA evidence follows only after the adoption closes.
+unchanged. A documentation-only correction lineage leaves those bytes
+immutable. Before an unchanged Review fast-forward, an exact correction target
+requires fixed-commit Validation and Review; after that fast-forward, the same
+bytes await Design closeout. The local package gate makes no fresh CUDA claim;
+separately authorized integrated CUDA evidence follows only after the adoption
+closes.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency

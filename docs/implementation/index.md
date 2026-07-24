@@ -601,13 +601,15 @@ Local `main` remains unpushed pending that adoption and those integrated gates.
 
 ### [Maintenance 7 TensorCore 0.15 Adoption](maintenance_7_tensorcore_0_15_adoption.md)
 
-Status: **Candidate 1 Validation-cleared / Review-returned for a Design-owned
-package-source correction**. Candidate 1 is exact commit
+Status: **Design-owned package-source correction route open**. Candidate 1 is
+exact commit
 `68c2f62c2ce354dd6c92fde28b020c0ce71881d6`, tree
-`a33750e4b4c094178ba4e65ffaaed530beb377d6`. Its production and test bytes
-remain immutable. One exact documentation-only direct child is fixed-commit
-Validation pending before Review rechecks the governing package-source
-contradiction.
+`a33750e4b4c094178ba4e65ffaaed530beb377d6`; it was Validation-cleared and
+Review-returned for the governing package-source contradiction. Its production
+and test bytes remain immutable through the documentation-only correction
+lineage. A pre-merge correction target requires fixed-commit Validation and
+Review; after an unchanged Review fast-forward, the same bytes await Design
+closeout.
 
 Maintenance 7 starts from exact clean local Maintenance 6 Design-closeout
 baseline `65bb55bf98bb37a129a950d93a0bdb9b0d3f2971`, tree

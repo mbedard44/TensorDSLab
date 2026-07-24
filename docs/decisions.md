@@ -431,7 +431,7 @@ Maintenance 7 supersedes that admission surface with the fixed table above.
 ### TensorCore `0.15.0` Owns Prepared Positions And Generic Requirements
 
 Maintenance 7 has exact immutable Candidate 1
-`68c2f62c2ce354dd6c92fde28b020c0ce71881d6` Validation-cleared /
+`68c2f62c2ce354dd6c92fde28b020c0ce71881d6`, which was Validation-cleared /
 Review-returned for a Design-owned package-source correction against exact
 published TensorCore `0.15.0` commit
 `0f974e9e7f52125bbe829e124beb24e69de811d3`. Candidate 1 replaces
@@ -882,10 +882,12 @@ dispatch, tensor relationships, axes identity, storage freshness, absolute
 product dtype domains, allocation/address/envelope limits, and
 generated-product validation remain.
 
-The decision remains accepted. Its exact Candidate 1 is Validation-cleared /
-Review-returned for one package-source correction, and the direct-child
-documentation candidate must clear Validation and Review before merge. The
-work authorizes no TensorCore edit, scientific equation or RNG change,
+The decision remains accepted. Its exact Candidate 1 was Validation-cleared /
+Review-returned for one package-source correction. Its documentation-only
+correction lineage preserves Candidate 1's production and test bytes; every
+pre-merge target must clear fixed-commit Validation and Review, and the same
+bytes after an unchanged Review fast-forward await Design closeout. The work
+authorizes no TensorCore edit, scientific equation or RNG change,
 IO/artifact surface, integration, Stage 8 work, optimization, compatibility
 shim, release, or push.
 

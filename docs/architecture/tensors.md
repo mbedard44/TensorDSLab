@@ -51,8 +51,11 @@ candidate `81ad2f52fe4a1966e5b3a0ceb5063138e42e731f` and Design closeout
 `021694b9479d02546405f6a815aedf21c9c831a4`. Maintenance 6 is Merged / Closed
 through exact Review-cleared target
 `0257fb477ee04556ebbe26351123ae610b5d7925`. TensorCore `0.15.0` adoption is
-the active package gate under Maintenance 7; one exact documentation-only
-direct child is pending Validation before Review recheck.
+the active package gate under Maintenance 7. Its Design-owned
+documentation-only correction lineage preserves Candidate 1's production and
+test bytes. A pre-merge correction target requires fixed-commit Validation and
+Review; after an unchanged Review fast-forward, the same bytes await Design
+closeout.
 
 The previous TensorCore `0.6` ID/layout/sidecar architecture is historical and
 is intentionally not preserved through aliases.

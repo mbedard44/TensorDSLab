@@ -1,9 +1,12 @@
 # Maintenance 7 TensorCore 0.15 Adoption Work Order
 
-Status: **Candidate 1 Validation-cleared / Review-returned for a Design-owned
-package-source correction**. The exact direct-child documentation correction
-is fixed-commit Validation pending. No production, test, dependency, metadata,
-scientific, RNG-address, or public-API byte is reopened.
+Status: **Design-owned package-source correction route open**. Exact Candidate
+1 was Validation-cleared and Review-returned for that correction. Its
+documentation-only correction lineage preserves all production, test,
+dependency, metadata, scientific, RNG-address, and public-API bytes. Before an
+unchanged Review fast-forward, an exact correction target requires fixed-commit
+Validation and Review; after that fast-forward, the same bytes await Design
+closeout.
 
 Stable work-order key:
 `TensorDSLab/maintenance-7-tensorcore-0-15-adoption`.

@@ -92,8 +92,8 @@ TensorCore `0.15.0` exact commit
 closure condition.
 
 [Maintenance 7](implementation/maintenance_7_tensorcore_0_15_adoption.md) is
-**Candidate 1 Validation-cleared / Review-returned for a Design-owned
-package-source correction**. Exact immutable Candidate 1 is
+in a **Design-owned package-source correction route**. Exact immutable
+Candidate 1 was Validation-cleared / Review-returned at
 `68c2f62c2ce354dd6c92fde28b020c0ce71881d6`, tree
 `a33750e4b4c094178ba4e65ffaaed530beb377d6`. It targets published TensorCore
 `0.15.0`, replaces `logical_positions(...)` with `RngPositions`, migrates
@@ -103,9 +103,12 @@ table. Public Configs expose no key fields and request preparation performs no
 caller-key collision admission. It also makes pulse Config values positive
 amplitude magnitudes and applies fixed DS20k negative polarity once in
 preparation, with exact calibrated result continuity. Public field names, Pint
-ownership, role streams, and scientific addresses remain unchanged. One
-direct-child documentation correction is pending Validation before Review
-recheck. Local closure precedes the separate integrated CUDA gate and any push.
+ownership, role streams, and scientific addresses remain unchanged. Its
+documentation-only correction lineage preserves the exact production and test
+bytes. A pre-merge correction target requires fixed-commit Validation and
+Review; after an unchanged Review fast-forward, the same bytes await Design
+closeout. Local closure precedes the separate integrated CUDA gate and any
+push.
 
 [Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
 Closed through exact implementation candidate

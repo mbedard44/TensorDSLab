@@ -6904,9 +6904,11 @@ The completed prerequisites and remaining production sequence are:
 5. Maintenance 6 Pint Physical Configuration Boundary is Merged / Closed
    through exact Review-cleared target
    `0257fb477ee04556ebbe26351123ae610b5d7925`.
-6. Complete the exact direct-child documentation correction, Validation, and
-   Review recheck for Maintenance 7 adoption of published TensorCore `0.15.0`
-   and the matching TensorDSLab validation/RngPositions cleanup.
+6. Complete Maintenance 7's Design-owned documentation-correction route and
+   local closeout for adoption of published TensorCore `0.15.0` and the
+   matching TensorDSLab validation/RngPositions cleanup. A pre-merge correction
+   target requires fixed-commit Validation and Review; after an unchanged
+   Review fast-forward, the same bytes await Design closeout.
 7. The first Stage 8 real-CUDA attempt remains stopped evidence. Any rerun
    requires a new Design authority after Maintenance 6.
    Profile real GPU memory and execution before designing workspace/output

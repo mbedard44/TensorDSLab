@@ -126,8 +126,9 @@ accelerator claim. Local `main` remains unpushed until the separate TensorCore
 
 [Maintenance 7 TensorCore 0.15 Adoption](docs/implementation/maintenance_7_tensorcore_0_15_adoption.md)
 has exact immutable Candidate 1
-`68c2f62c2ce354dd6c92fde28b020c0ce71881d6` **Validation-cleared /
-Review-returned for one Design-owned package-source correction**. It replaces
+`68c2f62c2ce354dd6c92fde28b020c0ce71881d6`, which was
+**Validation-cleared / Review-returned for one Design-owned package-source
+correction**. It replaces
 raw logical-position tensors with TensorCore `RngPositions`, retires matching
 local generic validators in favor of `tensor_core.validation`, and gives the
 unchanged readout RNG namespace and ten role keys one non-exported source.
@@ -135,8 +136,10 @@ Public Configs expose no key overrides. The maintenance also makes both pulse
 Configs accept positive voltage-amplitude magnitudes while preparation applies
 the fixed DS20k negative polarity once; calibrated rendered results remain
 exact. Public field names, Pint ownership, fixed keys and streams, and
-same-stack stochastic results remain unchanged. One documentation-only direct
-child is pending Validation before Review recheck.
+same-stack stochastic results remain unchanged. Its documentation-only
+correction lineage leaves production and tests immutable: a pre-merge target
+requires fixed-commit Validation and Review, while the same bytes after an
+unchanged Review fast-forward await Design closeout.
 
 The historical [TensorCore consumer proposal](docs/implementation/proposed_tensorcore_counter_rng_and_distributions.md)
 is now fulfilled by published TensorCore `0.9.0` commit
