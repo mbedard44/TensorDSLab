@@ -48,15 +48,15 @@ separate ratified scientific/API narrowing stores positive pulse-amplitude
 magnitudes and applies fixed DS20k negative polarity once in preparation while
 preserving calibrated rendered results.
 
-Maintenance 8 is **Design-complete / User dispatch pending** under
+Maintenance 8 is **Design-complete / User-authorized / Package loop active** under
 [`maintenance_8_python314_tensorcore_0_16_modernization.md`](implementation/maintenance_8_python314_tensorcore_0_16_modernization.md).
 It freezes exact published TensorCore `0.16.0` containing commit
 `e05324699892a8bcea024375720bfae1ed9569cc` and the Python `3.14.6` /
 PyTorch `2.13.0` modernization. The exact scope is dependency ownership,
 mechanical syntax/typing, metadata, tests, intentional docstrings, and
 synchronized records; no product, Config, Runtime, scientific, Pint, RNG, or
-public API redesign is accepted. Dispatch, integrated CUDA, and push remain
-separate user decisions.
+public API redesign is accepted. The fixed package route is active; integrated
+CUDA and push remain separate user decisions.
 
 ## Target Collaborator Surface
 

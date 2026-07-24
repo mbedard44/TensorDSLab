@@ -1,6 +1,6 @@
 # Maintenance 8 Python 3.14 And TensorCore 0.16 Modernization
 
-Status: **Design-complete / User dispatch pending**.
+Status: **Design-complete / User-authorized / Package loop active**.
 
 This is the fixed TensorDSLab Maintenance 8 production work order. It binds
 the exact published TensorCore `0.16.0` dependency, exact locally closed
@@ -812,14 +812,16 @@ under
 
 ## Dispatch Gate
 
-The Design authority is the exact commit that introduces this fixed work-order
-state. Its hash and tree are carried in the immutable dispatch handoff because
-a Git commit cannot truthfully contain its own hash. Implementation must prove
-that exact authority as its direct parent before editing.
+The Design authority is the exact lifecycle-only direct-child commit that
+records user authorization while preserving the fixed work-order contract.
+Its hash and tree are carried in the immutable dispatch handoff because a Git
+commit cannot truthfully contain its own hash. Implementation must prove that
+exact authority as its direct parent before editing.
 
-The work order is ready for user review but remains undispatched. Explicit user
-authorization is still required. Dispatch must name the exact authority
-commit/tree, confirm all execution roles are Active, and state that CUDA and
-push remain unauthorized. If any later TensorCore or TensorDSLab byte
-contradicts this contract, stop and return the conflict to both package Design
-authorities.
+The user authorized the persistent Implementation/Validation/Review route.
+The package loop is active until an unchanged Review fast-forward and Design
+closeout; this branch/main-neutral status remains true throughout intermediate
+candidate states. Dispatch must name the exact authority commit/tree, confirm
+all execution roles are Active, and state that CUDA and push remain
+unauthorized. If any later TensorCore or TensorDSLab byte contradicts this
+contract, stop and return the conflict to both package Design authorities.

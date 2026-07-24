@@ -109,7 +109,7 @@ local Review evidence passed with `13` conditional CUDA skips; no accelerator
 claim follows and local `main` remains unpushed.
 
 [Maintenance 8](implementation/maintenance_8_python314_tensorcore_0_16_modernization.md)
-is **Design-complete / User dispatch pending**. The fixed work order selects
+is **Design-complete / User-authorized / Package loop active**. The fixed work order selects
 exact published TensorCore `0.16.0` containing commit
 `e05324699892a8bcea024375720bfae1ed9569cc`, Python `3.14.6`, and
 PyTorch `2.13.0`; migrates requirement imports to domain-owned validation

@@ -494,7 +494,7 @@ performance evidence.
 
 The
 [Maintenance 8 work order](implementation/maintenance_8_python314_tensorcore_0_16_modernization.md)
-is **Design-complete / User dispatch pending**. It binds exact published
+is **Design-complete / User-authorized / Package loop active**. It binds exact published
 TensorCore `0.16.0` containing commit
 `e05324699892a8bcea024375720bfae1ed9569cc`, CPython `3.14.6`,
 PyTorch `2.13.0`, NumPy `2.5.1`, Pint `0.25.3`, Hatchling `1.31.0`, and

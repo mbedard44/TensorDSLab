@@ -667,7 +667,7 @@ authorized no cluster work or push.
 
 ### [Maintenance 8 Python 3.14 And TensorCore 0.16 Modernization](maintenance_8_python314_tensorcore_0_16_modernization.md)
 
-Status: **Design-complete / User dispatch pending**.
+Status: **Design-complete / User-authorized / Package loop active**.
 
 The fixed work order binds locally closed Maintenance 7 and exact published
 TensorCore `0.16.0` containing commit
@@ -690,9 +690,11 @@ is a concrete semantic column subtype, `FieldT` narrows a field factory, and
 the private quantity-table alias remains `_QuantityField`. The record changes
 no scientific, Pint, RNG, product, Config, Runtime, or public API contract.
 
-The committed Design authority remains undispatched until the user explicitly
-authorizes the persistent Implementation/Validation/Review route. It
-authorizes no cluster work, push, release, or compatibility claim.
+The user authorized the exact persistent Implementation/Validation/Review
+route. The package loop remains active until an unchanged Review fast-forward
+and Design closeout; this branch/main-neutral lifecycle wording remains true
+through candidate dispatch and merge. No cluster work, push, release, or
+compatibility claim is authorized.
 
 ## Provisional Post-Maintenance-8 Planning
 
