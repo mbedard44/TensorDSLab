@@ -417,7 +417,9 @@ retain their original private paths as historical evidence.
 - [Maintenance 7 Work Order](implementation/maintenance_7_tensorcore_0_15_adoption.md):
   Candidate 1 Validation-cleared / Review-returned exact TensorCore `0.15.0`,
   validation-ownership, RngPositions, and fixed readout role-key adoption;
-  direct-child Design documentation correction pending Validation.
+  its Design-owned documentation correction lineage preserves Candidate 1's
+  production and test bytes under the work-order's pre-merge
+  Validation/Review and post-merge Design-closeout law.
 - [Stage 7 Work Order](implementation/stage_7_public_readout_orchestration.md):
   Merged / Closed public request planning, whole-closure
   preparation, execute-once orchestration, and exact-retention contract.
