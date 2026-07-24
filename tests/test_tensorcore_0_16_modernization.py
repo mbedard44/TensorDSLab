@@ -41,6 +41,7 @@ from tensor_core.random.validation import require_count_tensor
 import tensor_dslab
 import tensor_dslab.common as common
 import tensor_dslab.readout as readout
+import tensor_dslab.readout.profiles as profiles
 from tensor_dslab import (
     quantities,
     quantity,
@@ -277,7 +278,7 @@ class TensorCore016ModernizationTest(unittest.TestCase):
 
     def test_python314_syntax_and_docstring_contracts_are_exact(self) -> None:
         production = tuple(sorted(Path("tensor_dslab").rglob("*.py")))
-        self.assertEqual(len(production), 59)
+        self.assertEqual(len(production), 60)
         for path in production:
             tree = ast.parse(path.read_text(), filename=str(path))
             self.assertTrue(ast.get_docstring(tree, clean=False), str(path))
@@ -313,7 +314,8 @@ class TensorCore016ModernizationTest(unittest.TestCase):
         )
         self.assertEqual(aliases, ("_QuantityField",))
 
-        modules = (tensor_dslab, common, readout)
+        self.assertEqual(profiles.__all__, ("ds20k_veto",))
+        modules = (tensor_dslab, common, readout, profiles)
         objects = {
             id(getattr(module, name)): getattr(module, name)
             for module in modules
@@ -326,7 +328,18 @@ class TensorCore016ModernizationTest(unittest.TestCase):
             value for value in objects.values() if inspect.isfunction(value)
         )
         self.assertEqual(len(public_classes), 32)
-        self.assertEqual(len(public_functions), 3)
+        self.assertEqual(len(public_functions), 4)
+        self.assertEqual(
+            frozenset(public_functions),
+            frozenset(
+                {
+                    tensor_dslab.quantity,
+                    tensor_dslab.quantities,
+                    tensor_dslab.simulate_readout,
+                    profiles.ds20k_veto,
+                }
+            ),
+        )
         for public_class in public_classes:
             source_path = inspect.getsourcefile(public_class)
             self.assertIsNotNone(source_path, public_class.__name__)
@@ -390,7 +403,13 @@ class TensorCore016ModernizationTest(unittest.TestCase):
         )
         self.assertEqual(
             direct_modules,
-            ("__init__.py", "collection.py", "config.py", "simulation.py"),
+            (
+                "__init__.py",
+                "collection.py",
+                "config.py",
+                "profiles.py",
+                "simulation.py",
+            ),
         )
         source = Path(
             "tensor_dslab/readout/runtime/requirements.py"

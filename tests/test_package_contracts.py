@@ -133,6 +133,17 @@ class PackageContractTest(unittest.TestCase):
             ],
         )
         self.assertEqual(
+            project["optional-dependencies"],
+            {
+                "demos": [
+                    "ipykernel==7.3.0",
+                    "matplotlib==3.11.1",
+                    "nbclient==0.11.0",
+                    "nbformat==5.10.4",
+                ]
+            },
+        )
+        self.assertEqual(
             metadata["tool"]["hatch"]["build"]["targets"]["wheel"]["packages"],
             ["tensor_dslab"],
         )
@@ -225,6 +236,13 @@ class PackageContractTest(unittest.TestCase):
         )
         for name in tensor_dslab.__all__:
             self.assertTrue(hasattr(tensor_dslab, name), name)
+        profiles = __import__(
+            "tensor_dslab.readout.profiles",
+            fromlist=("__all__",),
+        )
+        self.assertEqual(profiles.__all__, ("ds20k_veto",))
+        self.assertFalse(hasattr(tensor_dslab, "ds20k_veto"))
+        self.assertFalse(hasattr(readout, "ds20k_veto"))
 
     def test_product_package_exports_and_module_ownership(self) -> None:
         expected = {
