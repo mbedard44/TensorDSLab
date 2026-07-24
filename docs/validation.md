@@ -445,10 +445,14 @@ qualify only that exact integrated pairing.
 
 The
 [Maintenance 7 work order](implementation/maintenance_7_tensorcore_0_15_adoption.md)
-is **User-authorized / Dispatched** against
-exact local baseline `65bb55bf98bb37a129a950d93a0bdb9b0d3f2971`.
+has exact immutable Candidate 1
+`68c2f62c2ce354dd6c92fde28b020c0ce71881d6` **Validation-cleared /
+Review-returned for a Design-owned package-source correction**. One exact
+documentation-only direct child is pending fixed-commit Validation before
+Review recheck.
 
-During execution, local fixed-commit Validation and independent Review must
+For the supplemental candidate, local fixed-commit Validation and independent
+Review must retain Candidate 1's complete gate and additionally
 prove:
 
 - exact published TensorCore `0.15.0` commit/tree/version, 34 package-root
@@ -467,7 +471,10 @@ prove:
   shape-span, allocation, and count-tensor requirements while retaining every
   TensorDSLab readout/scientific/product relationship;
 - one non-exported production source for namespace `0x54445331`, with all ten
-  streams and every default key unchanged;
+  streams and every fixed key unchanged, no public Config key fields, and no
+  request-time caller-key collision admission;
+- synchronized live package sources naming
+  `readout/runtime/requirements.py` rather than the retired root module;
 - positive pulse-amplitude Config magnitudes, rejection of zero/negative
   quantities, one preparation-owned fixed negative sign, retained
   dtype-rounded-zero rejection, and exact calibrated negative-going kernel and
@@ -651,22 +658,25 @@ underflow and overflow separately when that bridge is implemented.
 
 ## Shared Private Requirement Checks
 
-`tensor_dslab.readout.requirements` is the unexported shared relationship
-owner selected by Maintenance 4. For supported value and container inputs,
-focused tests prove the retained `TypeError` distinction for malformed values
-and `ValueError` distinction for well-typed values that violate a
-relationship. Malformed or off-path typed class-object arguments are outside
-that promise under TensorCore `0.13.0`'s golden-path boundary. The former
-`tensor_dslab.readout._requirements` path is removed without a shim. Focused
-tests should prove every narrowly extracted helper preserves the applicable
+`tensor_dslab.readout.runtime.requirements` is the unexported owner of the sole
+shared readout-domain relationship under Maintenance 7. The former
+`tensor_dslab.readout.requirements` and
+`tensor_dslab.readout._requirements` paths are removed without shims. Generic
+dtype, layout, representability, allocation, shape-span, and count-domain
+requirements come directly from exact TensorCore `0.15.0` where their
+contracts match. For supported value and container inputs, focused tests prove
+the retained `TypeError` distinction for malformed values and `ValueError`
+distinction for well-typed values that violate a relationship. Malformed or
+off-path typed class-object arguments remain outside that promise. Focused
+tests should prove every retained or adopted helper preserves the applicable
 supported-input distinction.
 
 The shared readout-structure behavior still requires exactly one
 `ExampleAxis`, `ChannelAxis`, and `SampleAxis` in any order and
 `torch.strided` storage. It does not require contiguity, a fixed dimension
-order, or an exact base `torch.Tensor` type. Shared floating-dtype behavior
-accepts exactly `torch.float32` or `torch.float64` and rejects
-`torch.float16`, `torch.bfloat16`, and every non-floating dtype.
+order, or an exact base `torch.Tensor` type. TensorCore's variadic
+`require_field_dtype(...)` supplies the exact one-or-more accepted-dtype
+mechanic; TensorDSLab does not wrap it.
 
 Maintenance 5 removes public `common.sampling` and `SamplingConfig` without a
 shim. Private
@@ -678,10 +688,11 @@ Tests must prove one sample-dimension discovery per public request and exact
 retain it. No product preparation may accept or reconstruct a competing
 sampling policy.
 
-`requirements.py` may contain only behavior shared with exactly identical
-semantics. Product-specific equations and named validators remain in their
-owning runtime packages rather than becoming a registry, global validation
-layer, scientific dumping ground, or generic product framework.
+`readout/runtime/requirements.py` may contain only downstream behavior shared
+with exactly identical semantics and not already owned by TensorCore.
+Product-specific equations and named validators remain in their owning runtime
+packages rather than becoming a registry, global validation layer, scientific
+dumping ground, or generic product framework.
 
 ## Product Field Checks
 

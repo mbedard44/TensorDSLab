@@ -41,11 +41,14 @@ for public physical Config values and the compact SampleAxis convenience
 boundary while preserving the implemented axes, sampling authority, product
 graph, science, RNG, and unit-free execution core.
 
-Maintenance 7 is **User-authorized / Dispatched** under its focused
+Maintenance 7 has exact immutable Candidate 1
+`68c2f62c2ce354dd6c92fde28b020c0ce71881d6` **Validation-cleared /
+Review-returned for a Design-owned package-source correction** under its focused
 [TensorCore 0.15 adoption work order](../implementation/maintenance_7_tensorcore_0_15_adoption.md).
-It will replace raw logical-position tensors with exact `RngPositions`, import
-matching generic validation requirements from TensorCore, and centralize the
-unchanged readout RNG namespace. It also makes pulse Configs store strictly
+It replaces raw logical-position tensors with exact `RngPositions`, imports
+matching generic validation requirements from TensorCore, and centralizes the
+unchanged readout RNG namespace and role keys in one private table. It also
+makes pulse Configs store strictly
 positive amplitude magnitudes and applies the fixed DS20k negative polarity
 once in preparation, preserving calibrated negative-going results. No other
 scientific, product, Pint, role-key, address, or public-facade change is
@@ -280,17 +283,19 @@ physical Config Quantity
 ```
 
 Runtime records, products, collections, producers, validators, and RNG
-addresses contain no Pint object or unit string. This target is
-User-authorized and Dispatched; the currently implemented Config constructors
-remain the Maintenance 6 surface until implementation closes.
+addresses contain no Pint object or unit string. Maintenance 6 established
+this boundary, and Maintenance 7 Candidate 1 preserves it while changing only
+the accepted vector-Quantity representation and pulse-amplitude narrowing
+recorded in its work order.
 
-Exact stochastic leaf configs own defaulted TensorCore `RngKey` values:
-white/PSD noise use streams `1`/`2`; dark count uses `3`; retained/overflow
-direct crosstalk use `4`/`5`; retained/overflow delayed crosstalk use `6`/`7`;
-timing jitter uses `8`; afterpulse uses `9`; and charge smearing uses `10`.
-All use namespace `0x54445331` (`TDS1`). Keys identify stochastic roles and
-participate in config equality and `repr`; they do not contain a seed,
-algorithm, mutable state, device stream, or execution policy.
+Maintenance 7 fixes exact TensorCore `RngKey` values in the non-exported
+`readout/runtime/keys.py` table: white/PSD noise use streams `1`/`2`; dark
+count uses `3`; retained/overflow direct crosstalk use `4`/`5`;
+retained/overflow delayed crosstalk use `6`/`7`; timing jitter uses `8`;
+afterpulse uses `9`; and charge smearing uses `10`. All use namespace
+`0x54445331` (`TDS1`). Public Configs contain no role-key fields or override
+surface. The required `CounterRng.seed` remains the caller's realization
+control.
 
 Each product preparer receives only its exact product config and shared
 sampling/source facts when relevant. It returns one private immutable product
@@ -319,9 +324,8 @@ module-local mathematical helpers may retain their established underscores.
 Each ProductRuntime is a concrete final frozen slotted dataclass with no Runtime
 base, Config, semantic product, mutable cache, method, or hidden device
 movement. It contains only prepared tensors and static Python values required
-by production, request-wide stochastic-role checks, or immediate result
-validation. There is no Runtime ABC, registry, reflection layer, generic graph,
-or action framework.
+by production or immediate result validation. There is no Runtime ABC,
+registry, reflection layer, generic graph, or action framework.
 
 `readout.runtime.sampling` owns one private `SamplingRuntime` and
 `prepare_sampling(...)`:
@@ -343,11 +347,13 @@ they control dimensions, shapes, FFT lengths, and loop bounds; they are not
 payload tensors.
 
 `readout.runtime.prepare` owns `ReadoutRuntime`, request parsing, typed closure,
-required-config checks, closure-wide key uniqueness, and composition of the
-optional ProductRuntime values. Optional Runtime presence is the execution
-closure signal; no duplicate `need_*` booleans or public dependency registry
-is introduced. Complete closure preparation still precedes the first RNG
-request, production call, or semantic-output write.
+required-config checks, RNG-capability admission, and composition of the
+optional ProductRuntime values. The fixed package-owned key table is unique by
+construction, so request preparation performs no caller-key collision check.
+Optional Runtime presence is the execution closure signal; no duplicate
+`need_*` booleans or public dependency registry is introduced. Complete
+closure preparation still precedes the first RNG request, production call, or
+semantic-output write.
 
 Product preparers own contextual config interpretation, canonical-magnitude
 extraction, scientific equations, representability proofs, and
@@ -470,9 +476,8 @@ The first implementation prepares a log-domain one-sided cumulative tail for
 later-category masses for each conditional binomial; it never repeatedly
 subtracts categories from one, clips, or renormalizes. Category/tail/identity
 error is bounded by `1e-12`, the complete represented source law by `1e-11`
-L1, and `TimingJitterConfig.rng_key` owns the dedicated role whose default
-stream is `8`. Full evaluator and validation details are normative in
-`rebuild.md`.
+L1, and the package-owned timing-jitter key uses dedicated stream `8`. Full
+evaluator and validation details are normative in `rebuild.md`.
 
 This is a private Charge stage, not a transform that returns jittered
 `Photoelectrons`.
@@ -690,19 +695,20 @@ Deterministic requests still receive the RNG but request no values. There is
 no simultaneous `seed=`, TensorDSLab RNG wrapper, `torch.Generator`, or global
 RNG.
 
-Each stochastic leaf config owns an exact `RngKey` identifying its role.
-Default keys use namespace `TDS1` and streams `1` through `10` in the
-historical Stage 5/6 order. Afterpulse uses one coupled key; direct and delayed
-crosstalk each use distinct retained/overflow keys. The public builder rejects
-one key assigned to different roles in the requested closure before any RNG
-request, product-producer invocation, or semantic-output write.
+The private `readout/runtime/keys.py` table owns exact `RngKey` values for the
+ten stochastic roles. It uses namespace `TDS1` and streams `1` through `10` in
+the historical Stage 5/6 order. Afterpulse uses one coupled key; direct and
+delayed crosstalk each use distinct retained/overflow keys. Public Configs
+cannot override those addresses, and the builder performs no closure-wide
+caller-key collision admission.
 
-TensorCore owns counter generation, logical positions, uniforms, parameterized
-Gaussian draws, Poisson sampling, binomial sampling, and the two count
-distributions' internal word schedules. TensorDSLab owns product-specific key
-placement, scientific position/category lattices, direct-uniform/Gaussian
-ordinals, draw-free scientific policy, multinomial ordering and final
-remainders, count accumulation, and ledgers. Positions depend on actual
+TensorCore `0.15.0` owns counter generation, validated `RngPositions`,
+uniforms, parameterized Gaussian draws, Poisson sampling, binomial sampling,
+and the two count distributions' internal word schedules. TensorDSLab owns
+the fixed role table, scientific position/category lattices,
+direct-uniform/Gaussian ordinals, draw-free scientific policy, multinomial
+ordering and final remainders, count accumulation, and ledgers. Positions
+depend on actual
 tensor-dimension indices, not semantic coordinate values, strides, or storage
 addresses. A dimension or coordinate reordering is therefore a different
 positional interpretation and carries no permutation-invariance promise.
@@ -720,8 +726,10 @@ public RNG API and focused `require_same_dtype` relationship. The historical
 consumer proposal is fulfilled, and Maintenance 2 is Merged / Closed at the
 exact candidate and Design closeout above. The closed Stage 5/6 and Maintenance
 2 evidence are CPU-only because CUDA was unavailable.
-Maintenance 5 replaces the installed pin with exact TensorCore `0.13.0`
-without changing those RNG contracts.
+Maintenance 5 replaced the installed pin with exact TensorCore `0.13.0`.
+Maintenance 7 adopts exact TensorCore `0.15.0`, replaces
+`logical_positions(...)` with `RngPositions`, and preserves the same address
+values and RNG numerical contracts.
 
 TensorCore exposes no non-consuming concrete-algorithm capability query. The
 public builder accepts nominal `CounterRng` membership, performs no dummy draw,
@@ -779,8 +787,8 @@ The accepted Stage 7 public preparation contract covers at least:
 - one nonempty unique recognized product request;
 - exact required config closure and no irrelevant influence;
 - selected floating dtype and representable scalar constants;
-- a required `CounterRng` instance, exact config-owned `RngKey` values, and no
-  duplicate key assigned to different roles in the requested closure;
+- a required `CounterRng` instance and the exact fixed package-owned role-key
+  table, with no caller role-key fields or request-time collision policy;
 - no dummy RNG capability probe; a deterministic closure does not query the
   RNG, while a real custom stochastic backend failure remains dynamic;
 - scientific parameter and prepared-kernel normalization;
@@ -838,11 +846,12 @@ beneath `charge/runtime/effects/`.
 
 `readout/config.py` contains only `ReadoutConfig`, and
 `readout/collection.py` contains only `ReadoutCollection`.
-`readout/requirements.py` owns only genuinely shared private relationships;
+`readout/runtime/requirements.py` owns the sole shared private readout
+relationship, and `readout/runtime/keys.py` owns fixed stochastic addresses;
 runtime packages import no cross-product orchestration layer. The former
-`readout/_requirements.py`, product `_produce.py` bundles, and
-`charge/effects/` paths are retired without shims by Maintenance 4. Closed
-work orders continue to name their historical paths as exact evidence.
+`readout/requirements.py`, `readout/_requirements.py`, product `_produce.py`
+bundles, and `charge/effects/` paths are retired without shims. Closed work
+orders continue to name their historical paths as exact evidence.
 `readout/_random.py` and `_RngStream` remain absent under closed Maintenance 2.
 
 The exact tree and import direction are normative in
@@ -896,10 +905,11 @@ compact semantic axes, and source-derived sampling while preserving all product
 execution. It is Merged / Closed. Maintenance 6 is also Merged / Closed through
 exact Review-cleared target `0257fb477ee04556ebbe26351123ae610b5d7925`;
 it owns the physical Config representation and bounded runtime-admission
-cleanup. The separate TensorCore `0.15.0` adoption is now active under the
-User-authorized / Dispatched Maintenance 7 work order. Its local package loop
-intentionally makes no fresh CUDA claim; the exact integrated CUDA gate
-follows only after adoption closeout.
+cleanup. The separate TensorCore `0.15.0` adoption now has Candidate 1
+Validation-cleared / Review-returned for a Design documentation correction.
+One exact direct-child documentation candidate is pending Validation before
+Review recheck. Its local package loop intentionally makes no fresh CUDA claim;
+the exact integrated CUDA gate follows only after adoption closeout.
 
 ## Return To Design Before
 

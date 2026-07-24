@@ -1,10 +1,9 @@
 # Maintenance 7 TensorCore 0.15 Adoption Work Order
 
-Status: **Implementation candidate / fixed-commit Validation pending** while
-these bytes are absent from `main`. If these exact bytes are present unchanged
-on `main`, Review's clean fast-forward has completed and final Design
-acceptance remains pending until this work order and the implementation index
-record **Merged / Closed**.
+Status: **Candidate 1 Validation-cleared / Review-returned for a Design-owned
+package-source correction**. The exact direct-child documentation correction
+is fixed-commit Validation pending. No production, test, dependency, metadata,
+scientific, RNG-address, or public-API byte is reopened.
 
 Stable work-order key:
 `TensorDSLab/maintenance-7-tensorcore-0-15-adoption`.
@@ -14,7 +13,12 @@ Stable work-order key:
 Implementation completed Candidate 1 as one clean direct child of exact
 corrected Design authority
 `ad6172b69fc86a97ba96f1751757ea33e59fef5d`. The exact candidate commit and
-tree are fixed in the immutable Validation handoff.
+tree are:
+
+```text
+commit: 68c2f62c2ce354dd6c92fde28b020c0ce71881d6
+tree:   a33750e4b4c094178ba4e65ffaaed530beb377d6
+```
 
 The local evidence environment was Python `3.13.11`, PyTorch `2.12.1`, eager
 CPU, macOS `15.7.4` arm64, exact Pint `0.25.3`, and exact NumPy `2.3.5`, with
@@ -51,6 +55,48 @@ mutation, exact-scope, protected-byte, diff, build, artifact, bytecode, and
 repository-cleanliness gates are required to remain clear on the frozen
 candidate. This evidence makes no accelerator, performance, release,
 deployment, conformance, or broad compatibility claim.
+
+## Candidate 1 Review Return And Design Resolution
+
+Validation cleared exact immutable Candidate 1 and dispatched it unchanged to
+Review. Review found no production defect. It returned one governing P1:
+current live package sources still assigned stochastic-key admission to
+`prepare_readout(...)`, kept role keys on public Configs, and named the retired
+root `readout/requirements.py`, contradicting this work order and Candidate 1.
+
+Design accepts the finding. One documentation-only direct child of Candidate 1
+must synchronize exactly these live package sources:
+
+```text
+AGENTS.md
+CONTRIBUTING.md
+README.md
+docs/architecture/readout.md
+docs/architecture/rebuild.md
+docs/architecture/tensors.md
+docs/decisions.md
+docs/design.md
+docs/implementation/index.md
+docs/implementation/maintenance_7_tensorcore_0_15_adoption.md
+docs/overview.md
+docs/validation.md
+```
+
+The correction distinguishes closed Maintenance 2/Stage 7 historical evidence
+from the accepted Maintenance 7 target, records the fixed private key table and
+absence of request-time collision admission, and makes
+`readout/runtime/requirements.py` the sole live shared readout-domain
+requirement owner. It may change no other path or reopen any candidate behavior.
+
+Because the correction is exclusively Design-owned package documentation,
+Design may commit it directly as the exact child of Candidate 1 without a
+production Implementation turn. It is nevertheless one immutable supplemental
+candidate: fixed-commit Validation must recheck the complete applicable local
+gate and exact documentation scope, then send the same commit to Review only if
+clear. Review must recheck the original P1, the complete candidate, and the
+merge-safe lifecycle before any fast-forward. For finite-loop accounting this
+uses candidate submission 2/3; Validation-to-Implementation returns remain
+0/3. No cluster work or push is authorized.
 
 ## Authority And Baseline
 

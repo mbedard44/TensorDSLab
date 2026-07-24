@@ -22,7 +22,7 @@ Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
 Package maturity: Maintenance 6 Merged / Closed
 Next production gate: Maintenance 7 TensorCore 0.15 adoption;
-User-authorized / Dispatched
+Candidate 1 Validation-cleared / Review-returned for Design documentation
 Stage 8: separately stopped; any restart requires a new Design authority after
 Maintenance 6
 ```
@@ -107,14 +107,18 @@ unit-free. Local `main` remains unpushed pending the separate TensorCore
 `0.15.0` adoption and exact integrated CUDA gates.
 
 [Maintenance 7](docs/implementation/maintenance_7_tensorcore_0_15_adoption.md)
-is User-authorized and Dispatched. It adopts exact published TensorCore
-`0.15.0`, replaces `logical_positions(...)` with validated `RngPositions`,
-uses TensorCore's generic validation parts where the contracts match, and
-centralizes the unchanged readout RNG namespace. It also makes pulse Configs
+has exact immutable Candidate 1
+`68c2f62c2ce354dd6c92fde28b020c0ce71881d6` Validation-cleared and
+Review-returned for one Design-owned package-source correction. The candidate
+adopts exact published TensorCore `0.15.0`, replaces
+`logical_positions(...)` with validated `RngPositions`, uses TensorCore's
+generic validation parts where the contracts match, and centralizes the
+unchanged readout RNG namespace and role keys. It also makes pulse Configs
 store positive amplitude magnitudes and applies fixed DS20k negative polarity
 once in preparation, preserving calibrated rendered results. Streams,
 addresses, other science, Pint ownership, products, and facades remain
-unchanged. Its local package gate makes no fresh CUDA claim; separately
+unchanged. One documentation-only direct child is pending Validation before
+Review recheck. The local package gate makes no fresh CUDA claim; separately
 authorized integrated CUDA evidence follows only after the adoption closes.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
@@ -212,12 +216,15 @@ and easy to reason about. Compatibility with external orchestration or
 downstream training packages is deferred until the local TensorDSLab contracts
 are stable.
 
-Scientific configs should describe physics and readout behavior. Exact
-stochastic leaf configs may own immutable TensorCore `RngKey` role identities.
+Scientific configs should describe physics and readout behavior. Maintenance 7
+keeps stochastic role identity out of those records: one private
+`readout/runtime/keys.py` table fixes the namespace and ten append-only role
+streams, while the caller's `CounterRng.seed` selects the realization.
 Invocation seeds, RNG algorithm instances, device, dtype, movement, output
 storage, accelerator stream, and execution/chunking policy are runtime
-concerns. Do not hide persistence, placement, allocation, mutation, mutable RNG
-state, or device-stream policy inside scientific config records.
+concerns. Do not hide persistence, placement, allocation, mutation, RNG
+addresses, mutable RNG state, or device-stream policy inside scientific config
+records.
 
 ## Sibling Repository Shape
 
@@ -258,9 +265,10 @@ TensorDSLab/
       config.py               # ReadoutConfig
       collection.py           # ReadoutCollection
       simulation.py           # implemented Stage 7 public orchestration
-      requirements.py         # non-exported shared readout relationships
       runtime/
+        keys.py               # fixed non-exported stochastic role addresses
         prepare.py            # ReadoutRuntime and prepare_readout
+        requirements.py       # sole shared readout-domain relationship
         sampling.py           # SamplingRuntime and prepare_sampling
       photoelectrons/
         field.py
@@ -550,19 +558,22 @@ Stage 7 `readout/simulation.py` continues to own public
 thin owner of the public signature, topological produce/validate sequence,
 exact retention, and final collection construction.
 `readout/runtime/prepare.py` owns request parsing, dependency and config
-closure, key uniqueness, and composition of product Runtime values.
+closure, RNG-capability admission, and composition of product Runtime values.
 `readout/runtime/sampling.py` is a small private source-derived dependency leaf
-shared by request and product preparation. `readout/requirements.py` and every
-product runtime/effect module are non-exported implementation modules. The
-current implementation has no `readout/_random.py` or replacement `_rng.py`;
-generic RNG mechanics come from TensorCore. Under Maintenance 5,
+shared by request and product preparation.
+`readout/runtime/requirements.py`, `readout/runtime/keys.py`, and every product
+runtime/effect module are non-exported implementation modules. There is no
+root `readout/requirements.py`, `readout/_random.py`, or replacement `_rng.py`;
+generic validation and RNG mechanics come from TensorCore when its exact
+public contract matches. Under Maintenance 5,
 `common/axes.py` is the sole common sampling-coordinate owner and
 `common/sampling.py` is removed without a shim.
 
-Keep import direction acyclic: TensorCore, common, shared readout requirements,
-product configs/fields, the private source-bound sampling runtime, product
-runtime actions, readout config/collection and whole-request preparation,
-readout simulation, then deliberate root exports. Product runtime modules do not
+Keep import direction acyclic: TensorCore, common, private readout runtime
+requirements and keys, product configs/fields, the private source-bound
+sampling runtime, product runtime actions, readout config/collection and
+whole-request preparation, readout simulation, then deliberate root exports.
+Product runtime modules do not
 import `ReadoutConfig`, `ReadoutRuntime`, `ReadoutCollection`, simulation, or
 `simulate_readout(...)`; produce modules import neither Configs nor validators.
 
@@ -645,33 +656,35 @@ generated-product dtype conversion is not input normalization. The builder
 requires one immutable TensorCore
 `CounterRng`, even for a deterministic closure; there is no simultaneous
 `seed=` or ambient mutable generator. Deterministic private producers receive
-no RNG. Stochastic-capable Charge and noise producers receive it and select
-the exact `RngKey` owned by their leaf config. TensorCore exposes no
+no RNG. Stochastic-capable Charge and noise producers receive it and use the
+exact package-owned `RngKey` placed in their Runtime during preparation.
+TensorCore exposes no
 non-consuming algorithm-capability query: Stage 7 validates nominal
 `CounterRng` membership, performs no dummy draw, and treats a real custom RNG
 backend failure at the first genuine distribution request as an execution
 failure.
 
-Default keys use namespace `0x54445331` and append-only streams:
+The private `readout/runtime/keys.py` table fixes namespace `0x54445331` and
+these append-only streams:
 
 ```text
-WhiteNoiseConfig.rng_key                     1
-PsdNoiseConfig.rng_key                       2
-DarkCountConfig.rng_key                      3
-DirectCrosstalkConfig.retained_rng_key       4
-DirectCrosstalkConfig.overflow_rng_key       5
-DelayedCrosstalkConfig.retained_rng_key      6
-DelayedCrosstalkConfig.overflow_rng_key      7
-TimingJitterConfig.rng_key                   8
-AfterpulseConfig.rng_key                     9
-ChargeSmearingConfig.rng_key                10
+white noise                                  1
+PSD noise                                    2
+dark count                                   3
+direct crosstalk retained                    4
+direct crosstalk overflow                    5
+delayed crosstalk retained                   6
+delayed crosstalk overflow                   7
+timing jitter                                8
+afterpulse                                   9
+charge smearing                             10
 ```
 
-Keys are exact immutable config fields and may be deliberately overridden.
-Do not use loose constants, `IntEnum`, `auto()`, hashes, declaration order,
-requested-product order, or mutable/global generators. Stage 7 rejects one key
-assigned to different stochastic roles in the requested closure before any
-RNG request, producer invocation, or semantic-output write.
+The constants are private immutable package policy and cannot be overridden by
+Config construction. Do not use duplicated literals, `IntEnum`, `auto()`,
+hashes, declaration order, requested-product order, or mutable/global
+generators. The fixed table is proved unique once; request preparation does not
+retain obsolete caller-key collision admission.
 
 Stage 5/6 implemented the same default addresses through private `_RngStream`
 and `readout/_random.py`; those bytes remain historical evidence. The
@@ -697,8 +710,8 @@ through the frozen log-domain one-sided tail evaluator in `rebuild.md`. Its
 initial domain is `2**-52 <= sigma / T <= 64`,
 `2 <= sample_count <= 8192`, and `S * N <= 2**63`; exact zero sigma is a
 separate identity. It scans every possibly in-window target in increasing
-order, uses `TimingJitterConfig.rng_key` whose default stream is `8`, and leaves one final
-no-draw drop remainder. The local absolute tolerance is `1e-12` and the
+order, uses the package-owned timing-jitter key at stream `8`, and leaves one
+final no-draw drop remainder. The local absolute tolerance is `1e-12` and the
 complete source-law L1 tolerance is `1e-11`. Negative probabilities, clipping,
 residual assignment, normalization, per-PE normals, Box-Muller jitter, and an
 arbitrary timing-tail cutoff are forbidden. Correctness-first quadratic
@@ -1122,18 +1135,19 @@ Good tests should:
 - prove product-request one-pass consumption, duplicate/unrecognized
   rejection, transitive config preflight, order irrelevance, execute-once
   prerequisites, and exact requested retention;
-- for Maintenance 2, prove exact TensorCore public RNG imports, the ten
-  config-owned default keys and overrides, config equality/`repr`, deterministic
+- for historical Maintenance 2, prove exact TensorCore public RNG imports, the
+  ten then-config-owned default keys and overrides, config equality/`repr`, deterministic
   producers omitting RNG, stochastic-capable producers using `CounterRng`,
   public `uniform`, `gaussian`, `poisson`, and `binomial` use, default-key
   product continuity, Charge-local multinomial/count-bookkeeping ownership,
   semantic-only `require_same_dtype` use, the private scalar representation
   helper, and absence of `_RngStream`, `readout/_random.py`, and replacement
   `_rng.py`;
-- for Stage 7, prove required `CounterRng` even on deterministic closures,
-  draw-free deterministic execution, and closure-wide duplicate-role-key
-  rejection before RNG requests, producer invocation, or semantic-output
-  writes;
+- for historical Stage 7, retain proof of required `CounterRng` even on
+  deterministic closures, draw-free deterministic execution, and its
+  then-current closure-wide duplicate-role-key rejection; Maintenance 7
+  replaces only that caller-key surface with exact fixed-table and
+  no-collision-admission proofs;
 - prove source `Photoelectrons` exact return and immutability, guaranteed-fresh
   generated fields, pairwise generated-output independence, exact source-axis
   reuse, and no post-exposure TensorDSLab writes;

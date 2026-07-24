@@ -35,8 +35,10 @@ exact Pint `0.25.3` and uses `Scalar.require(...)` at the package-owned
 physical-configuration boundary without putting Pint into TensorCore or tensor
 execution.
 
-Maintenance 7 is **User-authorized / Dispatched**. It targets exact published
-TensorCore `0.15.0` commit
+Maintenance 7 has exact immutable Candidate 1
+`68c2f62c2ce354dd6c92fde28b020c0ce71881d6` **Validation-cleared /
+Review-returned for a Design-owned package-source correction**. It targets
+exact published TensorCore `0.15.0` commit
 `0f974e9e7f52125bbe829e124beb24e69de811d3`. Its dependency/RNG cleanup is
 behavior-preserving: `RngPositions` replaces raw logical-position tensors,
 matching generic validation moves to `tensor_core.validation`, and one
@@ -67,11 +69,12 @@ once, and does not retain an intermediate unless the caller requested it.
 Product-request iteration order has no semantic meaning.
 
 Before executing any product, the builder composes private product-owned
-Runtime records for the complete closure and checks closure-wide
-stochastic-key uniqueness. Scientific preparation remains beside each product;
-the public orchestration layer owns only request planning, the topological
-`produce -> validate -> descendant` sequence, exact retention, and final
-collection construction.
+Runtime records for the complete closure and admits the required
+`CounterRng`. Maintenance 7 fixes role keys in one private package table, so
+the public boundary has no role-key fields or closure-wide collision check.
+Scientific preparation remains beside each product; the public orchestration
+layer owns only request planning, the topological `produce -> validate ->
+descendant` sequence, exact retention, and final collection construction.
 
 The public concepts are therefore:
 
@@ -80,7 +83,6 @@ Photoelectrons   already-produced dense truth input
 products         final in-memory retention request
 ReadoutConfig    immutable scientific configuration
 CounterRng       algorithm plus invocation seed
-RngKey           config-owned stochastic role identity
 simulate_readout dependency planning and execution
 ReadoutCollection immutable completed requested result
 ```
@@ -233,11 +235,12 @@ the same unhashable contract.
 
 Config `__post_init__` is reserved for real construction behavior: Pint
 canonicalization, unwrapped primitive-domain validation, or genuine local
-relationships such as ordering, matching lengths, and distinct keys. It does
-not repeat annotations by checking `Scalar`, `RngKey`, nested Config,
-optional, or closed-union membership. Static typing and Review own that
-supported composition; malformed typed composition has no stable runtime
-diagnostic promise. No generic Config ABC is introduced.
+relationships such as ordering and matching lengths. It does not repeat
+annotations by checking `Scalar`, nested Config, optional, or closed-union
+membership. Maintenance 7 removes public role-key fields and their former
+distinctness relationships. Static typing and Review own supported
+composition; malformed typed composition has no stable runtime diagnostic
+promise. No generic Config ABC is introduced.
 
 The selected high-level computation is:
 
@@ -263,8 +266,8 @@ that correctness-first rule can make work quadratic in sample count.
 The accepted binary64 preparation uses a log-domain one-sided tail over
 `2**-52 <= sigma / T <= 64` and `2 <= sample_count <= 8192`, with stable
 success/later-category conditional masses, `1e-12` local probability
-tolerance, `1e-11` source-law L1 tolerance, and the dedicated append-only
-`TimingJitterConfig.rng_key` whose default stream is `8`. Unsupported values fail before
+tolerance, `1e-11` source-law L1 tolerance, and the package-owned dedicated
+append-only timing-jitter key at stream `8`. Unsupported values fail before
 RNG use rather than being clipped or normalized.
 
 The fixed-generation charge algorithm, pulse equations, PSD construction,
@@ -289,11 +292,12 @@ tensor_dslab/
     __init__.py
     config.py                # ReadoutConfig
     collection.py            # ReadoutCollection
-    requirements.py          # shared non-exported readout relationships
     simulation.py            # sole public simulation API
     runtime/
       __init__.py            # empty; no internal facade
+      keys.py                # fixed non-exported stochastic role addresses
       prepare.py             # ReadoutRuntime and complete request preflight
+      requirements.py        # sole shared readout-domain relationship
       sampling.py            # shared SamplingRuntime and one-time binding
 
     photoelectrons/
@@ -304,7 +308,7 @@ tensor_dslab/
         validate.py          # untrusted-ingress deep validation
     charge/
       __init__.py
-      config.py              # charge configs and default RngKeys
+      config.py              # charge scientific configs
       field.py               # Charge
       runtime/
         __init__.py
@@ -459,8 +463,10 @@ establish their own dependency.
 Public boundaries validate legitimate public inputs, including exact product
 requests, config relationships, axes, shape, dtype, device, sampling
 agreement, value domains at untrusted ingress, an accepted `CounterRng`
-instance, exact config-owned `RngKey` values, closure-wide key uniqueness, and
-representable numerical bounds. Supported statically preparable request
+instance, the exact fixed package-owned role-key table, and representable
+numerical bounds. Public Configs expose no role-key fields, and request
+preparation performs no caller-key collision admission. Supported statically
+preparable request
 failures occur before RNG requests, producer invocation, or semantic-output
 writes. TensorCore exposes no non-consuming RNG capability query, so a real
 custom-algorithm backend failure may occur only at its first genuine
@@ -560,8 +566,9 @@ is **Merged / Closed** through exact Review-cleared supplemental candidate
 is **Merged / Closed** through exact Review-cleared target
 `0257fb477ee04556ebbe26351123ae610b5d7925`. It implements only the bounded
 Pint/config/runtime scope; no Stage 8 rerun, IO/artifact surface, integration,
-or push follows. TensorCore `0.15.0` adoption is the active User-authorized /
-Dispatched package gate.
+or push follows. TensorCore `0.15.0` adoption is the active package gate with
+Candidate 1 Validation-cleared / Review-returned for Design documentation.
 [Maintenance 7](implementation/maintenance_7_tensorcore_0_15_adoption.md) is
-the exact User-authorized / Dispatched work order for that adoption. It does
-not authorize cluster work or a push.
+the exact work order for that adoption. One documentation-only direct child is
+pending Validation before Review recheck. It does not authorize cluster work
+or a push.

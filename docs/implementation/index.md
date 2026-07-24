@@ -601,11 +601,13 @@ Local `main` remains unpushed pending that adoption and those integrated gates.
 
 ### [Maintenance 7 TensorCore 0.15 Adoption](maintenance_7_tensorcore_0_15_adoption.md)
 
-Status: **Implementation candidate / fixed-commit Validation pending** while
-these bytes are absent from `main`. If these exact bytes are present unchanged
-on `main`, Review's clean fast-forward has completed and final Design
-acceptance remains pending until this index and the work order record
-**Merged / Closed**.
+Status: **Candidate 1 Validation-cleared / Review-returned for a Design-owned
+package-source correction**. Candidate 1 is exact commit
+`68c2f62c2ce354dd6c92fde28b020c0ce71881d6`, tree
+`a33750e4b4c094178ba4e65ffaaed530beb377d6`. Its production and test bytes
+remain immutable. One exact documentation-only direct child is fixed-commit
+Validation pending before Review rechecks the governing package-source
+contradiction.
 
 Maintenance 7 starts from exact clean local Maintenance 6 Design-closeout
 baseline `65bb55bf98bb37a129a950d93a0bdb9b0d3f2971`, tree
@@ -651,6 +653,15 @@ typing probe produced the same `16` required diagnostics in both forms.
 Exact dependency artifacts, address/key/quantity mutations, import/privacy,
 scope/protected-byte, diff, build, artifact, and hygiene gates were also
 exercised. CUDA was unavailable locally and no accelerator claim follows.
+
+Review found no production defect. It returned Candidate 1 because live
+package sources still described caller-configured role keys, closure-wide key
+admission, and the retired root `readout/requirements.py`. Design accepts that
+P1 and authorizes one direct-child documentation correction across the exact
+twelve live records named in the work order. Validation and Review must clear
+that unchanged supplemental commit before merge. The correction does not
+reopen implementation, dependency, science, RNG addresses, tests, or public
+API and authorizes no cluster work or push.
 
 ## Expected Stage Discipline
 

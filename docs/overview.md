@@ -92,16 +92,20 @@ TensorCore `0.15.0` exact commit
 closure condition.
 
 [Maintenance 7](implementation/maintenance_7_tensorcore_0_15_adoption.md) is
-**User-authorized / Dispatched** from exact
-clean local baseline `65bb55bf98bb37a129a950d93a0bdb9b0d3f2971`. It targets
-published TensorCore `0.15.0`, replaces `logical_positions(...)` with
-`RngPositions`, migrates matching generic validation helpers to TensorCore,
-and centralizes the unchanged readout RNG namespace. It also makes pulse
-Config values positive amplitude magnitudes and applies fixed DS20k negative
-polarity once in preparation, with exact calibrated result continuity. Public
-field names, Pint ownership, role streams, and scientific addresses remain
-unchanged. Its local closure precedes the separate integrated CUDA gate and any
-push.
+**Candidate 1 Validation-cleared / Review-returned for a Design-owned
+package-source correction**. Exact immutable Candidate 1 is
+`68c2f62c2ce354dd6c92fde28b020c0ce71881d6`, tree
+`a33750e4b4c094178ba4e65ffaaed530beb377d6`. It targets published TensorCore
+`0.15.0`, replaces `logical_positions(...)` with `RngPositions`, migrates
+matching generic validation helpers to TensorCore, and centralizes the
+unchanged readout RNG namespace and ten role keys in one private runtime
+table. Public Configs expose no key fields and request preparation performs no
+caller-key collision admission. It also makes pulse Config values positive
+amplitude magnitudes and applies fixed DS20k negative polarity once in
+preparation, with exact calibrated result continuity. Public field names, Pint
+ownership, role streams, and scientific addresses remain unchanged. One
+direct-child documentation correction is pending Validation before Review
+recheck. Local closure precedes the separate integrated CUDA gate and any push.
 
 [Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
 Closed through exact implementation candidate
@@ -293,14 +297,14 @@ target is not yet an implemented compatibility claim.
 tensor_dslab/
   common/
     axes.py
-    sampling.py
   readout/
     config.py
     collection.py
-    requirements.py
     simulation.py             # sole public orchestration function
     runtime/
+      keys.py                 # fixed non-exported stochastic role addresses
       prepare.py              # ReadoutRuntime and complete preflight
+      requirements.py         # sole shared readout-domain relationship
       sampling.py             # SamplingRuntime and one-time axis binding
     photoelectrons/
       field.py
@@ -331,9 +335,10 @@ non-exported `prepare_<product>`, `produce_<product>`, and
 input and owns only its field and ingress validator. `readout.simulation`
 keeps the one public orchestration function; `readout.runtime.prepare`
 composes the complete private Runtime closure. Generic RNG and distribution
-mechanics entered through the selected TensorCore `0.9.0` dependency and are
-preserved by the exact `0.13.0` Maintenance 5 baseline, while config-owned
-`RngKey` values select TensorDSLab stochastic roles.
+mechanics entered through the selected TensorCore `0.9.0` dependency and
+Maintenance 7 adopts exact `0.15.0` plus `RngPositions`. One non-exported
+runtime table fixes the unchanged namespace and ten role keys; public Configs
+contain no role-key fields or override surface.
 
 Privacy is export-driven. Runtime paths remain importable Python
 implementation details, but public facades do not export them and they carry
@@ -407,8 +412,9 @@ retain their original private paths as historical evidence.
   preparation cleanup through exact Review-cleared target
   `0257fb477ee04556ebbe26351123ae610b5d7925`.
 - [Maintenance 7 Work Order](implementation/maintenance_7_tensorcore_0_15_adoption.md):
-  User-authorized / Dispatched exact TensorCore `0.15.0`,
-  validation-ownership, RngPositions, and readout namespace adoption.
+  Candidate 1 Validation-cleared / Review-returned exact TensorCore `0.15.0`,
+  validation-ownership, RngPositions, and fixed readout role-key adoption;
+  direct-child Design documentation correction pending Validation.
 - [Stage 7 Work Order](implementation/stage_7_public_readout_orchestration.md):
   Merged / Closed public request planning, whole-closure
   preparation, execute-once orchestration, and exact-retention contract.

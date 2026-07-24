@@ -12,23 +12,26 @@ published TensorCore `0.9.0` commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59` for public RNG/distribution and
 same-dtype ownership. Those remain immutable historical baselines.
 
-Closed Maintenance 5 adopts published TensorCore `0.13.0` exact
+Closed Maintenance 5 adopted published TensorCore `0.13.0` exact
 commit `202d8b1bc6259b8453d3d377570417f2480d782b`, tree
-`48fa9a28db6d043abc07d9963b2015983ca436ea`, as the current dependency.
+`48fa9a28db6d043abc07d9963b2015983ca436ea`, as the Maintenance 5/6
+dependency baseline.
 Maintenance 5 consumes its compact semantic axes and golden-path structural
 boundary while preserving the public RNG and tensor relationships TensorDSLab
 already uses. The dependency also exposes generic `Scalar`; Maintenance 6 was
 closed at exact Review-cleared target
 `0257fb477ee04556ebbe26351123ae610b5d7925` and uses its public
 `require(...)` normalization at the package-owned Pint boundary while
-retaining this exact dependency. Its complete local fixed-commit evidence adds
+retaining that exact dependency. Its complete local fixed-commit evidence adds
 no CUDA claim. Every dependency change still requires an exact pin and
 TensorDSLab-owned source/archive, typing, and functional consumer evidence; the
-separate TensorCore `0.15.0` adoption will own the deferred integrated CUDA
+Maintenance 7 Candidate 1 pins exact TensorCore `0.15.0` and will own the deferred integrated CUDA
 qualification. No broad compatibility result follows.
 
-Maintenance 7 is User-authorized and Dispatched against exact published
-TensorCore `0.15.0` commit
+Maintenance 7 has exact immutable Candidate 1
+`68c2f62c2ce354dd6c92fde28b020c0ce71881d6` Validation-cleared /
+Review-returned for a Design-owned package-source correction against exact
+published TensorCore `0.15.0` commit
 `0f974e9e7f52125bbe829e124beb24e69de811d3`, tree
 `587ff59711255c027a85cfef883422d40ea5dcda`. Its accepted target consumes the
 public `RngPositions` representation and the supported
@@ -48,7 +51,8 @@ candidate `81ad2f52fe4a1966e5b3a0ceb5063138e42e731f` and Design closeout
 `021694b9479d02546405f6a815aedf21c9c831a4`. Maintenance 6 is Merged / Closed
 through exact Review-cleared target
 `0257fb477ee04556ebbe26351123ae610b5d7925`. TensorCore `0.15.0` adoption is
-the active User-authorized / Dispatched package gate under Maintenance 7.
+the active package gate under Maintenance 7; one exact documentation-only
+direct child is pending Validation before Review recheck.
 
 The previous TensorCore `0.6` ID/layout/sidecar architecture is historical and
 is intentionally not preserved through aliases.
@@ -88,12 +92,12 @@ retains `require_same_dtype(*fields)`. TensorDSLab consumes only package-root
 surfaces and never duplicates protected RNG or generic representation
 mechanics.
 
-The accepted Maintenance 7 target supersedes only that live dependency and
-consumer-mechanics description after implementation. TensorCore `0.15.0`
+Maintenance 7 Candidate 1 supersedes only that dependency and
+consumer-mechanics description. TensorCore `0.15.0`
 replaces `logical_positions(...)` with factory-owned `RngPositions`, provides
 the trusted `movedim`, `select`, unit-slice, and nonnegative-offset transforms
 needed by every TensorDSLab stochastic route, and exposes reusable generic
-requirements through `tensor_core.validation`. TensorDSLab will use those
+requirements through `tensor_core.validation`. TensorDSLab uses those
 surfaces directly, without a wrapper, alias, raw position accessor, or local
 generic validator. The protected CounterRng block hook remains the exact raw
 position observation boundary for tests and downstream RNG implementations.
@@ -120,12 +124,11 @@ TensorDSLab owns:
 - collection membership and cross-field coherence;
 - deep value-domain checks at explicit trust boundaries;
 - product dependencies, scientific configs, operations, and orchestration;
-- placement of exact `RngKey` role identities on stochastic leaf configs,
-  scientific position/category lattices, direct-uniform/Gaussian ordinals,
+- one non-exported fixed `RngKey` table containing the readout namespace and
+  ten product-role streams, with no public Config override surface;
+- scientific position/category lattices, direct-uniform/Gaussian ordinals,
   draw-free scientific policy, multinomial ordering and final remainders,
-  count accumulation, and ledgers;
-- one non-exported readout RNG namespace source, product-owned role streams,
-  and all scientific address-lattice policy;
+  count accumulation, ledgers, and all scientific address-lattice policy;
 - readout-specific structure and scientific raw-tensor/value policy after
   composing matching TensorCore generic requirements;
 - result aliasing/freshness, device/dtype/layout, autograd, synchronization,
@@ -334,8 +337,8 @@ data carrier containing no Config, semantic product, mutable cache, method, or
 Runtime base. Each producer receives explicit prerequisite fields and its
 product-owned Runtime, plus one public TensorCore `CounterRng` when that
 producer is stochastic-capable. Deterministic producers and helpers receive no
-RNG. The stochastic effect uses the exact `RngKey` captured from its leaf
-config during preparation.
+RNG. Preparation places the exact fixed package-owned `RngKey` into each
+stochastic Runtime; public Configs contain no role-key fields.
 
 `readout.runtime.sampling` owns one private `SamplingRuntime` containing Python
 integer sample count, period, and dimension. Request preparation derives it
@@ -352,7 +355,7 @@ before any descendant can consume it. Product runtime packages and their
 imports remain unsupported implementation access rather than a public API.
 
 The package tree and dependency direction are fixed in
-[`rebuild.md`](rebuild.md): common axes/sampling, unexported shared readout
+[`rebuild.md`](rebuild.md): common axes, unexported readout runtime
 requirements, product config/field modules, the source-bound sampling Runtime,
 product runtime actions, readout config/collection, then public simulation.
 There is no

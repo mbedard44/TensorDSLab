@@ -208,8 +208,9 @@ typed ProductRuntime and explicit prerequisites. Neither receives the whole
 There is no generic `Config` ABC without a polymorphic consumer, no string
 algorithm selector, no product-level `persist` flag, and no mixing of
 scientific choices with mutable RNG state, invocation seeds, runtime
-allocation, or device-stream control. Exact stochastic leaf configs may own
-immutable `RngKey` role identities.
+allocation, role addresses, or device-stream control. Maintenance 7 removes
+public per-role `RngKey` fields and fixes those addresses in one private
+package table.
 
 ### The Package Tree Is Product-Centered
 
@@ -219,9 +220,10 @@ replacement public sampling module.
 
 `readout/config.py` contains only `ReadoutConfig`;
 `readout/collection.py` contains only `ReadoutCollection`; and
-`readout/simulation.py` owns thin public orchestration. Non-exported shared
-relationships live in `readout/requirements.py`; complete request preparation
-and one-time sampling binding live in `readout/runtime/{prepare,sampling}.py`.
+`readout/simulation.py` owns thin public orchestration. The sole non-exported
+shared readout relationship, fixed role-key table, complete request
+preparation, and one-time sampling binding live in
+`readout/runtime/{requirements,keys,prepare,sampling}.py`.
 
 Each generated product subpackage owns `field.py`, `config.py`, and
 `runtime/{prepare,produce,validate}.py`. `photoelectrons` owns only `field.py`
@@ -325,7 +327,28 @@ are fresh, source-payload-independent `NoiseWaveform` values with
 `requires_grad=False`.
 Compiled execution and performance optimization remain later measured work.
 
-### Invocation `CounterRng` And Config-Owned `RngKey` Are The Accepted Target
+### Maintenance 7 Fixes Role Keys As Private Package Policy
+
+The public Stage 7 call continues to require one immutable TensorCore
+`CounterRng`; its seed is the caller's sole stochastic-realization control.
+Maintenance 7 removes every public `rng_key`, `retained_rng_key`, and
+`overflow_rng_key` Config field. One non-exported
+`readout/runtime/keys.py` table owns namespace `0x54445331` and the same ten
+append-only streams. Preparation places those exact keys in product Runtime
+records, and producers consume the prepared values.
+
+The fixed table preserves every default address and same-seed result. Because
+callers can no longer override role addresses, `rng_roles` bookkeeping and
+closure-wide key-collision admission are removed rather than retained as dead
+policy. TensorCore remains generic and receives explicit keys; it does not know
+TensorDSLab mechanisms.
+
+### Historical Maintenance 2 Config-Owned `RngKey` Target
+
+The following subsection records the exact Maintenance 2 and Stage 7 contract
+that Maintenance 7 supersedes only for public role-key ownership and collision
+admission. Its RNG algorithm, distributions, packing, and historical evidence
+remain valid.
 
 The public Stage 7 call requires one immutable TensorCore `CounterRng`:
 
@@ -401,15 +424,17 @@ TensorCore commit, splits module ownership, migrates stochastic functions,
 preserves default-key output continuity, and removes `_RngStream` plus
 `readout/_random.py` without a shim. It is Merged / Closed through exact
 candidate `89a188abe330c06aa0b54c27cd61ac32a4fe9f63` and Design closeout
-`9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. Closed Stage 7
-rejects duplicate keys assigned to distinct roles in the requested transitive
-closure before any RNG request, producer invocation, or semantic-output write.
+`9cbf8af3692740cd8e0bfbd1734d7ea91d95806a`. Closed Stage 7 historically
+rejected duplicate caller-configured keys in the requested transitive closure;
+Maintenance 7 supersedes that admission surface with the fixed table above.
 
 ### TensorCore `0.15.0` Owns Prepared Positions And Generic Requirements
 
-Maintenance 7 is User-authorized and Dispatched against exact published
-TensorCore `0.15.0` commit
-`0f974e9e7f52125bbe829e124beb24e69de811d3`. TensorDSLab will replace
+Maintenance 7 has exact immutable Candidate 1
+`68c2f62c2ce354dd6c92fde28b020c0ce71881d6` Validation-cleared /
+Review-returned for a Design-owned package-source correction against exact
+published TensorCore `0.15.0` commit
+`0f974e9e7f52125bbe829e124beb24e69de811d3`. Candidate 1 replaces
 `logical_positions(...)` without an alias by passing exact `RngPositions` to
 public CounterRng distributions. Its complete production transform need is
 covered by `from_shape`, `movedim`, `select`, unit-stride `slice`, and
@@ -742,9 +767,11 @@ The focused
 is Merged / Closed through exact Review-cleared implementation candidate
 `6dd55024685013fb9412a7247d3ddde7be1a3177`. It implements one public
 `simulate_readout(...)` function, complete product-owned preparation before
-producer execution, one private typed readout plan, closure-wide structural
-role-key uniqueness, fixed execute-once topology, and exact requested
-retention. It also closes the result trust boundary deferred by Stage 4: every
+producer execution, one private typed readout plan, its then-current
+closure-wide structural role-key uniqueness, fixed execute-once topology, and
+exact requested retention. Maintenance 7 supersedes only that caller-key
+admission surface with a fixed private table. Stage 7 also closes the result
+trust boundary deferred by Stage 4: every
 generated producer applies its exact private deep-value postcondition before
 the field can reach a downstream producer or the returned collection.
 
@@ -855,8 +882,10 @@ dispatch, tensor relationships, axes identity, storage freshness, absolute
 product dtype domains, allocation/address/envelope limits, and
 generated-product validation remain.
 
-The decision and its synchronized work order are User-authorized / Dispatched.
-They authorize no TensorCore edit, scientific equation or RNG change,
+The decision remains accepted. Its exact Candidate 1 is Validation-cleared /
+Review-returned for one package-source correction, and the direct-child
+documentation candidate must clear Validation and Review before merge. The
+work authorizes no TensorCore edit, scientific equation or RNG change,
 IO/artifact surface, integration, Stage 8 work, optimization, compatibility
 shim, release, or push.
 
@@ -946,8 +975,9 @@ supersedes its bare private producer/invocation seed, central stream enum, and
 generic `readout/_random.py` ownership with required `CounterRng`, config-owned
 `RngKey`, and TensorCore-owned generic counter/distribution mechanics. It
 preserves default-key output continuity and removes the retired local surfaces
-without aliases. Maintenance 2 is Merged / Closed at the exact candidate and
-Design closeout recorded above.
+without aliases. Maintenance 7 later supersedes config ownership with the
+fixed private package table while preserving the same addresses. Maintenance 2
+is Merged / Closed at the exact candidate and Design closeout recorded above.
 
 ### Separate Avalanche Architecture Attempts
 

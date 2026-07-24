@@ -113,8 +113,9 @@ until later editorial compaction; they are not Maintenance 6 implementation
 authority. The stage changes no scientific equation, RNG address, product
 meaning, IO/artifact boundary, or Stage 8 contract.
 
-Maintenance 7 TensorCore 0.15 Adoption is **User-authorized / Dispatched**
-under
+Maintenance 7 TensorCore 0.15 Adoption has exact immutable Candidate 1
+`68c2f62c2ce354dd6c92fde28b020c0ce71881d6` **Validation-cleared /
+Review-returned for a Design-owned package-source correction** under
 [`maintenance_7_tensorcore_0_15_adoption.md`](../implementation/maintenance_7_tensorcore_0_15_adoption.md).
 It pins exact published TensorCore `0.15.0`, cleanly replaces
 `logical_positions(...)` with `RngPositions`, moves only matching generic
@@ -124,12 +125,19 @@ DS20k pulse convention that public pulse Configs store positive
 peak-voltage-per-photoelectron magnitudes while preparation applies the fixed
 negative polarity exactly once. Calibrated rendered results remain exact. This
 positive-magnitude block supersedes later unqualified signed-Config sketches
-in this long-form document. Every role stream, raw position value/order, word
-schedule, other scientific limit, product action, and facade remains
-unchanged.
+in this long-form document. Maintenance 7 also removes all public per-role
+`RngKey` Config fields, fixes the same ten streams in
+`readout/runtime/keys.py`, removes closure-wide caller-key collision admission,
+and moves the sole shared readout-domain relationship from
+`readout/requirements.py` to `readout/runtime/requirements.py`. Every later
+unqualified reference in this long-form historical architecture to
+config-owned keys, key overrides, `rng_roles`, request-time key uniqueness, or
+the former requirements path is superseded by this paragraph. Every role
+stream, raw position value/order, word schedule, other scientific limit,
+product action, and facade remains unchanged.
 
-TensorDSLab Design selected and implemented the following RNG and
-module-ownership foundation:
+TensorDSLab Design historically selected and implemented the following
+Maintenance 2 RNG and module-ownership foundation:
 one caller-constructed TensorCore `CounterRng` per simulation invocation,
 config-owned `RngKey` values for stochastic roles, public parameterized
 Gaussian, Poisson, and binomial distributions on that RNG, product
@@ -143,7 +151,9 @@ commit, uses the public RNG/distribution surface, and realizes the accepted
 module ownership without compatibility shims. Published TensorCore `0.13.0`
 preserves the same public RNG/distribution contract for Maintenance 5. The
 Stage 5/6 private implementation remains closed historical evidence. Stage 7
-and Maintenance 4 are separate Merged / Closed production slices.
+and Maintenance 4 are separate Merged / Closed production slices. Maintenance
+7 supersedes only the config-owned role-key and root-requirements ownership
+parts of this historical record.
 
 Within this architecture, the fixed-`K` algorithm under
 [Fixed-Generation Correlated-Avalanche Baseline](#fixed-generation-correlated-avalanche-baseline)
@@ -509,10 +519,10 @@ never import either cross-product composition module. `requirements.py`
 contains only relationships genuinely shared across products and is not
 exported. There is no
 `readout/_random.py` or `readout/_rng.py`: generic counter generation,
-logical positions, uniforms, parameterized Gaussian draws, Poisson
-inversion/PTRS, and binomial inversion/BTRS move to the accepted TensorCore
-dependency. Charge-owned multinomial/category orchestration, count-domain
-helpers, checked accumulation, and ledger bookkeeping remain in
+validated `RngPositions`, uniforms, parameterized Gaussian draws, Poisson
+inversion/PTRS, and binomial inversion/BTRS come from the accepted TensorCore
+dependency. Charge-owned multinomial/category orchestration, checked
+accumulation, and ledger bookkeeping remain in
 `charge/runtime/effects/counts.py`.
 
 `ExampleAxis`, `ChannelAxis`, and `SampleAxis` belong in
@@ -529,21 +539,20 @@ ingress. Accepted Stage 7
 `simulate_readout(...)` borrows the supplied field and validates its
 realized `SampleAxis` against the caller's `SamplingConfig`.
 
-Runtime modules and `requirements.py` are private because no supported facade
-exports them. Privacy is an API and compatibility boundary, not a runtime
-access-control mechanism, and clean internal names do not make deep modules
-public. The public RNG surface is a TensorCore `CounterRng`; stochastic
-role identity lives as defaulted `RngKey` fields on exact leaf configs.
-TensorDSLab does not wrap those values in an all-encompassing RNG config,
-re-export raw-word generation, or move scientific category planning and
-bookkeeping to TensorCore.
+Runtime modules are private because no supported facade exports them. Privacy
+is an API and compatibility boundary, not a runtime access-control mechanism,
+and clean internal names do not make deep modules public. The public RNG
+surface is a TensorCore `CounterRng`; stochastic role identity lives in the
+fixed non-exported `readout/runtime/keys.py` table. TensorDSLab does not wrap
+those values in an all-encompassing RNG config, re-export raw-word generation,
+or move scientific category planning and bookkeeping to TensorCore.
 
 The dependency direction is acyclic:
 
 ```text
 tensor_core
   -> tensor_dslab.common
-  -> readout.requirements
+  -> readout.runtime.requirements and readout.runtime.keys
   -> product config and field modules
   -> readout.runtime.sampling
   -> product runtime.prepare modules and Charge effect preparation
@@ -588,10 +597,10 @@ introduce a second registry or create a later behavior module as a placeholder.
 | Module | Public symbols in the active MVP | Shared private symbols |
 | --- | --- | --- |
 | `common/axes.py` | `ExampleAxis`, `ChannelAxis`, `SampleAxis` | none |
-| `common/sampling.py` | `SamplingConfig` | none; this common module validates its own config directly |
-| `readout/requirements.py` | none | genuinely shared structural, dtype, device, scalar-representation, and result-relationship requirements |
+| `readout/runtime/keys.py` | none | one fixed readout namespace and ten exact role keys |
+| `readout/runtime/requirements.py` | none | `require_readout_structure` |
 | `readout/runtime/sampling.py` | none | `SamplingRuntime`, `prepare_sampling` |
-| `readout/runtime/prepare.py` | none | `ReadoutRuntime`, `prepare_readout`, request/closure/RNG-role preparation |
+| `readout/runtime/prepare.py` | none | `ReadoutRuntime`, `prepare_readout`, request/closure/RNG-capability preparation |
 | `readout/photoelectrons/field.py` | `Photoelectrons` | none beyond inherited `_require()` narrowing |
 | `readout/photoelectrons/runtime/validate.py` | none | `validate_photoelectrons` |
 | `readout/charge/config.py` | `TimingJitterConfig`, `DarkCountConfig`, `FixedDelayConfig`, `ExponentialDelayConfig`, `DirectCrosstalkConfig`, `DelayedCrosstalkConfig`, `AfterpulseRecoveryConfig`, `AfterpulseConfig`, `CorrelatedAvalancheConfig`, `ChargeSmearingConfig`, `ChargeConfig` | none |
@@ -616,11 +625,12 @@ introduce a second registry or create a later behavior module as a placeholder.
 | `readout/collection.py` | `ReadoutCollection` | none |
 | `readout/simulation.py` | `simulate_readout` | only the topological action sequence and exact retention |
 
-Shared requirement functions exist only where two or more product actions need
-the exact same relationship. Product-specific validators remain explicit and
-product-named even when they delegate identical finite/nonnegative primitives
-to `readout.requirements`; this preserves ownership and error context without
-duplicating tensor scans.
+Shared downstream requirement functions exist only where two or more product
+actions need the exact same relationship and TensorCore does not already own
+the generic mechanic. Product-specific validators remain explicit and
+product-named even when they delegate generic primitives directly to
+TensorCore; this preserves ownership and error context without duplicating
+tensor scans.
 
 Stage 3 historically implemented and exported `NormalDelayConfig`. Stage 6
 removed the class, both crosstalk-union memberships, all three export layers,
@@ -2041,49 +2051,39 @@ If a real polymorphic consumer appears later, add the narrowest protocol or
 abstract type at that boundary. Serialization alone does not justify a base;
 artifact codecs can operate on exact config types.
 
-### Config-Owned RNG Keys
+### Fixed Package-Owned RNG Keys
 
-Every independently stochastic leaf config owns its default `RngKey`.
-`RngKey` is an exact TensorCore value type with two non-boolean unsigned
-32-bit integers, `namespace` and `stream`. It identifies one stochastic role;
-it is not a seed, mutable state, algorithm selector, or counter. Keys are
-ordinary frozen config fields, participate in equality and `repr`, and may be
-overridden by advanced callers with another exact `RngKey`. TensorDSLab does
-not coerce integers, strings, hashes, or `None` into a key.
+`RngKey` is an exact TensorCore value type containing non-boolean unsigned
+32-bit `namespace` and `stream` values. It identifies one stochastic role; it
+is not a seed, mutable state, algorithm selector, or counter. Maintenance 7
+stores no `RngKey` in a public Config. The private
+`readout/runtime/keys.py` table owns the complete fixed mapping, and
+preparation places the matching key in each stochastic Runtime.
 
-The TensorDSLab namespace is `0x54445331` (`TDS1`). Default stream assignments
-are append-only:
+The TensorDSLab namespace is `0x54445331` (`TDS1`). Stream assignments are
+append-only:
 
-| Config field | Stream |
+| Role | Stream |
 | --- | ---: |
-| `WhiteNoiseConfig.rng_key` | `0x0000_0001` |
-| `PsdNoiseConfig.rng_key` | `0x0000_0002` |
-| `DarkCountConfig.rng_key` | `0x0000_0003` |
-| `DirectCrosstalkConfig.retained_rng_key` | `0x0000_0004` |
-| `DirectCrosstalkConfig.overflow_rng_key` | `0x0000_0005` |
-| `DelayedCrosstalkConfig.retained_rng_key` | `0x0000_0006` |
-| `DelayedCrosstalkConfig.overflow_rng_key` | `0x0000_0007` |
-| `TimingJitterConfig.rng_key` | `0x0000_0008` |
-| `AfterpulseConfig.rng_key` | `0x0000_0009` |
-| `ChargeSmearingConfig.rng_key` | `0x0000_000A` |
+| white noise | `0x0000_0001` |
+| PSD noise | `0x0000_0002` |
+| dark count | `0x0000_0003` |
+| direct crosstalk retained | `0x0000_0004` |
+| direct crosstalk overflow | `0x0000_0005` |
+| delayed crosstalk retained | `0x0000_0006` |
+| delayed crosstalk overflow | `0x0000_0007` |
+| timing jitter | `0x0000_0008` |
+| afterpulse | `0x0000_0009` |
+| charge smearing | `0x0000_000A` |
 
 Afterpulse intentionally uses one key for its coupled categorical outcome and
 derived count/charge ledgers. Direct and delayed crosstalk each use separate
-retained and overflow keys because those are independent Poisson fields.
-Deterministic, delay, recovery, and composite configs own no key:
-`ZeroNoiseConfig`, `FixedDelayConfig`, `ExponentialDelayConfig`,
-`AfterpulseRecoveryConfig`, every deterministic waveform config,
-`NoiseWaveformConfig`, `CorrelatedAvalancheConfig`, `ChargeConfig`, and
-`ReadoutConfig`.
-
-Maintenance 2 validates each exact key field, the ten defaults, and inequality
-of the retained/overflow keys inside each crosstalk config. Stage 7 owns the
-cross-product closure check: it gathers every distinct stochastic role in the
-requested transitive closure and rejects one key assigned to different roles
-before any RNG request, producer invocation, or semantic-output write.
-Structurally present key-bearing configs participate even when their numeric
-parameters make the operation a no-op; absent configs, `ZeroNoiseConfig`, and
-unrequested branches do not. TensorDSLab never silently re-keys a collision.
+retained and overflow keys because those are independent Poisson fields. The
+fixed table is proved exact and unique. Public construction exposes no key
+override, Config equality and `repr` contain no role address, and request
+preparation performs no closure-wide key collision admission. The caller
+selects the realization through the required `CounterRng.seed`; TensorDSLab
+never re-keys a role dynamically.
 
 ### Runtime Inputs Are Not Scientific Config
 
@@ -2311,8 +2311,9 @@ Requested retention remains a separate typed set returned with the Runtime.
 Neither value is a public graph, registry, config, TensorCore object,
 collection member, workspace, or durable artifact. `prepare_readout(...)`
 consumes the request iterable once, derives the fixed typed closure, prepares
-every required product Runtime, and validates the closure-wide key
-relationship.
+every required product Runtime, and admits the required `CounterRng`. It does
+not validate a caller-key relationship because role keys are fixed package
+policy.
 
 Conceptual orchestration:
 
@@ -2702,8 +2703,8 @@ conditional-binomial factorization. Category `c = t` uses
 count-grid `numel`. The combined drop category is last, receives the exact
 remaining count, and consumes no draw. Preflight requires the complete
 retained-category lattice to satisfy the domain above. The exact append-only
-default is
-`TimingJitterConfig.rng_key = RngKey(namespace=0x54445331, stream=8)`;
+package-owned timing-jitter key is
+`RngKey(namespace=0x54445331, stream=8)`;
 every timing
 conditional is an aggregate cell draw with `source_quantum = 0`. A represented
 zero-probability destination may skip physical work without shifting any later
@@ -3157,9 +3158,9 @@ stop:        final integer remainder, no draw
 Those `A`/`B` pairs feed the already-selected reduced conditional-binomial
 core. The AP builder never constructs overflow as
 `1 - sum(q_exp[0:L])` and never forms a tiny conditional side as `1-p_step`.
-AP sampling uses `AfterpulseConfig.rng_key`, whose schema-v1 default retains
-stream value `0x0000_0009`, and the generation/category/source address lattice
-below. Delay-kernel preparation itself consumes no random word.
+AP sampling uses the package-owned key at stream `0x0000_0009` and the
+generation/category/source address lattice below. Delay-kernel preparation
+itself consumes no random word.
 
 #### Exponential Afterpulse-Recovery Preparation
 
@@ -3817,9 +3818,9 @@ normal law above in the selected floating dtype and applies the documented
 nonnegative clipping. No count, rate, or later offspring law reads the smeared
 result.
 
-Enabled smearing uses `ChargeSmearingConfig.rng_key`, whose schema-v1 default
-retains stream value `0x0000_000A`, `source_quantum = 0`, and the row-major
-product-grid flat position directly as `logical_position`. The eager reference
+Enabled smearing uses the package-owned key at stream `0x0000_000A`,
+`source_quantum = 0`, and the row-major product-grid flat position directly as
+`logical_position`. The eager reference
 visits every one of the `N` grid positions, including a cell whose represented
 `S2` is zero. Such a cell still owns and consumes its addressed scalar normal;
 its zero scale makes the draw observationally inert without introducing a
@@ -4466,11 +4467,11 @@ The exact Stage 5 noise lattices use `q = 0` throughout:
 
 ```text
 white:
-    key = WhiteNoiseConfig.rng_key
+    key = WHITE_NOISE_RNG_KEY
     p = 0, ..., output.numel() - 1
 
 PSD, F = floor(N / 2) + 1:
-    key = PsdNoiseConfig.rng_key
+    key = PSD_NOISE_RNG_KEY
     p = row * F + k,  k = 1, ..., floor(N / 2)
 ```
 
@@ -4498,8 +4499,8 @@ algorithm. It requires exact sampling/source agreement, an exact
 `torch.float32` or `torch.float64` output dtype, and an accepted CPU/CUDA
 device. `produce_noise_waveform(...)` receives the accepted Runtime and an
 accepted `CounterRng`. `ZeroNoiseConfig` produces fresh exact zeros without
-invoking the RNG; white and PSD models use the exact `RngKey` captured from
-their config. Intrinsic config validity remains owned by the frozen config
+invoking the RNG; preparation gives white and PSD models their exact fixed
+package-owned `RngKey`. Intrinsic config validity remains owned by the frozen config
 constructors, and the private producer does not defend against fabricated
 private objects or constructor bypass. All contextual and numeric preparation
 completes before an RNG request, product-producer invocation, or semantic-output
@@ -4693,9 +4694,9 @@ primitive tests rather than the public readout collection contract.
 Conceptually, a one-raw-word-per-position random field is:
 
 ```python
-positions = logical_positions(tensor.shape, device=tensor.device)
+positions = RngPositions.from_shape(tensor.shape, device=tensor.device)
 random_field = rng.uniform(
-    key=config.rng_key,
+    key=ROLE_RNG_KEY,
     positions=positions,
     dtype=tensor.dtype,
     ordinal=0,
@@ -4730,7 +4731,8 @@ the special case `G = 1` and `p = u`.
 
 The fixed-`K` correlated-avalanche simulation uses this rule directly. For the
 draws that produce offspring generation `g + 1`, `j = g` with
-`0 <= g < K`. Each stochastic role has its own config-owned key and fixed
+`0 <= g < K`. Each stochastic role has its own fixed package-owned key and
+fixed
 per-generation lattice. Retained DiCT/DeCT Poisson fields use destination-grid
 positions; their overflow fields use source-grid positions. In either case,
 `p = g * N + u` and `q = 0`; TensorCore's Poisson mapping owns the attempt-to-
@@ -5031,8 +5033,8 @@ Maintenance 2 preserves that exact default-key word mapping through the
 TensorCore public class. Callers construct the RNG object but never construct
 raw counters or request protected raw words.
 
-For invocation seed `s`, config-owned `RngKey(namespace=d, stream=g)`, logical
-flat position `p`,
+For invocation seed `s`, package-owned
+`RngKey(namespace=d, stream=g)`, logical flat position `p`,
 source-quantum ordinal `q`, and zero-based raw-word ordinal `r`, define:
 
 ```text
@@ -5090,8 +5092,8 @@ same 32-bit raw word.
 Every independently specified random field or stochastic substep owns one
 exact `RngKey`. Cell-level operations use `q = 0`; per-source-quantum
 operations use the ordinal within that source cell. A role must not mix those
-two meanings. The ten accepted defaults are the config fields listed under
-[Config-Owned RNG Keys](#config-owned-rng-keys). They use namespace `TDS1`,
+two meanings. The ten accepted fixed role keys are listed under
+[Fixed Package-Owned RNG Keys](#fixed-package-owned-rng-keys). They use namespace `TDS1`,
 retain the Stage 5/6 stream values `1` through `10`, and never derive from
 declaration order, requested-product order, execution order, `Enum.auto()`, or
 Python `hash()`.
@@ -5099,8 +5101,9 @@ Python `hash()`.
 Closed Stage 6 production represented those values through the private
 `readout._random._RngStream` enum. The closed Maintenance 2 implementation
 removed that enum and module without a compatibility shim after selecting the
-required TensorCore commit. Its default config keys reproduce the existing
-Stage 5/6 raw-word addresses exactly. Numeric stream order records append-only
+required TensorCore commit. Its then-default config keys reproduce the
+existing Stage 5/6 raw-word addresses exactly; Maintenance 7 fixes the same
+keys in one private table. Numeric stream order records append-only
 identity, not physical execution order: timing jitter uses stream `8` while
 still executing before the correlated-avalanche roles. One AP key owns its
 complete coupled categorical realization; separate AP keys would incorrectly
@@ -5111,8 +5114,8 @@ and block zero, the independent scalar Threefry oracle fixes these two
 default-key blocks:
 
 ```text
-AfterpulseConfig.rng_key:     1f53a380 e9f15c80 6113c5f0 dd68b867
-ChargeSmearingConfig.rng_key: 5f643fe4 c4c88a72 a83fd264 a1443af3
+afterpulse role key:      1f53a380 e9f15c80 6113c5f0 dd68b867
+charge-smearing role key: 5f643fe4 c4c88a72 a83fd264 a1443af3
 ```
 
 Threefry operates on mathematical unsigned 32-bit words. TensorCore owns the
@@ -5461,8 +5464,8 @@ compacted. Overflow always uses `c = S`, and stop has no address or draw.
 Preflight requires `K * (S + 1) * N <= 2**63` whenever nonzero AP can execute.
 This is generation-major, offset/category-major, then source-position-major.
 Zero-probability categories may skip physical work without changing later
-positions. AP uses `AfterpulseConfig.rng_key`, whose default stream is `9`; it
-never shares a key or derives identity from active-only compaction. Inversion uses
+positions. AP uses the package-owned key at stream `9`; it never shares a key
+or derives identity from active-only compaction. Inversion uses
 raw ordinals zero and one at one AP address; BTRS attempt `j` uses ordinals
 `4*j` through `4*j + 3`, so attempt 63 ends at ordinal 255.
 
@@ -5470,7 +5473,7 @@ raw ordinals zero and one at one AP address; BTRS attempt `j` uses ordinals
 
 Dark counts and the retained and overflow draws for both crosstalk modes call
 TensorCore's public `CounterRng.poisson(...)`. TensorDSLab prepares each
-physical binary64 mean, selects the exact config-owned key, and constructs the
+physical binary64 mean, selects the exact fixed package-owned key, and constructs the
 owning operation's positional lattice. TensorCore validates and samples the
 generic numeric law. A mean is either scalar or exactly the positions shape;
 arbitrary implicit broadcasting is not part of the contract. The result is a
@@ -5736,10 +5739,10 @@ algorithms, clamping the sample, or emitting a biased fallback.
 Required behavior is:
 
 - exact repeatability for the same immutable RNG algorithm/seed, input values,
-  tensor shape, dimension order, coordinate order, config keys, dtype,
+  tensor shape, dimension order, coordinate order, fixed role keys, dtype,
   algorithm/version, and supported backend;
 - unchanged common product values when unrelated products are added to or
-  removed from `products`, because their config-owned role keys are fixed;
+  removed from `products`, because their package-owned role keys are fixed;
 - zero-effect configs consume no relevant draws;
 - no hidden global RNG; and
 - cross-backend statistical agreement for completed floating stochastic
@@ -6590,8 +6593,10 @@ The rebuild validation matrix includes:
   variate, endpoint, mean, finite-tail, and native-dtype fixtures for that
   separately dispatched operation; Stage 6 CT/AP delay placement instead uses
   binary64 prepared categorical laws and activates no such variate consumer;
-- globally unique config-owned role-key assignments that do not change with
-  the requested subset, enabled branches, or later appended operations;
+- globally unique fixed package-owned role-key assignments that do not change
+  with the requested subset, enabled branches, or later appended operations,
+  plus absence of public Config key fields and request-time collision
+  admission;
 - exact default streams `0x0000_0003` through `0x0000_000A` for dark counts,
   retained DiCT, DiCT overflow, retained DeCT, DeCT overflow, timing jitter,
   AP, and charge smearing respectively, including noncollision with the two
@@ -6899,9 +6904,9 @@ The completed prerequisites and remaining production sequence are:
 5. Maintenance 6 Pint Physical Configuration Boundary is Merged / Closed
    through exact Review-cleared target
    `0257fb477ee04556ebbe26351123ae610b5d7925`.
-6. Complete the User-authorized, Dispatched Maintenance 7 adoption of published
-   TensorCore `0.15.0` and the matching TensorDSLab validation/RngPositions
-   cleanup.
+6. Complete the exact direct-child documentation correction, Validation, and
+   Review recheck for Maintenance 7 adoption of published TensorCore `0.15.0`
+   and the matching TensorDSLab validation/RngPositions cleanup.
 7. The first Stage 8 real-CUDA attempt remains stopped evidence. Any rerun
    requires a new Design authority after Maintenance 6.
    Profile real GPU memory and execution before designing workspace/output
@@ -6939,7 +6944,7 @@ the historical `0.6` contracts in the first table.
 | immediate public workspace architecture | functional first; optimize after measurement |
 | field-ID model selection | explicit ordered product-type selection |
 | field-ID parity boundaries | product-request/builder parity boundaries |
-| semantic-coordinate RNG identity | config-owned `RngKey` plus logical flat tensor positions |
+| semantic-coordinate RNG identity | fixed package-owned `RngKey` plus validated flat `RngPositions` |
 
 The closed Maintenance 2 implementation supersedes these Stage 5/6 choices:
 
@@ -7029,7 +7034,8 @@ standard-normal components per interior coefficient,
 scales, retained expected variance, circular covariance, independent rows, and
 no post-transform normalization or hidden longer-record crop. Stage 5
 historically assigned streams `1` and `2`; Maintenance 2 preserves them as
-`WhiteNoiseConfig.rng_key` and `PsdNoiseConfig.rng_key`. The accepted
+then-config-owned white/PSD keys, and Maintenance 7 fixes the same values in
+the private key table. The accepted
 precision-matched uniforms and Box-Muller pair define how the corresponding
 standard-normal values are generated. Neither choice reopens this PSD law.
 
@@ -7103,9 +7109,9 @@ Closed prerequisites and remaining Design gates are:
    Cross-product analog/digitized
    fusion remains excluded.
 7. Maintenance 7 TensorCore `0.15.0` adoption and matching TensorDSLab cleanup
-   are User-authorized / Dispatched. Local
-   `main` remains unpushed until that adoption and the exact integrated CUDA
-   gates close.
+   have Candidate 1 Validation-cleared / Review-returned for a Design
+   documentation correction. Local `main` remains unpushed until the exact
+   direct-child correction, adoption closeout, and integrated CUDA gates close.
 8. Digitization-config association for independent/durable consumers.
 9. Exact TensorG4DS source and dense truth-binning bridge, including provenance
    origin, left-edge construction, exact boundary assignment at `0`, `i * T`,

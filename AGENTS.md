@@ -289,9 +289,12 @@ is a separate adoption of published TensorCore `0.15.0` exact commit
 `0f974e9e7f52125bbe829e124beb24e69de811d3`; only after that adoption and the
 exact integrated CUDA gates close may TensorDSLab be pushed.
 
-Maintenance 7 TensorCore 0.15 Adoption is **User-authorized / Dispatched**
-under
-`docs/implementation/maintenance_7_tensorcore_0_15_adoption.md`. Its focused
+Maintenance 7 TensorCore 0.15 Adoption is **Candidate 1 Validation-cleared /
+Review-returned for a Design-owned package-source correction** under
+`docs/implementation/maintenance_7_tensorcore_0_15_adoption.md`. Exact
+immutable Candidate 1 is
+`68c2f62c2ce354dd6c92fde28b020c0ce71881d6`; one documentation-only direct
+child is pending Validation before Review recheck. Its focused
 target pins exact published TensorCore `0.15.0` commit
 `0f974e9e7f52125bbe829e124beb24e69de811d3`, replaces raw
 `logical_positions(...)` use with `RngPositions`, imports matching generic
@@ -344,10 +347,11 @@ tensor_dslab/
   readout/
     config.py
     collection.py
-    requirements.py
     simulation.py
     runtime/
+      keys.py
       prepare.py
+      requirements.py
       sampling.py
     photoelectrons/
       field.py
@@ -389,11 +393,13 @@ This is the implemented Maintenance 5 package tree, not permission to create
 additional placeholders. Maintenance 6 may add only the accepted
 `common/units.py` behavior and the exact allowlisted physical-config/runtime
 changes in its work order; it does not reorganize this product tree.
-The dispatched Maintenance 7 target may add only the accepted non-exported
-`readout/runtime/keys.py` policy module, relocate the sole remaining
+The accepted Maintenance 7 target adds only the non-exported
+`readout/runtime/keys.py` policy module, relocates the sole remaining
 readout-domain requirement to `readout/runtime/requirements.py` without a
-shim, and change the exact validation/RngPositions migration paths in its work
-order; it creates no generic RNG wrapper or compatibility layer.
+shim, and changes the exact validation/RngPositions migration paths in its work
+order; it creates no generic RNG wrapper or compatibility layer. The tree above
+shows that accepted target. The former root `readout/requirements.py` remains
+only a Maintenance 4 through Maintenance 6 historical fact.
 Maintenance 2 realized the preceding product/module ownership
 migration without compatibility shims, and Stage 7 completed
 `readout/simulation.py`; their private `_produce.py`, `*Plan`,
@@ -437,12 +443,14 @@ into the narrowest private owner, while keeping product-specific semantics and
 errors explicit; do not create broad `utils.py` or `helpers.py` modules merely
 to make signatures look uniform.
 
-Under the accepted Maintenance 6 target, Config construction owns public
+Under the accepted Maintenance 7 target, Config construction owns public
 quantity recognition, dimension conversion, canonical copying, scalar-domain
 validation, primitive value domains, and genuine local relationships. It does
 not repeat annotated wrapper, key, nested-Config, optional, or union
 membership. Whole-request `prepare_readout(...)` owns public ingress, closure,
-dtype, device, RNG capability, and stochastic-key admission. Private child
+dtype, device, and RNG capability admission. The ten stochastic role keys are
+fixed package-owned constants; Configs expose no role-key fields and request
+preparation performs no caller-key collision check. Private child
 preparers trust that typed admission and own only contextual extraction, model
 dispatch, scientific/representation checks, and Runtime construction.
 Producers consume typed prerequisites plus plain Runtime facts and perform
@@ -452,13 +460,14 @@ private child actions, and do not remove scientific, axes-identity, freshness,
 device/dtype, or generated-product checks merely because TensorCore supplies
 generic roots.
 
-Keep import direction acyclic: TensorCore, common, shared readout requirements,
-product configs/fields, the source-bound sampling runtime, product runtime
-actions, readout config/collection and whole-request preparation, readout simulation,
-then deliberate package-root exports. Product runtime modules must not import
+Keep import direction acyclic: TensorCore, common, private readout runtime
+requirements and keys, product configs/fields, the source-bound sampling
+runtime, product runtime actions, readout config/collection and whole-request
+preparation, readout simulation, then deliberate package-root exports. Product
+runtime modules must not import
 `ReadoutConfig`, `ReadoutRuntime`, `ReadoutCollection`, `simulation`, or
 `simulate_readout(...)`. A producer imports no Config or validator. Generic
-counter generation, logical positions, uniforms, parameterized Gaussian
+counter generation, validated RNG positions, uniforms, parameterized Gaussian
 draws, Poisson sampling, and binomial sampling belong to TensorCore;
 TensorDSLab must not retain or rename `_random.py`.
 
@@ -660,10 +669,14 @@ TensorCore `0.9.0` commit
 counter/address validation, Threefry word continuity, fixed-point uniforms,
 parameterized Gaussian draws, Poisson inversion/PTRS, binomial
 inversion/BTRS, sampler numerical domains, exhaustion, and those
-distributions' internal word schedules. TensorDSLab owns exact
-stochastic-role key placement in leaf configs, scientific position/category
-lattices, direct-uniform/Gaussian ordinals, multinomial ordering and final
-remainders, draw-free scientific policy, count accumulation, and ledgers.
+distributions' internal word schedules. At that historical boundary,
+TensorDSLab placed exact stochastic-role keys in leaf configs. Maintenance 7
+supersedes only that ownership surface: it fixes the same namespace and ten
+streams in `readout/runtime/keys.py`, removes caller overrides and closure-wide
+key admission, and preserves all addresses. TensorDSLab continues to own
+scientific position/category lattices, direct-uniform/Gaussian ordinals,
+multinomial ordering and final remainders, draw-free scientific policy, count
+accumulation, and ledgers.
 Import only public TensorCore package-root names; do not copy or import
 protected RNG or promoted distribution mechanics. Published TensorCore
 `0.13.0` preserves that accepted public RNG surface while adding compact axes,
@@ -770,9 +783,11 @@ remain private local values.
 
 The accepted Stage 7 signature requires keyword-only `rng: CounterRng`, even
 for deterministic closures; there is no simultaneous `seed=` parameter.
-Deterministic closures request no values. Preflight rejects one `RngKey`
-assigned to distinct stochastic roles in the requested closure before any RNG
-request, producer invocation, or semantic-output write. TensorCore exposes no
+Deterministic closures request no values. Stage 7 historically rejected one
+caller-configured `RngKey` assigned to distinct stochastic roles. Maintenance
+7 removes those public role-key fields and that admission check; its fixed
+package-owned table is unique by construction and preserves the exact Stage 7
+addresses. TensorCore exposes no
 non-consuming concrete-algorithm capability query: the public boundary accepts
 nominal `CounterRng` membership, performs no dummy draw, and treats a real
 custom RNG/backend incompatibility at its first genuine distribution request
@@ -791,9 +806,10 @@ structure rather than duplicated public configuration, so `ReadoutConfig()` is
 the valid truth-only configuration. Config absence is structural. A requested
 product requires the configs in its transitive closure; an unrequested branch
 does not. Product configs describe science, not persistence, device movement,
-allocation, mutation, accelerator streams, invocation seeds, or campaign
-policy. Exact stochastic leaf configs may own immutable `RngKey` role
-identities. `products` controls only final in-memory retention. IO is deferred.
+allocation, mutation, accelerator streams, invocation seeds, stochastic role
+addresses, or campaign policy. Maintenance 7 fixes role addresses privately
+and leaves the caller's `CounterRng.seed` as the realization control.
+`products` controls only final in-memory retention. IO is deferred.
 
 The initial builder is functional. It borrows `Photoelectrons` read-only,
 returns that exact field when requested, and creates guaranteed-fresh generated
