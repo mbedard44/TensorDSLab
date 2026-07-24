@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Private correlated-avalanche preparation and execution."""
 
 import math
 from dataclasses import dataclass
@@ -9,9 +9,9 @@ from tensor_core import (
     CounterRng,
     RngKey,
     RngPositions,
-    require_representable_float,
 )
-from tensor_core.validation.random import require_count_tensor
+from tensor_core.tensor.validation import require_representable_float
+from tensor_core.random.validation import require_count_tensor
 
 from tensor_dslab.common.units import canonical_magnitude
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime

@@ -1,7 +1,8 @@
-from __future__ import annotations
+"""Private readout-domain structural requirements."""
 
 import torch
-from tensor_core import TensorField, require_field_layout
+from tensor_core import TensorField
+from tensor_core.tensor.validation import require_field_layout
 
 from tensor_dslab.common import ChannelAxis, ExampleAxis, SampleAxis
 

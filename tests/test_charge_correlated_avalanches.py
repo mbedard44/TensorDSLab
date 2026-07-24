@@ -1,9 +1,7 @@
-from __future__ import annotations
-
 from decimal import Decimal, localcontext
 import itertools
 import math
-from typing import ClassVar
+from typing import ClassVar, override
 import unittest
 from unittest.mock import patch
 
@@ -18,7 +16,7 @@ from tensor_core import (
     RngKey,
     Threefry4x32,
 )
-from tensor_core.validation import require_tensor_allocation
+from tensor_core.tensor.validation import require_tensor_allocation
 
 from tensor_dslab import (
     quantities,
@@ -63,6 +61,7 @@ def _density(value: int | float):
 class _FailingRng(CounterRng):
     __slots__ = ()
 
+    @override
     def _generate_block(
         self,
         *,
@@ -81,6 +80,7 @@ class _RecordingRng(CounterRng):
 
     calls: ClassVar[list[tuple[RngKey, torch.Tensor, int, int]]] = []
 
+    @override
     def _generate_block(
         self,
         *,

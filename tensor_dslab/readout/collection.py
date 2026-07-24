@@ -1,10 +1,12 @@
-from __future__ import annotations
+"""TensorCore semantic collection leaf for readout products."""
 
-from typing import final
+from typing import final, override
 
 from tensor_core import (
     TensorCollection,
     TensorField,
+)
+from tensor_core.tensor.validation import (
     require_field_types,
     require_same_axes,
     require_same_device,
@@ -21,6 +23,8 @@ from tensor_dslab.readout.pure_waveform.field import PureWaveform
 
 @final
 class ReadoutCollection(TensorCollection):
+    """Collect an exact nonempty subset of readout products."""
+
     __slots__ = ()
 
     @classmethod
@@ -36,6 +40,7 @@ class ReadoutCollection(TensorCollection):
             }
         )
 
+    @override
     def _require(self) -> None:
         if not self.field_types:
             raise ValueError("ReadoutCollection must be nonempty")

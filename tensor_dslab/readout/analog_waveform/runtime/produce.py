@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Private tensor execution for analog waveform products."""
 
 import torch
 

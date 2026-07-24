@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Private tensor execution for pure waveform products."""
 
 import torch
 from torch.nn import functional

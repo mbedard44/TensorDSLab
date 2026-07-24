@@ -1,11 +1,10 @@
-from __future__ import annotations
-
 from itertools import combinations
 import unittest
 from unittest.mock import patch
 
 import torch
-from tensor_core import TensorField, require_same_dtype
+from tensor_core import TensorField
+from tensor_core.tensor.validation import require_same_dtype
 
 from tensor_dslab import (
     AnalogWaveform,

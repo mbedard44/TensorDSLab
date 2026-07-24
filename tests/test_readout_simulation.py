@@ -1,11 +1,9 @@
-from __future__ import annotations
-
 from collections.abc import Callable
 from contextlib import ExitStack
 from dataclasses import replace
 from itertools import combinations, product
 import math
-from typing import Any, ClassVar
+from typing import Any, ClassVar, override
 import unittest
 from unittest.mock import patch
 
@@ -126,6 +124,7 @@ class _FailingRng(CounterRng):
 
     calls: ClassVar[int] = 0
 
+    @override
     def _generate_block(
         self,
         *,
@@ -145,6 +144,7 @@ class _DynamicFailureRng(CounterRng):
 
     calls: ClassVar[int] = 0
 
+    @override
     def _generate_block(
         self,
         *,
@@ -162,6 +162,7 @@ class _RecordingRng(CounterRng):
 
     calls: ClassVar[list[tuple[RngKey, torch.Tensor, int, int]]] = []
 
+    @override
     def _generate_block(
         self,
         *,

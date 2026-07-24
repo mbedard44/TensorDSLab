@@ -1,13 +1,9 @@
-from __future__ import annotations
-
 import unittest
 
 import torch
 from tensor_core import (
     TensorAxis,
     TensorField,
-    require_field_dtype,
-    require_representable_float,
 )
 
 from tensor_dslab.common import ChannelAxis, ExampleAxis, SampleAxis
@@ -45,6 +41,10 @@ from tensor_dslab.readout.pure_waveform.runtime.validate import (
 )
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 from tensor_core import FiniteFloat, NonnegativeFloat, PositiveInteger
+from tensor_core.tensor.validation import (
+    require_field_dtype,
+    require_representable_float,
+)
 from tests.readout_fixtures import (
     ALTERNATE_AXIS_ORDER,
     DEFAULT_AXIS_ORDER,

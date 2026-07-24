@@ -1,3 +1,5 @@
+"""Public semantic axes and physical-unit construction helpers."""
+
 from tensor_dslab.common.axes import ChannelAxis, ExampleAxis, SampleAxis
 from tensor_dslab.common.units import quantities, quantity
 

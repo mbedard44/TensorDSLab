@@ -1,10 +1,8 @@
-from __future__ import annotations
-
 import ast
 from dataclasses import fields, is_dataclass
 from inspect import signature
 from pathlib import Path
-from typing import ClassVar, get_args, get_origin, get_type_hints
+from typing import ClassVar, get_args, get_origin, get_type_hints, override
 import unittest
 from unittest.mock import patch
 
@@ -148,6 +146,7 @@ class _FailingRng(CounterRng):
 
     calls: ClassVar[int] = 0
 
+    @override
     def _generate_block(
         self,
         *,
@@ -281,7 +280,9 @@ class RuntimeActionOwnershipTest(unittest.TestCase):
         )
         self.assertEqual(len(runtime_markers), 8)
         for marker in runtime_markers:
-            self.assertEqual(marker.read_bytes(), b"", str(marker))
+            tree = ast.parse(marker.read_text(), filename=str(marker))
+            self.assertTrue(ast.get_docstring(tree, clean=False), str(marker))
+            self.assertEqual(len(tree.body), 1, str(marker))
 
     def test_runtime_records_are_private_final_frozen_slotted_values(self) -> None:
         public_modules = (tensor_dslab, readout)

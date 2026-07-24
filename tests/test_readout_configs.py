@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import FrozenInstanceError, fields, is_dataclass, replace
 from inspect import Parameter, signature
 from typing import Any, cast

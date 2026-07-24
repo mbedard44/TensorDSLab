@@ -1,13 +1,11 @@
-from __future__ import annotations
-
 import math
-from typing import ClassVar
+from typing import ClassVar, override
 import unittest
 
 import torch
 from tensor_core import CounterRng, RngKey, RngPositions, Threefry4x32
-from tensor_core.validation import require_tensor_allocation
-from tensor_core.validation.random import require_count_tensor
+from tensor_core.tensor.validation import require_tensor_allocation
+from tensor_core.random.validation import require_count_tensor
 
 from tensor_dslab.readout.charge.runtime.effects.counts import (
     MAX_COUNT,
@@ -32,6 +30,7 @@ class _RecordingRng(CounterRng):
 
     calls: ClassVar[list[tuple[RngKey, torch.Tensor, int, int]]] = []
 
+    @override
     def _generate_block(
         self,
         *,
@@ -51,6 +50,7 @@ class _RecordingRng(CounterRng):
 class _FailingRng(CounterRng):
     __slots__ = ()
 
+    @override
     def _generate_block(
         self,
         *,

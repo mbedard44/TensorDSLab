@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Private tensor execution for charge products."""
 
 import torch
 from tensor_core import CounterRng

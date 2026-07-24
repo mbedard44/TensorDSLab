@@ -1,7 +1,5 @@
-from __future__ import annotations
-
 from inspect import Parameter, signature
-from typing import cast, final
+from typing import cast, final, override
 import unittest
 from unittest.mock import PropertyMock, patch
 
@@ -118,6 +116,7 @@ class ReadoutAxesAndSamplingTest(unittest.TestCase):
         class EmptyCountAxis(CountAxis):
             __slots__ = ()
 
+            @override
             def _require(self) -> None:
                 return
 
@@ -178,6 +177,7 @@ class ReadoutAxesAndSamplingTest(unittest.TestCase):
         class OtherCountAxis(CountAxis):
             __slots__ = ()
 
+            @override
             def _require(self) -> None:
                 return
 
@@ -185,6 +185,7 @@ class ReadoutAxesAndSamplingTest(unittest.TestCase):
         class OtherLabelAxis(LabelAxis):
             __slots__ = ()
 
+            @override
             def _require(self) -> None:
                 return
 
@@ -192,6 +193,7 @@ class ReadoutAxesAndSamplingTest(unittest.TestCase):
         class OtherRegularAxis(RegularAxis):
             __slots__ = ()
 
+            @override
             def _require(self) -> None:
                 return
 

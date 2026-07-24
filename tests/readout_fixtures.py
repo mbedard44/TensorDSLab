@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-from typing import Any, TypeVar, final
+from typing import Any, final, override
 
 import torch
 from tensor_core import LabelAxis, TensorAxis, TensorField
@@ -17,13 +15,11 @@ from tensor_dslab.readout import (
 )
 
 
-FieldT = TypeVar("FieldT", bound=TensorField)
-
-
 @final
 class OtherAxis(LabelAxis):
     __slots__ = ()
 
+    @override
     def _require(self) -> None:
         if not self.labels:
             raise ValueError("OtherAxis must be nonempty")
@@ -33,6 +29,7 @@ class OtherAxis(LabelAxis):
 class ForeignField(TensorField):
     __slots__ = ()
 
+    @override
     def _require(self) -> None:
         return
 
@@ -118,7 +115,7 @@ def make_tensor(
     return torch.zeros(shape, dtype=dtype, device=device)
 
 
-def make_product(
+def make_product[FieldT: TensorField](
     field_type: type[FieldT],
     *,
     axes: tuple[TensorAxis[Any], ...] | None = None,

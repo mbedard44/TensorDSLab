@@ -1,3 +1,5 @@
+"""Public noise waveform product facade."""
+
 from tensor_dslab.readout.noise_waveform.config import (
     NoiseWaveformConfig,
     PsdNoiseConfig,

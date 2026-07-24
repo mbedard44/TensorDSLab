@@ -1,11 +1,9 @@
-from __future__ import annotations
-
 import ast
 from dataclasses import fields, is_dataclass, replace
 import math
 from pathlib import Path
 import tokenize
-from typing import Any, cast, ClassVar
+from typing import Any, cast, ClassVar, override
 import unittest
 from unittest.mock import patch
 
@@ -85,6 +83,7 @@ class _RecordingRng(CounterRng):
 
     calls: ClassVar[list[tuple[RngKey, torch.Tensor, int, int]]] = []
 
+    @override
     def _generate_block(
         self,
         *,

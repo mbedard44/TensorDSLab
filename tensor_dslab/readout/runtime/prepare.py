@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Private preparation of trusted readout runtime facts."""
 
 from collections.abc import Iterable
 from dataclasses import dataclass

@@ -1,11 +1,11 @@
-from __future__ import annotations
+"""Private preparation of trusted pure waveform runtime facts."""
 
 from dataclasses import dataclass
 import math
 from typing import final
 
 import torch
-from tensor_core import require_representable_float
+from tensor_core.tensor.validation import require_representable_float
 
 from tensor_dslab.common.units import canonical_magnitude
 from tensor_dslab.readout.pure_waveform.config import (

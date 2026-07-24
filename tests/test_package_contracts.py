@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import ast
 from inspect import Parameter, isabstract, signature
 import os
@@ -39,7 +37,7 @@ from tensor_dslab import (
 
 
 class PackageContractTest(unittest.TestCase):
-    def test_tensorcore_0_15_public_surface_and_topology_are_exact(self) -> None:
+    def test_tensorcore_0_16_public_surface_and_topology_are_exact(self) -> None:
         self.assertEqual(
             tensor_core.__all__,
             (
@@ -64,19 +62,6 @@ class PackageContractTest(unittest.TestCase):
                 "PositiveInteger",
                 "Probability",
                 "RngPositions",
-                "require_axis_signature",
-                "require_exact_integer",
-                "require_field_dtype",
-                "require_field_layout",
-                "require_finite_real",
-                "require_field_types",
-                "require_integer",
-                "require_nonnegative_integer",
-                "require_positive_integer",
-                "require_representable_float",
-                "require_same_axes",
-                "require_same_device",
-                "require_same_dtype",
             ),
         )
         package_root = Path(tensor_core.__file__).resolve().parent
@@ -99,7 +84,12 @@ class PackageContractTest(unittest.TestCase):
                 "random/positions.py",
                 "random/rng.py",
                 "random/threefry.py",
-                "scalars.py",
+                "random/validation.py",
+                "scalar/__init__.py",
+                "scalar/base.py",
+                "scalar/float.py",
+                "scalar/integer.py",
+                "scalar/validation.py",
                 "table/__init__.py",
                 "table/collection.py",
                 "table/column.py",
@@ -109,24 +99,20 @@ class PackageContractTest(unittest.TestCase):
                 "tensor/axis.py",
                 "tensor/collection.py",
                 "tensor/field.py",
-                "validation/__init__.py",
-                "validation/axis.py",
-                "validation/numeric.py",
-                "validation/random.py",
-                "validation/tensor.py",
+                "tensor/validation.py",
             ),
         )
         dependency_metadata = tomllib.loads(
             (package_root.parent / "pyproject.toml").read_text()
         )
-        self.assertEqual(dependency_metadata["project"]["version"], "0.15.0")
+        self.assertEqual(dependency_metadata["project"]["version"], "0.16.0")
         self.assertEqual(
             dependency_metadata["project"]["requires-python"],
-            ">=3.11",
+            ">=3.14",
         )
         self.assertEqual(
             dependency_metadata["project"]["dependencies"],
-            ["torch>=2.11,<2.13"],
+            ["torch>=2.13,<2.14"],
         )
 
     def test_package_metadata_selects_exact_tensorcore_candidate(self) -> None:
@@ -135,14 +121,15 @@ class PackageContractTest(unittest.TestCase):
         project = metadata["project"]
         self.assertEqual(project["name"], "tensor-dslab")
         self.assertEqual(project["version"], "0.1.0")
-        self.assertEqual(project["requires-python"], ">=3.11")
+        self.assertEqual(metadata["build-system"]["requires"], ["hatchling==1.31.0"])
+        self.assertEqual(project["requires-python"], ">=3.14")
         self.assertEqual(
             project["dependencies"],
             [
-                "numpy==2.3.5",
+                "numpy==2.5.1",
                 "pint==0.25.3",
-                "torch",
-                "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@0f974e9e7f52125bbe829e124beb24e69de811d3",
+                "torch>=2.13,<2.14",
+                "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@e05324699892a8bcea024375720bfae1ed9569cc",
             ],
         )
         self.assertEqual(
@@ -532,15 +519,23 @@ class PackageContractTest(unittest.TestCase):
                     self.assertFalse(hasattr(module, name))
 
     def test_production_uses_only_public_tensorcore_imports(self) -> None:
-        import tensor_core.validation as validation
-        import tensor_core.validation.random as random_validation
+        import tensor_core.random as random
+        import tensor_core.random.validation as random_validation
+        import tensor_core.scalar as scalar
+        import tensor_core.scalar.validation as scalar_validation
+        import tensor_core.table as table
+        import tensor_core.tensor as tensor
+        import tensor_core.tensor.validation as tensor_validation
 
         public_names = {
             "tensor_core": frozenset(tensor_core.__all__),
-            "tensor_core.validation": frozenset(validation.__all__),
-            "tensor_core.validation.random": frozenset(
-                random_validation.__all__
-            ),
+            "tensor_core.random": frozenset(random.__all__),
+            "tensor_core.random.validation": frozenset(random_validation.__all__),
+            "tensor_core.scalar": frozenset(scalar.__all__),
+            "tensor_core.scalar.validation": frozenset(scalar_validation.__all__),
+            "tensor_core.table": frozenset(table.__all__),
+            "tensor_core.tensor": frozenset(tensor.__all__),
+            "tensor_core.tensor.validation": frozenset(tensor_validation.__all__),
         }
         for path in Path("tensor_dslab").rglob("*.py"):
             tree = ast.parse(path.read_text(), filename=str(path))
@@ -646,7 +641,15 @@ class PackageContractTest(unittest.TestCase):
                 module = __import__(module_name, fromlist=("__name__",))
                 self.assertFalse(hasattr(module, "__all__"))
                 package_path = Path(*module_name.split("."), "__init__.py")
-                self.assertEqual(package_path.read_text(), "")
+                source = package_path.read_text()
+                tree = ast.parse(source, filename=str(package_path))
+                self.assertTrue(ast.get_docstring(tree, clean=False))
+                self.assertFalse(
+                    any(
+                        not isinstance(node, ast.Expr)
+                        for node in tree.body
+                    )
+                )
         effect_paths = tuple(
             sorted(
                 Path("tensor_dslab/readout/charge/runtime/effects").glob("*.py")

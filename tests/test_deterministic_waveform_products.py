@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import math
 from typing import Any
 import unittest
@@ -12,8 +10,8 @@ from tensor_core import (
     PositiveFloat,
     PositiveInteger,
     TensorAxis,
-    require_same_dtype,
 )
+from tensor_core.tensor.validation import require_same_dtype
 
 from tensor_dslab import (
     quantities,

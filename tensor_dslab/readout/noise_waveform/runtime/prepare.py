@@ -1,12 +1,13 @@
-from __future__ import annotations
+"""Private preparation of trusted noise waveform runtime facts."""
 
 from dataclasses import dataclass
 import math
 from typing import final
 
 import torch
-from tensor_core import RngKey, require_representable_float
-from tensor_core.validation import require_shape_span
+from tensor_core import RngKey
+from tensor_core.tensor.validation import require_representable_float
+from tensor_core.tensor.validation import require_shape_span
 
 from tensor_dslab.common.units import canonical_magnitude, canonical_magnitudes
 from tensor_dslab.readout.noise_waveform.config import (

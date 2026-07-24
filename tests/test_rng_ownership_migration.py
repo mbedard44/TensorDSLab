@@ -1,12 +1,10 @@
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import fields
 import importlib.util
 from inspect import Parameter, signature
 import platform
 import sys
-from typing import Any, ClassVar
+from typing import Any, ClassVar, override
 import unittest
 from unittest import mock
 
@@ -199,6 +197,7 @@ class _RecordingRng(CounterRng):
 
     calls: ClassVar[list[tuple[RngKey, torch.Tensor, int, int]]] = []
 
+    @override
     def _generate_block(
         self,
         *,
@@ -218,6 +217,7 @@ class _RecordingRng(CounterRng):
 class _FailingRng(CounterRng):
     __slots__ = ()
 
+    @override
     def _generate_block(
         self,
         *,

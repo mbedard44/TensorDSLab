@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Private phase-marginalized delay-law preparation."""
 
 import math
 from dataclasses import dataclass

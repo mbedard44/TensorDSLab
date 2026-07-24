@@ -1,3 +1,5 @@
+"""Public analog waveform product facade."""
+
 from tensor_dslab.readout.analog_waveform.config import (
     AnalogSaturationConfig,
     AnalogWaveformConfig,

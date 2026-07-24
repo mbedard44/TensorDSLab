@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Private completed-product validation for charge products."""
 
 import torch
 

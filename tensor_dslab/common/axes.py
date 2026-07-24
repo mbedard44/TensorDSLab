@@ -1,7 +1,7 @@
-from __future__ import annotations
+"""TensorDSLab semantic axes and sampling-coordinate policy."""
 
 import math
-from typing import final
+from typing import final, override
 
 import pint
 from pint import Quantity
@@ -12,8 +12,11 @@ from tensor_dslab.common.units import _integer_quantity
 
 @final
 class ExampleAxis(CountAxis):
+    """Identify nonempty examples by zero-based local ordinal."""
+
     __slots__ = ()
 
+    @override
     def _require(self) -> None:
         if self.count == 0:
             raise ValueError("ExampleAxis must be nonempty")
@@ -21,8 +24,11 @@ class ExampleAxis(CountAxis):
 
 @final
 class ChannelAxis(LabelAxis):
+    """Identify readout channels by unique string labels."""
+
     __slots__ = ()
 
+    @override
     def _require(self) -> None:
         if not self.labels:
             raise ValueError("ChannelAxis must be nonempty")
@@ -30,6 +36,8 @@ class ChannelAxis(LabelAxis):
 
 @final
 class SampleAxis(RegularAxis):
+    """Represent integer-picosecond sampling coordinates."""
+
     __slots__ = ()
 
     @classmethod
@@ -55,6 +63,7 @@ class SampleAxis(RegularAxis):
             raise TypeError("converted period magnitude must be exactly int or float")
         return cls(start=0, step=step, count=count)
 
+    @override
     def _require(self) -> None:
         if self.start < 0:
             raise ValueError("SampleAxis start must be nonnegative")

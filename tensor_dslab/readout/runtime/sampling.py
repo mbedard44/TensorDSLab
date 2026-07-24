@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Private source-owned sampling runtime preparation."""
 
 from dataclasses import dataclass
 from typing import final

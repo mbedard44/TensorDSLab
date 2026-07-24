@@ -1,10 +1,10 @@
-from __future__ import annotations
+"""Private charge count-domain arithmetic and ordered sampling."""
 
 import math
 
 import torch
 from tensor_core import CounterRng, RngKey, RngPositions
-from tensor_core.validation.random import require_count_tensor
+from tensor_core.random.validation import require_count_tensor
 
 
 MAX_COUNT = (1 << 53) - 1

@@ -1,11 +1,11 @@
-from __future__ import annotations
+"""Private preparation of trusted charge runtime facts."""
 
 from dataclasses import dataclass
 from typing import final
 
 import torch
-from tensor_core.validation import require_tensor_allocation
-from tensor_core.validation.random import require_count_tensor
+from tensor_core.tensor.validation import require_tensor_allocation
+from tensor_core.random.validation import require_count_tensor
 
 from tensor_dslab.readout.charge.config import ChargeConfig
 from tensor_dslab.readout.charge.runtime.effects.correlated_avalanches import (

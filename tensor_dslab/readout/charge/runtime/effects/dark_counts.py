@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Private dark-count preparation and execution."""
 
 import math
 from dataclasses import dataclass
@@ -7,7 +7,7 @@ from typing import final
 
 import torch
 from tensor_core import CounterRng, RngKey, RngPositions
-from tensor_core.validation.random import require_count_tensor
+from tensor_core.random.validation import require_count_tensor
 
 from tensor_dslab.common.units import canonical_magnitude
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime

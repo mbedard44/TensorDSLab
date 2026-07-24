@@ -1,11 +1,12 @@
-from __future__ import annotations
+"""Private charge-smearing preparation and execution."""
 
 import math
 from dataclasses import dataclass
 from typing import final
 
 import torch
-from tensor_core import CounterRng, RngKey, RngPositions, require_representable_float
+from tensor_core import CounterRng, RngKey, RngPositions
+from tensor_core.tensor.validation import require_representable_float
 
 from tensor_dslab.readout.charge.config import ChargeSmearingConfig
 from tensor_dslab.readout.runtime.keys import CHARGE_SMEARING_RNG_KEY

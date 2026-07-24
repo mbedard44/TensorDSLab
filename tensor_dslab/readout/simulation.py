@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Public topological readout simulation orchestration."""
 
 from collections.abc import Iterable
 
@@ -50,6 +50,7 @@ def simulate_readout(
     rng: CounterRng,
     floating_dtype: torch.dtype = torch.float32,
 ) -> ReadoutCollection:
+    """Produce exactly the requested readout products from photoelectron truth."""
     requested, runtime = prepare_readout(
         photoelectrons,
         products=products,

@@ -1,7 +1,6 @@
-from __future__ import annotations
-
 import math
 import unittest
+from typing import override
 from unittest.mock import patch
 
 import torch
@@ -31,6 +30,7 @@ class _PositionRecordingRng(CounterRng):
 
     calls: list[torch.Tensor] = []
 
+    @override
     def _generate_block(
         self,
         *,

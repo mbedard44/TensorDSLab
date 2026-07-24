@@ -1,7 +1,11 @@
-from __future__ import annotations
+"""Private completed-product validation for analog waveform products."""
 
 import torch
-from tensor_core import require_same_axes, require_same_device, require_same_dtype
+from tensor_core.tensor.validation import (
+    require_same_axes,
+    require_same_device,
+    require_same_dtype,
+)
 
 from tensor_dslab.readout.analog_waveform.field import AnalogWaveform
 from tensor_dslab.readout.noise_waveform.field import NoiseWaveform

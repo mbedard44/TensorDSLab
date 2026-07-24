@@ -1,3 +1,5 @@
+"""Public readout products, configurations, and orchestration."""
+
 from tensor_dslab.readout.analog_waveform import (
     AnalogSaturationConfig,
     AnalogWaveform,

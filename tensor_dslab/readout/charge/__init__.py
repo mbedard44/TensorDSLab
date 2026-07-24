@@ -1,3 +1,5 @@
+"""Public charge product facade."""
+
 from tensor_dslab.readout.charge.config import (
     AfterpulseConfig,
     AfterpulseRecoveryConfig,

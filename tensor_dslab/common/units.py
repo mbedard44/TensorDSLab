@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""TensorDSLab-owned Pint registry and canonical quantity boundaries."""
 
 import tokenize
 from typing import cast
@@ -9,7 +9,7 @@ from pint import Quantity
 from tensor_core import FiniteFloat, Scalar
 
 
-_QuantityField = tuple[str, str, type[Scalar[float]]]
+type _QuantityField = tuple[str, str, type[Scalar[float]]]
 _REGISTRY = pint.UnitRegistry(cache_folder=None)
 _PARSER_ERRORS = (
     pint.PintError,
@@ -42,6 +42,8 @@ def _finite_magnitude(magnitude: object, *, field: str) -> float:
 
 
 def quantity(magnitude: int | float, unit: str) -> Quantity:
+    """Return one copied scalar quantity in canonical package units."""
+
     parsed_unit = _require_unit(unit)
     normalized = _finite_magnitude(magnitude, field="quantity magnitude")
     return cast(Quantity, _REGISTRY.Quantity(normalized, parsed_unit))
@@ -51,6 +53,8 @@ def quantities(
     magnitudes: tuple[int | float, ...],
     unit: str,
 ) -> Quantity:
+    """Return one copied immutable vector quantity in canonical package units."""
+
     if type(magnitudes) is not tuple:
         raise TypeError("magnitudes must be exactly tuple")
     parsed_unit = _require_unit(unit)

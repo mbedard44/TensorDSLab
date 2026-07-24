@@ -1,3 +1,5 @@
+"""Private fixed readout RNG namespace and role keys."""
+
 from tensor_core import RngKey
 
 

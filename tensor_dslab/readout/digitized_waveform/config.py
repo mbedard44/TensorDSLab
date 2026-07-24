@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Public configuration records for digitized waveform."""
 
 from dataclasses import dataclass
 from typing import final

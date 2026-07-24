@@ -1,9 +1,7 @@
-from __future__ import annotations
-
 from collections.abc import Iterable
 from itertools import permutations
 import math
-from typing import Any
+from typing import Any, override
 import unittest
 from unittest.mock import patch
 
@@ -81,6 +79,7 @@ def _densities(values: tuple[int | float, ...]):
 class _FailingRng(CounterRng):
     __slots__ = ()
 
+    @override
     def _generate_block(
         self,
         *,

@@ -1,9 +1,7 @@
-from __future__ import annotations
-
 from fractions import Fraction
 import itertools
 import math
-from typing import ClassVar
+from typing import ClassVar, override
 import unittest
 from unittest import mock
 
@@ -100,6 +98,7 @@ def _produce_charge(
 class _FailingRng(CounterRng):
     __slots__ = ()
 
+    @override
     def _generate_block(
         self,
         *,
@@ -118,6 +117,7 @@ class _RecordingRng(CounterRng):
 
     calls: ClassVar[list[tuple[RngKey, torch.Tensor, int, int]]] = []
 
+    @override
     def _generate_block(
         self,
         *,
@@ -140,6 +140,7 @@ class _FixedBlockRng(CounterRng):
     words: ClassVar[tuple[int, int, int, int]] = (0, 0, 0, 0)
     calls: ClassVar[int] = 0
 
+    @override
     def _generate_block(
         self,
         *,

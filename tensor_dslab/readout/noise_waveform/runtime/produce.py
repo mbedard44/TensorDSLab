@@ -1,4 +1,4 @@
-from __future__ import annotations
+"""Private tensor execution for noise waveform products."""
 
 import math
 
