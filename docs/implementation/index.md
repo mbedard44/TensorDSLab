@@ -733,7 +733,7 @@ PureWaveform + NoiseWaveform = AnalogWaveform -> DigitizedWaveform
 
 The exact `demos` optional extra owns Matplotlib/Jupyter tooling; these packages
 do not become TensorDSLab runtime dependencies. The work order freezes a
-`22`-path maximum scope, three-candidate Implementation/Validation loop,
+`23`-path maximum scope, three-candidate Implementation/Validation loop,
 source/archive, typing, wheel/sdist, script/notebook, plotting, privacy, and
 hygiene evidence, and the later integrated-CUDA-before-first-push sequence.
 The Design-owned authority correction adds only
@@ -742,6 +742,18 @@ and public-function census can prove the required `60/32/4` target, including
 the precise-module-only `ds20k_veto()` export. Implementation stopped before a
 candidate commit with `I->V 0/3`, and the disjoint correction consumes no loop
 slot.
+The later user-requested Conda amendment adds only executable
+`demos/create_environment.sh`. It defaults to a fresh `tensor_dslab`
+environment with exact Python `3.14.6`, installs the local package
+non-editably with the exact `demos` extra, and prints the parent-shell
+activation and demo-run commands. The ordinary project and demo use the same
+environment. The script does not activate or modify the caller's shell,
+replace an existing environment, register a kernel, or weaken the wheel/sdist
+evidence. The demo is exact eager CPU and requires no GPU, CUDA runtime, or
+accelerator driver.
+Implementation paused uncommitted at exact corrected authority `37cbb53...`
+with eight preserved authorized paths and unchanged `I->V 0/3`, so this second
+disjoint Design correction likewise consumes no loop slot.
 It makes no calibration, TensorG4DS, TensorML, IO, accelerator, release,
 deployment, or compatibility claim. The user authorized the exact persistent
 Implementation/Validation/Review route; the package loop remains active until

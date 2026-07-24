@@ -5,11 +5,12 @@ Status: **Design-complete / User-authorized / Package loop active**.
 This is the fixed TensorDSLab Maintenance 9 production work order. It binds
 the exact locally closed Maintenance 8 baseline, exact published TensorCore
 `0.16.0`, one deliberately provisional package-owned DS20k Veto profile, one
-public script, one public notebook with plots, the complete changed-path
-allowlist, protected bytes, evidence matrix, loop budget, and merge authority.
-It is not Implementation dispatch until the user explicitly authorizes the
-route. It grants no cluster, push, release, deployment, production-calibration,
-or broad compatibility authority.
+environment-creation script, one readout script, one public notebook with
+plots, the complete changed-path allowlist, protected bytes, evidence matrix,
+loop budget, and merge authority. The user authorized the package route
+through the exact lifecycle authority carried by the dispatch handoff. It
+grants no cluster, push, release, deployment, production-calibration, or broad
+compatibility authority.
 
 Stable key:
 
@@ -49,6 +50,7 @@ tensor_dslab/
   readout/
     profiles.py
 demos/
+  create_environment.sh
   readout.py
   readout.ipynb
 ```
@@ -57,16 +59,18 @@ The profile makes a complete representative Veto readout configuration
 available without hiding the ordinary compositional Config model. The demos
 teach:
 
-1. how a completed `Photoelectrons` field is built explicitly from semantic
+1. how to create and activate the ordinary `tensor_dslab` Conda environment
+   used for both project work and the public demos;
+2. how a completed `Photoelectrons` field is built explicitly from semantic
    axes and an ordinary `torch.int64` tensor;
-2. how the complete readout configuration is built explicitly;
-3. how the same provisional configuration is obtained from `ds20k_veto()`;
-4. how an experimental configuration is derived with
+3. how the complete readout configuration is built explicitly;
+4. how the same provisional configuration is obtained from `ds20k_veto()`;
+5. how an experimental configuration is derived with
    `dataclasses.replace(...)`;
-5. how `simulate_readout(...)` produces and retains typed products;
-6. how `PureWaveform + NoiseWaveform = AnalogWaveform` and the analog waveform
+6. how `simulate_readout(...)` produces and retains typed products;
+7. how `PureWaveform + NoiseWaveform = AnalogWaveform` and the analog waveform
    becomes `DigitizedWaveform` for one selected trace; and
-7. where future FIL/TensorG4DS input and TensorML output adapters would replace
+8. where future FIL/TensorG4DS input and TensorML output adapters would replace
    the current demonstration boundaries.
 
 This stage is intentionally separate from the closed
@@ -613,6 +617,69 @@ Implementation and each evidence role must record the complete resolved
 transitive inventory and reject drift. These packages are demonstration and
 evidence inputs, not TensorDSLab runtime-science dependencies.
 
+## Conda Demo Environment
+
+Add one executable convenience script:
+
+```text
+demos/create_environment.sh
+```
+
+The supported invocation is:
+
+```bash
+./demos/create_environment.sh [environment-name]
+```
+
+The optional positional name exists only so Implementation, Validation, and
+Review can construct disjoint role-private evidence environments. The exact
+ordinary project-environment default is:
+
+```text
+tensor_dslab
+```
+
+The script:
+
+- uses a Bash shebang, `set -euo pipefail`, and mode `100755`;
+- accepts zero or one positional argument and rejects every other invocation;
+- resolves the repository root from its own physical location, so it works
+  from any current directory and records no absolute repository path;
+- uses `${CONDA_EXE:-conda}` as the Conda executable;
+- fails before mutation when Conda is unavailable or the requested named
+  environment already exists;
+- creates a new isolated environment with exact Python `3.14.6` and `pip`,
+  using `--no-default-packages`, `--override-channels`, and only
+  `conda-forge`;
+- installs the current local repository non-editably with the exact `demos`
+  extra by running the new environment's Python through `conda run`;
+- uses noninteractive Conda and pip operation and never installs with
+  `--user`;
+- performs one import/version smoke check inside the completed environment;
+- prints the next commands to
+  `conda activate <environment-name>`, change to the detected repository root,
+  and run `python demos/readout.py`; and
+- exits nonzero on any incomplete creation, installation, or smoke check.
+
+The script deliberately does not call `conda activate`: an executed child
+process cannot change its parent shell. It does not call `conda init`, source a
+shell profile, edit `.condarc` or a shell startup file, register a Jupyter
+kernel, remove or overwrite an existing environment, launch a frontend, run
+the simulation implicitly, or promise offline operation. Network access is an
+explicit setup prerequisite because the exact package dependencies may need to
+be fetched.
+
+The default `tensor_dslab` environment is the ordinary project environment,
+not a separate demo-only environment. Installing `.[demos]` makes that same
+environment capable of running the notebook while leaving the package's core
+dependency contract unchanged.
+
+Conda is a bootstrap tool rather than a TensorDSLab dependency. The accepted
+Design endpoint uses Conda `26.1.0`; evidence must record the actual Conda
+version and complete created-environment inventory. The supported script
+contract is its argument/default behavior and resulting environment, not exact
+console prose or the incidental Conda package-build solution.
+
 ## Script And Notebook Boundaries
 
 `demos/readout.py` is an ordinary executable script with `main()` and:
@@ -631,6 +698,12 @@ It:
 - includes small public-contract assertions; and
 - imports no private runtime, key, requirement, preparation, production,
   validation, or effect surface.
+
+The script and notebook require no GPU, CUDA runtime, accelerator driver, or
+accelerator-specific package choice. They create the source on the CPU,
+retain every generated product on CPU, and do not inspect or select CUDA even
+when it is available. The complete public demonstration must pass in a
+CPU-only environment with `torch.cuda.is_available() is False`.
 
 `demos/readout.ipynb` presents:
 
@@ -663,7 +736,8 @@ The candidate may change only:
 
 1. `pyproject.toml` to add the exact optional `demos` extra;
 2. one precise public profile module;
-3. one executable public script and one clean executable notebook;
+3. one executable readout script, one executable environment-creation script,
+   and one clean executable notebook;
 4. the focused tests and typing fixture required to prove them; and
 5. the exact synchronized current records listed below.
 
@@ -699,6 +773,42 @@ pass. This procedural correction consumes no candidate or return slot and
 changes no profile, demonstration, dependency, scientific, API, or evidence
 contract.
 
+### Design-owned Conda-script amendment
+
+At the user's request, Design issued a second procedural pause while
+Implementation was still uncommitted at exact corrected authority
+`37cbb53477699d7030e3f174258b6de69e87f358`, tree
+`12c009f060ab2f367cb89c1680c334688dfe0922`. No command was running.
+Candidate 1 had not been committed or dispatched, so loop accounting remained
+`I->V 0/3` and `V->I 0/3`.
+
+The preserved exact dirty set had advanced to eight authorized paths:
+
+```text
+pyproject.toml
+tensor_dslab/readout/profiles.py
+demos/readout.py
+demos/readout.ipynb
+tests/test_package_contracts.py
+tests/test_readout_profiles_and_demos.py
+tests/test_tensorcore_0_16_modernization.py
+tests/typing/maintenance_9_ds20k_veto_profile_and_public_readout_demos.py
+```
+
+The focused source/archive suites were each `24/24/0`; the full source/archive
+suites were each `224` run / `211` passed / `13` conditional CUDA skips; and
+real temporary-copy notebook execution had passed in both forms before the
+pause. This evidence is implementation progress, not candidate clearance.
+
+The corrected authority adds only `demos/create_environment.sh` to the
+allowlist and freezes its setup/evidence boundary above. The authority
+correction is documentation-only and disjoint from the eight preserved paths.
+Implementation may fast-forward and resume only after exact-parent,
+clean-index, disjointness, unchanged-dirty-set, and post-fast-forward gates
+pass. This amendment consumes no candidate or return slot and changes no
+profile, notebook, plotting, dependency, production, scientific, API, RNG,
+Pint, or CUDA contract.
+
 ### Exact changed-path allowlist
 
 Metadata:
@@ -716,6 +826,7 @@ tensor_dslab/readout/profiles.py
 Demonstrations:
 
 ```text
+demos/create_environment.sh
 demos/readout.py
 demos/readout.ipynb
 ```
@@ -748,8 +859,8 @@ docs/parity.md
 docs/validation.md
 ```
 
-The maximum candidate scope is exactly `22` logical paths: one metadata path,
-one production path, two demo paths, four test/typing paths, and fourteen
+The maximum candidate scope is exactly `23` logical paths: one metadata path,
+one production path, three demo paths, four test/typing paths, and fourteen
 current-document paths. A candidate need not touch an allowlisted current
 record when no truthful change is required. Any changed path outside this list
 is a hard stop.
@@ -800,6 +911,22 @@ The candidate must prove:
 - fixed-seed same-stack repeatability without promoting cross-platform
   stochastic literals;
 - successful repository-root execution of `demos/readout.py`;
+- exact CPU-only demonstration execution with every source/result tensor on
+  CPU and no GPU, CUDA runtime, driver, device discovery, or accelerator
+  selection requirement;
+- `bash -n demos/create_environment.sh`, exact executable mode, relative-path
+  operation, zero/one-argument behavior, exact `tensor_dslab` default name,
+  and rejection of malformed invocation;
+- fresh real creation through `demos/create_environment.sh` under a unique
+  role-owned name, followed by exact Python/dependency/import/inventory checks;
+- successful `conda run` script and notebook execution inside that created
+  environment, followed by role-owned cleanup after evidence capture;
+- exact non-editable local `.[demos]` installation, no user install, no
+  existing-environment mutation, and working printed
+  activation/change-directory/run guidance;
+- no `conda activate`, `conda init`, shell-profile/Conda-config mutation,
+  kernel registration, frontend launch, implicit simulation, absolute
+  repository path, or environment removal in the committed script;
 - successful `nbclient` execution of a temporary notebook copy under the exact
   `demos` extra;
 - public imports only;
@@ -854,6 +981,16 @@ Python `3.14.6` core and `demos` environments. Role-private paths and resolved
 transitive inventories must not enter committed records.
 
 ```bash
+bash -n demos/create_environment.sh
+
+./demos/create_environment.sh <role-private-environment-name>
+
+<conda> run --name <role-private-environment-name> \
+  python demos/readout.py
+
+<conda> run --name <role-private-environment-name> \
+  python -B -m unittest tests.test_readout_profiles_and_demos -v
+
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=<TensorDSLab>:<TensorCore-form> \
   <python-3.14.6> -B -m unittest \
   tests.test_readout_profiles_and_demos \
@@ -868,6 +1005,8 @@ PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=<TensorDSLab>:<TensorCore-form> \
 <pyright-1.1.411> --pythonversion 3.14 --pythonpath <python-3.14.6>
 
 <python-3.14.6> -B -m build --wheel --sdist
+
+<conda> env remove --yes --name <role-private-environment-name>
 ```
 
 The focused profile/demo test loads the committed notebook with exact
@@ -881,7 +1020,9 @@ The artifact gate installs the fresh TensorDSLab wheel first without optional
 extras and then with the exact `demos` extra. The core form proves
 Matplotlib/Jupyter absence and clean TensorDSLab import. The demonstration form
 repeats script/notebook execution with no project-root package shadowing.
-Editable installs are not evidence.
+The Conda-script environment is a separate user-workflow gate over the local
+source tree; it does not replace the isolated wheel/sdist evidence. Editable
+installs are not evidence.
 
 ## Explicit Non-Goals
 
@@ -899,6 +1040,10 @@ Editable installs are not evidence.
 - device, dtype, seed, product, or retention policy inside the profile;
 - new readout effect, equation, RNG role, key, address, or schedule;
 - Matplotlib, Jupyter, or plotting imports from `tensor_dslab` production;
+- automatic parent-shell activation, shell-profile or Conda-configuration
+  mutation, environment replacement/removal, or Jupyter-kernel registration;
+- Conda lockfile, cross-platform environment solution, offline installer, or
+  Conda package publication;
 - stored notebook outputs, execution counts, generated figures, or image-byte
   golden files;
 - multi-example/channel dashboard, interactivity, widgets, animation, styling
