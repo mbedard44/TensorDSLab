@@ -706,29 +706,39 @@ TensorDSLab and two TensorCore conditional CUDA skips are explicit
 qualifications. No cluster work, accelerator claim, push, release, or broad
 compatibility claim follows.
 
-## Provisional Post-Maintenance-8 Planning
+## Maintenance 9 Design Authority
 
-### [Provisional DS20k Veto Profile And Public Readout Demos](proposed_ds20k_veto_profile_and_public_readout_demos.md)
+### [Maintenance 9 DS20k Veto Profile And Public Readout Demos](maintenance_9_ds20k_veto_profile_and_public_readout_demos.md)
 
-Status: **Provisional Design notes / Post-Maintenance-8 promotion pending**.
-This non-operative record preserves the accepted direction for a later
-package-owned `ds20k_veto()` demonstration profile plus
-`demos/readout.py` and `demos/readout.ipynb`. It records the provisional Veto
-fixture values, illustrative dark-count/noise/ADC choices, preparation-owned
-negative polarity, inline random `Photoelectrons` construction, manual and
-profile Config paths, public-only execution, notebook hygiene, and explicit
-non-goals.
+Status: **Design-complete / User dispatch pending**.
 
-The record does not expand Maintenance 8, authorize implementation, freeze a
-post-Maintenance-8 baseline, promote a production calibration, create an IO or
-TensorML adapter, issue cluster authority, or authorize a push. Design must
-reconcile it against the exact closed Maintenance 8 bytes and obtain explicit
-user dispatch before it becomes a production work order.
+The fixed work order is based on exact closed Maintenance 8 commit
+`f213c387c5de0b9f508a233ab43336f5dc5439ea`, tree
+`72b338e40427d75ee4a949e8f61e10a36848b5f3`, and exact published TensorCore
+`0.16.0` containing commit
+`e05324699892a8bcea024375720bfae1ed9569cc`. It adds one precise public
+`ds20k_veto()` factory, `demos/readout.py`, and `demos/readout.ipynb` without
+changing the `35/5/30` facades or existing production science.
 
-Maintenance 8 is now closed, satisfying that proposal's dependency
-prerequisite. The proposal itself remains non-operative until Design rebases
-its separately preserved provisional branch onto the exact closeout, performs
-the promised post-Maintenance-8 audit, and obtains separate user dispatch.
+The profile uses the accepted positive Veto amplitude magnitude, fixed
+preparation-owned negative polarity, illustrative dark counts, the explicit
+`2 ns` / `250 MHz` toy PSD, unsaturated analog composition, and illustrative
+12-bit digitization. The notebook constructs `Photoelectrons` inline, compares
+manual and profile Config construction, runs only public orchestration, and
+plots one selected trace as:
+
+```text
+PureWaveform + NoiseWaveform = AnalogWaveform -> DigitizedWaveform
+```
+
+The exact `demos` optional extra owns Matplotlib/Jupyter tooling; these packages
+do not become TensorDSLab runtime dependencies. The work order freezes a
+`21`-path maximum scope, three-candidate Implementation/Validation loop,
+source/archive, typing, wheel/sdist, script/notebook, plotting, privacy, and
+hygiene evidence, and the later integrated-CUDA-before-first-push sequence.
+It makes no calibration, TensorG4DS, TensorML, IO, accelerator, release,
+deployment, or compatibility claim. No implementation begins until the user
+dispatches the exact Design authority.
 
 ## Expected Stage Discipline
 
