@@ -20,9 +20,8 @@ Project/display name: TensorDSLab
 Python import: tensor_dslab (accepted on main through Maintenance 5)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
-Package maturity: Maintenance 6 Merged / Closed
-Next production gate: Maintenance 7 TensorCore 0.15 adoption;
-Candidate 1 Validation-cleared / Review-returned for Design documentation
+Package maturity: Maintenance 7 Merged / Closed
+Next production gate: separately authorized post-Maintenance-7 work
 Stage 8: separately stopped; any restart requires a new Design authority after
 Maintenance 6
 ```
@@ -103,26 +102,25 @@ through exact Review-cleared supplemental candidate
 target `0257fb477ee04556ebbe26351123ae610b5d7925`: collaborators configure
 physical values with canonical copied Pint quantities, while preparation
 extracts plain execution values and production and validation remain
-unit-free. Local `main` remains unpushed pending the separate TensorCore
-`0.15.0` adoption and exact integrated CUDA gates.
+unit-free. Maintenance 7 now closes the separate TensorCore `0.15.0` adoption.
+Local `main` remains unpushed; any integrated gate remains separate.
 
 [Maintenance 7](docs/implementation/maintenance_7_tensorcore_0_15_adoption.md)
-has exact immutable Candidate 1
-`68c2f62c2ce354dd6c92fde28b020c0ce71881d6`, which was Validation-cleared and
-Review-returned for one Design-owned package-source correction. The candidate
-adopts exact published TensorCore `0.15.0`, replaces
+is **Merged / Closed** through exact Review-cleared and fast-forwarded target
+`205182f0c7a4359cece79211ad22b47b522c34e3`, tree
+`4c9f0ed2700b5683debb6e658ff2ec832e3d6acf`. Immutable production Candidate 1
+is `68c2f62c2ce354dd6c92fde28b020c0ce71881d6`. The maintenance adopts exact
+published TensorCore `0.15.0`, replaces
 `logical_positions(...)` with validated `RngPositions`, uses TensorCore's
 generic validation parts where the contracts match, and centralizes the
 unchanged readout RNG namespace and role keys. It also makes pulse Configs
 store positive amplitude magnitudes and applies fixed DS20k negative polarity
 once in preparation, preserving calibrated rendered results. Streams,
 addresses, other science, Pint ownership, products, and facades remain
-unchanged. A documentation-only correction lineage leaves those bytes
-immutable. Before an unchanged Review fast-forward, an exact correction target
-requires fixed-commit Validation and Review; after that fast-forward, the same
-bytes await Design closeout. The local package gate makes no fresh CUDA claim;
-separately authorized integrated CUDA evidence follows only after the adoption
-closes.
+unchanged. Fixed-commit Validation and independent Review cleared the exact
+source/archive and artifact evidence with `13` conditional CUDA skips. The
+local package gate makes no fresh CUDA claim; separately authorized integrated
+CUDA evidence remains required before any push.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency

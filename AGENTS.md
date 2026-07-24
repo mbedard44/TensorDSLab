@@ -284,21 +284,15 @@ Pint-free.
 
 Complete local fixed-commit Validation and independent Review cleared the
 source/archive by Pint wheel/sdist forms with `13` conditional CUDA skips. No
-accelerator claim follows. Local `main` remains unpushed. The next package gate
-is a separate adoption of published TensorCore `0.15.0` exact commit
-`0f974e9e7f52125bbe829e124beb24e69de811d3`; only after that adoption and the
-exact integrated CUDA gates close may TensorDSLab be pushed.
+accelerator claim follows.
 
-Maintenance 7 TensorCore 0.15 Adoption is in a **Design-owned package-source
-correction route** under
-`docs/implementation/maintenance_7_tensorcore_0_15_adoption.md`. Exact
-immutable Candidate 1 was Validation-cleared and Review-returned at
-`68c2f62c2ce354dd6c92fde28b020c0ce71881d6`; one documentation-only direct
-descendant lineage carries the package-source correction without changing its
-production or test bytes. Before an unchanged Review fast-forward, an exact
-correction target requires fixed-commit Validation and Review; after that
-fast-forward, the same bytes await Design closeout. Its focused target pins
-exact published TensorCore `0.15.0` commit
+Maintenance 7 TensorCore 0.15 Adoption is **Merged / Closed** under
+`docs/implementation/maintenance_7_tensorcore_0_15_adoption.md` through exact
+Review-cleared and fast-forwarded target
+`205182f0c7a4359cece79211ad22b47b522c34e3`, tree
+`4c9f0ed2700b5683debb6e658ff2ec832e3d6acf`. Immutable production Candidate 1
+remains `68c2f62c2ce354dd6c92fde28b020c0ce71881d6`. The closed target pins exact
+published TensorCore `0.15.0` commit
 `0f974e9e7f52125bbe829e124beb24e69de811d3`, replaces raw
 `logical_positions(...)` use with `RngPositions`, imports matching generic
 validation requirements from TensorCore, and centralizes the unchanged
@@ -309,7 +303,9 @@ once; calibrated rendered results remain exact. No public facade, Pint
 ownership boundary, other scientific law, role stream, raw RNG address, or
 Stage 8 contract changes. Its package loop is local-only; the exact integrated
 two-Torch-minor CUDA gates remain a separate post-closeout authority before any
-push.
+push. Complete local Review evidence passed with `13` conditional CUDA skips,
+so Maintenance 7 itself makes no fresh accelerator claim. Local `main` remains
+unpushed.
 
 The first Stage 8 real-CUDA attempt correctly stopped before any accepted
 measurement when its protected-suite gate over-applied those macOS literals to

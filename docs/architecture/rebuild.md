@@ -113,11 +113,13 @@ until later editorial compaction; they are not Maintenance 6 implementation
 authority. The stage changes no scientific equation, RNG address, product
 meaning, IO/artifact boundary, or Stage 8 contract.
 
-Maintenance 7 TensorCore 0.15 Adoption has exact immutable Candidate 1
-`68c2f62c2ce354dd6c92fde28b020c0ce71881d6` **Validation-cleared /
-Review-returned for a Design-owned package-source correction** under
+Maintenance 7 TensorCore 0.15 Adoption is **Merged / Closed** through exact
+Review-cleared target `205182f0c7a4359cece79211ad22b47b522c34e3`,
+tree `4c9f0ed2700b5683debb6e658ff2ec832e3d6acf`, under
 [`maintenance_7_tensorcore_0_15_adoption.md`](../implementation/maintenance_7_tensorcore_0_15_adoption.md).
-It pins exact published TensorCore `0.15.0`, cleanly replaces
+Immutable production Candidate 1 remains
+`68c2f62c2ce354dd6c92fde28b020c0ce71881d6`. The maintenance pins exact
+published TensorCore `0.15.0`, cleanly replaces
 `logical_positions(...)` with `RngPositions`, moves only matching generic
 validation mechanics into TensorCore ownership, and gives the unchanged
 `0x54445331` readout namespace one non-exported source. It also ratifies the
@@ -6904,11 +6906,9 @@ The completed prerequisites and remaining production sequence are:
 5. Maintenance 6 Pint Physical Configuration Boundary is Merged / Closed
    through exact Review-cleared target
    `0257fb477ee04556ebbe26351123ae610b5d7925`.
-6. Complete Maintenance 7's Design-owned documentation-correction route and
-   local closeout for adoption of published TensorCore `0.15.0` and the
-   matching TensorDSLab validation/RngPositions cleanup. A pre-merge correction
-   target requires fixed-commit Validation and Review; after an unchanged
-   Review fast-forward, the same bytes await Design closeout.
+6. Maintenance 7's adoption of published TensorCore `0.15.0` and matching
+   TensorDSLab validation/RngPositions cleanup is Merged / Closed through exact
+   target `205182f0c7a4359cece79211ad22b47b522c34e3`.
 7. The first Stage 8 real-CUDA attempt remains stopped evidence. Any rerun
    requires a new Design authority after Maintenance 6.
    Profile real GPU memory and execution before designing workspace/output
@@ -7111,9 +7111,9 @@ Closed prerequisites and remaining Design gates are:
    Cross-product analog/digitized
    fusion remains excluded.
 7. Maintenance 7 TensorCore `0.15.0` adoption and matching TensorDSLab cleanup
-   have Candidate 1 Validation-cleared / Review-returned for a Design
-   documentation correction. Local `main` remains unpushed until the exact
-   direct-child correction, adoption closeout, and integrated CUDA gates close.
+   are Merged / Closed through exact target
+   `205182f0c7a4359cece79211ad22b47b522c34e3`. Local `main` remains unpushed;
+   any integrated CUDA gate remains separately authorized.
 8. Digitization-config association for independent/durable consumers.
 9. Exact TensorG4DS source and dense truth-binning bridge, including provenance
    origin, left-edge construction, exact boundary assignment at `0`, `i * T`,

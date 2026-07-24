@@ -121,14 +121,14 @@ The target retains exact TensorCore `0.13.0`, uses its public
 keeps quantities out of tensors, RNG addressing, Runtime records, producers,
 validators, and collections. Complete local Validation and independent Review
 cleared the exact final bytes with `13` unavailable-CUDA skips and no
-accelerator claim. Local `main` remains unpushed until the separate TensorCore
-`0.15.0` adoption and exact integrated CUDA gates close.
+accelerator claim. Maintenance 7 now closes the separate TensorCore `0.15.0`
+adoption; local `main` remains unpushed pending later authorized gates.
 
 [Maintenance 7 TensorCore 0.15 Adoption](docs/implementation/maintenance_7_tensorcore_0_15_adoption.md)
-has exact immutable Candidate 1
-`68c2f62c2ce354dd6c92fde28b020c0ce71881d6`, which was
-**Validation-cleared / Review-returned for one Design-owned package-source
-correction**. It replaces
+is **Merged / Closed** through exact Review-cleared and fast-forwarded target
+`205182f0c7a4359cece79211ad22b47b522c34e3`, tree
+`4c9f0ed2700b5683debb6e658ff2ec832e3d6acf`; immutable production Candidate 1
+is `68c2f62c2ce354dd6c92fde28b020c0ce71881d6`. It replaces
 raw logical-position tensors with TensorCore `RngPositions`, retires matching
 local generic validators in favor of `tensor_core.validation`, and gives the
 unchanged readout RNG namespace and ten role keys one non-exported source.
@@ -136,10 +136,8 @@ Public Configs expose no key overrides. The maintenance also makes both pulse
 Configs accept positive voltage-amplitude magnitudes while preparation applies
 the fixed DS20k negative polarity once; calibrated rendered results remain
 exact. Public field names, Pint ownership, fixed keys and streams, and
-same-stack stochastic results remain unchanged. Its documentation-only
-correction lineage leaves production and tests immutable: a pre-merge target
-requires fixed-commit Validation and Review, while the same bytes after an
-unchanged Review fast-forward await Design closeout.
+same-stack stochastic results remain unchanged. Complete local Review evidence
+passed with `13` conditional CUDA skips, so no accelerator claim follows.
 
 The historical [TensorCore consumer proposal](docs/implementation/proposed_tensorcore_counter_rng_and_distributions.md)
 is now fulfilled by published TensorCore `0.9.0` commit

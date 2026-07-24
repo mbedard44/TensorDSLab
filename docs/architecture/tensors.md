@@ -25,16 +25,17 @@ closed at exact Review-cleared target
 retaining that exact dependency. Its complete local fixed-commit evidence adds
 no CUDA claim. Every dependency change still requires an exact pin and
 TensorDSLab-owned source/archive, typing, and functional consumer evidence; the
-Maintenance 7 Candidate 1 pins exact TensorCore `0.15.0` and will own the deferred integrated CUDA
-qualification. No broad compatibility result follows.
+closed Maintenance 7 target pins exact TensorCore `0.15.0` and makes no fresh
+accelerator claim. No broad compatibility result follows.
 
-Maintenance 7 has exact immutable Candidate 1
-`68c2f62c2ce354dd6c92fde28b020c0ce71881d6` Validation-cleared /
-Review-returned for a Design-owned package-source correction against exact
-published TensorCore `0.15.0` commit
+Maintenance 7 is **Merged / Closed** through exact Review-cleared target
+`205182f0c7a4359cece79211ad22b47b522c34e3`, tree
+`4c9f0ed2700b5683debb6e658ff2ec832e3d6acf`, against exact published
+TensorCore `0.15.0` commit
 `0f974e9e7f52125bbe829e124beb24e69de811d3`, tree
-`587ff59711255c027a85cfef883422d40ea5dcda`. Its accepted target consumes the
-public `RngPositions` representation and the supported
+`587ff59711255c027a85cfef883422d40ea5dcda`. Immutable production Candidate 1
+remains `68c2f62c2ce354dd6c92fde28b020c0ce71881d6`. The closed target consumes
+the public `RngPositions` representation and the supported
 `tensor_core.validation` parts bin without changing TensorDSLab's semantic
 leaves, products, or public exports. Its one physical-configuration narrowing
 makes pulse fields positive amplitude magnitudes and gives preparation sole
@@ -51,11 +52,8 @@ candidate `81ad2f52fe4a1966e5b3a0ceb5063138e42e731f` and Design closeout
 `021694b9479d02546405f6a815aedf21c9c831a4`. Maintenance 6 is Merged / Closed
 through exact Review-cleared target
 `0257fb477ee04556ebbe26351123ae610b5d7925`. TensorCore `0.15.0` adoption is
-the active package gate under Maintenance 7. Its Design-owned
-documentation-only correction lineage preserves Candidate 1's production and
-test bytes. A pre-merge correction target requires fixed-commit Validation and
-Review; after an unchanged Review fast-forward, the same bytes await Design
-closeout.
+Merged / Closed under Maintenance 7 through exact target
+`205182f0c7a4359cece79211ad22b47b522c34e3`.
 
 The previous TensorCore `0.6` ID/layout/sidecar architecture is historical and
 is intentionally not preserved through aliases.

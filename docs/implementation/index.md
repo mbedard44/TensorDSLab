@@ -595,21 +595,18 @@ Maintenance 6 stays pinned to TensorCore `0.13.0`. A separate later work order
 will consider adoption of published TensorCore `0.15.0` exact commit
 `0f974e9e7f52125bbe829e124beb24e69de811d3`, after which separately authorized
 package-owned CUDA matrices may qualify only that exact integrated pairing.
-Local `main` remains unpushed pending that adoption and those integrated gates.
+Maintenance 7 now closes that adoption. Local `main` remains unpushed pending
+later authorized gates.
 
 ## Maintenance 7 TensorCore 0.15 Adoption
 
 ### [Maintenance 7 TensorCore 0.15 Adoption](maintenance_7_tensorcore_0_15_adoption.md)
 
-Status: **Design-owned package-source correction route open**. Candidate 1 is
-exact commit
-`68c2f62c2ce354dd6c92fde28b020c0ce71881d6`, tree
-`a33750e4b4c094178ba4e65ffaaed530beb377d6`; it was Validation-cleared and
-Review-returned for the governing package-source contradiction. Its production
-and test bytes remain immutable through the documentation-only correction
-lineage. A pre-merge correction target requires fixed-commit Validation and
-Review; after an unchanged Review fast-forward, the same bytes await Design
-closeout.
+Status: **Merged / Closed** through exact Review-cleared and fast-forwarded
+target `205182f0c7a4359cece79211ad22b47b522c34e3`, tree
+`4c9f0ed2700b5683debb6e658ff2ec832e3d6acf`. Immutable production Candidate 1
+is exact commit `68c2f62c2ce354dd6c92fde28b020c0ce71881d6`, tree
+`a33750e4b4c094178ba4e65ffaaed530beb377d6`.
 
 Maintenance 7 starts from exact clean local Maintenance 6 Design-closeout
 baseline `65bb55bf98bb37a129a950d93a0bdb9b0d3f2971`, tree
@@ -641,9 +638,8 @@ positive magnitudes and applies fixed DS20k negative polarity exactly once in
 preparation; calibrated rendered results remain exact.
 
 The package Implementation/Validation/Review loop is local-only and makes no
-new CUDA claim. After exact adoption closeout, a separate authority runs
-package-owned two-Torch-minor CUDA matrices on the exact integrated pairing.
-TensorDSLab remains unpushed until both gates close.
+new CUDA claim. Any integrated CUDA matrix remains separately authorized.
+TensorDSLab remains unpushed.
 
 Candidate 1 is one clean direct child of corrected Design authority
 `ad6172b69fc86a97ba96f1751757ea33e59fef5d`; its exact commit and tree are
@@ -660,10 +656,12 @@ Review found no production defect. It returned Candidate 1 because live
 package sources still described caller-configured role keys, closure-wide key
 admission, and the retired root `readout/requirements.py`. Design accepts that
 P1 and authorizes one direct-child documentation correction across the exact
-twelve live records named in the work order. Validation and Review must clear
-that unchanged supplemental commit before merge. The correction does not
-reopen implementation, dependency, science, RNG addresses, tests, or public
-API and authorizes no cluster work or push.
+twelve live records named in the work order. Two merge-safety corrections were
+then required, with the final exceptional one-file supplemental exact target
+`205182f0c7a4359cece79211ad22b47b522c34e3` independently Validation- and
+Review-cleared and fast-forwarded unchanged. The correction reopened no
+implementation, dependency, science, RNG address, test, or public API byte and
+authorized no cluster work or push.
 
 ## Expected Stage Discipline
 

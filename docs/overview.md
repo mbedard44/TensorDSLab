@@ -92,23 +92,21 @@ TensorCore `0.15.0` exact commit
 closure condition.
 
 [Maintenance 7](implementation/maintenance_7_tensorcore_0_15_adoption.md) is
-in a **Design-owned package-source correction route**. Exact immutable
-Candidate 1 was Validation-cleared / Review-returned at
-`68c2f62c2ce354dd6c92fde28b020c0ce71881d6`, tree
-`a33750e4b4c094178ba4e65ffaaed530beb377d6`. It targets published TensorCore
-`0.15.0`, replaces `logical_positions(...)` with `RngPositions`, migrates
-matching generic validation helpers to TensorCore, and centralizes the
+**Merged / Closed** through exact Review-cleared and fast-forwarded target
+`205182f0c7a4359cece79211ad22b47b522c34e3`, tree
+`4c9f0ed2700b5683debb6e658ff2ec832e3d6acf`. Immutable production Candidate 1
+remains `68c2f62c2ce354dd6c92fde28b020c0ce71881d6`, tree
+`a33750e4b4c094178ba4e65ffaaed530beb377d6`. The maintenance adopts published
+TensorCore `0.15.0`, replaces `logical_positions(...)` with `RngPositions`,
+migrates matching generic validation helpers to TensorCore, and centralizes the
 unchanged readout RNG namespace and ten role keys in one private runtime
 table. Public Configs expose no key fields and request preparation performs no
 caller-key collision admission. It also makes pulse Config values positive
 amplitude magnitudes and applies fixed DS20k negative polarity once in
 preparation, with exact calibrated result continuity. Public field names, Pint
-ownership, role streams, and scientific addresses remain unchanged. Its
-documentation-only correction lineage preserves the exact production and test
-bytes. A pre-merge correction target requires fixed-commit Validation and
-Review; after an unchanged Review fast-forward, the same bytes await Design
-closeout. Local closure precedes the separate integrated CUDA gate and any
-push.
+ownership, role streams, and scientific addresses remain unchanged. Complete
+local Review evidence passed with `13` conditional CUDA skips; no accelerator
+claim follows and local `main` remains unpushed.
 
 [Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
 Closed through exact implementation candidate
@@ -415,11 +413,9 @@ retain their original private paths as historical evidence.
   preparation cleanup through exact Review-cleared target
   `0257fb477ee04556ebbe26351123ae610b5d7925`.
 - [Maintenance 7 Work Order](implementation/maintenance_7_tensorcore_0_15_adoption.md):
-  Candidate 1 Validation-cleared / Review-returned exact TensorCore `0.15.0`,
-  validation-ownership, RngPositions, and fixed readout role-key adoption;
-  its Design-owned documentation correction lineage preserves Candidate 1's
-  production and test bytes under the work-order's pre-merge
-  Validation/Review and post-merge Design-closeout law.
+  Merged / Closed exact TensorCore `0.15.0`, validation-ownership,
+  RngPositions, and fixed readout role-key adoption through target
+  `205182f0c7a4359cece79211ad22b47b522c34e3`.
 - [Stage 7 Work Order](implementation/stage_7_public_readout_orchestration.md):
   Merged / Closed public request planning, whole-closure
   preparation, execute-once orchestration, and exact-retention contract.

@@ -41,11 +41,13 @@ for public physical Config values and the compact SampleAxis convenience
 boundary while preserving the implemented axes, sampling authority, product
 graph, science, RNG, and unit-free execution core.
 
-Maintenance 7 has exact immutable Candidate 1
-`68c2f62c2ce354dd6c92fde28b020c0ce71881d6` **Validation-cleared /
-Review-returned for a Design-owned package-source correction** under its focused
+Maintenance 7 is **Merged / Closed** through exact Review-cleared target
+`205182f0c7a4359cece79211ad22b47b522c34e3`, tree
+`4c9f0ed2700b5683debb6e658ff2ec832e3d6acf`, under its focused
 [TensorCore 0.15 adoption work order](../implementation/maintenance_7_tensorcore_0_15_adoption.md).
-It replaces raw logical-position tensors with exact `RngPositions`, imports
+Immutable production Candidate 1 remains
+`68c2f62c2ce354dd6c92fde28b020c0ce71881d6`. The maintenance replaces raw
+logical-position tensors with exact `RngPositions`, imports
 matching generic validation requirements from TensorCore, and centralizes the
 unchanged readout RNG namespace and role keys in one private table. It also
 makes pulse Configs store strictly
@@ -905,13 +907,11 @@ compact semantic axes, and source-derived sampling while preserving all product
 execution. It is Merged / Closed. Maintenance 6 is also Merged / Closed through
 exact Review-cleared target `0257fb477ee04556ebbe26351123ae610b5d7925`;
 it owns the physical Config representation and bounded runtime-admission
-cleanup. The separate TensorCore `0.15.0` adoption now has Candidate 1
-Validation-cleared / Review-returned for a Design documentation correction.
-Its documentation-only correction lineage preserves the exact production and
-test bytes. A pre-merge correction target requires fixed-commit Validation and
-Review; after an unchanged Review fast-forward, the same bytes await Design
-closeout. Its local package loop intentionally makes no fresh CUDA claim; the
-exact integrated CUDA gate follows only after adoption closeout.
+cleanup. Maintenance 7's separate TensorCore `0.15.0` adoption is Merged /
+Closed through exact target
+`205182f0c7a4359cece79211ad22b47b522c34e3`. Its local package loop
+intentionally makes no fresh CUDA claim; any exact integrated CUDA gate remains
+separately authorized.
 
 ## Return To Design Before
 

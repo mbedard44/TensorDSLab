@@ -35,10 +35,11 @@ exact Pint `0.25.3` and uses `Scalar.require(...)` at the package-owned
 physical-configuration boundary without putting Pint into TensorCore or tensor
 execution.
 
-Maintenance 7 has exact immutable Candidate 1
-`68c2f62c2ce354dd6c92fde28b020c0ce71881d6` **Validation-cleared /
-Review-returned for a Design-owned package-source correction**. It targets
-exact published TensorCore `0.15.0` commit
+Maintenance 7 is **Merged / Closed** through exact Review-cleared target
+`205182f0c7a4359cece79211ad22b47b522c34e3`, tree
+`4c9f0ed2700b5683debb6e658ff2ec832e3d6acf`. Immutable production Candidate 1
+remains `68c2f62c2ce354dd6c92fde28b020c0ce71881d6`. The maintenance adopts exact
+published TensorCore `0.15.0` commit
 `0f974e9e7f52125bbe829e124beb24e69de811d3`. Its dependency/RNG cleanup is
 behavior-preserving: `RngPositions` replaces raw logical-position tensors,
 matching generic validation moves to `tensor_core.validation`, and one
@@ -566,12 +567,9 @@ is **Merged / Closed** through exact Review-cleared supplemental candidate
 is **Merged / Closed** through exact Review-cleared target
 `0257fb477ee04556ebbe26351123ae610b5d7925`. It implements only the bounded
 Pint/config/runtime scope; no Stage 8 rerun, IO/artifact surface, integration,
-or push follows. TensorCore `0.15.0` adoption is the active package gate with
-Candidate 1 historically Validation-cleared / Review-returned for Design
-documentation.
+or push follows. TensorCore `0.15.0` adoption is now Merged / Closed under
+Maintenance 7.
 [Maintenance 7](implementation/maintenance_7_tensorcore_0_15_adoption.md) is
-the exact work order for that adoption. Its documentation-only correction
-lineage preserves Candidate 1's production and test bytes. A pre-merge target
-requires fixed-commit Validation and Review; after an unchanged Review
-fast-forward, the same bytes await Design closeout. It does not authorize
-cluster work or a push.
+the exact closed work order for that adoption. Its documentation-only
+correction lineage preserved Candidate 1's production and test bytes. It
+authorizes no cluster work or push.

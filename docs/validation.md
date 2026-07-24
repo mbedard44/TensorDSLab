@@ -445,17 +445,13 @@ qualify only that exact integrated pairing.
 
 The
 [Maintenance 7 work order](implementation/maintenance_7_tensorcore_0_15_adoption.md)
-has exact immutable Candidate 1
-`68c2f62c2ce354dd6c92fde28b020c0ce71881d6`, which was
-**Validation-cleared / Review-returned for a Design-owned package-source
-correction**. Its documentation-only correction lineage preserves Candidate
-1's production and test bytes. A pre-merge correction target requires
-fixed-commit Validation and Review; after an unchanged Review fast-forward, the
-same bytes await Design closeout.
+is **Merged / Closed** through exact Review-cleared and fast-forwarded target
+`205182f0c7a4359cece79211ad22b47b522c34e3`, tree
+`4c9f0ed2700b5683debb6e658ff2ec832e3d6acf`. Immutable production Candidate 1
+remains `68c2f62c2ce354dd6c92fde28b020c0ce71881d6`.
 
-For every pre-merge correction target, local fixed-commit Validation and
-independent Review must retain Candidate 1's complete gate and additionally
-prove:
+Fixed-commit Validation and independent Review retained Candidate 1's complete
+gate and additionally proved:
 
 - exact published TensorCore `0.15.0` commit/tree/version, 34 package-root
   exports, 19 `tensor_core.validation` exports, the exact one-name public
@@ -488,10 +484,11 @@ prove:
   privacy, mutation, protected-byte, and hygiene evidence.
 
 Maintenance 7 performs no cluster submission and makes no new accelerator
-claim. After its exact local closeout, a separate integrated-CUDA authority
-must run the complete TensorCore and TensorDSLab two-Torch-minor matrices
-against that exact pairing before TensorDSLab is pushed. Those runs are
-functional correctness evidence, not Stage 8 performance evidence.
+claim. Review's complete local pre- and post-merge evidence passed with `13`
+conditional CUDA skips, Pyright zero diagnostics, and exact source/archive and
+artifact identities. Any integrated-CUDA authority remains separate before a
+TensorDSLab push and is functional correctness evidence, not Stage 8
+performance evidence.
 
 ## Governance Adoption Checks
 

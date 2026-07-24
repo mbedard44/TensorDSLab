@@ -1,12 +1,10 @@
 # Maintenance 7 TensorCore 0.15 Adoption Work Order
 
-Status: **Design-owned package-source correction route open**. Exact Candidate
-1 was Validation-cleared and Review-returned for that correction. Its
-documentation-only correction lineage preserves all production, test,
-dependency, metadata, scientific, RNG-address, and public-API bytes. Before an
-unchanged Review fast-forward, an exact correction target requires fixed-commit
-Validation and Review; after that fast-forward, the same bytes await Design
-closeout.
+Status: **Merged / Closed** through exact Review-cleared and fast-forwarded
+target `205182f0c7a4359cece79211ad22b47b522c34e3`, tree
+`4c9f0ed2700b5683debb6e658ff2ec832e3d6acf`. Its documentation-only correction
+lineage preserves all Candidate 1 production, test, dependency, metadata,
+scientific, RNG-address, and public-API bytes.
 
 Stable work-order key:
 `TensorDSLab/maintenance-7-tensorcore-0-15-adoption`.
@@ -100,6 +98,51 @@ clear. Review must recheck the original P1, the complete candidate, and the
 merge-safe lifecycle before any fast-forward. For finite-loop accounting this
 uses candidate submission 2/3; Validation-to-Implementation returns remain
 0/3. No cluster work or push is authorized.
+
+## Supplemental Review And Merge Closeout
+
+The Design-owned package-source correction proceeded through exact
+documentation Candidate 2 `421591dbaea3bf52cb960d5218eeb853b1c32510`
+and Candidate 3 `3ae04fa9f146e861546a946829e220cf1db51228`.
+Validation returned Candidate 2 for merge-unsafe lifecycle wording; Review
+returned Validation-cleared Candidate 3 because one stale pending-Validation
+sentence remained in `docs/overview.md`. Both candidates remain immutable
+history.
+
+Design authorized one exceptional one-file supplemental. Exact commit
+`205182f0c7a4359cece79211ad22b47b522c34e3`, tree
+`4c9f0ed2700b5683debb6e658ff2ec832e3d6acf`, changes only
+`docs/overview.md` by three insertions and one deletion from Candidate 3.
+Validation and independent Review cleared those exact bytes. Review
+fast-forwarded clean local `main` from Maintenance 6 closeout
+`65bb55bf98bb37a129a950d93a0bdb9b0d3f2971` to the exact target without a
+merge commit, rewrite, or byte change. No push occurred.
+
+Independent Review and post-merge evidence passed:
+
+- focused source/archive by Pint wheel/sdist forms at `185/173/12`;
+- full source/wheel and archive/sdist at `213/200/13`;
+- TensorCore source/archive at `81/79/2`;
+- Pyright `1.1.411` with zero diagnostics in both forms;
+- the external negative probe with the same exact `16` diagnostics;
+- exact `35/5/30` TensorDSLab facades and downstream import isolation;
+- exact TensorCore `0.15.0` source/archive identity and `34/19/1` exports;
+- Review-built TensorDSLab wheel at `55056` bytes with SHA-256
+  `a4278b9380f6b43615bceb47107be57756d433d37be08bbec0f4f2ebeecdaf8a`;
+- Review-built TensorDSLab sdist at `630535` bytes with SHA-256
+  `a847a6ad620ccd66cf03032cc56b3af0117638845f08636936259e9bc0ed28d5`;
+- all `34` Markdown files and `218` relative link occurrences;
+- scope, protected-byte, dependency, public-import, RngPositions, fixed-key,
+  retired-surface, privacy, diff, artifact, bytecode, build, and cleanliness
+  gates; and
+- the robust pending Validation/Review scan across all twelve live records.
+
+The accepted environment was macOS `15.7.4` arm64, Python `3.13.11`, PyTorch
+`2.12.1` eager CPU, exact Pint `0.25.3`, and exact NumPy `2.3.5`. CUDA was
+unavailable and `13` full-suite CUDA tests skipped conditionally. Maintenance
+7 therefore makes no accelerator, performance, broad compatibility, release,
+deployment, Stage 8, modernization, or push claim. Local `main` remains
+unpushed.
 
 ## Authority And Baseline
 
@@ -961,13 +1004,12 @@ No Della or other cluster submission occurs inside the Maintenance 7
 Implementation/Validation/Review loop. Local CUDA-unavailable skips remain
 explicit, and this maintenance makes no fresh accelerator claim.
 
-After exact Maintenance 7 local merge and Design closeout, Design will issue a
-separate fixed integrated-CUDA evidence authority. TensorCore and TensorDSLab
-then run their own package-owned complete two-Torch-minor CUDA matrices against
-the exact integrated TensorCore `0.15.0`, NumPy `2.3.5`, Pint `0.25.3`, and
-closed TensorDSLab pairing. A result from an older pairing does not qualify the
-new baseline. The matrices are functional correctness evidence only, not
-Stage 8 performance, deployment, release, or broad-backend certification.
+Maintenance 7 closeout issues no cluster authority. Any later integrated-CUDA
+evidence requires a separate fixed Design authority binding the exact
+TensorCore, TensorDSLab, NumPy, Pint, Python, and Torch pairing selected by that
+later gate. A result from an older pairing does not qualify a newer baseline.
+Such matrices are functional correctness evidence only, not Stage 8
+performance, deployment, release, or broad-backend certification.
 
 ## Documentation Scope
 
