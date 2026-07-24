@@ -529,7 +529,11 @@ parallel names-only discriminator or field-dependent branch. Each physical
 field appears exactly once with its unit and constraint. PSD nonemptiness,
 equal vector lengths, ordered coverage, exclusive stop, and nonzero-power
 requirements remain explicit relationship checks in
-`PsdNoiseConfig.__post_init__` after canonicalization.
+`PsdNoiseConfig.__post_init__` after canonicalization. Those relationships
+operate directly on the canonical Pint quantities: `len(...)` owns vector
+cardinality, iteration/indexing owns ordered edge comparisons, and scalar-
+vector comparisons retain their canonical units. Config validation does not
+strip magnitudes merely to inspect these relationships.
 
 The public construction helper changes coherently:
 
@@ -552,9 +556,11 @@ vectors. It converts each canonical NumPy magnitude to a plain ordered
 producer, a tensor payload, or a completed product.
 
 The internal `canonical_magnitudes(...)` accessor performs that ordered
-array-to-tuple conversion without exposing NumPy through a facade.
-`PsdNoiseConfig.__post_init__` may use the same accessor transiently for its
-explicit relationships; canonical vector storage remains unchanged.
+array-to-tuple conversion without exposing NumPy through a facade. It is a
+preparation-boundary accessor, not a Config-validation helper:
+`PsdNoiseConfig.__post_init__` uses the canonical Quantity fields directly,
+and `prepare_noise_waveform(...)` calls the accessor exactly once per vector
+when it constructs unit-free execution facts.
 
 `__post_init__`, not `__new__`, remains the canonicalization owner: the
 dataclass-generated initializer must first assign the caller's values, after
@@ -746,7 +752,8 @@ alter protected scientific fixtures merely to make the migration pass.
   and every element is normalized with an exact indexed diagnostic;
 - `PsdNoiseConfig.frequency_left_edges` and `power_density` are exact
   `Quantity` fields, `frequency_stop` remains scalar, and all PSD relationships
-  remain explicit at Config construction;
+  remain explicit at Config construction and operate directly on the
+  canonical quantities without transient magnitude extraction;
 - `quantities(...)` accepts an exact tuple of scalar magnitudes but returns one
   canonical vector Quantity, including an accepted empty vector;
 - scalar, zero-dimensional, multidimensional, complex, boolean, object, or
@@ -755,6 +762,8 @@ alter protected scientific fixtures merely to make the migration pass.
 - preparation converts vector magnitudes to plain ordered tuples before
   Runtime construction, while Runtime/producer/validator modules contain no
   NumPy import, array, or public NumPy type;
+- `canonical_magnitudes(...)` is used only at that preparation boundary and
+  is not called by Config construction or relationship validation;
 - `__post_init__` remains the sole Config canonicalization/local-relationship
   hook and neither Config defines `__new__`;
 - pure-waveform preparation applies one and only one negative sign after
@@ -772,8 +781,9 @@ alter protected scientific fixtures merely to make the migration pass.
   source-aliased array, reject or canonicalize `None`, omit/reorder/drop a
   vector element, skip one indexed constraint, reuse a non-indexed vector
   diagnostic, merge/misclassify the scalar/vector tables, restore a separate
-  vector canonicalizer, defer a PSD relationship until preparation, or let
-  NumPy enter a Runtime/producer/validator fail focused evidence.
+  vector canonicalizer, strip PSD magnitudes during Config relationship
+  validation, defer a PSD relationship until preparation, or let NumPy enter
+  a Runtime/producer/validator fail focused evidence.
 
 ### Typing
 
