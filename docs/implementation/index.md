@@ -795,11 +795,17 @@ deployment, or compatibility claim. The `13` TensorDSLab and two TensorCore
 CUDA skips remain explicit. Cluster work and push remain unauthorized until
 the separate integrated-CUDA authority completes.
 
-## Maintenance 10 Design Authority
+## Maintenance 10 Implementation Candidate
 
 ### [Maintenance 10 IV-Like Digitizer And Demo Source](maintenance_10_iv_like_digitizer_and_demo_source.md)
 
-Status: Active fixed work order; execution requires exact role handoffs.
+Status: **Implementation candidate prepared; fixed-commit gates govern**.
+
+If the exact candidate bytes are absent from `main`, they remain under
+fixed-commit Validation and Review. If those bytes are present unchanged on
+`main`, Review's fast-forward has completed, but final Design acceptance
+remains pending unless and until this index and the work order say
+**Merged / Closed**.
 
 Maintenance 10 starts from exact clean Maintenance 9 closeout
 `3466c2d59be359ffa537848c8abba4d1405f338f`. It changes only the provisional
@@ -819,6 +825,23 @@ CPU/typing/package evidence, fixed-commit Validation, and independent Review.
 It defers CUDA but authorizes one carefully qualified ordinary GitHub push only
 after the exact Maintenance 10 candidate and its evidence-only closeout are
 cleared and fast-forwarded.
+
+Implementation prepared a direct-child candidate from corrected authority
+`faed4546e6e946f359e8bada6ede9ba5724eebae`. The exact move-expanded scope is
+ten allowlisted paths. Focused source/archive evidence passed at `29/29/0`,
+full source/archive evidence passed at `229` run / `216` passed / `13`
+conditional CUDA skips, TensorCore source/archive passed at `84/82/2`, and
+Pyright was zero-diagnostic with exactly `60` intended negative-fixture errors
+in each dependency form. The exact notebook code/whole SHA-256 values are
+`456656c129e68863bd7158a11824e1cd8c44607a2f7dc969b393fb0ce6b53ac0`
+and
+`f2ac47c6914c579d4a5559d31eef0091904cee3f0814d9bae1be9536f00f66dd`.
+The fresh wheel/sdist SHA-256 values are
+`23a8f8d2362c840e3cf53986fbf4fdcd0b73f19336bbe3afaca509a574279d82`
+and
+`b7d9a2c2587cc2090e52c92cee2d6d94ab264731e97a3e4ac85a6498658b87f4`.
+Real Conda, isolated core/demo artifact, script, notebook, privacy, scope, and
+hygiene gates passed on eager CPU. CUDA remains unavailable and unclaimed.
 
 ## Expected Stage Discipline
 

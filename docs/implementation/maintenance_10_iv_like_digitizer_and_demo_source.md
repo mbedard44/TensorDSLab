@@ -1,6 +1,12 @@
 # Maintenance 10 IV-Like Digitizer And Demo Source
 
-Status: Active fixed work order; execution requires exact role handoffs
+Status: Implementation candidate prepared; fixed-commit gates govern
+
+If the exact candidate bytes are absent from `main`, they remain under
+fixed-commit Validation and Review. If those bytes are present unchanged on
+`main`, Review's fast-forward has completed, but final Design acceptance
+remains pending unless and until this record and the implementation index say
+**Merged / Closed**.
 
 Stable key:
 `TensorDSLab/maintenance-10-iv-like-digitizer-and-demo-source`
@@ -308,6 +314,63 @@ Committed tests must prove:
 
 Tests must not assert completed Charge nonzero-cell count because the accepted
 dark-count law owns additional seeded events.
+
+## Implementation Candidate Evidence
+
+Implementation prepared one direct-child candidate from corrected Design
+authority `faed4546e6e946f359e8bada6ede9ba5724eebae`. Its exact tracked scope is
+the ten allowlisted move-expanded paths above: the profile, root environment
+script and deleted old endpoint, two demos, one proof module, two live public
+records, and two lifecycle records. No other production, test, metadata,
+dependency, architecture, governance, or historical-work-order byte changes.
+
+The final stored notebook has exact code-source SHA-256
+`456656c129e68863bd7158a11824e1cd8c44607a2f7dc969b393fb0ce6b53ac0`
+and whole-notebook SHA-256
+`f2ac47c6914c579d4a5559d31eef0091904cee3f0814d9bae1be9536f00f66dd`.
+It was executed in the exact `tensor_dslab` Conda environment, replayed
+byte-identically after the Matplotlib cache was warm, and visually inspected.
+The stored result has `23` cells, `11` consecutively executed code cells,
+seven intentional outputs, one embedded PNG, and zero errors. The figure
+shows the four separated source amplitudes across the complete `10000 ns`
+window, black Charge spikes on the required three panels, an Analog-only panel
+without a legend, and legible labels.
+
+Implementation evidence on macOS `15.7.4` arm64, eager CPU, CPython `3.14.6`,
+PyTorch `2.13.0`, NumPy `2.5.1`, Pint `0.25.3`, exact TensorCore `0.16.0`,
+Hatchling `1.31.0`, and Pyright `1.1.411` includes:
+
+- exact TensorCore source/archive identity at containing commit
+  `e05324699892a8bcea024375720bfae1ed9569cc`, tree
+  `0414a99ac6096035213479e195a0b095d4b1b12e`, canonical ZIP size
+  `476239` bytes, and SHA-256
+  `f9267b74fec35a57591cbf7b2fe2ec28cb9023442080aa7b21a8ab31a38cd6c8`;
+- focused TensorDSLab source/archive suites at `29/29/0` each and full
+  source/archive suites at `229` run / `216` passed / `13` conditional
+  unavailable-CUDA skips each;
+- TensorCore source/archive suites at `84` run / `82` passed / two
+  unavailable-CUDA skips each;
+- Pyright at zero diagnostics and the frozen dependency negative fixture at
+  exactly `60` intended errors with no warnings or informations in both
+  dependency forms;
+- one fresh real Conda `26.1.0` environment created from outside the
+  repository by `create_environment.sh`, exact focused `14/14/0` evidence,
+  CPU script execution, and clean removal after recording the environment;
+- fresh wheel SHA-256
+  `23a8f8d2362c840e3cf53986fbf4fdcd0b73f19336bbe3afaca509a574279d82`
+  and sdist SHA-256
+  `b7d9a2c2587cc2090e52c92cee2d6d94ab264731e97a3e4ac85a6498658b87f4`,
+  with source-identical package bytes;
+- isolated core-wheel proof that Matplotlib/Jupyter are absent, and isolated
+  demos-wheel script plus notebook execution from outside the repository
+  with `11` executed code cells, one display output, and zero errors; and
+- exact root-script mode/path/absence, import isolation, public contracts,
+  provisional parity, link/fence, privacy, protected-byte, diff, artifact,
+  bytecode, and final-worktree hygiene gates.
+
+The `13` TensorDSLab and two TensorCore conditional CUDA skips are explicit
+qualifications. No accelerator, calibration, release, deployment, broad
+compatibility, merge, or push claim follows from Implementation evidence.
 
 ## Validation And Review
 

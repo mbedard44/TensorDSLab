@@ -22,9 +22,6 @@ from tensor_dslab.readout.profiles import ds20k_veto
 def main() -> None:
     """Construct synthetic truth and print two public readout results."""
 
-    source_generator = torch.Generator(device="cpu")
-    source_generator.manual_seed(11)
-
     axes = (
         ExampleAxis(count=2),
         ChannelAxis(
@@ -37,18 +34,15 @@ def main() -> None:
         ),
         SampleAxis.from_period(
             period=quantity(2.0, "ns"),
-            count=1280,
+            count=5000,
         ),
     )
     shape = tuple(axis.size for axis in axes)
-    draws = torch.randint(
-        low=0,
-        high=512,
-        size=shape,
-        dtype=torch.int64,
-        generator=source_generator,
-    )
-    counts = torch.where(draws < 2, draws + 1, torch.zeros_like(draws))
+    counts = torch.zeros(shape, dtype=torch.int64, device="cpu")
+    counts[0, 0, 100] = 1
+    counts[0, 0, 1300] = 2
+    counts[0, 0, 2500] = 3
+    counts[0, 0, 3700] = 4
     photoelectrons = Photoelectrons(tensor=counts, axes=axes)
 
     requested = (

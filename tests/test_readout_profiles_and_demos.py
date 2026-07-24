@@ -1,5 +1,6 @@
 import ast
 from dataclasses import fields, is_dataclass
+import hashlib
 import math
 import os
 from pathlib import Path
@@ -119,31 +120,26 @@ def _literal_config() -> ReadoutConfig:
         ),
         analog_waveform=AnalogWaveformConfig(),
         digitized_waveform=DigitizedWaveformConfig(
-            bit_depth=PositiveInteger(12),
-            input_minimum=quantity(-20.0, "mV"),
-            input_maximum=quantity(2.0, "mV"),
-            analog_gain_db=NonnegativeFloat(0.0),
+            bit_depth=PositiveInteger(16),
+            input_minimum=quantity(-3900.0, "mV"),
+            input_maximum=quantity(100.0, "mV"),
+            analog_gain_db=NonnegativeFloat(3.5218),
         ),
     )
 
 
 def _source() -> Photoelectrons:
-    generator = torch.Generator(device="cpu")
-    generator.manual_seed(11)
     axes = (
         ExampleAxis(count=2),
         ChannelAxis(labels=("veto-0", "veto-1", "veto-2", "veto-3")),
-        SampleAxis.from_period(period=quantity(2.0, "ns"), count=1280),
+        SampleAxis.from_period(period=quantity(2.0, "ns"), count=5000),
     )
     shape = tuple(axis.size for axis in axes)
-    draws = torch.randint(
-        low=0,
-        high=512,
-        size=shape,
-        dtype=torch.int64,
-        generator=generator,
-    )
-    counts = torch.where(draws < 2, draws + 1, torch.zeros_like(draws))
+    counts = torch.zeros(shape, dtype=torch.int64, device="cpu")
+    counts[0, 0, 100] = 1
+    counts[0, 0, 1300] = 2
+    counts[0, 0, 2500] = 3
+    counts[0, 0, 3700] = 4
     return Photoelectrons(tensor=counts, axes=axes)
 
 
@@ -249,7 +245,7 @@ def _source_construction_ast(
     statements: list[ast.stmt],
 ) -> tuple[str, ...]:
     selected: list[ast.stmt] = []
-    assigned_names = {"source_generator", "draws", "counts"}
+    assigned_names = {"axes", "shape", "counts", "photoelectrons"}
     for statement in statements:
         if (
             isinstance(statement, ast.Assign)
@@ -259,12 +255,11 @@ def _source_construction_ast(
         ):
             selected.append(statement)
         elif (
-            isinstance(statement, ast.Expr)
-            and isinstance(statement.value, ast.Call)
-            and isinstance(statement.value.func, ast.Attribute)
-            and isinstance(statement.value.func.value, ast.Name)
-            and statement.value.func.value.id == "source_generator"
-            and statement.value.func.attr == "manual_seed"
+            isinstance(statement, ast.Assign)
+            and len(statement.targets) == 1
+            and isinstance(statement.targets[0], ast.Subscript)
+            and isinstance(statement.targets[0].value, ast.Name)
+            and statement.targets[0].value.id == "counts"
         ):
             selected.append(statement)
     return tuple(
@@ -276,18 +271,26 @@ def _source_construction_ast(
 _EXPECTED_SOURCE_CONSTRUCTION_AST = _source_construction_ast(
     ast.parse(
         """
-source_generator = torch.Generator(device="cpu")
-source_generator.manual_seed(11)
-draws = torch.randint(
-    low=0,
-    high=512,
-    size=shape,
-    dtype=torch.int64,
-    generator=source_generator,
+axes = (
+    ExampleAxis(count=2),
+    ChannelAxis(labels=("veto-0", "veto-1", "veto-2", "veto-3")),
+    SampleAxis.from_period(period=quantity(2.0, "ns"), count=5000),
 )
-counts = torch.where(draws < 2, draws + 1, torch.zeros_like(draws))
+shape = tuple(axis.size for axis in axes)
+counts = torch.zeros(shape, dtype=torch.int64, device="cpu")
+counts[0, 0, 100] = 1
+counts[0, 0, 1300] = 2
+counts[0, 0, 2500] = 3
+counts[0, 0, 3700] = 4
+photoelectrons = Photoelectrons(tensor=counts, axes=axes)
 """
     ).body
+)
+_EXPECTED_NOTEBOOK_CODE_SHA256 = (
+    "456656c129e68863bd7158a11824e1cd8c44607a2f7dc969b393fb0ce6b53ac0"
+)
+_EXPECTED_NOTEBOOK_SHA256 = (
+    "f2ac47c6914c579d4a5559d31eef0091904cee3f0814d9bae1be9536f00f66dd"
 )
 
 
@@ -322,9 +325,16 @@ class ReadoutProfilesAndDemosTest(unittest.TestCase):
             "[0, 250] MHz",
             "62.5 MHz",
             "0.5 mV",
-            "[-20, 2] mV",
+            "16",
+            "[-3900, 100] mV",
+            "3.5218 dB",
             "2 ns",
-            "1280",
+            "5000",
+            "10000 ns",
+            "200 ns",
+            "2600 ns",
+            "5000 ns",
+            "7400 ns",
             "veto-0",
             "veto-3",
         ):
@@ -339,11 +349,14 @@ class ReadoutProfilesAndDemosTest(unittest.TestCase):
             "**Not applicable** to donor parity",
             "not by `ds20k_veto()`",
             "Later promotion or replacement of a provisional value requires",
+            "Maintenance 10 refines only the provisional digitizer",
         ):
             self.assertIn(required, normalized_parity)
 
     def test_environment_script_contract_and_fake_execution(self) -> None:
-        script = Path("demos/create_environment.sh").resolve()
+        script = Path("create_environment.sh").resolve()
+        self.assertFalse(Path("demos/create_environment.sh").exists())
+        self.assertEqual(script.stat().st_mode & 0o777, 0o755)
         self.assertTrue(script.stat().st_mode & 0o111)
         source = script.read_text()
         self.assertTrue(source.startswith("#!/usr/bin/env bash\nset -euo pipefail\n"))
@@ -355,6 +368,7 @@ class ReadoutProfilesAndDemosTest(unittest.TestCase):
             "--channel conda-forge",
             '"python=3.14.6"',
             '"${repository_root}[demos]"',
+            'repository_root="${script_directory}"',
             "--disable-pip-version-check",
             "--no-input",
             "conda activate",
@@ -372,6 +386,7 @@ class ReadoutProfilesAndDemosTest(unittest.TestCase):
             "torch.cuda",
         ):
             self.assertNotIn(forbidden, source)
+        self.assertNotIn('"${script_directory}/.."', source)
         self.assertNotIn(str(Path.cwd()), source)
 
         syntax = subprocess.run(
@@ -522,8 +537,13 @@ class ReadoutProfilesAndDemosTest(unittest.TestCase):
         notebook = nbformat.read("demos/readout.ipynb", as_version=4)
         notebook_source = "\n".join(cell.source for cell in notebook.cells)
         for source in (script_source, notebook_source):
-            self.assertIn('torch.Generator(device="cpu")', source)
+            self.assertIn(
+                'counts = torch.zeros(shape, dtype=torch.int64, device="cpu")',
+                source,
+            )
             self.assertIn('field.tensor.device.type == "cpu"', source)
+            self.assertNotIn("torch.Generator", source)
+            self.assertNotIn("torch.randint", source)
             self.assertNotIn("torch.cuda", source)
             self.assertNotIn('device="cuda"', source)
             self.assertNotIn("device='cuda'", source)
@@ -699,7 +719,7 @@ class ReadoutProfilesAndDemosTest(unittest.TestCase):
         literal = _literal_config()
         source = _source()
         sampling = SamplingRuntime(
-            sample_count=1280,
+            sample_count=5000,
             sample_period_ps=2000,
             sample_dimension=2,
         )
@@ -775,7 +795,7 @@ class ReadoutProfilesAndDemosTest(unittest.TestCase):
                 prepared_rms = math.sqrt(
                     float(profile_powers.represented_powers_mv2.sum())
                 )
-                self.assertAlmostEqual(prepared_rms, 0.4973, places=4)
+                self.assertAlmostEqual(prepared_rms, 0.5031, places=4)
 
         assert profile.pure_waveform is not None
         for dtype in (torch.float32, torch.float64):
@@ -953,21 +973,16 @@ class ReadoutProfilesAndDemosTest(unittest.TestCase):
             _EXPECTED_SOURCE_CONSTRUCTION_AST,
         )
 
-        expected_shape = (2, 4, 1280)
-        expected_generator = torch.Generator(device="cpu")
-        expected_generator.manual_seed(11)
-        expected_draws = torch.randint(
-            low=0,
-            high=512,
-            size=expected_shape,
+        expected_shape = (2, 4, 5000)
+        expected_counts = torch.zeros(
+            expected_shape,
             dtype=torch.int64,
-            generator=expected_generator,
+            device="cpu",
         )
-        expected_counts = torch.where(
-            expected_draws < 2,
-            expected_draws + 1,
-            torch.zeros_like(expected_draws),
-        )
+        expected_counts[0, 0, 100] = 1
+        expected_counts[0, 0, 1300] = 2
+        expected_counts[0, 0, 2500] = 3
+        expected_counts[0, 0, 3700] = 4
         produced_counts: list[torch.Tensor] = []
         for label, statements in (
             ("script", script_source_statements),
@@ -1001,11 +1016,8 @@ class ReadoutProfilesAndDemosTest(unittest.TestCase):
                     )
                 )
                 self.assertEqual(namespace["shape"], expected_shape)
-                draws = namespace["draws"]
                 counts = namespace["counts"]
-                assert isinstance(draws, torch.Tensor)
                 assert isinstance(counts, torch.Tensor)
-                self.assertTrue(torch.equal(draws, expected_draws))
                 self.assertTrue(torch.equal(counts, expected_counts))
                 source = namespace["photoelectrons"]
                 self.assertIs(type(source), Photoelectrons)
@@ -1017,6 +1029,31 @@ class ReadoutProfilesAndDemosTest(unittest.TestCase):
                     ("veto-0", "veto-1", "veto-2", "veto-3"),
                 )
                 self.assertEqual(source.axis(SampleAxis).step, 2000)
+                self.assertEqual(source.axis(SampleAxis).count, 5000)
+                self.assertEqual(
+                    source.axis(SampleAxis).stop_time.magnitude,
+                    10_000_000,
+                )
+                self.assertEqual(
+                    tuple(
+                        tuple(int(item) for item in coordinate)
+                        for coordinate in torch.nonzero(source.tensor).tolist()
+                    ),
+                    (
+                        (0, 0, 100),
+                        (0, 0, 1300),
+                        (0, 0, 2500),
+                        (0, 0, 3700),
+                    ),
+                )
+                self.assertEqual(
+                    tuple(
+                        int(source.tensor[0, 0, index])
+                        for index in (100, 1300, 2500, 3700)
+                    ),
+                    (1, 2, 3, 4),
+                )
+                self.assertEqual(int(source.tensor.sum()), 10)
                 produced_counts.append(counts)
         self.assertTrue(torch.equal(produced_counts[0], produced_counts[1]))
 
@@ -1057,7 +1094,7 @@ class ReadoutProfilesAndDemosTest(unittest.TestCase):
             _config_signature(ds20k_veto()),
         )
 
-    def test_notebook_is_cleared_and_has_exact_public_narrative(self) -> None:
+    def test_notebook_is_executed_and_has_exact_public_narrative(self) -> None:
         notebook = nbformat.read("demos/readout.ipynb", as_version=4)
         self.assertEqual(len(notebook.cells), 23)
         self.assertEqual(
@@ -1065,12 +1102,23 @@ class ReadoutProfilesAndDemosTest(unittest.TestCase):
             ("markdown", "code") * 11 + ("markdown",),
         )
         opening = notebook.cells[0].source
-        self.assertIn("./demos/create_environment.sh", opening)
+        self.assertIn("./create_environment.sh", opening)
+        self.assertNotIn("./demos/create_environment.sh", opening)
         self.assertIn("conda activate tensor_dslab", opening)
         self.assertIn("before opening this notebook", opening.lower())
 
         code_cells = tuple(
             cell for cell in notebook.cells if cell.cell_type == "code"
+        )
+        self.assertEqual(
+            hashlib.sha256(
+                "\n\n".join(cell.source for cell in code_cells).encode()
+            ).hexdigest(),
+            _EXPECTED_NOTEBOOK_CODE_SHA256,
+        )
+        self.assertEqual(
+            hashlib.sha256(Path("demos/readout.ipynb").read_bytes()).hexdigest(),
+            _EXPECTED_NOTEBOOK_SHA256,
         )
         first_code = code_cells[0].source
         for required in (
@@ -1100,19 +1148,54 @@ class ReadoutProfilesAndDemosTest(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, executable_source)
 
-        for cell in notebook.cells:
-            if cell.cell_type == "code":
-                self.assertIsNone(cell.execution_count)
-                self.assertEqual(cell.outputs, [])
+        self.assertEqual(
+            tuple(cell.execution_count for cell in code_cells),
+            tuple(range(1, 12)),
+        )
+        outputs = tuple(
+            output
+            for cell in code_cells
+            for output in cell.outputs
+        )
+        self.assertEqual(len(outputs), 7)
+        self.assertEqual(
+            sum(
+                output.output_type == "display_data"
+                and "image/png" in output.data
+                for output in outputs
+            ),
+            1,
+        )
+        self.assertFalse(
+            any(output.output_type == "error" for output in outputs)
+        )
+        for cell in code_cells:
+            self.assertNotIn("execution", cell.metadata)
         source = "\n".join(cell.source for cell in notebook.cells)
         for required in (
             "provisional demonstration profile",
             "manual_config = ReadoutConfig(",
             "profile_config = ds20k_veto()",
-            "source_generator.manual_seed(11)",
-            "SampleAxis.from_period(period=quantity(2.0, \"ns\"), count=1280)",
+            'counts = torch.zeros(shape, dtype=torch.int64, device="cpu")',
+            "counts[0, 0, 100] = 1",
+            "counts[0, 0, 1300] = 2",
+            "counts[0, 0, 2500] = 3",
+            "counts[0, 0, 3700] = 4",
+            "SampleAxis.from_period(period=quantity(2.0, \"ns\"), count=5000)",
+            (
+                "assert photoelectrons.axis(SampleAxis).stop_time.magnitude "
+                "== 10_000_000"
+            ),
             "products=(DigitizedWaveform,)",
             "assert torch.equal(analog_trace, recomposed_trace)",
+            'plot_axes[2].plot(time_ns.numpy(), analog_trace.numpy(), color="tab:green")',
+            "for panel_index in (0, 2, 3):",
+            "charge_axis.vlines(",
+            'color="black"',
+            'charge_axis.set_ylabel("Charge [PE]", color="black")',
+            'charge_axis.tick_params(axis="y", colors="black")',
+            'charge_axis.spines["right"].set_color("black")',
+            "source plus seeded dark counts",
             "Pure [mV]",
             "Noise [mV]",
             "Analog [mV]",
@@ -1126,6 +1209,16 @@ class ReadoutProfilesAndDemosTest(unittest.TestCase):
         ):
             self.assertIn(required, source)
         for forbidden in (
+            "torch.Generator",
+            "torch.randint",
+            "torch.where",
+            "source_generator",
+            "draws =",
+            "plot_axes[2].legend",
+            "recomposed_trace.numpy()",
+            'label="AnalogWaveform"',
+            "purple",
+            "tab:purple",
             "savefig",
             "read_csv",
             "read_json",

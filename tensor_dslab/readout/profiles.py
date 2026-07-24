@@ -83,9 +83,9 @@ def ds20k_veto() -> ReadoutConfig:
         ),
         analog_waveform=AnalogWaveformConfig(),
         digitized_waveform=DigitizedWaveformConfig(
-            bit_depth=PositiveInteger(12),
-            input_minimum=quantity(-20.0, "mV"),
-            input_maximum=quantity(2.0, "mV"),
-            analog_gain_db=NonnegativeFloat(0.0),
+            bit_depth=PositiveInteger(16),
+            input_minimum=quantity(-3900.0, "mV"),
+            input_maximum=quantity(100.0, "mV"),
+            analog_gain_db=NonnegativeFloat(3.5218),
         ),
     )

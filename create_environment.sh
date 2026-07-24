@@ -23,10 +23,7 @@ script_directory="$(
     CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1
     pwd -P
 )"
-repository_root="$(
-    CDPATH= cd -- "${script_directory}/.." >/dev/null 2>&1
-    pwd -P
-)"
+repository_root="${script_directory}"
 
 environment_listing="$("${conda_executable}" env list)"
 if awk -v requested="${environment_name}" \

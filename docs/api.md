@@ -29,9 +29,12 @@ environment/device inspection. It is exported only from
 The returned Config is a **provisional demonstration profile, not an approved
 run calibration**. Its Veto pulse magnitudes retain audited donor fixtures for
 the existing numerical-parity comparison boundary. Its dark-count, PSD,
-analog, and digitization settings are illustrative choices. Calling the
-factory does not select source axes, channel identities, a sample grid, input
-data, products, dtype, device, RNG seed, or retention policy.
+analog, and digitization settings are illustrative choices. The provisional
+digitizer uses `16` bits, an input interval of `[-3900, 100] mV`, and
+`3.5218 dB` analog gain; those IV-DSLab-like values are not an approved
+hardware or run calibration. Calling the factory does not select source axes,
+channel identities, a sample grid, input data, products, dtype, device, RNG
+seed, or retention policy.
 
 Use the profile explicitly with the ordinary public simulation API:
 
@@ -61,9 +64,20 @@ def run_readout(photoelectrons: Photoelectrons):
 The executable [readout demonstration](../demos/readout.py) and
 [notebook](../demos/readout.ipynb) construct their `Photoelectrons` input and
 sampling axes separately, compare manual and profile Config construction, and
-retain only the requested products. Their source pattern, labels, grid, seed,
-plot selection, and requested products are demonstration choices, not hidden
-profile state.
+retain only the requested products. They use a `2 ns`, `5000`-sample CPU grid
+with explicit `1`, `2`, `3`, and `4` PE source deposits at `200`, `2600`,
+`5000`, and `7400 ns`. The seeded readout may add separate dark-count Charge
+events. The source pattern, labels, grid, seed, plot selection, and requested
+products are demonstration choices, not hidden profile state.
+
+Create the ordinary project/demo environment from the repository root before
+running either form:
+
+```bash
+./create_environment.sh
+conda activate tensor_dslab
+python demos/readout.py
+```
 
 The complete value-by-value comparison boundary and classification are
 recorded in [IV-DSLab Parity](parity.md#maintenance-9-provisional-ds20k-veto-profile).

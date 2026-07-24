@@ -228,12 +228,12 @@ magnitude is not evidence that the magnitude is an approved run calibration.
 | PSD nonzero support | below `62.5 MHz` | **Deferred** IV-DSLab-like demonstration shape; no distributional or statistical parity claim. |
 | Integrated PSD RMS | approximately `0.5 mV` | **Deferred** illustrative noise scale; no measured-noise or run-calibration claim. |
 | Analog saturation | disabled | **Deferred** illustrative linear-composition choice; no detector-saturation claim. |
-| ADC bit depth | `12` | **Deferred** illustrative digitizer choice; no hardware/run parity claim. |
-| ADC input interval | `[-20, 2] mV` | **Deferred** illustrative digitizer choice; no hardware/run parity claim. |
-| Analog gain | `0 dB` | **Deferred** illustrative digitizer choice; no hardware/run parity claim. |
-| Sampling | start `0`, period `2 ns`, count `1280` | **Deferred** demo-grid choice owned by the source `SampleAxis`, not by `ds20k_veto()` and not a donor sampling claim. |
+| ADC bit depth | `16` | **Deferred** illustrative IV-DSLab-like digitizer choice; no hardware/run parity claim. |
+| ADC input interval | `[-3900, 100] mV` | **Deferred** illustrative IV-DSLab-like digitizer choice; no hardware/run parity claim. |
+| Analog gain | `3.5218 dB` | **Deferred** illustrative IV-DSLab-like digitizer choice; no hardware/run parity claim. |
+| Sampling | start `0`, period `2 ns`, count `5000`, exclusive stop `10000 ns` | **Not applicable** to detector calibration or donor sampling parity: this demo grid is owned by the source `SampleAxis`, not by `ds20k_veto()`. |
 | Example/channel axes | two examples and labels `veto-0` through `veto-3` | **Not applicable** to detector calibration: these are local demonstration identities, not physical channel provenance. |
-| Toy source and RNG | sparse generated source with fixed demonstration seeds | **Not applicable** to donor parity: deterministic tutorial repeatability, not an event or RNG-stream equivalence claim. |
+| Toy source and RNG | explicit `1`, `2`, `3`, and `4` PE deposits at `200 ns`, `2600 ns`, `5000 ns`, and `7400 ns`; readout seed `17` | **Not applicable** to donor parity: deterministic tutorial inputs and repeatability, not an event or RNG-stream equivalence claim. The seeded dark-count model may add later Charge events. |
 | Execution and plots | `float32`, full/selected product requests, one displayed example/channel, four panels | **Not applicable** to calibration: public-API and presentation choices only. |
 
 The profile owns only its returned Config tree. Source construction, axes,
@@ -249,6 +249,16 @@ notebook, plot, source/archive, and artifact evidence does not strengthen any
 classification in the table above: retained pulse fixtures remain numerical
 parity only over their named waveform boundary, and every illustrative
 profile/demo choice remains Deferred or Not applicable as recorded.
+
+Maintenance 10 refines only the provisional digitizer and caller-owned demo
+source/grid/plot evidence recorded in the table. The `16`-bit
+`[-3900, 100] mV`, `3.5218 dB` digitizer remains a **Deferred**
+IV-DSLab-like illustrative choice rather than an approved calibration. The
+explicit four-deposit source, `10000 ns` grid, fixed seed, and black Charge
+overlays are **Not applicable** to detector calibration or donor-event parity.
+Nothing in this refinement strengthens waveform numerical parity, establishes
+digitizer calibration or IV eventwise parity, or changes a scientific
+equation.
 
 Stage 4's reviewed tests establish the named TPC/Veto pulse checkpoints,
 independent deterministic reference equations, conditional analog composition,
