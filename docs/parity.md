@@ -1136,7 +1136,7 @@ Semantic coordinates are not RNG identities. Reordering axes or coordinates,
 reindexing payloads, selecting, or invoking arbitrary chunks generally changes
 logical flat positions and therefore sampled values. Positional addresses
 restart for each builder invocation. Product-request changes preserve a common
-product because config-owned role keys are fixed, but chunk stability would
+product because package-owned role keys are fixed, but chunk stability would
 require explicit global positional offsets and a later Design contract.
 
 The Maintenance 2 implementation uses immutable TensorCore `CounterRng` instances

@@ -1,6 +1,6 @@
 # Maintenance 7 TensorCore 0.15 Adoption Work Order
 
-Status: **Design-complete / User authorization pending / Undispatched**.
+Status: **User-authorized / Dispatched**.
 
 Stable work-order key:
 `TensorDSLab/maintenance-7-tensorcore-0-15-adoption`.

@@ -22,7 +22,7 @@ Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
 Package maturity: Maintenance 6 Merged / Closed
 Next production gate: Maintenance 7 TensorCore 0.15 adoption;
-Design-complete / User authorization pending / Undispatched
+User-authorized / Dispatched
 Stage 8: separately stopped; any restart requires a new Design authority after
 Maintenance 6
 ```
@@ -107,7 +107,7 @@ unit-free. Local `main` remains unpushed pending the separate TensorCore
 `0.15.0` adoption and exact integrated CUDA gates.
 
 [Maintenance 7](docs/implementation/maintenance_7_tensorcore_0_15_adoption.md)
-is Design-complete and undispatched. It adopts exact published TensorCore
+is User-authorized and Dispatched. It adopts exact published TensorCore
 `0.15.0`, replaces `logical_positions(...)` with validated `RngPositions`,
 uses TensorCore's generic validation parts where the contracts match, and
 centralizes the unchanged readout RNG namespace. It also makes pulse Configs

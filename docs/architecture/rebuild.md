@@ -113,8 +113,8 @@ until later editorial compaction; they are not Maintenance 6 implementation
 authority. The stage changes no scientific equation, RNG address, product
 meaning, IO/artifact boundary, or Stage 8 contract.
 
-Maintenance 7 TensorCore 0.15 Adoption is **Design-complete / User
-authorization pending / Undispatched** under
+Maintenance 7 TensorCore 0.15 Adoption is **User-authorized / Dispatched**
+under
 [`maintenance_7_tensorcore_0_15_adoption.md`](../implementation/maintenance_7_tensorcore_0_15_adoption.md).
 It pins exact published TensorCore `0.15.0`, cleanly replaces
 `logical_positions(...)` with `RngPositions`, moves only matching generic
@@ -6899,7 +6899,7 @@ The completed prerequisites and remaining production sequence are:
 5. Maintenance 6 Pint Physical Configuration Boundary is Merged / Closed
    through exact Review-cleared target
    `0257fb477ee04556ebbe26351123ae610b5d7925`.
-6. Complete the Design-ready, undispatched Maintenance 7 adoption of published
+6. Complete the User-authorized, Dispatched Maintenance 7 adoption of published
    TensorCore `0.15.0` and the matching TensorDSLab validation/RngPositions
    cleanup.
 7. The first Stage 8 real-CUDA attempt remains stopped evidence. Any rerun
@@ -7103,7 +7103,7 @@ Closed prerequisites and remaining Design gates are:
    Cross-product analog/digitized
    fusion remains excluded.
 7. Maintenance 7 TensorCore `0.15.0` adoption and matching TensorDSLab cleanup
-   are Design-complete / User authorization pending / Undispatched. Local
+   are User-authorized / Dispatched. Local
    `main` remains unpushed until that adoption and the exact integrated CUDA
    gates close.
 8. Digitization-config association for independent/durable consumers.

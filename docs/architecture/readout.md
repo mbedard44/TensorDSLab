@@ -41,8 +41,7 @@ for public physical Config values and the compact SampleAxis convenience
 boundary while preserving the implemented axes, sampling authority, product
 graph, science, RNG, and unit-free execution core.
 
-Maintenance 7 is **Design-complete / User authorization pending /
-Undispatched** under its focused
+Maintenance 7 is **User-authorized / Dispatched** under its focused
 [TensorCore 0.15 adoption work order](../implementation/maintenance_7_tensorcore_0_15_adoption.md).
 It will replace raw logical-position tensors with exact `RngPositions`, import
 matching generic validation requirements from TensorCore, and centralize the
@@ -216,14 +215,14 @@ as `Charge` may be computed privately for a digitized request without becoming
 a collection member.
 
 Request order has no semantic meaning. Changing only the retained product set
-must not change a product common to two requests. Config-owned stochastic-role
-keys and deterministic planning enforce that independence.
+must not change a product common to two requests. Package-owned fixed
+stochastic-role keys and deterministic planning enforce that independence.
 
 Unknown products, duplicates, missing required config, invalid sampling,
-an invalid `CounterRng`, duplicate role keys, or another request-level problem
-fails before an RNG request, product-production invocation, or semantic-output
-write. Product-owned private Runtime records complete the entire closure
-before execution; the private whole-request preparer does not duplicate their
+an invalid `CounterRng`, or another request-level problem fails before an RNG
+request, product-production invocation, or semantic-output write.
+Product-owned private Runtime records complete the entire closure before
+execution; the private whole-request preparer does not duplicate their
 scientific equations.
 
 The planner is ordinary typed code, not a public dependency registry or
@@ -282,8 +281,8 @@ physical Config Quantity
 
 Runtime records, products, collections, producers, validators, and RNG
 addresses contain no Pint object or unit string. This target is
-Design-complete but remains undispatched; the currently implemented Config
-constructors remain the Maintenance 5 surface until implementation closes.
+User-authorized and Dispatched; the currently implemented Config constructors
+remain the Maintenance 6 surface until implementation closes.
 
 Exact stochastic leaf configs own defaulted TensorCore `RngKey` values:
 white/PSD noise use streams `1`/`2`; dark count uses `3`; retained/overflow
@@ -897,10 +896,10 @@ compact semantic axes, and source-derived sampling while preserving all product
 execution. It is Merged / Closed. Maintenance 6 is also Merged / Closed through
 exact Review-cleared target `0257fb477ee04556ebbe26351123ae610b5d7925`;
 it owns the physical Config representation and bounded runtime-admission
-cleanup. The separate TensorCore `0.15.0` adoption is next and remains
-undispatched under Maintenance 7. Its local package loop intentionally makes
-no fresh CUDA claim; the exact integrated CUDA gate follows only after
-adoption closeout.
+cleanup. The separate TensorCore `0.15.0` adoption is now active under the
+User-authorized / Dispatched Maintenance 7 work order. Its local package loop
+intentionally makes no fresh CUDA claim; the exact integrated CUDA gate
+follows only after adoption closeout.
 
 ## Return To Design Before
 

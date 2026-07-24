@@ -445,10 +445,10 @@ qualify only that exact integrated pairing.
 
 The
 [Maintenance 7 work order](implementation/maintenance_7_tensorcore_0_15_adoption.md)
-is **Design-complete / User authorization pending / Undispatched** against
+is **User-authorized / Dispatched** against
 exact local baseline `65bb55bf98bb37a129a950d93a0bdb9b0d3f2971`.
 
-When dispatched, local fixed-commit Validation and independent Review must
+During execution, local fixed-commit Validation and independent Review must
 prove:
 
 - exact published TensorCore `0.15.0` commit/tree/version, 34 package-root

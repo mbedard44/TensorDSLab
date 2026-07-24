@@ -27,7 +27,7 @@ TensorDSLab-owned source/archive, typing, and functional consumer evidence; the
 separate TensorCore `0.15.0` adoption will own the deferred integrated CUDA
 qualification. No broad compatibility result follows.
 
-Maintenance 7 is Design-complete and undispatched against exact published
+Maintenance 7 is User-authorized and Dispatched against exact published
 TensorCore `0.15.0` commit
 `0f974e9e7f52125bbe829e124beb24e69de811d3`, tree
 `587ff59711255c027a85cfef883422d40ea5dcda`. Its accepted target consumes the
@@ -48,8 +48,7 @@ candidate `81ad2f52fe4a1966e5b3a0ceb5063138e42e731f` and Design closeout
 `021694b9479d02546405f6a815aedf21c9c831a4`. Maintenance 6 is Merged / Closed
 through exact Review-cleared target
 `0257fb477ee04556ebbe26351123ae610b5d7925`. TensorCore `0.15.0` adoption is
-the next Design-complete / User authorization pending / Undispatched package
-gate under Maintenance 7.
+the active User-authorized / Dispatched package gate under Maintenance 7.
 
 The previous TensorCore `0.6` ID/layout/sidecar architecture is historical and
 is intentionally not preserved through aliases.

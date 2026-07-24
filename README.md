@@ -125,7 +125,7 @@ accelerator claim. Local `main` remains unpushed until the separate TensorCore
 `0.15.0` adoption and exact integrated CUDA gates close.
 
 [Maintenance 7 TensorCore 0.15 Adoption](docs/implementation/maintenance_7_tensorcore_0_15_adoption.md)
-is **Design-complete / User authorization pending / Undispatched**. It will
+is **User-authorized / Dispatched**. It will
 replace raw logical-position tensors with TensorCore `RngPositions`, retire
 matching local generic validators in favor of `tensor_core.validation`, and
 give the unchanged readout RNG namespace one non-exported source. The

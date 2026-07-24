@@ -601,7 +601,7 @@ Local `main` remains unpushed pending that adoption and those integrated gates.
 
 ### [Maintenance 7 TensorCore 0.15 Adoption](maintenance_7_tensorcore_0_15_adoption.md)
 
-Status: **Design-complete / User authorization pending / Undispatched**.
+Status: **User-authorized / Dispatched**.
 
 Maintenance 7 starts from exact clean local Maintenance 6 Design-closeout
 baseline `65bb55bf98bb37a129a950d93a0bdb9b0d3f2971`, tree
