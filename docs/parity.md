@@ -192,6 +192,57 @@ A sampled golden output cannot prove distributional parity. Conversely, two
 implementations may pass selected statistical checks without sharing the same
 law; such a result must remain classified as statistical parity.
 
+## Maintenance 9 Provisional DS20k Veto Profile
+
+The precise-module public `ds20k_veto()` factory is documented in the
+[Public API](api.md#provisional-ds20k-veto-profile). It identifies the
+represented detector/readout family, but the returned Config is a
+**provisional demonstration profile, not an approved run calibration**.
+The factory contains a mixture of retained donor fixture values and
+illustrative settings, so its name does not promote the complete Config to one
+donor-parity or calibration claim.
+
+The comparison boundary for the retained pulse values is the existing sampled
+Veto pulse equation described under
+[Pure Waveform Rendering](#pure-waveform-rendering). The values are exact
+Config magnitudes retained from the audited donor fixture; rendered waveform
+behavior remains classified as **numerical parity** over the aligned
+in-window template and convolution domain. Exact retention of an input
+magnitude is not evidence that the magnitude is an approved run calibration.
+
+| Surface | Profile or demo value | Classification and comparison boundary |
+| --- | --- | --- |
+| Veto Gaussian center | `232.89 ns` | Retained donor fixture input to the existing Veto **numerical parity** boundary; no run-calibration claim. |
+| Veto Gaussian width | `507.72 ns` | Retained donor fixture input to the existing Veto **numerical parity** boundary; no run-calibration claim. |
+| Veto first edge offset | `-81.92 ns` | Retained donor fixture input to the existing Veto **numerical parity** boundary; no run-calibration claim. |
+| Veto first edge width | `147.28 ns` | Retained donor fixture input to the existing Veto **numerical parity** boundary; no run-calibration claim. |
+| Veto second edge offset | `-176.50 ns` | Retained donor fixture input to the existing Veto **numerical parity** boundary; no run-calibration claim. |
+| Veto second edge width | `45.69 ns` | Retained donor fixture input to the existing Veto **numerical parity** boundary; no run-calibration claim. |
+| Veto support | `2020.27 ns` | Retained 8 ns donor fixture input to the existing Veto **numerical parity** boundary; no run-calibration claim. |
+| Veto peak magnitude | `14.5912372 mV` | Retained donor fixture magnitude. Maintenance 7 applies the fixed negative-going polarity once during preparation; the existing Veto rendering boundary remains **numerical parity**, not run calibration. |
+| Dark-count rate | `100 kHz` | **Deferred** calibration choice used illustratively; no donor-equivalence claim. |
+| Timing jitter | disabled | **Deferred** illustrative simplification; no claim that a detector run has zero jitter. |
+| Correlated avalanches | disabled | **Deferred** illustrative simplification; no claim that a detector run has no correlated avalanches. |
+| Charge smearing | disabled | **Deferred** illustrative simplification; no claim that a detector run has no charge spread. |
+| PSD frequency coverage | `[0, 250] MHz` | **Deferred** illustrative choice matched to the demo's 2 ns grid; no measured-noise parity claim. |
+| PSD nonzero support | below `62.5 MHz` | **Deferred** IV-DSLab-like demonstration shape; no distributional or statistical parity claim. |
+| Integrated PSD RMS | approximately `0.5 mV` | **Deferred** illustrative noise scale; no measured-noise or run-calibration claim. |
+| Analog saturation | disabled | **Deferred** illustrative linear-composition choice; no detector-saturation claim. |
+| ADC bit depth | `12` | **Deferred** illustrative digitizer choice; no hardware/run parity claim. |
+| ADC input interval | `[-20, 2] mV` | **Deferred** illustrative digitizer choice; no hardware/run parity claim. |
+| Analog gain | `0 dB` | **Deferred** illustrative digitizer choice; no hardware/run parity claim. |
+| Sampling | start `0`, period `2 ns`, count `1280` | **Deferred** demo-grid choice owned by the source `SampleAxis`, not by `ds20k_veto()` and not a donor sampling claim. |
+| Example/channel axes | two examples and labels `veto-0` through `veto-3` | **Not applicable** to detector calibration: these are local demonstration identities, not physical channel provenance. |
+| Toy source and RNG | sparse generated source with fixed demonstration seeds | **Not applicable** to donor parity: deterministic tutorial repeatability, not an event or RNG-stream equivalence claim. |
+| Execution and plots | `float32`, full/selected product requests, one displayed example/channel, four panels | **Not applicable** to calibration: public-API and presentation choices only. |
+
+The profile owns only its returned Config tree. Source construction, axes,
+sampling, products, dtype, device, seed, retention, and visualization remain
+explicit caller or demo choices. Later promotion or replacement of a
+provisional value requires a focused scientific/API decision and a newly named
+comparison boundary; it must not be inferred from the factory name or from a
+successful demonstration.
+
 Stage 4's reviewed tests establish the named TPC/Veto pulse checkpoints,
 independent deterministic reference equations, conditional analog composition,
 and representation-mapped ADC behavior in that work order's accepted CPU

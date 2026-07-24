@@ -382,6 +382,8 @@ retain their original private paths as historical evidence.
 
 ## Documentation Map
 
+- [Public API](api.md): supported facade boundaries, precise-module public
+  profiles, and collaborator-facing usage.
 - [Design](design.md): architecture thesis, ownership boundaries, and
   non-goals.
 - [Decisions](decisions.md): accepted, historical, and open decisions.

@@ -226,6 +226,56 @@ def _runtime_signature(value: object) -> object:
 
 
 class ReadoutProfilesAndDemosTest(unittest.TestCase):
+    def test_live_api_and_parity_records_classify_the_profile_exactly(self) -> None:
+        api = Path("docs/api.md").read_text()
+        parity = Path("docs/parity.md").read_text()
+        overview = Path("docs/overview.md").read_text()
+        normalized_api = " ".join(api.split())
+        normalized_parity = " ".join(parity.split())
+
+        for required in (
+            "from tensor_dslab.readout.profiles import ds20k_veto",
+            "provisional demonstration profile, not an approved run calibration",
+            "does not select source axes, channel identities, a sample grid",
+            "not re-exported from `tensor_dslab` or `tensor_dslab.readout`",
+            "parity.md#maintenance-9-provisional-ds20k-veto-profile",
+        ):
+            self.assertIn(required, normalized_api)
+        self.assertIn("[Public API](api.md)", overview)
+
+        for value in (
+            "232.89 ns",
+            "507.72 ns",
+            "-81.92 ns",
+            "147.28 ns",
+            "-176.50 ns",
+            "45.69 ns",
+            "2020.27 ns",
+            "14.5912372 mV",
+            "100 kHz",
+            "[0, 250] MHz",
+            "62.5 MHz",
+            "0.5 mV",
+            "[-20, 2] mV",
+            "2 ns",
+            "1280",
+            "veto-0",
+            "veto-3",
+        ):
+            self.assertIn(f"`{value}`", parity)
+        for required in (
+            "## Maintenance 9 Provisional DS20k Veto Profile",
+            "provisional demonstration profile, not an approved run calibration",
+            "existing Veto **numerical parity** boundary",
+            "**Deferred** calibration choice used illustratively",
+            "**Deferred** IV-DSLab-like demonstration shape",
+            "**Not applicable** to detector calibration",
+            "**Not applicable** to donor parity",
+            "not by `ds20k_veto()`",
+            "Later promotion or replacement of a provisional value requires",
+        ):
+            self.assertIn(required, normalized_parity)
+
     def test_environment_script_contract_and_fake_execution(self) -> None:
         script = Path("demos/create_environment.sh").resolve()
         self.assertTrue(script.stat().st_mode & 0o111)
