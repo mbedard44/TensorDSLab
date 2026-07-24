@@ -1,16 +1,16 @@
 # Maintenance 8 Python 3.14 And TensorCore 0.16 Modernization
 
-Status: **Provisional Design / Undispatched / TensorCore 0.16 publication
-pending**.
+Status: **Design-complete / User dispatch pending**.
 
-This document preserves the accepted TensorDSLab Maintenance 8 direction. It
-is not yet an operative production work order, fixed dependency selection,
-implementation authority, compatibility claim, cluster authority, release, or
-push authorization. Design will freeze the exact TensorCore commit, baseline,
-allowlist, evidence commands, artifact identities, loop budget, and route
-disposition only after TensorCore publishes its final `0.16.0` bytes.
+This is the fixed TensorDSLab Maintenance 8 production work order. It binds
+the exact published TensorCore `0.16.0` dependency, exact locally closed
+TensorDSLab Maintenance 7 production baseline, complete changed-path
+allowlist, protected bytes, evidence matrix, loop budget, and merge authority.
+It is not Implementation dispatch until the user explicitly authorizes the
+route. It grants no cluster, push, release, deployment, or broad compatibility
+authority.
 
-Stable provisional key:
+Stable key:
 
 ```text
 TensorDSLab/maintenance-8-python314-tensorcore-0-16-modernization
@@ -33,7 +33,7 @@ Modernize TensorDSLab once, coherently, before the package's first push:
 This is a dependency, syntax, documentation, and packaging modernization. It
 must not become an opportunistic scientific or architectural rewrite.
 
-## Accepted Starting Point And Prerequisites
+## Accepted Starting Point And Dependency Authority
 
 The current TensorDSLab local baseline is Maintenance 7's exact corrected
 Design closeout:
@@ -47,26 +47,39 @@ Maintenance 7 is locally Merged / Closed, adopts exact published TensorCore
 `0.15.0`, and remains unpushed. Its complete production, tests, dependency,
 and evidence history must remain intact.
 
-Maintenance 8 may become operative only after all of these are true:
+Those publication prerequisites are now satisfied. The exact dependency
+authority is:
 
-1. TensorCore closes and publishes the final accepted `0.16.0` commit on its
-   live GitHub `main`;
-2. TensorCore returns the exact commit, tree, version, metadata, package
-   topology, export surfaces, source/archive identities, and residual
-   qualifications;
-3. the published bytes include the accepted domain-owned validation topology,
-   Python 3.14/Torch 2.13 modernization, intentional docstrings, and
-   descriptive PEP 695 type-parameter naming;
-4. TensorDSLab Design independently audits that exact dependency against the
-   Maintenance 7 baseline;
-5. Design converts this provisional record into a fixed, self-consistent work
-   order with exact path and evidence boundaries; and
-6. the user explicitly authorizes dispatch after the fixed work order is
-   committed.
+```text
+repository:              https://github.com/mbedard44/TensorCore.git
+live refs/heads/main:    e05324699892a8bcea024375720bfae1ed9569cc
+publication tree:        0414a99ac6096035213479e195a0b095d4b1b12e
+publication parent:      7588ccb718aba1cd2b3e3456bb5eb09d1fbc592e
+package version:         0.16.0
+implementation anchor:   0c1475258e7ede60f1b607db8017dc13a7fafc02
+implementation tree:     1147f0523b78e21e7454f8728f6fcacef1db9df7
+```
 
-No unpublished TensorCore local commit is a dependency target. TensorDSLab
-must not pin a commit until the corresponding live remote ref is independently
-verified.
+The publication descendants after the implementation anchor are
+documentation-only. An exact path comparison proves that `tensor_core/`,
+`tests/`, and `pyproject.toml` are byte-identical between the implementation
+anchor and published containing commit.
+
+TensorDSLab Design independently verified the live GitHub branch at exact
+`e053246...`, the clean synchronized local TensorCore checkout, version
+`0.16.0`, Python/Torch metadata, ordered `21`-name root API, exact `26` package
+files, and the accepted domain-owned validation modules. A canonical no-prefix
+Git ZIP created from exact `e053246...` is `476239` bytes with SHA-256
+`f9267b74fec35a57591cbf7b2fe2ec28cb9023442080aa7b21a8ab31a38cd6c8`.
+TensorCore's independently accepted build evidence records wheel SHA-256
+`51df309d3389c2ea4336d676e2e05a3bfe4585e2f65bd699d79acfe9265761f5`
+and source-archive SHA-256
+`a22870ad38de3b6792c6e9929e1e01ca1e29ca72923857a76d8e1c4ae44ec089`.
+
+Implementation and both evidence roles must independently reconstruct the
+exact source checkout and canonical Git ZIP. A different commit, tree,
+version, package topology, export tuple, archive hash, or live remote ref is a
+hard stop. No unpublished TensorCore commit is an accepted dependency target.
 
 ## Exact Intended Environment
 
@@ -94,13 +107,16 @@ dependencies = [
     "numpy==2.5.1",
     "pint==0.25.3",
     "torch>=2.13,<2.14",
-    "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@<exact-published-0.16-commit>",
+    "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@e05324699892a8bcea024375720bfae1ed9569cc",
 ]
 ```
 
-The final work order must replace the placeholder with the exact published
-TensorCore `0.16.0` commit. It must freeze the accepted source and artifact
-identities for TensorCore, Pint, NumPy, TensorDSLab, and the build frontend.
+The exact Python, Torch, NumPy, Pint, Hatchling, and Pyright versions are
+required inputs. Each evidence role must record the exact resolved artifact
+filenames and SHA-256 values it uses. TensorDSLab candidate wheel and sdist
+hashes cannot exist before the candidate; each role must build fresh isolated
+artifacts, report their hashes, inspect their metadata, and prove extracted
+`tensor_dslab/` package bytes equal the fixed source bytes.
 
 TensorDSLab currently has no package-owned CI workflow. Maintenance 8 must not
 create placeholder CI merely to mirror TensorCore. If Design later accepts a
@@ -173,10 +189,8 @@ The final dependency audit must verify these exact public surfaces:
 - no `tensor_core.validation` compatibility package, root requirement alias,
   or forwarding assignment.
 
-These counts are the accepted consumer boundary of the pre-publication
-TensorCore Design candidate. The dependency pin remains unset until the exact
-same contract is implemented, closed, published, and independently verified
-on live `origin/main`.
+These counts are the accepted consumer boundary of exact published commit
+`e053246...`. The dependency pin must name that commit and no other.
 
 TensorCore `0.16.0` also adds public
 `tensor_core.tensor.validation.require_index(...)` for strict nonnegative
@@ -438,9 +452,9 @@ There is no namespace cleanup, new role, RNG algorithm, distribution, probing,
 stateful generator, scientific recalibration, or performance rewrite in
 Maintenance 8.
 
-## Expected Change Families
+## Exact Implementation Scope
 
-The final fixed work order should bound changes to these families:
+The candidate may change only these families:
 
 1. dependency and tool metadata;
 2. TensorCore precise-import migration;
@@ -451,13 +465,170 @@ The final fixed work order should bound changes to these families:
    and implementation records; and
 7. exact lifecycle/evidence updates.
 
-The final allowlist must be derived from the exact published TensorCore
-handoff and the exact Maintenance 7 baseline. This provisional record does not
-authorize every repository file to change.
+Because the docstring contract applies to every production module, all `59`
+current production Python modules are deliberately in scope. This is not
+blanket repository authority: every changed production hunk must be one of
+the exact dependency-import, Python 3.14 syntax, `@override`, or truthful
+docstring changes defined here. The Design baseline has one intentional module
+docstring and `58` production modules without one; the candidate must reach
+`59/59`. The supported public-symbol census is exactly `32` classes and `3`
+functions across the unchanged `35/5/30` package/common/readout facades.
+
+### Exact changed-path allowlist
+
+Metadata and type checking:
+
+```text
+pyproject.toml
+pyrightconfig.json
+```
+
+Production:
+
+```text
+tensor_dslab/__init__.py
+tensor_dslab/common/__init__.py
+tensor_dslab/common/axes.py
+tensor_dslab/common/units.py
+tensor_dslab/readout/__init__.py
+tensor_dslab/readout/analog_waveform/__init__.py
+tensor_dslab/readout/analog_waveform/config.py
+tensor_dslab/readout/analog_waveform/field.py
+tensor_dslab/readout/analog_waveform/runtime/__init__.py
+tensor_dslab/readout/analog_waveform/runtime/prepare.py
+tensor_dslab/readout/analog_waveform/runtime/produce.py
+tensor_dslab/readout/analog_waveform/runtime/validate.py
+tensor_dslab/readout/charge/__init__.py
+tensor_dslab/readout/charge/config.py
+tensor_dslab/readout/charge/field.py
+tensor_dslab/readout/charge/runtime/__init__.py
+tensor_dslab/readout/charge/runtime/effects/__init__.py
+tensor_dslab/readout/charge/runtime/effects/correlated_avalanches.py
+tensor_dslab/readout/charge/runtime/effects/counts.py
+tensor_dslab/readout/charge/runtime/effects/dark_counts.py
+tensor_dslab/readout/charge/runtime/effects/delays.py
+tensor_dslab/readout/charge/runtime/effects/smearing.py
+tensor_dslab/readout/charge/runtime/effects/timing_jitter.py
+tensor_dslab/readout/charge/runtime/prepare.py
+tensor_dslab/readout/charge/runtime/produce.py
+tensor_dslab/readout/charge/runtime/validate.py
+tensor_dslab/readout/collection.py
+tensor_dslab/readout/config.py
+tensor_dslab/readout/digitized_waveform/__init__.py
+tensor_dslab/readout/digitized_waveform/config.py
+tensor_dslab/readout/digitized_waveform/field.py
+tensor_dslab/readout/digitized_waveform/runtime/__init__.py
+tensor_dslab/readout/digitized_waveform/runtime/prepare.py
+tensor_dslab/readout/digitized_waveform/runtime/produce.py
+tensor_dslab/readout/digitized_waveform/runtime/validate.py
+tensor_dslab/readout/noise_waveform/__init__.py
+tensor_dslab/readout/noise_waveform/config.py
+tensor_dslab/readout/noise_waveform/field.py
+tensor_dslab/readout/noise_waveform/runtime/__init__.py
+tensor_dslab/readout/noise_waveform/runtime/prepare.py
+tensor_dslab/readout/noise_waveform/runtime/produce.py
+tensor_dslab/readout/noise_waveform/runtime/validate.py
+tensor_dslab/readout/photoelectrons/__init__.py
+tensor_dslab/readout/photoelectrons/field.py
+tensor_dslab/readout/photoelectrons/runtime/__init__.py
+tensor_dslab/readout/photoelectrons/runtime/validate.py
+tensor_dslab/readout/pure_waveform/__init__.py
+tensor_dslab/readout/pure_waveform/config.py
+tensor_dslab/readout/pure_waveform/field.py
+tensor_dslab/readout/pure_waveform/runtime/__init__.py
+tensor_dslab/readout/pure_waveform/runtime/prepare.py
+tensor_dslab/readout/pure_waveform/runtime/produce.py
+tensor_dslab/readout/pure_waveform/runtime/validate.py
+tensor_dslab/readout/runtime/__init__.py
+tensor_dslab/readout/runtime/keys.py
+tensor_dslab/readout/runtime/prepare.py
+tensor_dslab/readout/runtime/requirements.py
+tensor_dslab/readout/runtime/sampling.py
+tensor_dslab/readout/simulation.py
+```
+
+Tests and typing fixtures:
+
+```text
+tests/readout_fixtures.py
+tests/test_charge_correlated_avalanches.py
+tests/test_charge_count_orchestration.py
+tests/test_charge_delay_preparation.py
+tests/test_charge_product.py
+tests/test_charge_timing_jitter.py
+tests/test_deterministic_waveform_products.py
+tests/test_noise_waveform_product.py
+tests/test_package_contracts.py
+tests/test_pint_physical_configuration.py
+tests/test_readout_axes_and_sampling.py
+tests/test_readout_collection.py
+tests/test_readout_configs.py
+tests/test_readout_product_types.py
+tests/test_readout_simulation.py
+tests/test_rng_ownership_migration.py
+tests/test_runtime_action_ownership.py
+tests/test_tensorcore_0_15_adoption.py
+tests/test_tensorcore_0_16_modernization.py
+tests/typing/maintenance_2_rng_and_product_module_ownership_migration.py
+tests/typing/maintenance_4_runtime_action_ownership.py
+tests/typing/maintenance_6_pint_physical_configuration_boundary.py
+tests/typing/stage_3_semantic_leaf_contracts.py
+tests/typing/stage_4_deterministic_waveform_products.py
+tests/typing/stage_7_public_readout_orchestration.py
+```
+
+`tests/test_tensorcore_0_15_adoption.py` must be cleanly replaced by
+`tests/test_tensorcore_0_16_modernization.py`; they may not coexist in the
+candidate. `tests/__init__.py` is protected.
+
+Synchronized current records:
+
+```text
+AGENTS.md
+CONTRIBUTING.md
+README.md
+docs/architecture/readout.md
+docs/architecture/rebuild.md
+docs/architecture/tensors.md
+docs/decisions.md
+docs/design.md
+docs/implementation/index.md
+docs/implementation/maintenance_8_python314_tensorcore_0_16_modernization.md
+docs/overview.md
+docs/validation.md
+```
+
+The maximum candidate scope is therefore `98` logical paths: `2` metadata,
+`59` production, `25` test/typing, and `12` current-document paths. A candidate
+need not touch an allowlisted test or current record when no truthful change
+is required. It must add truthful module docstrings to the exact `58` modules
+that lack them; the already-documented package root need not change unless
+another authorized mechanical edit requires it. A changed path outside this
+list is a hard stop.
+
+### Protected bytes
+
+The following are protected:
+
+- `LICENSE`, `tensor_dslab/py.typed`, `tests/__init__.py`,
+  `docs/parity.md`, and every non-allowlisted path;
+- every closed historical implementation work order;
+- `docs/implementation/proposed_ds20k_veto_profile_and_public_readout_demos.md`;
+- all package/facade export tuples and public call signatures except
+  annotation spelling mechanically required by Python 3.14;
+- all scientific constants, Pint canonical units, RNG namespace/key/address
+  values, equations, thresholds, loop order, dtype/device behavior, and
+  result relationships; and
+- all CUDA, push, release, IO, profile/demo, TensorML, TensorG4DS, artifact,
+  cache, serialization, and performance surfaces.
+
+Mechanical edits must not be used to reformat unrelated code. If a required
+change falls outside the exact allowlist or contradicts a protected byte,
+Implementation stops and returns the exact conflict to Design.
 
 ## Required Evidence
 
-The fixed work order should require, at minimum:
+The candidate must provide all of the following:
 
 ### Dependency and environment
 
@@ -478,7 +649,8 @@ The fixed work order should require, at minimum:
 - exact `21/7/3/7/15/3/4/1` dependency export tuples and import-isolation
   checks;
 - proof that all `13` former requirement re-exports are absent from the
-  TensorCore root, the `11` retained requirements are available only from
+  TensorCore root, the `10` TensorDSLab-consumed requirements are available
+  only from
   their accepted domain modules, and the two sign-specific free requirements
   are absent completely;
 - proof that `require_index()` is present in
@@ -513,6 +685,8 @@ The fixed work order should require, at minimum:
 
 - every production module has an intentional module docstring;
 - every supported exported class/function has its own nonempty docstring;
+- the exact docstring census is `59` production modules, `32` supported
+  public classes, and `3` supported public functions;
 - class checks use `__dict__.get("__doc__")`;
 - all Markdown fences parse and executable examples run;
 - all relative links resolve;
@@ -522,9 +696,71 @@ The fixed work order should require, at minimum:
 - final branch, topology, scope, protected bytes, and worktree cleanliness
   pass.
 
-The final work order must freeze exact test totals only after the exact
-dependency and implementation bytes exist. This provisional record does not
-invent future totals.
+Implementation records the first exact candidate totals; Validation and Review
+must independently reproduce them. Totals are evidence, not permission to
+accept missing tests, extra skips, or silently narrowed discovery.
+
+## Normalized Commands
+
+Each role uses fresh exact TensorCore source and canonical-ZIP forms and a
+Python `3.14.6` environment containing the exact dependency versions above.
+Paths are role-private evidence inputs and must not enter committed records.
+The normalized commands are:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=<TensorDSLab>:<TensorCore-form> \
+  <python-3.14.6> -B -m unittest discover -s tests -v
+
+<pyright-1.1.411> --pythonversion 3.14 --pythonpath <python-3.14.6>
+
+<python-3.14.6> -B -m build --wheel --sdist
+```
+
+The focused suite is the exact union of the modernized TensorCore dependency,
+package-contract, axes/sampling, Pint/config, RNG ownership, count
+orchestration, runtime-action ownership, readout simulation, and typing
+contract tests named by the candidate. The full discovery command above is
+mandatory in both dependency forms before and after the candidate commit.
+Pyright runs against both forms from fresh role-private configurations whose
+only dependency-path difference is the exact TensorCore source versus archive
+root.
+
+The artifact gate installs the fresh TensorDSLab wheel into an isolated
+Python `3.14.6` environment with no project root on `sys.path`, verifies exact
+metadata pins and `35/5/30` TensorDSLab facade identities, checks downstream
+import isolation, runs the focused suite, and compares extracted wheel/sdist
+package bytes with source. Editable installs are not evidence.
+
+## Role Route And Candidate Budget
+
+The persistent TensorDSLab roles are:
+
+```text
+Design -> Implementation -> Validation -> Review
+```
+
+Implementation produces one immutable direct-child candidate of the fixed
+Design authority and dispatches it to persistent Validation. Validation
+independently reconstructs all dependency forms and may return a bounded
+finding packet to Implementation. The ordinary budget is:
+
+```text
+Implementation -> Validation candidate submissions: 3
+Validation -> Implementation returns:              3
+```
+
+Validation dispatches an unchanged cleared candidate to persistent Review.
+Review independently repeats the required functional, typing, artifact,
+scope, documentation, privacy, and hygiene evidence. Review alone may
+fast-forward a cleared candidate to the governed local `main`, using
+`git merge --ff-only`. Review may not push.
+
+An exhausted candidate route, Design-owned documentation contradiction,
+dependency discrepancy, environment mismatch, unavailable exact Python/Torch
+input, unexpected skip, scientific difference, or need for cluster evidence
+returns to Design. No supplemental candidate or allocation is implicit.
+Design owns a later evidence-only lifecycle closeout over the exact twelve
+current records only after Review's unchanged fast-forward.
 
 ## CUDA And First-Push Sequence
 
@@ -574,22 +810,16 @@ The provisional DS20k Veto profile and demos remain a separate later stage
 under
 [Provisional DS20k Veto Profile And Public Readout Demos](proposed_ds20k_veto_profile_and_public_readout_demos.md).
 
-## Promotion Checklist
+## Dispatch Gate
 
-Before dispatch, Design must replace this provisional status with a
-self-consistent fixed work order that:
+The Design authority is the exact commit that introduces this fixed work-order
+state. Its hash and tree are carried in the immutable dispatch handoff because
+a Git commit cannot truthfully contain its own hash. Implementation must prove
+that exact authority as its direct parent before editing.
 
-1. names the exact published TensorCore `0.16.0` commit and artifacts;
-2. names the exact TensorDSLab authority commit and tree;
-3. freezes the exact changed-path allowlist and protected bytes;
-4. freezes the exact source/archive/wheel and environment commands;
-5. freezes the exact public/module docstring census;
-6. freezes the exact typing fixtures and expected diagnostics;
-7. freezes the Implementation/Validation/Review loop and candidate budget;
-8. uses merge-safe lifecycle wording;
-9. keeps CUDA and push authority separate; and
-10. obtains explicit user dispatch.
-
-If the published TensorCore handoff contradicts any dependency, import,
-typing, docstring, runtime, scientific, or evidence assumption here, stop and
-return the conflict to TensorDSLab and TensorCore Design before dispatch.
+The work order is ready for user review but remains undispatched. Explicit user
+authorization is still required. Dispatch must name the exact authority
+commit/tree, confirm all execution roles are Active, and state that CUDA and
+push remain unauthorized. If any later TensorCore or TensorDSLab byte
+contradicts this contract, stop and return the conflict to both package Design
+authorities.

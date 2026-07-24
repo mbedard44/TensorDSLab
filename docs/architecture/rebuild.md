@@ -138,6 +138,14 @@ the former requirements path is superseded by this paragraph. Every role
 stream, raw position value/order, word schedule, other scientific limit,
 product action, and facade remains unchanged.
 
+Maintenance 8 is **Design-complete / User dispatch pending** under its exact
+fixed work order. It adopts published TensorCore `0.16.0` containing commit
+`e05324699892a8bcea024375720bfae1ed9569cc` and Python `3.14.6` /
+PyTorch `2.13.0` through dependency-import, typing-syntax, metadata, test, and
+docstring changes only. It does not revise any accepted equation, bound,
+sampling law, Pint rule, RNG address, product relationship, or parity
+classification in this long-form architecture.
+
 TensorDSLab Design historically selected and implemented the following
 Maintenance 2 RNG and module-ownership foundation:
 one caller-constructed TensorCore `CounterRng` per simulation invocation,

@@ -490,6 +490,25 @@ artifact identities. Any integrated-CUDA authority remains separate before a
 TensorDSLab push and is functional correctness evidence, not Stage 8
 performance evidence.
 
+## Maintenance 8 Python 3.14 And TensorCore 0.16 Gate
+
+The
+[Maintenance 8 work order](implementation/maintenance_8_python314_tensorcore_0_16_modernization.md)
+is **Design-complete / User dispatch pending**. It binds exact published
+TensorCore `0.16.0` containing commit
+`e05324699892a8bcea024375720bfae1ed9569cc`, CPython `3.14.6`,
+PyTorch `2.13.0`, NumPy `2.5.1`, Pint `0.25.3`, Hatchling `1.31.0`, and
+Pyright `1.1.411`.
+
+The gate requires exact domain-owned TensorCore imports and
+`21/7/3/7/15/3/4/1` dependency exports, all `59` production-module
+docstrings, own docstrings for supported public symbols, bounded Python 3.14
+syntax and typing changes, source/archive/artifact equality, complete
+functional and static evidence, exact protected-byte and scope checks, and
+zero new CUDA claim. Scientific equations, Pint normalization, fixed RNG
+addresses, product actions, public facades, integrated CUDA, and push remain
+protected or separately authorized.
+
 ## Governance Adoption Checks
 
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`.

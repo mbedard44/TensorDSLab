@@ -663,24 +663,26 @@ Review-cleared and fast-forwarded unchanged. The correction reopened no
 implementation, dependency, science, RNG address, test, or public API byte and
 authorized no cluster work or push.
 
-## Maintenance 8 Provisional Design
+## Maintenance 8 Design Authority
 
 ### [Maintenance 8 Python 3.14 And TensorCore 0.16 Modernization](maintenance_8_python314_tensorcore_0_16_modernization.md)
 
-Status: **Provisional Design / Undispatched / TensorCore 0.16 publication
-pending**.
+Status: **Design-complete / User dispatch pending**.
 
-The record preserves the accepted one-stage modernization after locally closed
-Maintenance 7: exact published TensorCore `0.16.0`, CPython `3.14.6`, PyTorch
-`2.13.0`, NumPy `2.5.1`, Pint `0.25.3`, Hatchling `1.31.0`, Pyright
-`1.1.411`, a semantic-only `21`-name TensorCore root, exact domain-owned
-`7/3/7/15/3/4/1` subpackage/validation surfaces, bounded PEP 695 and
-annotation-model cleanup, descriptive non-underscored type parameters,
-intentional docstrings, and the deferred exact integrated CUDA/first-push
-sequence. The seven retained TensorDSLab requirements migrate from the
-TensorCore root to `tensor_core.tensor.validation`; additive
-`require_index()` is dependency evidence rather than a new TensorDSLab
-production dependency.
+The fixed work order binds locally closed Maintenance 7 and exact published
+TensorCore `0.16.0` containing commit
+`e05324699892a8bcea024375720bfae1ed9569cc`, CPython `3.14.6`, PyTorch
+`2.13.0`, NumPy `2.5.1`, Pint `0.25.3`, Hatchling `1.31.0`, and Pyright
+`1.1.411`. It freezes a semantic-only `21`-name TensorCore root, exact
+domain-owned `7/3/7/15/3/4/1` subpackage/validation surfaces, bounded PEP 695
+and annotation-model cleanup, descriptive non-underscored type parameters,
+intentional docstrings, a `98`-logical-path maximum candidate allowlist, the
+three-candidate role loop, and the deferred exact integrated CUDA/first-push
+sequence. The seven former root requirements migrate to
+`tensor_core.tensor.validation`; `require_shape_span`,
+`require_tensor_allocation`, and `require_count_tensor` move to their exact
+published domains. Additive `require_index()` is dependency evidence rather
+than a new TensorDSLab production dependency.
 
 The naming convention distinguishes scoped type parameters from private
 module-level aliases: `DataT` is a `TableColumn` payload parameter, `ColumnT`
@@ -688,11 +690,9 @@ is a concrete semantic column subtype, `FieldT` narrows a field factory, and
 the private quantity-table alias remains `_QuantityField`. The record changes
 no scientific, Pint, RNG, product, Config, Runtime, or public API contract.
 
-Design must bind the exact published TensorCore commit, exact baseline,
-allowlist, artifact identities, evidence commands, lifecycle wording, and loop
-budget before obtaining separate user dispatch. The provisional record itself
-authorizes no implementation, dependency update, cluster work, compatibility
-claim, or push.
+The committed Design authority remains undispatched until the user explicitly
+authorizes the persistent Implementation/Validation/Review route. It
+authorizes no cluster work, push, release, or compatibility claim.
 
 ## Provisional Post-Maintenance-8 Planning
 

@@ -776,6 +776,13 @@ synchronize CUDA as an accepted correctness-first cost. Outside those checks,
 same-stream consumers use normal PyTorch ordering and cross-stream consumers
 establish an explicit dependency.
 
+Maintenance 8 is **Design-complete / User dispatch pending**. Its exact
+published TensorCore `0.16.0` and Python `3.14` modernization work order is
+mechanical at this boundary: product preparation, production, validation,
+scientific equations, fixed RNG addressing, execution order, and completed
+field relationships remain unchanged. Integrated CUDA evidence is deferred
+until the exact locally closed TensorCore/TensorDSLab pairing exists.
+
 ## Validation
 
 Validation separates universal structure, intrinsic semantics, trust-boundary

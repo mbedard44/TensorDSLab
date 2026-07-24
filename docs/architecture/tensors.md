@@ -55,6 +55,16 @@ through exact Review-cleared target
 Merged / Closed under Maintenance 7 through exact target
 `205182f0c7a4359cece79211ad22b47b522c34e3`.
 
+Maintenance 8 is **Design-complete / User dispatch pending**. Its fixed
+dependency target is exact published TensorCore `0.16.0` containing commit
+`e05324699892a8bcea024375720bfae1ed9569cc`. The dependency removes the
+central validation package and root requirement re-exports in favor of exact
+domain-owned `scalar.validation`, `tensor.validation`, and
+`random.validation` surfaces while preserving the semantic roots and behavior
+used here. TensorDSLab's migration is import-, syntax-, metadata-, test-, and
+docstring-only; no axis, field, collection, scalar, table, artifact, Pint, RNG,
+or product contract changes.
+
 The previous TensorCore `0.6` ID/layout/sidecar architecture is historical and
 is intentionally not preserved through aliases.
 

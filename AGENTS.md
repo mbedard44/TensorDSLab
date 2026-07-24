@@ -307,6 +307,19 @@ push. Complete local Review evidence passed with `13` conditional CUDA skips,
 so Maintenance 7 itself makes no fresh accelerator claim. Local `main` remains
 unpushed.
 
+Maintenance 8 Python 3.14 And TensorCore 0.16 Modernization is
+**Design-complete / User dispatch pending** under
+`docs/implementation/maintenance_8_python314_tensorcore_0_16_modernization.md`.
+Its fixed work order selects exact published TensorCore `0.16.0` containing
+commit `e05324699892a8bcea024375720bfae1ed9569cc`, CPython `3.14.6`,
+PyTorch `2.13.0`, NumPy `2.5.1`, Pint `0.25.3`, Hatchling `1.31.0`, and
+Pyright `1.1.411`. It is limited to the exact dependency/import migration,
+mechanical Python 3.14 typing syntax, intentional docstrings, tests, metadata,
+and synchronized records. It changes no scientific, Pint, RNG, product,
+Runtime, producer, validator, or public TensorDSLab contract. Its local package
+loop makes no CUDA claim; the exact integrated CUDA gate and first push remain
+separate later authorities.
+
 The first Stage 8 real-CUDA attempt correctly stopped before any accepted
 measurement when its protected-suite gate over-applied those macOS literals to
 the frozen Della Linux/x86_64 stack. Exact Stage 8 authority

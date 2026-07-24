@@ -139,6 +139,15 @@ exact. Public field names, Pint ownership, fixed keys and streams, and
 same-stack stochastic results remain unchanged. Complete local Review evidence
 passed with `13` conditional CUDA skips, so no accelerator claim follows.
 
+[Maintenance 8](docs/implementation/maintenance_8_python314_tensorcore_0_16_modernization.md)
+is **Design-complete / User dispatch pending**. Its exact fixed target is the
+published TensorCore `0.16.0` containing commit
+`e05324699892a8bcea024375720bfae1ed9569cc` plus the Python `3.14.6`,
+PyTorch `2.13.0`, domain-validation-import, typing-syntax, and intentional
+docstring modernization. It preserves the complete TensorDSLab scientific,
+Pint, RNG, product, and public API behavior. No implementation, CUDA, or push
+authority follows until separately issued.
+
 The historical [TensorCore consumer proposal](docs/implementation/proposed_tensorcore_counter_rng_and_distributions.md)
 is now fulfilled by published TensorCore `0.9.0` commit
 `4708bf2ca063a1bcd37a30a342733b9e3dbe9f59`. The

@@ -71,6 +71,17 @@ preserved generic mechanics only; it adds no TensorDSLab table, artifact/IO,
 or Pint surface. Maintenance 6 retains the exact pin and consumes only
 `Scalar.require(...)` at TensorDSLab's package-owned quantity boundary.
 
+### Maintenance 8 Modernizes Without Changing Domain Semantics
+
+Maintenance 8 is **Design-complete / User dispatch pending**. TensorDSLab
+selects exact published TensorCore `0.16.0` containing commit
+`e05324699892a8bcea024375720bfae1ed9569cc`, CPython `3.14.6`, and
+PyTorch `2.13.0`. The accepted change is one bounded dependency/import,
+typing-syntax, metadata, test, and docstring modernization. TensorDSLab keeps
+its exact public facades, Pint ownership, scientific preparation, production,
+validation, fixed RNG policy, and product relationships. Fresh integrated
+CUDA evidence and the first push require separate later authority.
+
 ### Exact Types Replace Loose Semantic Namespaces
 
 The rebuild has no runtime axis IDs, field IDs, layout records, semantic name
