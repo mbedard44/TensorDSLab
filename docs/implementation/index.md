@@ -663,6 +663,25 @@ Review-cleared and fast-forwarded unchanged. The correction reopened no
 implementation, dependency, science, RNG address, test, or public API byte and
 authorized no cluster work or push.
 
+## Provisional Post-Maintenance-8 Planning
+
+### [Provisional DS20k Veto Profile And Public Readout Demos](proposed_ds20k_veto_profile_and_public_readout_demos.md)
+
+Status: **Provisional Design notes / Deferred until Maintenance 8 closes**.
+This non-operative record preserves the accepted direction for a later
+package-owned `ds20k_veto()` demonstration profile plus
+`demos/readout.py` and `demos/readout.ipynb`. It records the provisional Veto
+fixture values, illustrative dark-count/noise/ADC choices, preparation-owned
+negative polarity, inline random `Photoelectrons` construction, manual and
+profile Config paths, public-only execution, notebook hygiene, and explicit
+non-goals.
+
+The record does not expand Maintenance 8, authorize implementation, freeze a
+post-Maintenance-8 baseline, promote a production calibration, create an IO or
+TensorML adapter, issue cluster authority, or authorize a push. Design must
+reconcile it against the exact closed Maintenance 8 bytes and obtain explicit
+user dispatch before it becomes a production work order.
+
 ## Expected Stage Discipline
 
 Each stage should stay scoped to its work order. If implementation reveals a
