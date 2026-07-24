@@ -1,6 +1,6 @@
 # Maintenance 9 DS20k Veto Profile And Public Readout Demos
 
-Status: **Design-complete / User dispatch pending**.
+Status: **Design-complete / User-authorized / Package loop active**.
 
 This is the fixed TensorDSLab Maintenance 9 production work order. It binds
 the exact locally closed Maintenance 8 baseline, exact published TensorCore
@@ -921,13 +921,15 @@ or broad-backend claim.
 
 ## Dispatch Gate
 
-This Design branch is documentation-only. The eventual exact Design authority
-is the clean commit that contains this fixed work order and synchronized
-implementation index, followed only by a lifecycle-only direct child if the
-user authorizes dispatch. The dispatch packet must name that exact
-commit/tree, verify all execution roles are Active, and state explicitly that
-cluster work and push remain unauthorized.
+The exact Design authority is the lifecycle-only direct-child commit that
+records user authorization while preserving the fixed work-order contract.
+Its hash and tree are carried in the immutable dispatch handoff because a Git
+commit cannot truthfully contain its own hash. Implementation must prove that
+exact authority as its direct parent before editing.
 
-Until the user authorizes that exact route, this work order remains
-Design-complete and no production, test, metadata, demo, notebook, dependency,
-cluster, merge, or push action may begin.
+The user authorized the persistent Implementation/Validation/Review route.
+The package loop is active until an unchanged Review fast-forward and Design
+closeout; this branch/main-neutral status remains true throughout intermediate
+candidate states. The dispatch packet must name the exact authority
+commit/tree, confirm all execution roles are Active, and state that cluster
+work and push remain unauthorized.

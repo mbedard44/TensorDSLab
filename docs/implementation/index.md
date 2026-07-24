@@ -710,7 +710,7 @@ compatibility claim follows.
 
 ### [Maintenance 9 DS20k Veto Profile And Public Readout Demos](maintenance_9_ds20k_veto_profile_and_public_readout_demos.md)
 
-Status: **Design-complete / User dispatch pending**.
+Status: **Design-complete / User-authorized / Package loop active**.
 
 The fixed work order is based on exact closed Maintenance 8 commit
 `f213c387c5de0b9f508a233ab43336f5dc5439ea`, tree
@@ -737,8 +737,10 @@ do not become TensorDSLab runtime dependencies. The work order freezes a
 source/archive, typing, wheel/sdist, script/notebook, plotting, privacy, and
 hygiene evidence, and the later integrated-CUDA-before-first-push sequence.
 It makes no calibration, TensorG4DS, TensorML, IO, accelerator, release,
-deployment, or compatibility claim. No implementation begins until the user
-dispatches the exact Design authority.
+deployment, or compatibility claim. The user authorized the exact persistent
+Implementation/Validation/Review route; the package loop remains active until
+an unchanged Review fast-forward and Design closeout. Cluster work and push
+remain unauthorized.
 
 ## Expected Stage Discipline
 
