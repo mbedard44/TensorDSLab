@@ -751,9 +751,20 @@ environment. The script does not activate or modify the caller's shell,
 replace an existing environment, register a kernel, or weaken the wheel/sdist
 evidence. The demo is exact eager CPU and requires no GPU, CUDA runtime, or
 accelerator driver.
-Implementation paused uncommitted at exact corrected authority `37cbb53...`
-with eight preserved authorized paths and unchanged `I->V 0/3`, so this second
-disjoint Design correction likewise consumes no loop slot.
+The notebook begins with Markdown instructing the user to run the setup script
+and activate `tensor_dslab` before selecting its kernel. No notebook code cell
+creates, activates, installs into, or changes an environment; the first Python
+cell only reports the active interpreter/tool versions and proves the default
+CPU execution boundary.
+Implementation's initial environment-scope pause was uncommitted at exact
+corrected authority `37cbb53...` with eight preserved authorized paths and
+unchanged `I->V 0/3`; that disjoint Design correction consumed no loop slot.
+The later notebook-guidance clarification paused Implementation again,
+uncommitted at exact authority `a602eae...`, with a clean index and nine
+preserved authorized paths after the already-running real environment command
+completed successfully. The final disjoint documentation correction requires
+opening setup instructions in Markdown and an environment-read-only first
+Python cell; it likewise consumes no loop slot.
 It makes no calibration, TensorG4DS, TensorML, IO, accelerator, release,
 deployment, or compatibility claim. The user authorized the exact persistent
 Implementation/Validation/Review route; the package loop remains active until

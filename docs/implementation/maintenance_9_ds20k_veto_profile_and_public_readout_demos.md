@@ -707,18 +707,28 @@ CPU-only environment with `torch.cuda.is_available() is False`.
 
 `demos/readout.ipynb` presents:
 
-1. purpose and explicit provisional-profile status;
-2. supported imports;
-3. inline random `Photoelectrons` construction;
-4. source and axis inspection;
-5. manual Config composition;
-6. `ds20k_veto()` composition;
-7. full readout execution;
-8. product and collection inspection;
-9. the required four-panel waveform plot and exact additive assertion;
-10. selected-product retention;
-11. an optional `dataclasses.replace(...)` experiment; and
-12. future FIL/TensorG4DS and TensorML replacement boundaries.
+1. an opening Markdown setup section telling the user to run
+   `./demos/create_environment.sh`, then `conda activate tensor_dslab`, before
+   launching or selecting the notebook kernel;
+2. purpose and explicit provisional-profile status;
+3. a first executable Python cell that reports the active Python executable,
+   Python and Torch versions, and proves an ordinary default tensor is on CPU;
+4. supported imports;
+5. inline random `Photoelectrons` construction;
+6. source and axis inspection;
+7. manual Config composition;
+8. `ds20k_veto()` composition;
+9. full readout execution;
+10. product and collection inspection;
+11. the required four-panel waveform plot and exact additive assertion;
+12. selected-product retention;
+13. an optional `dataclasses.replace(...)` experiment; and
+14. future FIL/TensorG4DS and TensorML replacement boundaries.
+
+Environment creation and activation are deliberately user actions before
+notebook execution. No notebook code cell invokes Conda, creates or mutates an
+environment, activates a shell, installs a package, changes interpreter, or
+launches another notebook process.
 
 Any nonexistent FIL or TensorML adapter appears only in Markdown or commented
 pseudocode. The notebook imports neither package and makes no compatibility
@@ -808,6 +818,54 @@ clean-index, disjointness, unchanged-dirty-set, and post-fast-forward gates
 pass. This amendment consumes no candidate or return slot and changes no
 profile, notebook, plotting, dependency, production, scientific, API, RNG,
 Pint, or CUDA contract.
+
+The user then clarified the notebook teaching boundary while Candidate 1
+remained uncommitted: the opening environment instructions are Markdown, the
+user creates and activates `tensor_dslab` before notebook execution, and the
+first executable cell only verifies the already-active interpreter and CPU
+boundary. This refinement changes no path allowlist, dependency, environment
+script, product, plot, science, RNG, Pint, or CUDA contract.
+
+### Design-owned notebook-guidance amendment
+
+The notebook clarification reached Implementation while the already-authorized
+real `demos/create_environment.sh` evidence command was in its pip-install
+phase after successful Conda environment creation. Implementation allowed that
+single in-flight invocation to reach a clean successful boundary rather than
+leave an indeterminate partial environment, then started no further command.
+
+At the pause, Implementation remained uncommitted at exact authority
+`a602eae0e0979c3e0c0ee1034d5c3287ef18572a`, tree
+`eb6bf271b1fc4dda90976c83d478f33112a46851`, with a clean index and exactly
+nine authorized dirty paths:
+
+```text
+pyproject.toml
+tensor_dslab/readout/profiles.py
+demos/create_environment.sh
+demos/readout.py
+demos/readout.ipynb
+tests/test_package_contracts.py
+tests/test_readout_profiles_and_demos.py
+tests/test_tensorcore_0_16_modernization.py
+tests/typing/maintenance_9_ds20k_veto_profile_and_public_readout_demos.py
+```
+
+Candidate accounting remained `I->V 0/3` and `V->I 0/3`. The amended focused
+source suite was `26/26/0`; Bash syntax and mode were clear; and one real
+role-private environment had been successfully created from outside the
+repository using Conda `26.1.0`, exact Python `3.14.6`, a non-editable local
+`.[demos]` installation, and the accepted dependency/tool versions. This is
+implementation progress, not candidate clearance.
+
+This final documentation-only clarification is disjoint from all nine
+preserved paths. Implementation may fast-forward and resume only after
+exact-parent, clean-index, disjointness, unchanged-dirty-set, and
+post-fast-forward gates pass. It may then update only the already-allowlisted
+notebook/test/document consequences, finish the interrupted evidence plan,
+clean up its role-private environment after recording its inventory, and
+freeze Candidate 1 through the ordinary route. This amendment consumes no
+candidate or return slot.
 
 ### Exact changed-path allowlist
 
@@ -929,6 +987,10 @@ The candidate must prove:
   repository path, or environment removal in the committed script;
 - successful `nbclient` execution of a temporary notebook copy under the exact
   `demos` extra;
+- exact opening Markdown setup instructions, no executable notebook
+  environment-management command, and a first Python cell that reports the
+  active interpreter/tool versions and proves the ordinary default tensor is
+  on CPU without inspecting or selecting CUDA;
 - public imports only;
 - expected product membership, shapes, dtypes, axes, and device;
 - exact unsaturated tensor equality between `AnalogWaveform` and the
