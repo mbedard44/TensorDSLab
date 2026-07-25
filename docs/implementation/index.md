@@ -795,17 +795,17 @@ deployment, or compatibility claim. The `13` TensorDSLab and two TensorCore
 CUDA skips remain explicit. Cluster work and push remain unauthorized until
 the separate integrated-CUDA authority completes.
 
-## Maintenance 10 Implementation Candidate
+## Maintenance 10 Merged / Closed
 
 ### [Maintenance 10 IV-Like Digitizer And Demo Source](maintenance_10_iv_like_digitizer_and_demo_source.md)
 
-Status: **Implementation candidate prepared; fixed-commit gates govern**.
+Status: **Merged / Closed**.
 
-If the exact candidate bytes are absent from `main`, they remain under
-fixed-commit Validation and Review. If those bytes are present unchanged on
-`main`, Review's fast-forward has completed, but final Design acceptance
-remains pending unless and until this index and the work order say
-**Merged / Closed**.
+Exact Review-cleared local `main` is
+`d2cf1120d0e6b9bd1452a14d6b38931750443a3d`, tree
+`613d8c167a91f3e0e0c715c2c23918886ca5c37c`. It contains immutable
+Candidate 3 `96302586548a5770d722fcad09838fb9142aef0f` plus the cleared
+two-document evidence correction.
 
 Maintenance 10 starts from exact clean Maintenance 9 closeout
 `3466c2d59be359ffa537848c8abba4d1405f338f`. It changes only the provisional
@@ -832,8 +832,10 @@ Implementation prepared a candidate lineage from corrected authority
 committed immediate-replay identity proof. Immutable Candidate 2
 `31062c77852683c2b7914ff15987d5b0b182ce67` added that proof but was returned
 because its exact replay retained the absolute default-environment executable
-path. Fixed Candidate 3 is its direct child; the cumulative move-expanded
-scope remains ten allowlisted paths. The notebook now proves that
+path. Fixed Candidate 3 `96302586548a5770d722fcad09838fb9142aef0f`,
+tree `fd30cb015957392c5ebdb78fee8e06cfee8a2f57`, is its direct child; the
+cumulative move-expanded scope remains ten allowlisted paths. The notebook
+now proves that
 `sys.executable` is the active `sys.prefix/bin` interpreter and reports the
 truthful prefix-relative `bin/python`, making the frozen bytes independent of
 the environment name. Its test executes two immediate replays under one
@@ -861,11 +863,24 @@ hygiene gates passed on eager CPU. CUDA remains unavailable and unclaimed.
 Validation completed Candidate 3's ordinary matrix but returned it solely
 because these two lifecycle records had mislabeled a pre-lifecycle sdist hash
 as final Candidate 3 evidence. With the ordinary route exhausted, Design
-authorizes one exceptional evidence-only direct child changing exactly this
-index and the Maintenance 10 work order. The correction records the
-independently reproduced immutable-Candidate-3 artifact identity and makes no
-hash claim about its own necessarily changed sdist. Validation and Review must
-recheck that exact two-document correction before any fast-forward.
+authorized one exceptional evidence-only direct child changing exactly this
+index and the Maintenance 10 work order. Validation cleared exact correction
+`d2cf1120d0e6b9bd1452a14d6b38931750443a3d` unchanged. Independent Review
+reproduced the immutable Candidate 3 artifacts and complete carried-forward
+source/archive, notebook, typing, import, privacy, and hygiene evidence, then
+fast-forwarded exact `d2cf1120d0e6b9bd1452a14d6b38931750443a3d`
+unchanged to clean local `main`.
+
+Accepted Review totals are focused source/archive `29/29/0` each; full
+source/archive `229/216/13` each; TensorCore source/archive `84/82/2` each;
+Pyright zero; the negative fixture exactly `60` intended errors in both
+forms; and `39` Markdown files / `243` relative-link occurrences / zero
+missing. The `13` TensorDSLab and two TensorCore CUDA skips remain explicit
+unavailable-CUDA qualifications. This two-document Design closeout makes no
+self-hash or closeout-sdist claim and changes no executable, package,
+dependency, metadata, demo, test, API, science, RNG, parity, or governance
+byte. Review verification of the exact closeout remains the final gate before
+the authorized qualified ordinary GitHub push.
 
 ## Expected Stage Discipline
 

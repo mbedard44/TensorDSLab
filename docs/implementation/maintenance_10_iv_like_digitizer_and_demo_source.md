@@ -1,12 +1,13 @@
 # Maintenance 10 IV-Like Digitizer And Demo Source
 
-Status: Implementation candidate prepared; fixed-commit gates govern
+Status: **Merged / Closed**
 
-If the exact candidate bytes are absent from `main`, they remain under
-fixed-commit Validation and Review. If those bytes are present unchanged on
-`main`, Review's fast-forward has completed, but final Design acceptance
-remains pending unless and until this record and the implementation index say
-**Merged / Closed**.
+Exact Review-cleared local `main` is
+`d2cf1120d0e6b9bd1452a14d6b38931750443a3d`, tree
+`613d8c167a91f3e0e0c715c2c23918886ca5c37c`. It contains immutable
+Candidate 3 plus the independently cleared two-document evidence correction.
+The worktree is clean and remains unpushed pending Review of this separate
+evidence-only closeout.
 
 Stable key:
 `TensorDSLab/maintenance-10-iv-like-digitizer-and-demo-source`
@@ -323,13 +324,15 @@ Implementation prepared a candidate lineage from corrected Design authority
 missing committed immediate-replay proof. Immutable direct-child Candidate 2
 `31062c77852683c2b7914ff15987d5b0b182ce67` added that proof but was returned
 because its exact-byte comparison retained the absolute path of the default
-Conda environment. Fixed Candidate 3 is Candidate 2's direct child and changes
-only the allowlisted notebook, proof module, and two lifecycle records. The
-cumulative tracked scope remains the ten allowlisted move-expanded paths
-above: the profile, root environment script and deleted old endpoint, two
-demos, one proof module, two live public records, and two lifecycle records.
-No other production, test, metadata, dependency, architecture, governance, or
-historical-work-order byte changes.
+Conda environment. Fixed Candidate 3
+`96302586548a5770d722fcad09838fb9142aef0f`, tree
+`fd30cb015957392c5ebdb78fee8e06cfee8a2f57`, is Candidate 2's direct child
+and changes only the allowlisted notebook, proof module, and two lifecycle
+records. The cumulative tracked scope remains the ten allowlisted
+move-expanded paths above: the profile, root environment script and deleted
+old endpoint, two demos, one proof module, two live public records, and two
+lifecycle records. No other production, test, metadata, dependency,
+architecture, governance, or historical-work-order byte changes.
 
 The final stored notebook has exact code-source SHA-256
 `370aad6a4d32bad4a623c114e43951f783707ebb180d123f4344070ae8a0f543`
@@ -425,10 +428,32 @@ Candidate 3 evidence before it may fast-forward the unchanged correction to
 local `main`. This route consumes no fourth ordinary Implementation candidate
 or Validation return and authorizes no Implementation edit.
 
-On CLEAR, Review may fast-forward the exact unchanged accepted target to local
-`main`. Design may then create one evidence-only direct-child closeout limited
-to this work order and `docs/implementation/index.md`; Review must verify and
-fast-forward that exact closeout before publication.
+Validation cleared exact exceptional correction
+`d2cf1120d0e6b9bd1452a14d6b38931750443a3d`, tree
+`613d8c167a91f3e0e0c715c2c23918886ca5c37c`, unchanged. Independent Review
+reproduced the immutable Candidate 3 wheel and sdist identities, notebook
+hashes and inventory, exact TensorCore archive, focused/full source and
+archive suites, TensorCore suites, Pyright and negative typing, CPU demo,
+imports, links, privacy, and hygiene. Review found no remaining issue and
+fast-forwarded exact `d2cf1120d0e6b9bd1452a14d6b38931750443a3d`
+unchanged to clean local `main`.
+
+Accepted Review totals are focused source/archive `29/29/0` each; full
+source/archive `229` run / `216` passed / `13` unavailable-CUDA skips each;
+TensorCore source/archive `84/82/2` each; Pyright zero diagnostics; the
+negative fixture exactly `60` intended errors in both forms; and `39`
+Markdown files / `243` relative-link occurrences / zero missing targets.
+Review confirmed the stored notebook at `23` cells, `11` executed code cells,
+seven outputs, one PNG, and zero errors, timestamps, or private data. The
+`13` TensorDSLab and two TensorCore skips remain explicit unavailable-CUDA
+qualifications.
+
+This Design closeout changes only this work order and
+`docs/implementation/index.md`. It records the accepted parent evidence and
+makes no closeout-sdist or self-hash claim. No production, test, demo,
+dependency, metadata, API, science, RNG, parity, governance, or other byte
+changes. Review must verify and fast-forward this exact closeout before the
+authorized qualified development-preview push.
 
 ## Qualified Development Preview Push
 
