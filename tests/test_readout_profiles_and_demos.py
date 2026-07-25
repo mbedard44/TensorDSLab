@@ -287,10 +287,10 @@ photoelectrons = Photoelectrons(tensor=counts, axes=axes)
     ).body
 )
 _EXPECTED_NOTEBOOK_CODE_SHA256 = (
-    "456656c129e68863bd7158a11824e1cd8c44607a2f7dc969b393fb0ce6b53ac0"
+    "370aad6a4d32bad4a623c114e43951f783707ebb180d123f4344070ae8a0f543"
 )
 _EXPECTED_NOTEBOOK_SHA256 = (
-    "f2ac47c6914c579d4a5559d31eef0091904cee3f0814d9bae1be9536f00f66dd"
+    "a23819f68277e62d61e54e265b656e7bf4b6dbb4afb5f8039691e35cb9671014"
 )
 
 
@@ -1122,11 +1122,22 @@ class ReadoutProfilesAndDemosTest(unittest.TestCase):
         )
         first_code = code_cells[0].source
         for required in (
+            "from pathlib import Path",
             "import platform",
             "import sys",
             "import torch",
+            "active_executable = Path(sys.executable)",
+            "active_prefix = Path(sys.prefix)",
+            'assert active_executable.parent == active_prefix / "bin"',
+            (
+                "relative_executable = "
+                "active_executable.relative_to(active_prefix)"
+            ),
             "default_tensor = torch.empty(())",
-            'print("Python executable:", sys.executable)',
+            (
+                'print("Python executable:", '
+                "relative_executable.as_posix())"
+            ),
             'print("Python version:", platform.python_version())',
             'print("PyTorch version:", torch.__version__)',
             'assert platform.python_version() == "3.14.6"',
@@ -1134,6 +1145,11 @@ class ReadoutProfilesAndDemosTest(unittest.TestCase):
             'assert default_tensor.device.type == "cpu"',
         ):
             self.assertIn(required, first_code)
+        first_output = code_cells[0].outputs[0]
+        self.assertEqual(first_output.output_type, "stream")
+        self.assertTrue(
+            first_output.text.startswith("Python executable: bin/python\n")
+        )
         executable_source = "\n".join(cell.source for cell in code_cells)
         for forbidden in (
             "conda ",

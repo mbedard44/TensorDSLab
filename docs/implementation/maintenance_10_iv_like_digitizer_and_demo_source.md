@@ -320,22 +320,28 @@ dark-count law owns additional seeded events.
 Implementation prepared a candidate lineage from corrected Design authority
 `faed4546e6e946f359e8bada6ede9ba5724eebae`. Immutable Candidate 1
 `be5ed3a0cd119a1f29962064f118adf58d76abd9` was returned by Validation for a
-missing committed immediate-replay proof. Fixed Candidate 2 is its direct
-child and changes only that allowlisted proof module plus the two lifecycle
-records needed to keep candidate evidence truthful. The cumulative tracked
-scope remains the ten allowlisted move-expanded paths above: the profile, root
-environment script and deleted old endpoint, two demos, one proof module, two
-live public records, and two lifecycle records. No other production, test,
-metadata, dependency, architecture, governance, or historical-work-order byte
-changes.
+missing committed immediate-replay proof. Immutable direct-child Candidate 2
+`31062c77852683c2b7914ff15987d5b0b182ce67` added that proof but was returned
+because its exact-byte comparison retained the absolute path of the default
+Conda environment. Fixed Candidate 3 is Candidate 2's direct child and changes
+only the allowlisted notebook, proof module, and two lifecycle records. The
+cumulative tracked scope remains the ten allowlisted move-expanded paths
+above: the profile, root environment script and deleted old endpoint, two
+demos, one proof module, two live public records, and two lifecycle records.
+No other production, test, metadata, dependency, architecture, governance, or
+historical-work-order byte changes.
 
 The final stored notebook has exact code-source SHA-256
-`456656c129e68863bd7158a11824e1cd8c44607a2f7dc969b393fb0ce6b53ac0`
+`370aad6a4d32bad4a623c114e43951f783707ebb180d123f4344070ae8a0f543`
 and whole-notebook SHA-256
-`f2ac47c6914c579d4a5559d31eef0091904cee3f0814d9bae1be9536f00f66dd`.
-It was executed in the exact `tensor_dslab` Conda environment, replayed
-byte-identically after the Matplotlib cache was warm, and visually inspected.
-Candidate 2's committed test now warms one controlled Matplotlib cache,
+`a23819f68277e62d61e54e265b656e7bf4b6dbb4afb5f8039691e35cb9671014`.
+Its first cell derives the active executable from `sys.executable`, proves that
+it is the current `sys.prefix/bin` interpreter, and reports the truthful
+prefix-relative path `bin/python`; it therefore proves the active environment
+without embedding an environment-name-specific private path. It was executed
+in the exact default `tensor_dslab` Conda environment, replayed byte-identically
+after the Matplotlib cache was warm, and visually inspected. Candidate 3's
+committed test warms one controlled Matplotlib cache,
 executes two immediate notebook replays, removes only permitted transient
 execution timestamp metadata, and requires deterministic serialized identity
 between both replays and the frozen committed notebook. A process-local
@@ -363,13 +369,15 @@ Hatchling `1.31.0`, and Pyright `1.1.411` includes:
 - Pyright at zero diagnostics and the frozen dependency negative fixture at
   exactly `60` intended errors with no warnings or informations in both
   dependency forms;
-- one fresh real Conda `26.1.0` environment created from outside the
-  repository by `create_environment.sh`, exact focused `14/14/0` evidence,
-  CPU script execution, and clean removal after recording the environment;
+- one fresh alternately named real Conda `26.1.0` environment created from
+  outside the repository by `create_environment.sh`, exact focused `14/14/0`
+  evidence including both replay kernels, prefix-relative `bin/python`
+  executable proof, CPU script execution, and clean removal after recording
+  the environment;
 - fresh wheel SHA-256
   `23a8f8d2362c840e3cf53986fbf4fdcd0b73f19336bbe3afaca509a574279d82`
   and sdist SHA-256
-  `04c015a637c035847cd2a8e5efcb57c77d535704a442afc0de7292c1015b8ceb`,
+  `9c2fc9d4e46eb50495b4ee2b4f87b03affab445f2c89d79a745f3655dcc2337f`,
   with source-identical package bytes;
 - isolated core-wheel proof that Matplotlib/Jupyter are absent, and isolated
   demos-wheel script plus notebook execution from outside the repository

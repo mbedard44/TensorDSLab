@@ -829,22 +829,30 @@ cleared and fast-forwarded.
 Implementation prepared a candidate lineage from corrected authority
 `faed4546e6e946f359e8bada6ede9ba5724eebae`. Immutable Candidate 1
 `be5ed3a0cd119a1f29962064f118adf58d76abd9` was returned for one missing
-committed immediate-replay identity proof. Fixed Candidate 2 is its direct
-child and adds that proof while the cumulative move-expanded scope remains ten
-allowlisted paths. Its test executes two immediate replays under one controlled
-warm Matplotlib cache and requires deterministic serialized identity with the
-committed notebook. Focused source/archive evidence passed at `29/29/0`, full
-source/archive evidence passed at `229` run / `216` passed / `13` conditional
-CUDA skips, TensorCore source/archive passed at `84/82/2`, and Pyright was
-zero-diagnostic with exactly `60` intended negative-fixture errors in each
-dependency form. The exact notebook code/whole SHA-256 values are
-`456656c129e68863bd7158a11824e1cd8c44607a2f7dc969b393fb0ce6b53ac0`
+committed immediate-replay identity proof. Immutable Candidate 2
+`31062c77852683c2b7914ff15987d5b0b182ce67` added that proof but was returned
+because its exact replay retained the absolute default-environment executable
+path. Fixed Candidate 3 is its direct child; the cumulative move-expanded
+scope remains ten allowlisted paths. The notebook now proves that
+`sys.executable` is the active `sys.prefix/bin` interpreter and reports the
+truthful prefix-relative `bin/python`, making the frozen bytes independent of
+the environment name. Its test executes two immediate replays under one
+controlled warm Matplotlib cache and requires deterministic serialized
+identity with the committed notebook. A fresh alternately named real
+environment passed the entire focused module at `14/14/0`, including both
+replay kernels, and was then removed. Focused source/archive evidence passed
+at `29/29/0`, full source/archive evidence passed at `229` run / `216` passed /
+`13` conditional CUDA skips, TensorCore source/archive passed at `84/82/2`,
+and Pyright was zero-diagnostic with exactly `60` intended negative-fixture
+errors in each dependency form. The exact notebook code/whole SHA-256 values
+are
+`370aad6a4d32bad4a623c114e43951f783707ebb180d123f4344070ae8a0f543`
 and
-`f2ac47c6914c579d4a5559d31eef0091904cee3f0814d9bae1be9536f00f66dd`.
+`a23819f68277e62d61e54e265b656e7bf4b6dbb4afb5f8039691e35cb9671014`.
 The fresh wheel/sdist SHA-256 values are
 `23a8f8d2362c840e3cf53986fbf4fdcd0b73f19336bbe3afaca509a574279d82`
 and
-`04c015a637c035847cd2a8e5efcb57c77d535704a442afc0de7292c1015b8ceb`.
+`9c2fc9d4e46eb50495b4ee2b4f87b03affab445f2c89d79a745f3655dcc2337f`.
 Real Conda, isolated core/demo artifact, script, notebook, privacy, scope, and
 hygiene gates passed on eager CPU. CUDA remains unavailable and unclaimed.
 
