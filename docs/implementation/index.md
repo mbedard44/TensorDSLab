@@ -852,9 +852,20 @@ and
 The fresh wheel/sdist SHA-256 values are
 `23a8f8d2362c840e3cf53986fbf4fdcd0b73f19336bbe3afaca509a574279d82`
 and
-`9c2fc9d4e46eb50495b4ee2b4f87b03affab445f2c89d79a745f3655dcc2337f`.
+`fd6d54a5da60a292335b555b587e4329d8874cb5d907dc695f29df18ad46821d`;
+these identify immutable Candidate 3, whose independently reproduced final
+sdist is `858317` bytes.
 Real Conda, isolated core/demo artifact, script, notebook, privacy, scope, and
 hygiene gates passed on eager CPU. CUDA remains unavailable and unclaimed.
+
+Validation completed Candidate 3's ordinary matrix but returned it solely
+because these two lifecycle records had mislabeled a pre-lifecycle sdist hash
+as final Candidate 3 evidence. With the ordinary route exhausted, Design
+authorizes one exceptional evidence-only direct child changing exactly this
+index and the Maintenance 10 work order. The correction records the
+independently reproduced immutable-Candidate-3 artifact identity and makes no
+hash claim about its own necessarily changed sdist. Validation and Review must
+recheck that exact two-document correction before any fast-forward.
 
 ## Expected Stage Discipline
 

@@ -374,10 +374,10 @@ Hatchling `1.31.0`, and Pyright `1.1.411` includes:
   evidence including both replay kernels, prefix-relative `bin/python`
   executable proof, CPU script execution, and clean removal after recording
   the environment;
-- fresh wheel SHA-256
+- immutable Candidate 3 fresh wheel SHA-256
   `23a8f8d2362c840e3cf53986fbf4fdcd0b73f19336bbe3afaca509a574279d82`
-  and sdist SHA-256
-  `9c2fc9d4e46eb50495b4ee2b4f87b03affab445f2c89d79a745f3655dcc2337f`,
+  and independently reproduced final sdist size `858317` bytes and SHA-256
+  `fd6d54a5da60a292335b555b587e4329d8874cb5d907dc695f29df18ad46821d`,
   with source-identical package bytes;
 - isolated core-wheel proof that Matplotlib/Jupyter are absent, and isolated
   demos-wheel script plus notebook execution from outside the repository
@@ -404,7 +404,28 @@ forms and execute the candidate's focused/full CPU, typing, notebook, script,
 contract, privacy, and hygiene matrix. Review independently rechecks exact
 candidate bytes, proof strength, visual output, scope, and evidence.
 
-On CLEAR, Review may fast-forward the exact unchanged candidate to local
+Validation completed the ordinary Candidate 3 matrix but returned the
+immutable candidate for one evidence-record defect: both lifecycle records
+called a pre-lifecycle sdist hash the fresh Candidate 3 sdist identity. Every
+other gate cleared. Because the ordinary candidate route is exhausted, Design
+authorizes exactly one exceptional evidence-only direct child of Candidate 3
+that changes only this work order and `docs/implementation/index.md`. It may
+replace the inaccurate sdist evidence with Validation's independently
+reproduced final Candidate 3 size and hash and describe this exceptional
+route; production, tests, demos, metadata, dependency, API, science, RNG, and
+all other bytes must remain parent-identical.
+
+The exceptional correction makes no hash claim about its own sdist: changing
+these archive-bearing records necessarily changes that archive. Validation is
+authorized one fixed-commit recheck limited to exact direct-child topology,
+the two-document delta, the corrected immutable-Candidate-3 artifact evidence,
+protected-byte identity, diff checks, and cleanliness. On CLEAR, Review must
+independently recheck the exact correction and the previously cleared
+Candidate 3 evidence before it may fast-forward the unchanged correction to
+local `main`. This route consumes no fourth ordinary Implementation candidate
+or Validation return and authorizes no Implementation edit.
+
+On CLEAR, Review may fast-forward the exact unchanged accepted target to local
 `main`. Design may then create one evidence-only direct-child closeout limited
 to this work order and `docs/implementation/index.md`; Review must verify and
 fast-forward that exact closeout before publication.
