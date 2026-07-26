@@ -159,8 +159,11 @@ profile is illustrative rather than calibrated, and the accepted local
 evidence makes no accelerator or push claim.
 
 [Maintenance 11](docs/implementation/maintenance_11_tensorcore_0_19_addressed_distributions.md)
-is the active fixed-commit migration to exact TensorCore `0.19.0` containing
-commit `ed17f4b637258f0a7f4544f235648b747f17fa44`. It replaces the previous
+is **Merged / Closed** through exact Review-cleared and fast-forwarded
+Candidate 2 `a527042701ac56f368f26248381244fdfcfb7fd3`, tree
+`5c76122b25d17b9fe0b796618613d7bff0b102c1`. It migrates to exact TensorCore
+`0.19.0` containing commit
+`ed17f4b637258f0a7f4544f235648b747f17fa44` and replaces the previous
 position-plus-method RNG calls with public addressed `RngElements`,
 `RngAddress`, Distribution, and ProbabilityKernel objects while retaining the
 public TensorDSLab facades and downstream physical laws. The CPU-only
@@ -169,11 +172,10 @@ metadata, raw words, one delayed-crosstalk collapsed-rate Poisson draw,
 repeatability, chunk invariance, and global Torch RNG isolation. Its private
 role-key import is explicitly unsupported.
 
-Before the bytes reach `main`, they are candidate evidence under fixed-commit
-gates. If they appear unchanged on `main`, Review's fast-forward has
-completed, while final Design acceptance remains pending until the work order
-and implementation index say **Merged / Closed**. No integrated CUDA,
-performance, release, deployment, or production-readiness claim follows.
+Complete source/archive evidence passed at `232/221/11`; the `11`
+TensorDSLab and two TensorCore unavailable-CUDA skips authorize no integrated
+CUDA, performance, compatibility, release, publication, deployment, or
+production-readiness claim.
 
 The historical [TensorCore consumer proposal](docs/implementation/proposed_tensorcore_counter_rng_and_distributions.md)
 is now fulfilled by published TensorCore `0.9.0` commit

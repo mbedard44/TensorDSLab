@@ -73,7 +73,10 @@ existing construction contract directly: compact axes plus a dense
 returns exact typed fields. It adds no axis representation, field relationship,
 movement, alignment, or mutable-storage contract.
 
-Maintenance 11 selects exact published TensorCore `0.19.0` containing commit
+Maintenance 11 is **Merged / Closed** through exact Review-cleared and
+fast-forwarded Candidate 2 `a527042701ac56f368f26248381244fdfcfb7fd3`,
+tree `5c76122b25d17b9fe0b796618613d7bff0b102c1`, against exact published
+TensorCore `0.19.0` containing commit
 `ed17f4b637258f0a7f4544f235648b747f17fa44`. TensorDSLab consumes the public
 `RngElements`, `RngAddress`, Distribution, `TensorKernel`, and
 `ProbabilityKernel` roots while retaining package-owned semantic axes,

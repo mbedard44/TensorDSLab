@@ -262,12 +262,15 @@ equation.
 
 ## Maintenance 11 Addressed-Randomness Rebaseline
 
-Maintenance 11 is an intentional predeployment RNG comparison-boundary
-change, not a new donor-equivalence claim. TensorCore `0.19.0` supplies public
-addressed elements, addresses, distributions, and probability kernels.
-TensorDSLab retains its model probabilities/rates, fixed active role keys,
-semantic indices, physical displacement and boundary interpretation, checked
-accumulation, and product validation.
+Maintenance 11 is **Merged / Closed** through exact Review-cleared and
+fast-forwarded Candidate 2 `a527042701ac56f368f26248381244fdfcfb7fd3`,
+tree `5c76122b25d17b9fe0b796618613d7bff0b102c1`. It is an intentional
+predeployment RNG comparison-boundary change, not a new donor-equivalence
+claim. TensorCore `0.19.0` supplies public addressed elements, addresses,
+distributions, and probability kernels. TensorDSLab retains its model
+probabilities/rates, fixed active role keys, semantic indices, physical
+displacement and boundary interpretation, checked accumulation, and product
+validation.
 
 | Surface | Classification and boundary |
 | --- | --- |

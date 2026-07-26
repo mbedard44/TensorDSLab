@@ -339,10 +339,14 @@ passed with `13` conditional TensorDSLab and two TensorCore CUDA skips. No
 accelerator or push claim follows; the integrated CUDA gate and first push
 remain separate later authorities.
 
-Maintenance 11 TensorCore 0.19 Addressed Distributions is the active
-fixed-commit package gate under
+Maintenance 11 TensorCore 0.19 Addressed Distributions is **Merged / Closed**
+under
 `docs/implementation/maintenance_11_tensorcore_0_19_addressed_distributions.md`.
-It selects exact published TensorCore `0.19.0` containing commit
+Its exact Review-cleared and fast-forwarded target is
+`a527042701ac56f368f26248381244fdfcfb7fd3`, tree
+`5c76122b25d17b9fe0b796618613d7bff0b102c1`; immutable Candidate 1 remains
+`6eca602bdc6e4e2869d28efd36347a168791751f`. It selects exact published
+TensorCore `0.19.0` containing commit
 `ed17f4b637258f0a7f4544f235648b747f17fa44` and migrates stochastic execution
 from `RngPositions` plus `CounterRng` law methods to public `RngElements`,
 `RngAddress`, `Distribution`, `TensorKernel`, and `ProbabilityKernel`
@@ -354,13 +358,13 @@ with occurrence quantum `0` and delay-allocation quantum `1`. The obsolete
 crosstalk overflow streams and scientifically unused finite-window outputs
 have no compatibility reservation.
 
-The Maintenance 11 bytes use three-state lifecycle wording. If they are absent
-from `main`, they are a feature-branch candidate under fixed-commit gates. If
-they are present unchanged on `main`, Review's fast-forward has completed, but
-final Design acceptance remains pending unless and until the work order and
-implementation index say **Merged / Closed**. No current integrated CUDA,
-accelerator-support, performance, release, deployment, or production-readiness
-claim follows.
+Candidate 2 changes only the independent afterpulse analytical proof from
+Candidate 1. Complete source/archive evidence passed at `232/221/11`;
+TensorCore passed at `107/105/2`; Pyright was clean; and the exact dependency
+negative fixture retained `82` intended diagnostics. The unavailable-CUDA
+skips are explicit: no current integrated CUDA, accelerator-support,
+performance, release, deployment, compatibility, publication, or
+production-readiness claim follows.
 
 The first Stage 8 real-CUDA attempt correctly stopped before any accepted
 measurement when its protected-suite gate over-applied those macOS literals to

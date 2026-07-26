@@ -549,29 +549,31 @@ later authorities.
 
 The
 [Maintenance 11 work order](implementation/maintenance_11_tensorcore_0_19_addressed_distributions.md)
-requires exact TensorCore `0.19.0` containing commit
+is **Merged / Closed** through exact Review-cleared and fast-forwarded
+Candidate 2 `a527042701ac56f368f26248381244fdfcfb7fd3`, tree
+`5c76122b25d17b9fe0b796618613d7bff0b102c1`. It adopts exact TensorCore
+`0.19.0` containing commit
 `ed17f4b637258f0a7f4544f235648b747f17fa44`, source/archive/package identity,
-and public-root imports. Focused proof must cover exact `RngElements` domains,
-role-named `RngAddress` metadata, raw words, deterministic no-representation
-paths, public Distribution/ProbabilityKernel delegation, retained-capacity
-selection, exact address fixtures, and absence of retired manual offsets,
-category draws, old law methods, and overflow state.
+and public-root imports. Accepted focused proof covers exact `RngElements`
+domains, role-named `RngAddress` metadata, raw words, deterministic
+no-representation paths, public Distribution/ProbabilityKernel delegation,
+retained-capacity selection, exact address fixtures, and absence of retired
+manual offsets, category draws, old law methods, and overflow state.
 
-Scientific proof must independently establish normalized prepared kernels,
+Independent scientific proof establishes normalized prepared kernels,
 collapsed crosstalk destination means, Poisson splitting/superposition,
 afterpulse quantum `0`/`1`, count ceilings, checked accumulation, ledgers,
-boundaries, source/result storage, validation, and same-stack replay. Both
-executed notebooks require deterministic immediate replay, no errors,
-privacy-safe outputs, and source plus isolated-wheel execution. Complete
-source/archive discovery must not regress below `229/216/13`; all new tests
-must be discovered. Pyright must be clean and the dependency-negative fixture
-must report exactly `82` intended diagnostics in both forms.
+boundaries, source/result storage, validation, and same-stack replay. Candidate
+2 changes only the afterpulse analytical proof from immutable Candidate 1
+`6eca602bdc6e4e2869d28efd36347a168791751f`; Review's half-probability mutant
+fails it in `27` subtests. Focused source/archive totals are `169/161/8`;
+complete source/archive totals are `232/221/11`; TensorCore totals are
+`107/105/2`; Pyright is clean; and the dependency-negative fixture reports
+exactly `82` intended diagnostics in both forms.
 
 This local CPU gate authorizes no current integrated CUDA, accelerator-support,
-performance, release, deployment, calibration, or production-readiness claim.
-If the candidate bytes later appear unchanged on `main`, Review's fast-forward
-has completed; final Design acceptance remains pending until the work order
-and index record **Merged / Closed**.
+performance, compatibility, publication, release, deployment, calibration, or
+production-readiness claim.
 
 ## Governance Adoption Checks
 

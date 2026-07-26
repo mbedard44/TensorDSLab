@@ -793,13 +793,16 @@ analog, and digitized relationship. They add no hidden preparation path,
 product action, sampling authority, device policy, or calibrated detector
 claim.
 
-Maintenance 11 migrates only the generic random-execution representation and
-the explicitly accepted predeployment crosstalk rebaseline. Each stochastic
-Charge execution constructs one full-product `RngElements`; stochastic white
-or PSD noise constructs one model-specific element lattice. Private
-role-named `RngAddress` builders attach the fixed key, quantum, and ordinal
-metadata. Deterministic paths construct no elements, addresses, kernels, or
-distributions and request no words.
+Maintenance 11 is **Merged / Closed** through exact Review-cleared and
+fast-forwarded Candidate 2 `a527042701ac56f368f26248381244fdfcfb7fd3`,
+tree `5c76122b25d17b9fe0b796618613d7bff0b102c1`. It migrates only the generic
+random-execution representation and the explicitly accepted predeployment
+crosstalk rebaseline. Each stochastic Charge execution constructs one
+full-product `RngElements`; stochastic white or PSD noise constructs one
+model-specific element lattice. Private role-named `RngAddress` builders
+attach the fixed key, quantum, and ordinal metadata. Deterministic paths
+construct no elements, addresses, kernels, or distributions and request no
+words.
 
 White and PSD noise plus charge smearing use public Gaussian distributions;
 dark counts and collapsed crosstalk destination rates use Poisson

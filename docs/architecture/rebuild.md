@@ -154,14 +154,17 @@ demo's source, axes, products, dtype, seed, device, and plots remain explicit
 caller choices; its profile values create no run-calibration or new parity
 authority.
 
-Maintenance 11 supersedes later unqualified descriptions of raw
-`RngPositions`, manual offsets, `CounterRng` law methods, private category
-draws, crosstalk retained/overflow draws, or separately returned finite-window
-tail state. Exact TensorCore `0.19.0` owns `RngElements`, `RngAddress`,
-Distribution, TensorKernel, and ProbabilityKernel mechanics. TensorDSLab owns
-the fixed namespace and active keys, semantic lattices and address schemas,
-scientific probability/rate construction, displacement and boundary meaning,
-checked accumulation, ledgers, and postconditions.
+Maintenance 11 is **Merged / Closed** through exact Review-cleared and
+fast-forwarded Candidate 2 `a527042701ac56f368f26248381244fdfcfb7fd3`,
+tree `5c76122b25d17b9fe0b796618613d7bff0b102c1`. It supersedes later
+unqualified descriptions of raw `RngPositions`, manual offsets, `CounterRng`
+law methods, private category draws, crosstalk retained/overflow draws, or
+separately returned finite-window tail state. Exact TensorCore `0.19.0` owns
+`RngElements`, `RngAddress`, Distribution, TensorKernel, and ProbabilityKernel
+mechanics. TensorDSLab owns the fixed namespace and active keys, semantic
+lattices and address schemas, scientific probability/rate construction,
+displacement and boundary meaning, checked accumulation, ledgers, and
+postconditions.
 
 The active mapping is Gaussian for white/PSD noise and charge smearing;
 Poisson for dark counts and collapsed direct/delayed-crosstalk destination

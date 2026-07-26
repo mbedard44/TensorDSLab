@@ -882,48 +882,39 @@ dependency, metadata, demo, test, API, science, RNG, parity, or governance
 byte. Review verification of the exact closeout remains the final gate before
 the authorized qualified ordinary GitHub push.
 
-## Maintenance 11 Production Work Order
+## Maintenance 11 Merged / Closed
 
 ### [Maintenance 11 TensorCore 0.19 Addressed Distributions](maintenance_11_tensorcore_0_19_addressed_distributions.md)
 
-Status: **Implementation candidate / fixed-commit gates**.
+Status: **Merged / Closed**.
 
-This maintenance records the package-owned migration from TensorCore
-`0.16.0` `RngPositions` and `CounterRng` distribution methods to the
-TensorCore `0.19.0` `RngElements`, `RngAddress`, `Distribution`,
-`TensorKernel`, and `ProbabilityKernel` architecture. It freezes the intended
-effect mapping: Gaussian noise and charge smearing, Poisson dark counts,
-ProbabilityKernel-backed timing-jitter and afterpulse allocation, and the
-collapsed rate-first Poisson construction for direct and delayed crosstalk.
-TensorDSLab continues to own detector axes, displacement and boundary
-semantics, physical laws, fixed scientific keys and address schemas, count
-ceilings, accumulation, and product validation.
+Exact Review-cleared and fast-forwarded Candidate 2 is
+`a527042701ac56f368f26248381244fdfcfb7fd3`, tree
+`5c76122b25d17b9fe0b796618613d7bff0b102c1`. Its exact parent is immutable
+Candidate 1 `6eca602bdc6e4e2869d28efd36347a168791751f`. Candidate 2 changes
+exactly `tests/test_charge_correlated_avalanches.py` from Candidate 1, with
+`224` insertions and `20` deletions, to lock the independent afterpulse
+occurrence, delay, recovery, finite-window, recursion, and ledger oracle.
+Review's half-probability mutant failed the corrected proof in `27` subtests.
 
-The work order deliberately retires manual position offsets, private duplicate
-distribution orchestration, and scientifically unused tail/finite-window
-overflow outputs. The retired overflow stream values receive no permanent
-reservation promise in this predeployment rebaseline. Afterpulse retains
-stream `0x0000_0009`, with quantum `0` for occurrence and quantum `1` for
-delay allocation. The work order also adds one executed CPU
-`demos/random.ipynb` walkthrough of elements, addresses, raw Threefry words,
-deterministic delayed-crosstalk rate construction, one-step tensor Poisson
-sampling, replay, chunk invariance, and global-RNG isolation.
-Exact published TensorCore containing commit
-`ed17f4b637258f0a7f4544f235648b747f17fa44` is the selected dependency
-target, while the pre-implementation TensorDSLab baseline remains pinned to
-`e05324699892a8bcea024375720bfae1ed9569cc`. The exact committed work-order
-bytes are executable authority and freeze a `48`-endpoint ceiling, one new
-production address owner, the afterpulse quantum `0`/`1` split, the finite
-candidate route, and complete
-CPU/typing/artifact/demo evidence. Implementation may begin only from those
-exact committed bytes. CUDA, merge, push, publication, and compatibility
-claims remain prohibited.
+The closed maintenance migrates from TensorCore `0.16.0` `RngPositions` and
+`CounterRng` distribution methods to exact published TensorCore `0.19.0`
+containing commit `ed17f4b637258f0a7f4544f235648b747f17fa44`,
+`RngElements`, `RngAddress`, Distribution, TensorKernel, and ProbabilityKernel.
+It preserves the `35/5/30` TensorDSLab facades and uses `43`
+rename-expanded endpoints inside the frozen `48`-endpoint ceiling.
 
-If the changed production bytes are absent from `main`, they remain a
-feature-branch candidate under fixed-commit gates. If they are present
-unchanged on `main`, Review's fast-forward has completed, but final Design
-acceptance remains pending until this index and the work order record
-**Merged / Closed**.
+Focused source/archive evidence is `169/161/8`; complete source/archive
+evidence is `232/221/11`; TensorCore source/archive evidence is `107/105/2`;
+Pyright reports zero diagnostics; and the dependency-negative fixture reports
+exactly `82` intended diagnostics. The exact Candidate 2 wheel is `59946`
+bytes with SHA-256
+`355460e0fe4008169e7effc8f45edf8be64ac124795175a6f845ea91c5a9d1de`;
+the exact Candidate 2 sdist is `911807` bytes with SHA-256
+`a26a634255c219118f68c556ca43e2f5009c988eacc20d80d2f1be4c78addd55`.
+The `11` TensorDSLab and two TensorCore unavailable-CUDA skips are explicit;
+no accelerator, performance, compatibility, publication, release, deployment,
+calibration, or production-readiness claim follows.
 
 ## Expected Stage Discipline
 

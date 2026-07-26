@@ -1,6 +1,6 @@
 # Maintenance 11 TensorCore 0.19 Addressed Distributions
 
-Status: **Implementation candidate / fixed-commit gates**
+Status: **Merged / Closed**
 
 Stable key:
 `TensorDSLab/maintenance-11-tensorcore-0-19-addressed-distributions`
@@ -13,23 +13,20 @@ class-first addressed Distribution and TensorKernel surfaces, and add one
 focused educational notebook that makes the resulting counter-based RNG
 architecture inspectable through a delayed-crosstalk example.
 
-This is the package-owned executable production work order. It freezes the
-accepted migration decisions, exact TensorCore publication evidence,
-predeployment RNG rebaseline, changed-path ceiling, protected paths, and
-required evidence.
+This closed package-owned production work order records the accepted migration
+decisions, exact TensorCore publication evidence, predeployment RNG rebaseline,
+changed-path ceiling, protected paths, and completed evidence.
 
-Lifecycle interpretation is merge-safe. While these production bytes are
-absent from `main`, they are an Implementation candidate under fixed-commit
-Validation and Review. If the exact bytes later appear on `main`, Review's
-fast-forward has completed, while final Design acceptance remains pending
-unless and until this work order and the implementation index record
-**Merged / Closed**.
+Maintenance 11 is **Merged / Closed** through exact Review-cleared and
+fast-forwarded Candidate 2
+`a527042701ac56f368f26248381244fdfcfb7fd3`, tree
+`5c76122b25d17b9fe0b796618613d7bff0b102c1`. Its exact parent is immutable
+Candidate 1 `6eca602bdc6e4e2869d28efd36347a168791751f`. Review's
+`git merge --ff-only` introduced no merge commit, rewrite, amend, rebase, or
+squash.
 
-The user authorized finalization and Implementation after accepting the
-predeployment stream rebaseline. This authority permits only the
-Implementation-to-Validation-to-Review candidate loop described below. It
-does not authorize compatibility claims, CUDA work, merge, push, publication,
-or release.
+The completed package loop authorizes no compatibility claim, CUDA work, push,
+publication, or release.
 
 This maintenance follows:
 
@@ -1132,10 +1129,22 @@ role-named environment when needed to prove the root environment script; it
 must be removed after the recorded check. Do not create repeated exploratory
 Conda environments.
 
-## Implementation Candidate Evidence
+## Final Design Closeout
 
-The fixed Implementation bytes use `43` rename-expanded endpoints inside the
-exact `48`-endpoint ceiling. They add only the non-exported
+The exact Design authority was
+`1db4d303ba147cef774cbbd74161ef14385f0933`. Immutable Candidate 1 was
+`6eca602bdc6e4e2869d28efd36347a168791751f`, tree
+`4c8c33dc2f7bd63db7a2a7b5254569479a46ebd9`. Independent Review returned
+Candidate 1 for one committed afterpulse-proof gap, not a production defect.
+Candidate 2 is its exact direct child and changes only
+`tests/test_charge_correlated_avalanches.py`, with `224` insertions and `20`
+deletions. The corrected proof independently derives configured afterpulse
+occurrence, conditional delay allocation, recovery-weighted Charge and S2,
+finite-window discard, and exactly three generations of recursion. Review's
+process-local half-probability mutant fails the proof in `27` subtests.
+
+The closed production bytes use `43` rename-expanded endpoints inside the exact
+`48`-endpoint ceiling. They add only the non-exported
 `readout/runtime/addresses.py` production module, preserve the exact
 `35/5/30` TensorDSLab facades, and retain exactly `61` production Python
 modules.
@@ -1157,14 +1166,21 @@ wheel `51208` bytes with SHA-256
 and source archive `492382` bytes with SHA-256
 `a76983491a0b6dc019be725695010f38707a5a90a0cfd151da4596eab77fef07`.
 Source/archive package bytes and the exact `30` TensorCore root exports agree.
-Fresh TensorDSLab artifact hashes remain role-handoff evidence rather than a
-self-referential claim in the candidate-bearing document.
+The exact Candidate 2 wheel is `59946` bytes with SHA-256
+`355460e0fe4008169e7effc8f45edf8be64ac124795175a6f845ea91c5a9d1de`;
+the exact Candidate 2 sdist is `911807` bytes with SHA-256
+`a26a634255c219118f68c556ca43e2f5009c988eacc20d80d2f1be4c78addd55`.
+The closeout makes no recursive closeout-artifact or self-hash claim.
 
 All accepted evidence is eager CPU-only on CPython `3.14.6`, PyTorch `2.13.0`,
 NumPy `2.5.1`, and Pint `0.25.3`. The notebook, package, import-isolation,
 source/archive, static, documentation-link, privacy, and hygiene gates make no
 integrated CUDA, accelerator-support, performance, release, deployment,
-calibration, or production-readiness claim.
+calibration, compatibility, publication, or production-readiness claim.
+This evidence-only closeout changes exactly the fourteen existing
+candidate-synchronized current records. All `40` Markdown files and `250`
+actual relative-link occurrences resolve with zero missing targets, and all
+fences remain balanced.
 
 ## CUDA And Release Qualification
 
@@ -1235,18 +1251,12 @@ This maintenance does not authorize or imply:
 
 ## Authority
 
-This document is Design-complete executable authority. Implementation is
-authorized to create the exact feature branch, change only the frozen
-allowlist, execute the required local evidence, freeze one coherent candidate,
-and dispatch that immutable candidate to persistent Validation.
+This document is the closed Design authority and evidence record for exact
+Review-cleared Candidate 2. The Implementation-to-Validation-to-Review route
+and Review-owned local fast-forward are complete.
 
-Validation may inspect only a fixed commit, return findings within the finite
-route, or dispatch unchanged clear bytes to persistent independent Review.
-Review remains read-only until a Validation-cleared fixed commit arrives.
-
-No role may infer permission to change a protected path, run CUDA or cluster
-work, merge, push, publish, claim compatibility, or broaden the scientific
-boundary. Final same-byte Design approval remains required before Review may
-fast-forward local main. A later Design-owned evidence-only closeout and
-independent Review verification remain required before any separately
-authorized push.
+No further Implementation, Validation return, candidate, production or test
+edit, dependency change, CUDA or cluster work, push, publication, compatibility
+claim, or scientific broadening follows from this closeout. Independent Review
+verification of this exact evidence-only direct child remains required before
+any separately authorized next action.

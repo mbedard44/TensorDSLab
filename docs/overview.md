@@ -128,20 +128,17 @@ passed at `229/216/13`; the unavailable-CUDA skips authorize no accelerator
 claim or push.
 
 [Maintenance 11](implementation/maintenance_11_tensorcore_0_19_addressed_distributions.md)
-is the active fixed-commit TensorCore `0.19.0` addressed-distribution
-migration. It introduces one private address owner, migrates stochastic
-effects to public Distribution and ProbabilityKernel objects, retains the
-afterpulse stream with separate occurrence/delay quanta, and rebaselines
-crosstalk through exact collapsed-rate Poisson superposition. The new
-CPU-only `demos/random.ipynb` makes addresses, raw words, repeatability, chunk
-invariance, and global-RNG isolation inspectable without creating a public
-TensorDSLab RNG surface.
-
-Before merge these bytes are candidate evidence. If they appear unchanged on
-`main`, Review's fast-forward is complete, but Design acceptance is pending
-until the work order and index record **Merged / Closed**. No integrated CUDA,
-performance, release, deployment, calibration, or production-readiness claim
-follows.
+is **Merged / Closed** through exact Review-cleared and fast-forwarded
+Candidate 2 `a527042701ac56f368f26248381244fdfcfb7fd3`, tree
+`5c76122b25d17b9fe0b796618613d7bff0b102c1`. It introduces one private
+address owner, migrates stochastic effects to public Distribution and
+ProbabilityKernel objects, retains the afterpulse stream with separate
+occurrence/delay quanta, and rebaselines crosstalk through exact collapsed-rate
+Poisson superposition. The CPU-only `demos/random.ipynb` makes addresses, raw
+words, repeatability, chunk invariance, and global-RNG isolation inspectable
+without creating a public TensorDSLab RNG surface. No integrated CUDA,
+performance, compatibility, publication, release, deployment, calibration, or
+production-readiness claim follows.
 
 [Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
 Closed through exact implementation candidate

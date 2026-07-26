@@ -20,8 +20,8 @@ Project/display name: TensorDSLab
 Python import: tensor_dslab (accepted on main through Maintenance 5)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
-Package maturity: Maintenance 7 Merged / Closed
-Next production gate: separately authorized post-Maintenance-7 work
+Package maturity: Maintenance 11 Merged / Closed
+Next production gate: separately authorized post-Maintenance-11 work
 Stage 8: separately stopped; any restart requires a new Design authority after
 Maintenance 6
 ```
@@ -140,8 +140,11 @@ conditional unavailable-CUDA skips; integrated CUDA evidence and the first
 push remain separately authorized.
 
 [Maintenance 11](docs/implementation/maintenance_11_tensorcore_0_19_addressed_distributions.md)
-is the active fixed-commit migration to exact TensorCore `0.19.0` containing
-commit `ed17f4b637258f0a7f4544f235648b747f17fa44`. New stochastic code must use
+is **Merged / Closed** through exact Review-cleared and fast-forwarded
+Candidate 2 `a527042701ac56f368f26248381244fdfcfb7fd3`, tree
+`5c76122b25d17b9fe0b796618613d7bff0b102c1`. It migrates to exact TensorCore
+`0.19.0` containing commit
+`ed17f4b637258f0a7f4544f235648b747f17fa44`. New stochastic code must use
 one semantically complete `RngElements` lattice, explicit `RngAddress`
 metadata, and the public Distribution or ProbabilityKernel owner selected by
 the work order. Do not restore manual offsets, call retired `CounterRng` law
@@ -150,12 +153,10 @@ or expose private role keys. Scientific preparation still owns physical
 probabilities, destination mappings, boundary interpretation, count
 accumulation, and product validation.
 
-If these bytes are not on `main`, they remain a candidate under fixed-commit
-Validation and Review. If they are present unchanged on `main`, Review's
-fast-forward has completed; final Design acceptance is still pending until the
-work order and implementation index record **Merged / Closed**. This local
-CPU gate makes no integrated CUDA, accelerator-support, performance,
-publication, release, or deployment claim.
+Candidate 2 changes only the independent afterpulse analytical proof from
+immutable Candidate 1 `6eca602bdc6e4e2869d28efd36347a168791751f`.
+This local CPU gate makes no integrated CUDA, accelerator-support,
+performance, compatibility, publication, release, or deployment claim.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency
