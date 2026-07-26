@@ -901,14 +901,20 @@ ceilings, accumulation, and product validation.
 
 The draft deliberately retires manual position offsets, private duplicate
 distribution orchestration, and scientifically unused tail/finite-window
-overflow outputs while reserving retired RNG identities. It is not executable
-authority. Dispatch remains blocked until TensorCore publishes an exact
-containing `0.19.0` commit, TensorDSLab selects that immutable dependency pin,
-the afterpulse occurrence/delay address separation is frozen, exact scope and
-evidence allowlists are committed, all required package roles are active, and
-the user separately authorizes Implementation. No dependency adoption,
-production/test edit, CUDA action, merge, push, or compatibility claim follows
-from this provisional record.
+overflow outputs while reserving retired RNG identities. It also proposes one
+executed CPU `demos/random.ipynb` walkthrough of elements, addresses, raw
+Threefry words, deterministic delayed-crosstalk rate construction, one-step
+tensor Poisson sampling, replay, chunk invariance, and global-RNG isolation.
+Exact published TensorCore containing commit
+`ed17f4b637258f0a7f4544f235648b747f17fa44` is the selected future dependency
+target, while current TensorDSLab remains pinned to
+`e05324699892a8bcea024375720bfae1ed9569cc`. The record is not executable
+authority. Dispatch remains blocked until the afterpulse occurrence/delay
+address separation is frozen, exact scope and evidence allowlists are
+committed, all required package roles are active, and the user separately
+authorizes Implementation. No dependency adoption, production/test/demo edit,
+CUDA action, merge, push, or compatibility claim follows from this provisional
+record.
 
 ## Expected Stage Discipline
 

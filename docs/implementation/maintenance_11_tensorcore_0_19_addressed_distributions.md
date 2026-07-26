@@ -8,18 +8,20 @@ Stable key:
 ## Purpose
 
 Prepare one package-owned TensorDSLab migration from the published
-TensorCore `0.16.0` random surface to TensorCore `0.19.0`'s class-first
-addressed Distribution and TensorKernel surfaces.
+TensorCore `0.16.0` random surface to published TensorCore `0.19.0`'s
+class-first addressed Distribution and TensorKernel surfaces, and add one
+focused educational notebook that makes the resulting counter-based RNG
+architecture inspectable through a delayed-crosstalk example.
 
-This record preserves the accepted migration decisions while TensorCore
-completes its separate `0.19.0` GitHub publication lifecycle. It is not yet a
-production work order. It authorizes no dependency change, implementation,
-test edit, compatibility claim, CUDA work, merge, or push.
+This record preserves the accepted migration decisions and exact TensorCore
+publication evidence. It is not yet a production work order. It authorizes no
+dependency change, implementation, test or demo edit, compatibility claim,
+CUDA work, merge, or push.
 
-Before dispatch, TensorDSLab Design must replace every provisional dependency
-reference below with the exact published TensorCore containing commit, verify
-the live GitHub ref, freeze the final changed-file and test allowlists, obtain
-renewed exact consumer evidence, and record explicit user authorization.
+Before dispatch, TensorDSLab Design must reverify the exact published
+TensorCore containing commit and package bytes, freeze the remaining address
+decision and final changed-file/test allowlists, obtain renewed exact consumer
+evidence, and record explicit user authorization.
 
 This maintenance follows:
 
@@ -72,11 +74,19 @@ Those are operative current facts until this maintenance is separately
 completed. This provisional record does not silently supersede the current
 source, architecture, parity, or validation contract.
 
-## Provisional TensorCore Target
+## Selected TensorCore Target
 
-The audited local TensorCore Stage 26 package implementation anchor is:
+The exact published TensorCore dependency target is:
 
 ```text
+repository:
+    https://github.com/mbedard44/TensorCore.git
+live refs/heads/main / containing commit:
+    ed17f4b637258f0a7f4544f235648b747f17fa44
+containing tree:
+    ef8c706a83d03c3bd8b4094855af8064ab86743b
+containing parent:
+    e9ad9c09f108e9e7951bd5efcdafa43afad8bf7b
 TensorCore Stage 26 package anchor:
     fdfc96d428d62847dddc1a52eb956dd598874ae1
 TensorCore package tree:
@@ -85,15 +95,28 @@ package version:
     0.19.0
 ```
 
-TensorCore's documentation-only publication lifecycle replacement
-`d22788f0ee5e98d5d9babf14e22cb50d4b6553d9`, tree
-`72b2248b47ee5372dc597b5aa6ad95e5862e4734`, has received exact-byte
-TensorDSLab consumer confirmation. It is consultation evidence, not a
-TensorDSLab dependency selection. The future exact GitHub containing commit
-remains unresolved in this record and must be supplied by TensorCore after its
-package-owned publication closeout.
+The containing commit is selected as the immutable future TensorDSLab
+dependency pin. This Design selection does not edit `pyproject.toml`, adopt
+the dependency in the current package, or claim compatibility.
 
-The audited Stage 26 package surface provides:
+TensorCore's publication handoff records:
+
+```text
+containing wheel:
+    51208 bytes
+    SHA-256 9666ff7811cc1bdfe289290f3ae18517d7f47c316ad1ff766477a7d08f075dda
+containing source archive:
+    492382 bytes
+    SHA-256 a76983491a0b6dc019be725695010f38707a5a90a0cfd151da4596eab77fef07
+```
+
+The containing commit changes only approved publication-lifecycle
+documentation after the package anchor. Its `tensor_core/`, `tests/`, and
+`pyproject.toml` bytes are exact to `fdfc96d`. README-derived wheel METADATA
+and RECORD are the only accepted wheel differences from the package-anchor
+artifact.
+
+The published Stage 26 package surface provides:
 
 - `RngElements` and `RngAddress`;
 - `CounterRng.words(...)` with `_generate_block(...)` retained as the
@@ -108,7 +131,7 @@ The audited Stage 26 package surface provides:
 - `ProbabilityKernel`; and
 - `require_kernel_dimensions(...)`.
 
-The exact audited export census is:
+The exact published export census is:
 
 ```text
 tensor_core:                         30
@@ -123,9 +146,11 @@ tensor_core.tensor.validation:       16
 tensor_core.random.validation:        1
 ```
 
-Before dispatch, the exact published containing commit must reproduce these
-package bytes and supported surfaces. No alias for `RngPositions`, old
-CounterRng Distribution methods, or retired import path is accepted.
+Local read-only verification confirms local main, tracking `origin/main`, and
+the containing tree at exact `ed17f4b`, and confirms protected package bytes
+are identical to the Stage 26 anchor. Dispatch must reverify the live ref and
+artifact identities. No alias for `RngPositions`, old CounterRng Distribution
+methods, or retired import path is accepted.
 
 ## Selected Ownership Boundary
 
@@ -482,6 +507,11 @@ approximation:
 - independent contributions arriving at one destination superpose into one
   Poisson variable whose rate is their sum.
 
+This explicitly resolves TensorCore's `1e8` Poisson-mean adoption decision.
+It is the algebraic collapse of category-wise addressed Poisson thinning, not
+a total-offspring Poisson. Admission is therefore governed by each retained
+destination mean; no scientifically unused total-source mean is constructed.
+
 The selected formulation:
 
 - closely matches current TensorDSLab destination-rate construction;
@@ -643,6 +673,126 @@ their Config values, source, axes, CPU boundary, product relationships, and
 plot contract do not change unless a separately authorized demonstration
 amendment says otherwise.
 
+## Addressed-Randomness Demonstration
+
+Add one new CPU-only executed notebook:
+
+```text
+demos/random.ipynb
+```
+
+The notebook is an educational source artifact for the exact adopted
+TensorCore version. It is not a second stochastic implementation, a supported
+TensorDSLab RNG facade, or a user-configurable scientific-key surface.
+
+The notebook must use the real public TensorCore classes:
+
+- `RngKey`;
+- `RngElements`;
+- `RngAddress`;
+- `Threefry4x32`;
+- `CounterRng.words(...)`;
+- `ProbabilityKernel`; and
+- `PoissonDistribution`.
+
+It may import the package-owned
+`DELAYED_CROSSTALK_RETAINED_RNG_KEY` from the precise private
+`tensor_dslab.readout.runtime.keys` module solely to show the actual role
+identity used by TensorDSLab. The surrounding Markdown must state that this
+module is an unsupported implementation detail, that users do not configure
+production role keys, and that importing it in the notebook creates no public
+compatibility promise. The notebook must not duplicate the namespace or
+stream integer as a second literal.
+
+### Narrative
+
+The notebook should proceed in this order:
+
+1. Explain that counter-based generation is a pure mapping from seed, role
+   key, complete address, and raw-word ordinal to deterministic words. There
+   is no mutable stream position and no use of Torch's global RNG state.
+2. Construct one small CPU `torch.int64` tensor named `parent_counts`,
+   representing the current delayed-crosstalk avalanche frontier over a
+   `SampleAxis`.
+3. State explicitly that this private execution frontier is not the public
+   floating-point `Charge` TensorField, even though it contributes to the
+   eventual Charge product.
+4. Construct canonical row-major `RngElements` for the destination shape and
+   show their public shape/device metadata. If explicit logical integers are
+   displayed, retain the caller-owned source tensor used to construct the
+   elements; do not expose or depend on TensorCore private element storage.
+5. Construct a generation-domain `RngAddress.root(...)`, select one generation
+   into an atomic address, and display the root/selected shape,
+   `element_shape`, device, and completion state.
+6. Request a small frozen tuple of raw ordinals with
+   `CounterRng.words(...)`, display the resulting word table, and explain how
+   Threefry maps address identity to words. Do not copy or reimplement
+   Threefry rounds, constants, packing, or private permutation methods.
+7. Construct a demo-local final fieldless delayed-crosstalk
+   `ProbabilityKernel` leaf over `SampleAxis`, using a short causal
+   nonnegative delay-probability tensor.
+8. Deterministically form retained destination means:
+
+   ```text
+   lambda[destination]
+       = sum_source(
+           parent_counts[source]
+           * mean_offspring
+           * probability[destination - source]
+         )
+   ```
+
+   with no contribution from negative or out-of-window displacements.
+9. Construct one tensor-valued `PoissonDistribution(mean=lambda)` and draw
+   the complete destination avalanche tensor over the atomic generation
+   address. This is the selected one-step Poisson splitting/superposition
+   formulation; the notebook must not draw a source-total Poisson or invoke
+   Multinomial for crosstalk.
+10. Repeat the identical draw and prove exact equality.
+11. Slice the original `RngElements` into at least two deterministic
+    destination chunks, rebuild the same generation-domain address over each
+    retained-capacity slice, draw the corresponding mean slices, concatenate
+    them, and prove exact equality with the full draw. Constructing fresh
+    renumbered chunk elements is prohibited.
+12. Snapshot Torch's global RNG state before the addressed operations and
+    prove it remains byte-identical afterward.
+
+The notebook should include compact plots of:
+
+- the parent avalanche frontier;
+- the represented delayed-crosstalk probability kernel;
+- the deterministic destination-rate tensor; and
+- the sampled destination avalanche counts.
+
+It should also include a small table relating displayed destination element
+identities, selected address-domain state, raw ordinals, and returned
+Threefry words. The dependency is now exact `ed17f4b`; exact displayed values
+are frozen after the final address schema is selected.
+
+The existing root `create_environment.sh` and the existing `[demos]` optional
+dependency group remain the sole environment path. The new notebook adds no
+dependency and contains no environment creation or activation cell. Its first
+Markdown cell directs users to create and activate `tensor_dslab` before
+launching Jupyter, matching `demos/readout.ipynb`. The script's installed
+dependency smoke assertion must advance from TensorCore `0.16.0` to exact
+`0.19.0` in the same candidate.
+
+The notebook must be committed with a clean deterministic execution:
+
+- CPU device only;
+- one supported installed-wheel kernel;
+- no project-root import shadowing;
+- no execution errors or timestamp/private-path/token output;
+- frozen cell IDs and execution counts;
+- only intentional compact tables and plots retained; and
+- source execution plus copied-notebook installed-wheel execution in the
+  focused proof.
+
+Prefer a focused new `tests/test_random_demo.py` proof owner rather than
+further expanding the already broad readout-profile/demo test module. The
+final dispatch amendment must freeze the exact test path and allowlist; this
+provisional filename is not permission to create a placeholder test.
+
 ## Provisional Implementation Sequence
 
 After the exact publication and dispatch gates close, one atomic candidate
@@ -658,8 +808,9 @@ should proceed internally in this order:
 8. afterpulse occurrence and delay factorization;
 9. collapsed direct/delayed crosstalk Poisson migration;
 10. retirement of old offsets, category orchestration, and overflow state;
-11. synchronized parity, architecture, validation, API, and lifecycle docs;
-12. complete fixed-commit source/archive, typing, artifact, demo, and hygiene
+11. the addressed-randomness notebook and its focused installed-wheel proof;
+12. synchronized parity, architecture, validation, API, and lifecycle docs;
+13. complete fixed-commit source/archive, typing, artifact, demo, and hygiene
     evidence.
 
 This order is an implementation plan, not permission to commit partial
@@ -745,6 +896,14 @@ At minimum, the exact candidate must prove:
 - fresh wheel and sdist with source-equal package bytes;
 - isolated core-wheel and demos-wheel execution;
 - CPU script and stored notebook replay after exact-output refresh if needed;
+- exact source and installed-wheel execution of `demos/random.ipynb`;
+- notebook proof of public `RngElements`/`RngAddress` metadata, actual private
+  role-key use without a duplicated literal, repeated-draw equality,
+  retained-capacity chunk equality, unchanged global Torch RNG state, and the
+  one-step collapsed Poisson crosstalk path;
+- static notebook proof that no private TensorCore storage/permutation method,
+  source-total crosstalk Poisson, crosstalk Multinomial, environment mutation,
+  or production-key customization is presented;
 - `docs/parity.md`, architecture, decisions, validation, API, README,
   overview, CONTRIBUTING, AGENTS, and implementation index synchronized only
   where the final changed contract requires it;
@@ -771,18 +930,18 @@ pre-1.0 migration.
 
 TensorDSLab Design must complete all of the following before dispatch:
 
-1. receive TensorCore's exact `0.19.0` GitHub publication handoff;
-2. verify the live containing commit and package-anchor byte identity;
-3. replace the provisional dependency evidence in this record;
-4. freeze afterpulse occurrence/allocation identity separation;
-5. perform the final exact source/test/document inventory;
-6. freeze the complete changed-path and protected-path allowlists;
-7. freeze exact tests, counts, artifacts, hashes, and environment inputs;
-8. synchronize any package-authoritative architecture/parity decision bytes
+1. reverify live GitHub main at exact `ed17f4b` and the package-anchor byte
+   identity;
+2. reverify the selected containing wheel/archive identities;
+3. freeze afterpulse occurrence/allocation identity separation;
+4. perform the final exact source/test/document inventory;
+5. freeze the complete changed-path and protected-path allowlists;
+6. freeze exact tests, counts, artifacts, hashes, and environment inputs;
+7. synchronize any package-authoritative architecture/parity decision bytes
    needed before production starts;
-9. verify persistent TensorDSLab Implementation, Validation, and Review roles;
-10. commit one immutable Design/work-order authority; and
-11. obtain explicit user authorization to dispatch.
+8. verify persistent TensorDSLab Implementation, Validation, and Review roles;
+9. commit one immutable Design/work-order authority; and
+10. obtain explicit user authorization to dispatch.
 
 Any TensorCore contract change, publication mismatch, unresolved address
 collision, scientific-domain narrowing, public-surface change, or
@@ -796,6 +955,8 @@ This provisional maintenance does not authorize or imply:
 - implementation or test changes;
 - a compatibility shim, alias, or deprecation layer;
 - a public TensorDSLab API change;
+- a public TensorDSLab RNG tutorial API or supported import for private role
+  keys;
 - user-configurable RNG keys, addresses, streams, or domains;
 - mutable RNG state or a cursor;
 - per-avalanche expansion;
@@ -814,7 +975,8 @@ This provisional maintenance does not authorize or imply:
 This document records accepted provisional TensorDSLab Design direction only.
 Implementation remains undispatched.
 
-TensorCore's local Stage 26 anchor and publication-lifecycle candidate provide
-read-only consumer evidence but do not select a TensorDSLab dependency.
-Only a later exact TensorDSLab Design amendment satisfying every pre-dispatch
-gate can convert this record into executable authority.
+TensorCore's exact published containing commit `ed17f4b` is the selected
+future dependency target, while the current package remains pinned to
+`e05324699892a8bcea024375720bfae1ed9569cc`. Only a later exact TensorDSLab
+Design amendment satisfying every remaining pre-dispatch gate can convert
+this record into executable authority.
