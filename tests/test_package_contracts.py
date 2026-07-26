@@ -37,7 +37,7 @@ from tensor_dslab import (
 
 
 class PackageContractTest(unittest.TestCase):
-    def test_tensorcore_0_16_public_surface_and_topology_are_exact(self) -> None:
+    def test_tensorcore_0_19_public_surface_and_topology_are_exact(self) -> None:
         self.assertEqual(
             tensor_core.__all__,
             (
@@ -48,12 +48,22 @@ class PackageContractTest(unittest.TestCase):
                 "LabelAxis",
                 "TensorCollection",
                 "TensorField",
+                "TensorKernel",
+                "ProbabilityKernel",
                 "TableColumn",
                 "TableCollection",
                 "TableField",
                 "RngKey",
+                "RngElements",
+                "RngAddress",
                 "CounterRng",
                 "Threefry4x32",
+                "Distribution",
+                "UniformDistribution",
+                "GaussianDistribution",
+                "PoissonDistribution",
+                "BinomialDistribution",
+                "MultinomialDistribution",
                 "Scalar",
                 "FiniteFloat",
                 "NonnegativeFloat",
@@ -61,7 +71,6 @@ class PackageContractTest(unittest.TestCase):
                 "PositiveFloat",
                 "PositiveInteger",
                 "Probability",
-                "RngPositions",
             ),
         )
         package_root = Path(tensor_core.__file__).resolve().parent
@@ -77,13 +86,19 @@ class PackageContractTest(unittest.TestCase):
                 "__init__.py",
                 "py.typed",
                 "random/__init__.py",
-                "random/distributions/__init__.py",
-                "random/distributions/continuous.py",
-                "random/distributions/counts.py",
+                "random/address.py",
+                "random/distribution/__init__.py",
+                "random/distribution/categorical.py",
+                "random/distribution/distribution.py",
+                "random/distribution/gaussian.py",
+                "random/distribution/poisson.py",
+                "random/distribution/uniform.py",
+                "random/elements.py",
+                "random/generator/__init__.py",
+                "random/generator/counter.py",
+                "random/generator/threefry.py",
+                "random/interval.py",
                 "random/key.py",
-                "random/positions.py",
-                "random/rng.py",
-                "random/threefry.py",
                 "random/validation.py",
                 "scalar/__init__.py",
                 "scalar/base.py",
@@ -99,13 +114,14 @@ class PackageContractTest(unittest.TestCase):
                 "tensor/axis.py",
                 "tensor/collection.py",
                 "tensor/field.py",
+                "tensor/kernel.py",
                 "tensor/validation.py",
             ),
         )
         dependency_metadata = tomllib.loads(
             (package_root.parent / "pyproject.toml").read_text()
         )
-        self.assertEqual(dependency_metadata["project"]["version"], "0.16.0")
+        self.assertEqual(dependency_metadata["project"]["version"], "0.19.0")
         self.assertEqual(
             dependency_metadata["project"]["requires-python"],
             ">=3.14",
@@ -129,7 +145,7 @@ class PackageContractTest(unittest.TestCase):
                 "numpy==2.5.1",
                 "pint==0.25.3",
                 "torch>=2.13,<2.14",
-                "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@e05324699892a8bcea024375720bfae1ed9569cc",
+                "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@ed17f4b637258f0a7f4544f235648b747f17fa44",
             ],
         )
         self.assertEqual(
@@ -417,7 +433,17 @@ class PackageContractTest(unittest.TestCase):
             "CounterRng",
             "RngKey",
             "Threefry4x32",
+            "RngElements",
+            "RngAddress",
             "RngPositions",
+            "Distribution",
+            "UniformDistribution",
+            "GaussianDistribution",
+            "PoissonDistribution",
+            "BinomialDistribution",
+            "MultinomialDistribution",
+            "TensorKernel",
+            "ProbabilityKernel",
             "require_same_dtype",
         )
         for module in (tensor_dslab, common, readout):

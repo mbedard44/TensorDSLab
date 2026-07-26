@@ -154,6 +154,25 @@ demo's source, axes, products, dtype, seed, device, and plots remain explicit
 caller choices; its profile values create no run-calibration or new parity
 authority.
 
+Maintenance 11 supersedes later unqualified descriptions of raw
+`RngPositions`, manual offsets, `CounterRng` law methods, private category
+draws, crosstalk retained/overflow draws, or separately returned finite-window
+tail state. Exact TensorCore `0.19.0` owns `RngElements`, `RngAddress`,
+Distribution, TensorKernel, and ProbabilityKernel mechanics. TensorDSLab owns
+the fixed namespace and active keys, semantic lattices and address schemas,
+scientific probability/rate construction, displacement and boundary meaning,
+checked accumulation, ledgers, and postconditions.
+
+The active mapping is Gaussian for white/PSD noise and charge smearing;
+Poisson for dark counts and collapsed direct/delayed-crosstalk destination
+means; prepared ProbabilityKernel plus Multinomial for timing jitter and
+afterpulse delay; and Binomial for afterpulse occurrence. Crosstalk collapse
+is exact under Poisson splitting and superposition; it is not a total-first
+Poisson-plus-Multinomial substitute. Afterpulse retains stream
+`0x0000_0009`, occurrence quantum `0`, and delay quantum `1`. Obsolete
+crosstalk overflow streams and outputs are retired without reservation or a
+compatibility layer.
+
 TensorDSLab Design historically selected and implemented the following
 Maintenance 2 RNG and module-ownership foundation:
 one caller-constructed TensorCore `CounterRng` per simulation invocation,

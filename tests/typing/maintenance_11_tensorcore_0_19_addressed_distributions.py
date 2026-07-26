@@ -2,9 +2,11 @@ from typing import assert_type
 
 import torch
 from tensor_core import (
+    GaussianDistribution,
     NonnegativeFloat,
+    RngAddress,
+    RngElements,
     RngKey,
-    RngPositions,
     Threefry4x32,
 )
 
@@ -50,7 +52,22 @@ source = Photoelectrons(
 )
 rng = Threefry4x32(seed=17)
 assert_type(WHITE_NOISE_RNG_KEY, RngKey)
-assert_type(RngPositions.from_shape((1, 1, 4), device="cpu"), RngPositions)
+elements = RngElements.from_shape((1, 1, 4), device="cpu")
+assert_type(elements, RngElements)
+address = RngAddress.root(
+    key=WHITE_NOISE_RNG_KEY,
+    elements=elements,
+    shape=(),
+)
+assert_type(address, RngAddress)
+assert_type(
+    GaussianDistribution(
+        mean=0.0,
+        standard_deviation=1.0,
+        dtype=torch.float32,
+    ).draw(rng=rng, address=address),
+    torch.Tensor,
+)
 
 sampling_runtime = prepare_sampling(source)
 assert_type(sampling_runtime, SamplingRuntime)

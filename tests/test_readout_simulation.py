@@ -1398,7 +1398,7 @@ class ReadoutRngContractTest(unittest.TestCase):
                     ),
                     seed=seed,
                 )
-                self.assertEqual(len(direct_noise_calls), 2)
+                self.assertEqual(len(direct_noise_calls), 1)
                 _assert_rng_calls_equal(
                     self,
                     public_noise_calls,

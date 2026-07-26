@@ -13,6 +13,7 @@ from tensor_core import (
     PositiveFloat,
     PositiveInteger,
     Probability,
+    RngElements,
     RngKey,
     Threefry4x32,
 )
@@ -137,7 +138,7 @@ class _RecordingRng(CounterRng):
 class _FixedBlockRng(CounterRng):
     __slots__ = ()
 
-    words: ClassVar[tuple[int, int, int, int]] = (0, 0, 0, 0)
+    block_words: ClassVar[tuple[int, int, int, int]] = (0, 0, 0, 0)
     calls: ClassVar[int] = 0
 
     @override
@@ -152,7 +153,7 @@ class _FixedBlockRng(CounterRng):
         type(self).calls += 1
         return (
             torch.tensor(
-                type(self).words,
+                type(self).block_words,
                 dtype=torch.int64,
                 device=positions.device,
             )
@@ -162,7 +163,7 @@ class _FixedBlockRng(CounterRng):
 
     @classmethod
     def use(cls, words: tuple[int, int, int, int]) -> None:
-        cls.words = words
+        cls.block_words = words
         cls.calls = 0
 
 
@@ -349,6 +350,49 @@ class ChargeProductStructureTest(unittest.TestCase):
             source.tensor.untyped_storage().data_ptr(),
         )
         self.assertTrue(torch.equal(torch.random.get_rng_state(), state))
+
+    def test_deterministic_charge_paths_construct_no_rng_elements(self) -> None:
+        class _ForbiddenElements:
+            @staticmethod
+            def from_shape(*args, **kwargs):
+                del args, kwargs
+                raise AssertionError("deterministic Charge constructed RngElements")
+
+        values = torch.arange(16, dtype=torch.int64).reshape(2, 2, 4)
+        source = _field(values)
+        deterministic_configs = (
+            ChargeConfig(),
+            ChargeConfig(
+                correlated_avalanches=CorrelatedAvalancheConfig(
+                    maximum_generations=NonnegativeInteger(0),
+                )
+            ),
+            ChargeConfig(
+                correlated_avalanches=CorrelatedAvalancheConfig(
+                    maximum_generations=NonnegativeInteger(2),
+                    direct_crosstalk=DirectCrosstalkConfig(
+                        mean_offspring_per_parent=NonnegativeFloat(1.0),
+                        delay=FixedDelayConfig(delay=_ns(8.0)),
+                    ),
+                )
+            ),
+        )
+        with mock.patch.object(
+            charge_producer,
+            "RngElements",
+            _ForbiddenElements,
+        ):
+            for config in deterministic_configs:
+                result = _produce_charge(
+                    source,
+                    sampling=_sampling(),
+                    config=config,
+                    rng=_FailingRng(seed=0),
+                    floating_dtype=torch.float64,
+                )
+                self.assertTrue(
+                    torch.equal(result.tensor, values.to(torch.float64))
+                )
 
 
 class ChargeProductPreflightTest(unittest.TestCase):
@@ -538,6 +582,10 @@ class DarkCountStatisticalTest(unittest.TestCase):
                     sampling=_sampling_runtime(sampling),
                 ),
                 rng=Threefry4x32(seed=seed),
+                elements=RngElements.from_shape(
+                    tuple(counts.shape),
+                    device=counts.device,
+                ),
             )
             observations.append(dark[:, 0, 0].to(torch.float64))
 
@@ -700,8 +748,12 @@ class ChargeSmearingTest(unittest.TestCase):
                                 device=ledgers.device,
                             ),
                             rng=_FixedBlockRng(seed=1),
+                            elements=RngElements.from_shape(
+                                tuple(ledgers.shape),
+                                device=ledgers.device,
+                            ),
                         )
-                        self.assertEqual(_FixedBlockRng.calls, 2)
+                        self.assertEqual(_FixedBlockRng.calls, 1)
                         self.assertTrue(
                             bool(torch.all(torch.isfinite(result)).item())
                         )
@@ -802,7 +854,7 @@ class ChargeSmearingTest(unittest.TestCase):
         self.assertEqual(_RecordingRng.calls, [])
         self.assertTrue(torch.equal(source.tensor, original))
 
-    def test_zero_s2_still_owns_a_position_and_is_observationally_inert(self) -> None:
+    def test_zero_s2_is_word_free_and_observationally_inert(self) -> None:
         source = _field(torch.zeros((2, 2, 4), dtype=torch.int64))
         _RecordingRng.calls = []
         smearing = ChargeSmearingConfig(relative_sigma=NonnegativeFloat(0.1))
@@ -813,24 +865,7 @@ class ChargeSmearingTest(unittest.TestCase):
             rng=_RecordingRng(seed=5),
             floating_dtype=torch.float32,
         )
-        self.assertTrue(_RecordingRng.calls)
-        self.assertTrue(
-            all(
-                call[0] == CHARGE_SMEARING_RNG_KEY
-                for call in _RecordingRng.calls
-            )
-        )
-        expected_positions = torch.arange(
-            source.tensor.numel(),
-            dtype=torch.int64,
-            device=source.tensor.device,
-        ).reshape(source.tensor.shape)
-        self.assertTrue(
-            all(
-                torch.equal(call[1], expected_positions)
-                for call in _RecordingRng.calls
-            )
-        )
+        self.assertEqual(_RecordingRng.calls, [])
         self.assertTrue(torch.equal(result.tensor, torch.zeros_like(result.tensor)))
 
     def test_repeatability_stream_isolation_and_global_rng_immutability(self) -> None:

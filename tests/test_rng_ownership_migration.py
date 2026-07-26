@@ -10,13 +10,18 @@ from unittest import mock
 
 import torch
 from tensor_core import (
+    BinomialDistribution,
     CounterRng,
+    GaussianDistribution,
     NonnegativeFloat,
     NonnegativeInteger,
+    PoissonDistribution,
     Probability,
+    RngAddress,
+    RngElements,
     RngKey,
-    RngPositions,
     Threefry4x32,
+    UniformDistribution,
 )
 
 import tensor_dslab
@@ -89,9 +94,7 @@ _EXPECTED_KEYS = (
     fixed_keys.PSD_NOISE_RNG_KEY,
     fixed_keys.DARK_COUNT_RNG_KEY,
     fixed_keys.DIRECT_CROSSTALK_RETAINED_RNG_KEY,
-    fixed_keys.DIRECT_CROSSTALK_OVERFLOW_RNG_KEY,
     fixed_keys.DELAYED_CROSSTALK_RETAINED_RNG_KEY,
-    fixed_keys.DELAYED_CROSSTALK_OVERFLOW_RNG_KEY,
     fixed_keys.TIMING_JITTER_RNG_KEY,
     fixed_keys.AFTERPULSE_RNG_KEY,
     fixed_keys.CHARGE_SMEARING_RNG_KEY,
@@ -267,9 +270,12 @@ class RngOwnershipMigrationTest(unittest.TestCase):
     def test_fixed_key_table_is_exact_unique_and_export_private(self) -> None:
         self.assertEqual(
             tuple((key.namespace, key.stream) for key in _EXPECTED_KEYS),
-            tuple((_NAMESPACE, stream) for stream in range(1, 11)),
+            tuple(
+                (_NAMESPACE, stream)
+                for stream in (1, 2, 3, 4, 6, 8, 9, 10)
+            ),
         )
-        self.assertEqual(len(set(_EXPECTED_KEYS)), 10)
+        self.assertEqual(len(set(_EXPECTED_KEYS)), 8)
         for module in (tensor_dslab, readout):
             for name in (
                 "RNG_NAMESPACE",
@@ -380,16 +386,8 @@ class RngOwnershipMigrationTest(unittest.TestCase):
             fixed_keys.DIRECT_CROSSTALK_RETAINED_RNG_KEY,
         )
         self.assertIs(
-            correlated.direct_overflow_rng_key,
-            fixed_keys.DIRECT_CROSSTALK_OVERFLOW_RNG_KEY,
-        )
-        self.assertIs(
             correlated.delayed_retained_rng_key,
             fixed_keys.DELAYED_CROSSTALK_RETAINED_RNG_KEY,
-        )
-        self.assertIs(
-            correlated.delayed_overflow_rng_key,
-            fixed_keys.DELAYED_CROSSTALK_OVERFLOW_RNG_KEY,
         )
         self.assertIs(
             correlated.afterpulse_rng_key,
@@ -410,64 +408,70 @@ class RngOwnershipMigrationTest(unittest.TestCase):
         self.assertIsNone(disabled.correlated_avalanches)
         self.assertIsNone(disabled.smearing)
 
-    def test_rng_positions_snapshot_transforms_and_raw_hook_are_exact(self) -> None:
+    def test_rng_elements_snapshot_transforms_and_raw_hook_are_exact(self) -> None:
         raw = torch.tensor((0, 1, 2, 4_294_967_299), dtype=torch.int64)
-        snapshot = RngPositions.from_tensor(raw)
+        snapshot = RngElements.from_tensor(raw)
         raw.fill_(99)
-        transformed = snapshot.movedim(0, 0).slice(0, 1, 4).offset(7)
-        self.assertIs(type(transformed), RngPositions)
+        transformed = snapshot.movedim(0, 0).slice(0, 1, 4)
+        self.assertIs(type(transformed), RngElements)
         self.assertEqual(transformed.shape, (3,))
         _RecordingRng.calls = []
-        _RecordingRng(seed=0).uniform(
-            key=fixed_keys.WHITE_NOISE_RNG_KEY,
-            positions=transformed,
-            dtype=torch.float64,
+        _RecordingRng(seed=0).words(
+            address=RngAddress.root(
+                key=fixed_keys.WHITE_NOISE_RNG_KEY,
+                elements=transformed,
+                shape=(),
+            ),
+            ordinals=(0,),
         )
         self.assertEqual(len(_RecordingRng.calls), 1)
         self.assertTrue(
             torch.equal(
                 _RecordingRng.calls[0][1],
-                torch.tensor((8, 9, 4_294_967_306), dtype=torch.int64),
+                torch.tensor((1, 2, 4_294_967_299), dtype=torch.int64),
             )
         )
 
     def test_public_tensorcore_distribution_replay_and_raw_rejection(self) -> None:
         raw = torch.tensor((0, 1, 2, 4_294_967_299), dtype=torch.int64)
-        positions = RngPositions.from_tensor(raw)
+        elements = RngElements.from_tensor(raw)
+        white_address = RngAddress.root(
+            key=fixed_keys.WHITE_NOISE_RNG_KEY,
+            elements=elements,
+            shape=(),
+        )
+        dark_address = RngAddress.root(
+            key=fixed_keys.DARK_COUNT_RNG_KEY,
+            elements=elements,
+            shape=(),
+        )
+        jitter_address = RngAddress.root(
+            key=fixed_keys.TIMING_JITTER_RNG_KEY,
+            elements=elements,
+            shape=(),
+        )
         requests = (
-            lambda rng: rng.uniform(
-                key=fixed_keys.WHITE_NOISE_RNG_KEY,
-                positions=positions,
+            lambda rng: UniformDistribution(
                 dtype=torch.float64,
-            ),
-            lambda rng: rng.gaussian(
+            ).draw(rng=rng, address=white_address),
+            lambda rng: GaussianDistribution(
                 mean=0.0,
                 standard_deviation=0.75,
-                key=fixed_keys.WHITE_NOISE_RNG_KEY,
-                positions=positions,
                 dtype=torch.float64,
-            ),
-            lambda rng: rng.poisson(
+            ).draw(rng=rng, address=white_address),
+            lambda rng: PoissonDistribution(
                 mean=torch.tensor(
                     (0.0, 0.75, 9.5, 25.0),
                     dtype=torch.float64,
                 ),
-                key=fixed_keys.DARK_COUNT_RNG_KEY,
-                positions=positions,
-            ),
-            lambda rng: rng.binomial(
+            ).draw(rng=rng, address=dark_address),
+            lambda rng: BinomialDistribution(
                 counts=torch.tensor((0, 3, 20, 100), dtype=torch.int64),
-                success_mass=torch.tensor(
+                probability=torch.tensor(
                     (0.0, 0.25, 0.9, 0.2),
                     dtype=torch.float64,
                 ),
-                failure_mass=torch.tensor(
-                    (0.0, 0.75, 0.1, 0.8),
-                    dtype=torch.float64,
-                ),
-                key=fixed_keys.TIMING_JITTER_RNG_KEY,
-                positions=positions,
-            ),
+            ).draw(rng=rng, address=jitter_address),
         )
         for request in requests:
             with self.subTest(request=request):
@@ -479,31 +483,35 @@ class RngOwnershipMigrationTest(unittest.TestCase):
                     second.untyped_storage().data_ptr(),
                 )
         with self.assertRaises(TypeError):
-            Threefry4x32(seed=0).uniform(
-                key=fixed_keys.WHITE_NOISE_RNG_KEY,
-                positions=raw,  # type: ignore[arg-type]
-                dtype=torch.float32,
+            UniformDistribution(dtype=torch.float32).draw(
+                rng=Threefry4x32(seed=0),
+                address=raw,  # type: ignore[arg-type]
             )
 
     def test_public_tensorcore_zero_dimension_address_span(self) -> None:
         with self.assertRaisesRegex(
             ValueError,
-            "RngPositions.from_shape shape span must be less than 2\\*\\*63",
+            "RngElements.from_shape.shape span",
         ):
-            RngPositions.from_shape((0, 1 << 62, 2), device="cpu")
-        positions = RngPositions.from_shape((0, 1 << 62), device="cpu")
-        self.assertEqual(positions.shape, (0, 1 << 62))
+            RngElements.from_shape((0, 1 << 62, 2), device="cpu")
+        elements = RngElements.from_shape((0, 1 << 62), device="cpu")
+        self.assertEqual(elements.shape, (0, 1 << 62))
         with self.assertRaisesRegex(
             ValueError,
-            "result shape span must be less than 2\\*\\*63",
+            "result",
         ):
-            _FailingRng(seed=_SEED).gaussian(
+            GaussianDistribution(
                 mean=0.0,
                 standard_deviation=1.0,
-                key=fixed_keys.WHITE_NOISE_RNG_KEY,
-                positions=positions,
                 dtype=torch.float32,
                 count=2,
+            ).draw(
+                rng=_FailingRng(seed=_SEED),
+                address=RngAddress.root(
+                    key=fixed_keys.WHITE_NOISE_RNG_KEY,
+                    elements=elements,
+                    shape=(),
+                ),
             )
 
     def test_runtime_producer_signatures_and_exact_zero_draws(self) -> None:

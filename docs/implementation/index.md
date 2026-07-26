@@ -886,7 +886,7 @@ the authorized qualified ordinary GitHub push.
 
 ### [Maintenance 11 TensorCore 0.19 Addressed Distributions](maintenance_11_tensorcore_0_19_addressed_distributions.md)
 
-Status: **Design-complete / Implementation pending**.
+Status: **Implementation candidate / fixed-commit gates**.
 
 This maintenance records the package-owned migration from TensorCore
 `0.16.0` `RngPositions` and `CounterRng` distribution methods to the
@@ -918,6 +918,12 @@ candidate route, and complete
 CPU/typing/artifact/demo evidence. Implementation may begin only from those
 exact committed bytes. CUDA, merge, push, publication, and compatibility
 claims remain prohibited.
+
+If the changed production bytes are absent from `main`, they remain a
+feature-branch candidate under fixed-commit gates. If they are present
+unchanged on `main`, Review's fast-forward has completed, but final Design
+acceptance remains pending until this index and the work order record
+**Merged / Closed**.
 
 ## Expected Stage Discipline
 

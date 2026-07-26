@@ -51,7 +51,7 @@ fi
 
 "${conda_executable}" run --name "${environment_name}" \
     python -c \
-    'import platform; from importlib.metadata import version; import tensor_dslab; from tensor_dslab.readout.profiles import ds20k_veto; assert platform.python_version() == "3.14.6"; assert version("tensor-dslab") == "0.1.0"; assert version("tensor-core") == "0.16.0"; assert type(ds20k_veto()).__name__ == "ReadoutConfig"; print("TensorDSLab", version("tensor-dslab"), "TensorCore", version("tensor-core"), "Python", platform.python_version())'
+    'import platform; from importlib.metadata import version; import tensor_dslab; from tensor_dslab.readout.profiles import ds20k_veto; assert platform.python_version() == "3.14.6"; assert version("tensor-dslab") == "0.1.0"; assert version("tensor-core") == "0.19.0"; assert type(ds20k_veto()).__name__ == "ReadoutConfig"; print("TensorDSLab", version("tensor-dslab"), "TensorCore", version("tensor-core"), "Python", platform.python_version())'
 
 echo "Environment '${environment_name}' is ready."
 echo "Run:"

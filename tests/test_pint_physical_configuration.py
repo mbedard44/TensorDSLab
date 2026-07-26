@@ -601,6 +601,7 @@ class PintPhysicalConfigurationTest(unittest.TestCase):
                 TimingJitterConfig(sigma=_ns(1)),
                 sampling=sampling,
                 tensor_numel=4,
+                device=torch.device("cpu"),
             )
             self.assertIsNotNone(runtime)
             self.assertEqual(extracted.call_count, 1)
@@ -624,7 +625,11 @@ class PintPhysicalConfigurationTest(unittest.TestCase):
                     "canonical_magnitude",
                     wraps=unit_boundary.canonical_magnitude,
                 ) as extracted:
-                    delays.prepare_delay(delay_config, sampling=sampling)
+                    delays.prepare_delay(
+                        delay_config,
+                        sampling=sampling,
+                        device=torch.device("cpu"),
+                    )
                     self.assertEqual(extracted.call_count, 1)
 
         afterpulse = CorrelatedAvalancheConfig(
@@ -645,6 +650,7 @@ class PintPhysicalConfigurationTest(unittest.TestCase):
                 sampling=sampling,
                 floating_dtype=torch.float64,
                 tensor_numel=4,
+                device=torch.device("cpu"),
             )
             self.assertEqual(extracted.call_count, 2)
 

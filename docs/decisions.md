@@ -94,6 +94,26 @@ dtype, products, seed, and plot trace explicitly, and use only the existing
 public orchestration surface. Demo dependencies remain optional. Integrated
 CUDA and the first push remain separate decisions.
 
+### TensorCore `0.19` Owns Addressed Distributions And Kernels
+
+Maintenance 11 selects exact published TensorCore `0.19.0` containing commit
+`ed17f4b637258f0a7f4544f235648b747f17fa44`. TensorDSLab adopts public
+`RngElements`, `RngAddress`, Distribution, `TensorKernel`, and
+`ProbabilityKernel` roots and retires manual position offsets, private generic
+category draws, and old `CounterRng` law calls. TensorDSLab retains its
+scientific keys and address schemas, physical kernels and rates, boundary
+meaning, ledgers, checked count accumulation, and completed-product
+validation.
+
+Direct and delayed crosstalk now sum deterministic collapsed destination
+means and issue one tensor-valued Poisson draw, which is exact by Poisson
+splitting and superposition. Their obsolete retained/overflow split and
+streams `0x0000_0005` and `0x0000_0007` are retired without reservation.
+Afterpulse remains on stream `0x0000_0009`; occurrence uses quantum `0` and
+conditional delay allocation uses quantum `1`. No new stream, public key
+surface, total-first Poisson-plus-Multinomial factorization, compatibility
+shim, or calibration claim is accepted.
+
 ### Exact Types Replace Loose Semantic Namespaces
 
 The rebuild has no runtime axis IDs, field IDs, layout records, semantic name

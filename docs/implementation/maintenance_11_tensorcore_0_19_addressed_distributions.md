@@ -1,6 +1,6 @@
 # Maintenance 11 TensorCore 0.19 Addressed Distributions
 
-Status: **Design-complete / Implementation pending**
+Status: **Implementation candidate / fixed-commit gates**
 
 Stable key:
 `TensorDSLab/maintenance-11-tensorcore-0-19-addressed-distributions`
@@ -17,6 +17,13 @@ This is the package-owned executable production work order. It freezes the
 accepted migration decisions, exact TensorCore publication evidence,
 predeployment RNG rebaseline, changed-path ceiling, protected paths, and
 required evidence.
+
+Lifecycle interpretation is merge-safe. While these production bytes are
+absent from `main`, they are an Implementation candidate under fixed-commit
+Validation and Review. If the exact bytes later appear on `main`, Review's
+fast-forward has completed, while final Design acceptance remains pending
+unless and until this work order and the implementation index record
+**Merged / Closed**.
 
 The user authorized finalization and Implementation after accepting the
 predeployment stream rebaseline. This authority permits only the
@@ -1124,6 +1131,40 @@ Implementation and independent roles may each create at most one temporary
 role-named environment when needed to prove the root environment script; it
 must be removed after the recorded check. Do not create repeated exploratory
 Conda environments.
+
+## Implementation Candidate Evidence
+
+The fixed Implementation bytes use `43` rename-expanded endpoints inside the
+exact `48`-endpoint ceiling. They add only the non-exported
+`readout/runtime/addresses.py` production module, preserve the exact
+`35/5/30` TensorDSLab facades, and retain exactly `61` production Python
+modules.
+
+Against independently verified TensorCore `0.19.0` source and canonical
+archive forms, the focused TensorDSLab suites each discover `169` tests,
+passing `161` with `8` unavailable-CUDA skips. Complete discovery in each form
+runs `232`, passes `221`, and skips `11` unavailable-CUDA cases. TensorCore's
+own source and archive suites each run `107`, pass `105`, and skip the same two
+unavailable-CUDA cases accepted by its publication record. Pyright `1.1.411`
+reports zero TensorDSLab diagnostics in both forms, while TensorCore's frozen
+negative fixture reports exactly `82` intended errors and no warnings or
+informations in both forms.
+
+The exact dependency evidence remains containing commit `ed17f4b`, tree
+`ef8c706`, parent `e9ad9c0`, package anchor `fdfc96d`, version `0.19.0`,
+wheel `51208` bytes with SHA-256
+`9666ff7811cc1bdfe289290f3ae18517d7f47c316ad1ff766477a7d08f075dda`,
+and source archive `492382` bytes with SHA-256
+`a76983491a0b6dc019be725695010f38707a5a90a0cfd151da4596eab77fef07`.
+Source/archive package bytes and the exact `30` TensorCore root exports agree.
+Fresh TensorDSLab artifact hashes remain role-handoff evidence rather than a
+self-referential claim in the candidate-bearing document.
+
+All accepted evidence is eager CPU-only on CPython `3.14.6`, PyTorch `2.13.0`,
+NumPy `2.5.1`, and Pint `0.25.3`. The notebook, package, import-isolation,
+source/archive, static, documentation-link, privacy, and hygiene gates make no
+integrated CUDA, accelerator-support, performance, release, deployment,
+calibration, or production-readiness claim.
 
 ## CUDA And Release Qualification
 

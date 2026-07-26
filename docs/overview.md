@@ -127,6 +127,22 @@ existing simulation and scientific contracts. Full source/archive evidence
 passed at `229/216/13`; the unavailable-CUDA skips authorize no accelerator
 claim or push.
 
+[Maintenance 11](implementation/maintenance_11_tensorcore_0_19_addressed_distributions.md)
+is the active fixed-commit TensorCore `0.19.0` addressed-distribution
+migration. It introduces one private address owner, migrates stochastic
+effects to public Distribution and ProbabilityKernel objects, retains the
+afterpulse stream with separate occurrence/delay quanta, and rebaselines
+crosstalk through exact collapsed-rate Poisson superposition. The new
+CPU-only `demos/random.ipynb` makes addresses, raw words, repeatability, chunk
+invariance, and global-RNG isolation inspectable without creating a public
+TensorDSLab RNG surface.
+
+Before merge these bytes are candidate evidence. If they appear unchanged on
+`main`, Review's fast-forward is complete, but Design acceptance is pending
+until the work order and index record **Merged / Closed**. No integrated CUDA,
+performance, release, deployment, calibration, or production-readiness claim
+follows.
+
 [Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
 Closed through exact implementation candidate
 `3eb8ad19a36308ca2b73d41d219a7a3b4b46c1da` and Review's clean fast-forward

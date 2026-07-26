@@ -7,6 +7,23 @@ types, Config types, semantic axes, physical-quantity helpers, and
 Private product Runtime actions, validators, producers, requirements, and RNG
 role keys are implementation details.
 
+## Addressed Random Execution
+
+Maintenance 11 selects exact published TensorCore `0.19.0` containing commit
+`ed17f4b637258f0a7f4544f235648b747f17fa44`. The public TensorDSLab API is
+unchanged: callers still provide a `CounterRng` to `simulate_readout(...)`,
+and its seed remains the realization control. Internally, each stochastic
+product uses public TensorCore `RngElements`, `RngAddress`, Distribution, and
+ProbabilityKernel objects. Role keys and address construction are private
+package policy, not caller customization surfaces.
+
+The CPU-only [addressed-randomness notebook](../demos/random.ipynb) is an
+educational inspection of the public TensorCore address model and the
+TensorDSLab delayed-crosstalk mapping. Its private role-key import is clearly
+marked unsupported; applications must not depend on that module or duplicate
+its numeric values. The notebook does not add a TensorDSLab RNG facade,
+calibration, CUDA, performance, release, or deployment contract.
+
 ## Provisional DS20k Veto Profile
 
 Maintenance 9 is **Merged / Closed** through exact Review-cleared target

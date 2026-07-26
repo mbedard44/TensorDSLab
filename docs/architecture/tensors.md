@@ -73,6 +73,21 @@ existing construction contract directly: compact axes plus a dense
 returns exact typed fields. It adds no axis representation, field relationship,
 movement, alignment, or mutable-storage contract.
 
+Maintenance 11 selects exact published TensorCore `0.19.0` containing commit
+`ed17f4b637258f0a7f4544f235648b747f17fa44`. TensorDSLab consumes the public
+`RngElements`, `RngAddress`, Distribution, `TensorKernel`, and
+`ProbabilityKernel` roots while retaining package-owned semantic axes,
+physical laws, fixed key/address policy, product relationships, storage
+rules, and validation. `tensor_dslab.readout.runtime.addresses` is the sole
+new non-exported production module; no package facade changes.
+
+Every stochastic Charge request uses one complete product element domain and
+every stochastic noise model one model-specific element domain. Selection
+retains root capacity rather than renumbering addresses. Deterministic paths
+construct no random representation. Tensor payloads remain same-device; the
+new generic roots do not authorize host materialization, cross-device
+normalization, an output workspace, or a public TensorDSLab RNG abstraction.
+
 The previous TensorCore `0.6` ID/layout/sidecar architecture is historical and
 is intentionally not preserved through aliases.
 

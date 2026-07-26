@@ -6,9 +6,12 @@ from typing import final
 
 import torch
 from tensor_core import (
+    BinomialDistribution,
     CounterRng,
+    MultinomialDistribution,
+    PoissonDistribution,
+    RngElements,
     RngKey,
-    RngPositions,
 )
 from tensor_core.tensor.validation import require_representable_float
 from tensor_core.random.validation import require_count_tensor
@@ -20,21 +23,23 @@ from tensor_dslab.readout.charge.runtime.effects.counts import (
     MAX_COUNT,
     checked_add,
     checked_rate_product,
-    draw_ordered_categories,
-    original_positions,
 )
 from tensor_dslab.readout.charge.runtime.effects.delays import (
+    AfterpulseRecoveryKernel,
     AfterpulseRuntime,
     DelayRuntime,
     prepare_afterpulse_recovery,
     prepare_delay,
     prepare_exponential_delay,
 )
+from tensor_dslab.readout.runtime.addresses import (
+    afterpulse_delay_address,
+    afterpulse_occurrence_address,
+    crosstalk_generation_address,
+)
 from tensor_dslab.readout.runtime.keys import (
     AFTERPULSE_RNG_KEY,
-    DELAYED_CROSSTALK_OVERFLOW_RNG_KEY,
     DELAYED_CROSSTALK_RETAINED_RNG_KEY,
-    DIRECT_CROSSTALK_OVERFLOW_RNG_KEY,
     DIRECT_CROSSTALK_RETAINED_RNG_KEY,
 )
 
@@ -52,10 +57,8 @@ class CorrelatedAvalancheRuntime:
     tensor_numel: int
     direct_mean: float | None
     direct_retained_rng_key: RngKey | None
-    direct_overflow_rng_key: RngKey | None
     delayed_mean: float | None
     delayed_retained_rng_key: RngKey | None
-    delayed_overflow_rng_key: RngKey | None
     afterpulse_probability: float | None
     afterpulse_rng_key: RngKey | None
 
@@ -67,13 +70,9 @@ class _CorrelatedAvalancheResult:
     final_frontier: torch.Tensor
     total_count: torch.Tensor
     direct_crosstalk_count: torch.Tensor | None
-    direct_crosstalk_overflow_count: torch.Tensor | None
     delayed_crosstalk_count: torch.Tensor | None
-    delayed_crosstalk_overflow_count: torch.Tensor | None
     afterpulse_count: torch.Tensor | None
-    afterpulse_overflow_count: torch.Tensor | None
     afterpulse_charge: torch.Tensor | None
-    afterpulse_overflow_charge: torch.Tensor | None
     afterpulse_charge_square_sum: torch.Tensor | None
 
 
@@ -109,6 +108,7 @@ def prepare_correlated_avalanches(
     sampling: SamplingRuntime,
     floating_dtype: torch.dtype,
     tensor_numel: int,
+    device: torch.device,
 ) -> CorrelatedAvalancheRuntime:
     maximum_generations = config.maximum_generations.value
     sample_count = sampling.sample_count
@@ -131,74 +131,90 @@ def prepare_correlated_avalanches(
             tensor_numel=tensor_numel,
             direct_mean=None,
             direct_retained_rng_key=None,
-            direct_overflow_rng_key=None,
             delayed_mean=None,
             delayed_retained_rng_key=None,
-            delayed_overflow_rng_key=None,
             afterpulse_probability=None,
             afterpulse_rng_key=None,
         )
 
-    direct = (
-        None
-        if config.direct_crosstalk is None
-        or config.direct_crosstalk.mean_offspring_per_parent.value == 0.0
-        else prepare_delay(config.direct_crosstalk.delay, sampling=sampling)
-    )
-    delayed = (
-        None
-        if config.delayed_crosstalk is None
-        or config.delayed_crosstalk.mean_offspring_per_parent.value == 0.0
-        else prepare_delay(config.delayed_crosstalk.delay, sampling=sampling)
-    )
+    direct: DelayRuntime | None = None
+    if (
+        config.direct_crosstalk is not None
+        and config.direct_crosstalk.mean_offspring_per_parent.value != 0.0
+    ):
+        prepared_direct = prepare_delay(
+            config.direct_crosstalk.delay,
+            sampling=sampling,
+            device=device,
+        )
+        if bool(torch.any(prepared_direct.kernel.tensor != 0).item()):
+            direct = prepared_direct
+
+    delayed: DelayRuntime | None = None
+    if (
+        config.delayed_crosstalk is not None
+        and config.delayed_crosstalk.mean_offspring_per_parent.value != 0.0
+    ):
+        prepared_delayed = prepare_delay(
+            config.delayed_crosstalk.delay,
+            sampling=sampling,
+            device=device,
+        )
+        if bool(torch.any(prepared_delayed.kernel.tensor != 0).item()):
+            delayed = prepared_delayed
+
     afterpulse: AfterpulseRuntime | None = None
     if config.afterpulse is not None and config.afterpulse.probability.value != 0.0:
         mean_delay_ns = canonical_magnitude(config.afterpulse.mean_delay)
         delay = prepare_exponential_delay(
             mean_delay_ns,
             sampling=sampling,
+            device=device,
         )
-        recovery: tuple[float, ...] | None = None
-        overflow_recovery: tuple[float, ...] | None = None
-        if config.afterpulse.recovery is not None:
-            time_constant_ns = canonical_magnitude(
-                config.afterpulse.recovery.time_constant
-            )
-            recovery, overflow_recovery = prepare_afterpulse_recovery(
-                mean_delay_ns,
-                time_constant_ns,
-                sampling=sampling,
-                delay=delay,
-            )
-            recovery = tuple(
-                require_representable_float(
-                    value,
-                    dtype=floating_dtype,
-                    field="afterpulse recovery weight",
+        if bool(torch.any(delay.kernel.tensor != 0).item()):
+            recovery: AfterpulseRecoveryKernel | None = None
+            if config.afterpulse.recovery is not None:
+                time_constant_ns = canonical_magnitude(
+                    config.afterpulse.recovery.time_constant
                 )
-                for value in recovery
-            )
-            overflow_recovery = tuple(
-                require_representable_float(
-                    value,
-                    dtype=floating_dtype,
-                    field="afterpulse recovery weight",
+                recovery_values = prepare_afterpulse_recovery(
+                    mean_delay_ns,
+                    time_constant_ns,
+                    sampling=sampling,
+                    delay=delay,
+                    device=device,
                 )
-                for value in overflow_recovery
-            )
-            if any(
-                not math.isfinite(value) or not 0.0 <= value <= 1.0
-                for value in (*recovery, *overflow_recovery)
-            ):
-                raise ValueError("afterpulse recovery is invalid in the Charge dtype")
-        afterpulse = AfterpulseRuntime(delay, recovery, overflow_recovery)
+                represented_recovery = tuple(
+                    require_representable_float(
+                        value,
+                        dtype=floating_dtype,
+                        field="afterpulse recovery weight",
+                    )
+                    for value in recovery_values
+                )
+                if any(
+                    not math.isfinite(value) or not 0.0 <= value <= 1.0
+                    for value in represented_recovery
+                ):
+                    raise ValueError(
+                        "afterpulse recovery is invalid in the Charge dtype"
+                    )
+                recovery = AfterpulseRecoveryKernel(
+                    tensor=torch.tensor(
+                        represented_recovery,
+                        dtype=floating_dtype,
+                        device=device,
+                    ),
+                    axis_types=delay.kernel.axis_types,
+                )
+            afterpulse = AfterpulseRuntime(delay, recovery)
 
     if direct is not None or delayed is not None:
         if maximum_generations * tensor_numel > 1 << 63:
             raise ValueError("crosstalk address lattice exceeds its domain")
     if afterpulse is not None and (
         maximum_generations
-        * (sampling.sample_count + 1)
+        * sampling.sample_count
         * tensor_numel
         > 1 << 63
     ):
@@ -206,9 +222,10 @@ def prepare_correlated_avalanches(
 
     retained_mechanisms = sum(
         (
-            direct is not None and any(direct.probabilities),
-            delayed is not None and any(delayed.probabilities),
-            afterpulse is not None and any(afterpulse.delay.probabilities),
+            direct is not None and bool(torch.any(direct.kernel.tensor != 0).item()),
+            delayed is not None and bool(torch.any(delayed.kernel.tensor != 0).item()),
+            afterpulse is not None
+            and bool(torch.any(afterpulse.delay.kernel.tensor != 0).item()),
         )
     )
     recovered_afterpulse = afterpulse is not None and afterpulse.recovery is not None
@@ -238,11 +255,6 @@ def prepare_correlated_avalanches(
             if direct is None or config.direct_crosstalk is None
             else DIRECT_CROSSTALK_RETAINED_RNG_KEY
         ),
-        direct_overflow_rng_key=(
-            None
-            if direct is None or config.direct_crosstalk is None
-            else DIRECT_CROSSTALK_OVERFLOW_RNG_KEY
-        ),
         delayed_mean=(
             None
             if delayed is None or config.delayed_crosstalk is None
@@ -252,11 +264,6 @@ def prepare_correlated_avalanches(
             None
             if delayed is None or config.delayed_crosstalk is None
             else DELAYED_CROSSTALK_RETAINED_RNG_KEY
-        ),
-        delayed_overflow_rng_key=(
-            None
-            if delayed is None or config.delayed_crosstalk is None
-            else DELAYED_CROSSTALK_OVERFLOW_RNG_KEY
         ),
         afterpulse_probability=(
             None
@@ -274,153 +281,87 @@ def prepare_correlated_avalanches(
 def _draw_crosstalk(
     frontier: torch.Tensor,
     *,
-    positions: RngPositions,
+    elements: RngElements,
     runtime: DelayRuntime,
     mean: float,
     retained_key: RngKey,
-    overflow_key: RngKey,
     generation_index: int,
-    tensor_numel: int,
+    maximum_generations: int,
     rng: CounterRng,
     field: str,
-) -> tuple[torch.Tensor, torch.Tensor]:
+) -> torch.Tensor:
     sample_count = frontier.shape[-1]
     basis = torch.zeros_like(frontier, dtype=torch.float64)
     for destination in range(sample_count):
         accumulated = basis[..., destination]
         for source in range(destination + 1):
-            probability = runtime.probabilities[destination - source]
-            if probability == 0.0:
-                continue
-            contribution = frontier[..., source].to(torch.float64) * probability
-            accumulated = accumulated + contribution
-        basis[..., destination] = accumulated
-    retained_rate = checked_rate_product(basis, mean, field=f"{field} retained")
-
-    overflow_basis = torch.zeros_like(frontier, dtype=torch.float64)
-    for source in range(sample_count):
-        probability = runtime.right_tails[sample_count - source]
-        if probability != 0.0:
-            overflow_basis[..., source] = (
+            probability = runtime.kernel.tensor[destination - source]
+            contribution = (
                 frontier[..., source].to(torch.float64) * probability
             )
-    overflow_rate = checked_rate_product(
-        overflow_basis,
-        mean,
-        field=f"{field} overflow",
+            accumulated = accumulated + contribution
+        basis[..., destination] = accumulated
+    rate = checked_rate_product(basis, mean, field=field)
+    return PoissonDistribution(mean=rate).draw(
+        rng=rng,
+        address=crosstalk_generation_address(
+            elements,
+            key=retained_key,
+            maximum_generations=maximum_generations,
+            generation_index=generation_index,
+        ),
     )
-    generation_positions = positions.offset(generation_index * tensor_numel)
-    retained = rng.poisson(
-        mean=retained_rate,
-        key=retained_key,
-        positions=generation_positions,
-        quantum=0,
-    )
-    overflow = rng.poisson(
-        mean=overflow_rate,
-        key=overflow_key,
-        positions=generation_positions,
-        quantum=0,
-    )
-    return retained, overflow
 
 
 def _draw_afterpulses(
     frontier: torch.Tensor,
     *,
-    positions: RngPositions,
+    elements: RngElements,
     runtime: AfterpulseRuntime,
     probability: float,
     rng_key: RngKey,
     generation_index: int,
-    tensor_numel: int,
+    maximum_generations: int,
     floating_dtype: torch.dtype,
     rng: CounterRng,
-) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     sample_count = frontier.shape[-1]
     retained_count = torch.zeros_like(frontier)
-    overflow_count = torch.zeros_like(frontier)
     retained_charge = torch.zeros_like(frontier, dtype=floating_dtype)
-    overflow_charge = torch.zeros_like(frontier, dtype=floating_dtype)
     charge_square_sum = torch.zeros_like(frontier, dtype=floating_dtype)
 
-    for source in range(sample_count):
-        source_counts = frontier[..., source]
-        source_positions = positions.select(-1, source)
-        shape = tuple(source_counts.shape)
-        success_masses: list[torch.Tensor] = []
-        failure_masses: list[torch.Tensor] = []
-        category_positions: list[RngPositions] = []
-        for offset in range(sample_count - source):
-            success = probability * runtime.delay.probabilities[offset]
-            later = (1.0 - probability) + probability * runtime.delay.right_tails[
-                offset + 1
-            ]
-            success_masses.append(
-                torch.full(
-                    shape,
-                    success,
-                    dtype=torch.float64,
-                    device=frontier.device,
-                )
-            )
-            failure_masses.append(
-                torch.full(
-                    shape,
-                    later,
-                    dtype=torch.float64,
-                    device=frontier.device,
-                )
-            )
-            category_positions.append(
-                source_positions.offset(
-                    (
-                        generation_index * (sample_count + 1)
-                        + offset
-                    )
-                    * tensor_numel
-                )
-            )
-
-        first_outside = sample_count - source
-        success_masses.append(
-            torch.full(
-                shape,
-                probability * runtime.delay.right_tails[first_outside],
-                dtype=torch.float64,
-                device=frontier.device,
-            )
-        )
-        failure_masses.append(
-            torch.full(
-                shape,
-                1.0 - probability,
-                dtype=torch.float64,
-                device=frontier.device,
-            )
-        )
-        category_positions.append(
-            source_positions.offset(
-                (
-                    generation_index * (sample_count + 1)
-                    + sample_count
-                )
-                * tensor_numel
-            )
-        )
-        *drawn_categories, _stop = draw_ordered_categories(
-            source_counts,
-            success_masses=tuple(success_masses),
-            failure_masses=tuple(failure_masses),
-            positions=tuple(category_positions),
-            rng=rng,
+    occurrences = BinomialDistribution(
+        counts=frontier,
+        probability=probability,
+    ).draw(
+        rng=rng,
+        address=afterpulse_occurrence_address(
+            elements,
             key=rng_key,
-            field="afterpulse",
+            maximum_generations=maximum_generations,
+            generation_index=generation_index,
+        ),
+    )
+    for source in range(sample_count):
+        source_counts = occurrences[..., source]
+        source_elements = elements.select(-1, source)
+        allocation = MultinomialDistribution(
+            counts=source_counts,
+            kernel=runtime.delay.kernel,
+            completion_probability=runtime.delay.right_tails[sample_count],
+        ).draw(
+            rng=rng,
+            address=afterpulse_delay_address(
+                source_elements,
+                key=rng_key,
+                maximum_generations=maximum_generations,
+                generation_index=generation_index,
+                kernel_shape=runtime.delay.kernel.shape,
+            ),
         )
-        retained_categories = drawn_categories[:-1]
-        overflow = drawn_categories[-1]
 
-        for offset, category in enumerate(retained_categories):
+        for offset in range(sample_count - source):
+            category = allocation[offset]
             destination = source + offset
             retained_count[..., destination] = checked_add(
                 retained_count[..., destination],
@@ -428,11 +369,7 @@ def _draw_afterpulses(
                 field="afterpulse retained count",
             )
             if runtime.recovery is not None:
-                represented_weight = torch.tensor(
-                    runtime.recovery[offset],
-                    dtype=floating_dtype,
-                    device=frontier.device,
-                )
+                represented_weight = runtime.recovery.tensor[offset]
                 category_float = category.to(floating_dtype)
                 retained_charge[..., destination] = (
                     retained_charge[..., destination]
@@ -444,31 +381,19 @@ def _draw_afterpulses(
                     * (represented_weight * represented_weight)
                 )
 
-        overflow_count[..., source] = overflow
-        if runtime.overflow_recovery is not None:
-            overflow_charge[..., source] = overflow.to(floating_dtype) * torch.tensor(
-                runtime.overflow_recovery[first_outside],
-                dtype=floating_dtype,
-                device=frontier.device,
-            )
-
     if runtime.recovery is None:
         retained_charge = retained_count.to(floating_dtype)
         charge_square_sum = retained_charge
-        overflow_charge = overflow_count.to(floating_dtype)
 
     for field, value in (
         ("afterpulse charge", retained_charge),
-        ("afterpulse overflow charge", overflow_charge),
         ("afterpulse charge-square sum", charge_square_sum),
     ):
         if not bool(torch.all(torch.isfinite(value) & (value >= 0.0)).item()):
             raise RuntimeError(f"{field} is invalid")
     return (
         retained_count,
-        overflow_count,
         retained_charge,
-        overflow_charge,
         charge_square_sum,
     )
 
@@ -503,6 +428,7 @@ def simulate_correlated_avalanches(
     floating_dtype: torch.dtype,
     runtime: CorrelatedAvalancheRuntime,
     rng: CounterRng,
+    elements: RngElements,
 ) -> _CorrelatedAvalancheResult:
     require_count_tensor(seed_avalanches, "correlated-avalanche roots")
     if sample_dimension < 0 or sample_dimension >= seed_avalanches.ndim:
@@ -512,13 +438,8 @@ def simulate_correlated_avalanches(
     if seed_avalanches.numel() != runtime.tensor_numel:
         raise ValueError("input size disagrees with the prepared runtime")
 
-    tensor_numel = seed_avalanches.numel()
     sample_last = seed_avalanches.movedim(sample_dimension, -1)
-    positions = original_positions(
-        tuple(seed_avalanches.shape),
-        sample_dimension=sample_dimension,
-        device=seed_avalanches.device,
-    )
+    sample_last_elements = elements.movedim(sample_dimension, -1)
     maximum_generations = runtime.maximum_generations
 
     S1 = sample_last.to(floating_dtype)
@@ -546,18 +467,9 @@ def simulate_correlated_avalanches(
             None,
             None,
             None,
-            None,
-            None,
-            None,
-            None,
         )
 
     direct_count = (
-        torch.zeros_like(sample_last)
-        if runtime.direct_crosstalk is not None
-        else None
-    )
-    direct_overflow = (
         torch.zeros_like(sample_last)
         if runtime.direct_crosstalk is not None
         else None
@@ -567,23 +479,10 @@ def simulate_correlated_avalanches(
         if runtime.delayed_crosstalk is not None
         else None
     )
-    delayed_overflow = (
-        torch.zeros_like(sample_last)
-        if runtime.delayed_crosstalk is not None
-        else None
-    )
     afterpulse_count = (
         torch.zeros_like(sample_last) if runtime.afterpulse is not None else None
     )
-    afterpulse_overflow = (
-        torch.zeros_like(sample_last) if runtime.afterpulse is not None else None
-    )
     afterpulse_charge = (
-        torch.zeros_like(sample_last, dtype=floating_dtype)
-        if runtime.afterpulse is not None
-        else None
-    )
-    afterpulse_overflow_charge = (
         torch.zeros_like(sample_last, dtype=floating_dtype)
         if runtime.afterpulse is not None
         else None
@@ -601,31 +500,24 @@ def simulate_correlated_avalanches(
             if (
                 runtime.direct_mean is None
                 or runtime.direct_retained_rng_key is None
-                or runtime.direct_overflow_rng_key is None
             ):
                 raise RuntimeError("direct-crosstalk runtime is incomplete")
-            new_count, new_overflow = _draw_crosstalk(
+            new_count = _draw_crosstalk(
                 frontier,
-                positions=positions,
+                elements=sample_last_elements,
                 runtime=runtime.direct_crosstalk,
                 mean=runtime.direct_mean,
                 retained_key=runtime.direct_retained_rng_key,
-                overflow_key=runtime.direct_overflow_rng_key,
                 generation_index=generation_index,
-                tensor_numel=tensor_numel,
+                maximum_generations=maximum_generations,
                 rng=rng,
                 field="direct crosstalk",
             )
-            assert direct_count is not None and direct_overflow is not None
+            assert direct_count is not None
             direct_count = checked_add(
                 direct_count,
                 new_count,
                 field="direct-crosstalk cumulative count",
-            )
-            direct_overflow = checked_add(
-                direct_overflow,
-                new_overflow,
-                field="direct-crosstalk cumulative overflow",
             )
             direct_charge = new_count.to(floating_dtype)
             S1 = _checked_ledger_add(
@@ -650,31 +542,24 @@ def simulate_correlated_avalanches(
             if (
                 runtime.delayed_mean is None
                 or runtime.delayed_retained_rng_key is None
-                or runtime.delayed_overflow_rng_key is None
             ):
                 raise RuntimeError("delayed-crosstalk runtime is incomplete")
-            new_count, new_overflow = _draw_crosstalk(
+            new_count = _draw_crosstalk(
                 frontier,
-                positions=positions,
+                elements=sample_last_elements,
                 runtime=runtime.delayed_crosstalk,
                 mean=runtime.delayed_mean,
                 retained_key=runtime.delayed_retained_rng_key,
-                overflow_key=runtime.delayed_overflow_rng_key,
                 generation_index=generation_index,
-                tensor_numel=tensor_numel,
+                maximum_generations=maximum_generations,
                 rng=rng,
                 field="delayed crosstalk",
             )
-            assert delayed_count is not None and delayed_overflow is not None
+            assert delayed_count is not None
             delayed_count = checked_add(
                 delayed_count,
                 new_count,
                 field="delayed-crosstalk cumulative count",
-            )
-            delayed_overflow = checked_add(
-                delayed_overflow,
-                new_overflow,
-                field="delayed-crosstalk cumulative overflow",
             )
             delayed_charge = new_count.to(floating_dtype)
             S1 = _checked_ledger_add(
@@ -703,26 +588,22 @@ def simulate_correlated_avalanches(
                 raise RuntimeError("afterpulse runtime is incomplete")
             (
                 new_count,
-                new_overflow,
                 new_charge,
-                new_overflow_charge,
                 new_square_sum,
             ) = _draw_afterpulses(
                 frontier,
-                positions=positions,
+                elements=sample_last_elements,
                 runtime=runtime.afterpulse,
                 probability=runtime.afterpulse_probability,
                 rng_key=runtime.afterpulse_rng_key,
                 generation_index=generation_index,
-                tensor_numel=tensor_numel,
+                maximum_generations=maximum_generations,
                 floating_dtype=floating_dtype,
                 rng=rng,
             )
             assert (
                 afterpulse_count is not None
-                and afterpulse_overflow is not None
                 and afterpulse_charge is not None
-                and afterpulse_overflow_charge is not None
                 and afterpulse_square_sum is not None
             )
             afterpulse_count = checked_add(
@@ -730,22 +611,11 @@ def simulate_correlated_avalanches(
                 new_count,
                 field="afterpulse cumulative count",
             )
-            afterpulse_overflow = checked_add(
-                afterpulse_overflow,
-                new_overflow,
-                field="afterpulse cumulative overflow",
-            )
             afterpulse_charge = _checked_ledger_add(
                 afterpulse_charge,
                 new_charge,
                 bound=runtime.ledger_bound,
                 field="afterpulse cumulative charge",
-            )
-            afterpulse_overflow_charge = _checked_ledger_add(
-                afterpulse_overflow_charge,
-                new_overflow_charge,
-                bound=runtime.ledger_bound,
-                field="afterpulse cumulative overflow charge",
             )
             afterpulse_square_sum = _checked_ledger_add(
                 afterpulse_square_sum,
@@ -814,14 +684,8 @@ def simulate_correlated_avalanches(
         restore(frontier),
         restore(total_count),
         None if direct_count is None else restore(direct_count),
-        None if direct_overflow is None else restore(direct_overflow),
         None if delayed_count is None else restore(delayed_count),
-        None if delayed_overflow is None else restore(delayed_overflow),
         None if afterpulse_count is None else restore(afterpulse_count),
-        None if afterpulse_overflow is None else restore(afterpulse_overflow),
         None if afterpulse_charge is None else restore(afterpulse_charge),
-        None
-        if afterpulse_overflow_charge is None
-        else restore(afterpulse_overflow_charge),
         None if afterpulse_square_sum is None else restore(afterpulse_square_sum),
     )

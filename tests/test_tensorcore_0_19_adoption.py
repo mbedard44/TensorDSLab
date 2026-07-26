@@ -22,8 +22,9 @@ import tensor_core.tensor as tensor
 import tensor_core.tensor.validation as tensor_validation
 from tensor_core import (
     CounterRng,
+    RngAddress,
+    RngElements,
     RngKey,
-    RngPositions,
     TensorField,
 )
 from tensor_core.tensor.validation import (
@@ -73,12 +74,22 @@ _ROOT_EXPORTS = (
     "LabelAxis",
     "TensorCollection",
     "TensorField",
+    "TensorKernel",
+    "ProbabilityKernel",
     "TableColumn",
     "TableCollection",
     "TableField",
     "RngKey",
+    "RngElements",
+    "RngAddress",
     "CounterRng",
     "Threefry4x32",
+    "Distribution",
+    "UniformDistribution",
+    "GaussianDistribution",
+    "PoissonDistribution",
+    "BinomialDistribution",
+    "MultinomialDistribution",
     "Scalar",
     "FiniteFloat",
     "NonnegativeFloat",
@@ -86,7 +97,6 @@ _ROOT_EXPORTS = (
     "PositiveFloat",
     "PositiveInteger",
     "Probability",
-    "RngPositions",
 )
 _TENSOR_VALIDATION_EXPORTS = (
     "require_axis_signature",
@@ -96,6 +106,7 @@ _TENSOR_VALIDATION_EXPORTS = (
     "require_field_layout",
     "require_field_types",
     "require_index",
+    "require_kernel_dimensions",
     "require_representable_float",
     "require_same_axes",
     "require_same_device",
@@ -110,9 +121,7 @@ _FIXED_KEYS = (
     keys.PSD_NOISE_RNG_KEY,
     keys.DARK_COUNT_RNG_KEY,
     keys.DIRECT_CROSSTALK_RETAINED_RNG_KEY,
-    keys.DIRECT_CROSSTALK_OVERFLOW_RNG_KEY,
     keys.DELAYED_CROSSTALK_RETAINED_RNG_KEY,
-    keys.DELAYED_CROSSTALK_OVERFLOW_RNG_KEY,
     keys.TIMING_JITTER_RNG_KEY,
     keys.AFTERPULSE_RNG_KEY,
     keys.CHARGE_SMEARING_RNG_KEY,
@@ -150,7 +159,7 @@ def _axes() -> tuple[ExampleAxis, ChannelAxis, SampleAxis]:
     )
 
 
-class TensorCore016ModernizationTest(unittest.TestCase):
+class TensorCore019AdoptionTest(unittest.TestCase):
     def test_dependency_exports_and_precise_random_validation_are_exact(self) -> None:
         self.assertEqual(tensor_core.__all__, _ROOT_EXPORTS)
         self.assertEqual(
@@ -179,6 +188,8 @@ class TensorCore016ModernizationTest(unittest.TestCase):
                 "TensorCollection",
                 "TensorField",
                 "TensorArtifact",
+                "TensorKernel",
+                "ProbabilityKernel",
             ),
         )
         self.assertEqual(tensor_validation.__all__, _TENSOR_VALIDATION_EXPORTS)
@@ -188,7 +199,19 @@ class TensorCore016ModernizationTest(unittest.TestCase):
         )
         self.assertEqual(
             tensor_random.__all__,
-            ("RngKey", "CounterRng", "Threefry4x32", "RngPositions"),
+            (
+                "RngKey",
+                "RngElements",
+                "RngAddress",
+                "CounterRng",
+                "Threefry4x32",
+                "Distribution",
+                "UniformDistribution",
+                "GaussianDistribution",
+                "PoissonDistribution",
+                "BinomialDistribution",
+                "MultinomialDistribution",
+            ),
         )
         self.assertEqual(random_validation.__all__, ("require_count_tensor",))
         for name in (*_TENSOR_VALIDATION_EXPORTS, *scalar_validation.__all__):
@@ -261,15 +284,15 @@ class TensorCore016ModernizationTest(unittest.TestCase):
         )
         self.assertIs(field.axis_at(1), axes[1])
         self.assertEqual(axes[2].coordinate_at(1), 2_000)
-        selected = RngPositions.from_shape((2, 3), device="cpu").select(1, 1)
+        selected = RngElements.from_shape((2, 3), device="cpu").select(1, 1)
         self.assertEqual(selected.shape, (2,))
         for operation in (
             lambda: field.axis_at(True),
             lambda: field.axis_at(-1),
             lambda: axes[2].coordinate_at(True),
             lambda: axes[2].coordinate_at(-1),
-            lambda: RngPositions.from_shape((2, 3), device="cpu").select(1, True),
-            lambda: RngPositions.from_shape((2, 3), device="cpu").select(1, -1),
+            lambda: RngElements.from_shape((2, 3), device="cpu").select(1, True),
+            lambda: RngElements.from_shape((2, 3), device="cpu").select(1, -1),
         ):
             with self.assertRaises((TypeError, IndexError)):
                 operation()
@@ -278,7 +301,7 @@ class TensorCore016ModernizationTest(unittest.TestCase):
 
     def test_python314_syntax_and_docstring_contracts_are_exact(self) -> None:
         production = tuple(sorted(Path("tensor_dslab").rglob("*.py")))
-        self.assertEqual(len(production), 60)
+        self.assertEqual(len(production), 61)
         for path in production:
             tree = ast.parse(path.read_text(), filename=str(path))
             self.assertTrue(ast.get_docstring(tree, clean=False), str(path))
@@ -423,17 +446,20 @@ class TensorCore016ModernizationTest(unittest.TestCase):
         self.assertEqual(functions, ("require_readout_structure",))
         self.assertIn("require_field_layout", source)
 
-    def test_rng_positions_factories_and_transforms_preserve_raw_addresses(
+    def test_rng_elements_factories_and_transforms_preserve_raw_addresses(
         self,
     ) -> None:
-        base = RngPositions.from_shape((2, 3, 4), device="cpu")
-        transformed = base.movedim(1, -1).select(0, 1).slice(0, 1, 4).offset(97)
+        base = RngElements.from_shape((2, 3, 4), device="cpu")
+        transformed = base.movedim(1, -1).select(0, 1).slice(0, 1, 4)
         self.assertEqual(transformed.shape, (3, 3))
         _RecordingRng.calls = []
-        _RecordingRng(seed=0).uniform(
-            key=keys.WHITE_NOISE_RNG_KEY,
-            positions=transformed,
-            dtype=torch.float64,
+        _RecordingRng(seed=0).words(
+            address=RngAddress.root(
+                key=keys.WHITE_NOISE_RNG_KEY,
+                elements=transformed,
+                shape=(),
+            ),
+            ordinals=(0,),
         )
         expected = (
             torch.arange(24, dtype=torch.int64)
@@ -441,18 +467,20 @@ class TensorCore016ModernizationTest(unittest.TestCase):
             .movedim(1, -1)
             .select(0, 1)
             .narrow(0, 1, 3)
-            + 97
         )
         self.assertTrue(torch.equal(_RecordingRng.calls[0], expected))
 
         caller = torch.tensor((3, 5, 8), dtype=torch.int64)
-        snapshot = RngPositions.from_tensor(caller)
+        snapshot = RngElements.from_tensor(caller)
         caller.fill_(0)
         _RecordingRng.calls = []
-        _RecordingRng(seed=0).uniform(
-            key=keys.WHITE_NOISE_RNG_KEY,
-            positions=snapshot,
-            dtype=torch.float64,
+        _RecordingRng(seed=0).words(
+            address=RngAddress.root(
+                key=keys.WHITE_NOISE_RNG_KEY,
+                elements=snapshot,
+                shape=(),
+            ),
+            ordinals=(0,),
         )
         self.assertTrue(
             torch.equal(
@@ -464,13 +492,18 @@ class TensorCore016ModernizationTest(unittest.TestCase):
     def test_fixed_key_source_is_unique_and_has_each_literal_once(self) -> None:
         self.assertEqual(
             tuple((key.namespace, key.stream) for key in _FIXED_KEYS),
-            tuple((0x54445331, stream) for stream in range(1, 11)),
+            tuple(
+                (0x54445331, stream)
+                for stream in (1, 2, 3, 4, 6, 8, 9, 10)
+            ),
         )
-        self.assertEqual(len(set(_FIXED_KEYS)), 10)
+        self.assertEqual(len(set(_FIXED_KEYS)), 8)
         source = Path("tensor_dslab/readout/runtime/keys.py").read_text()
         self.assertEqual(source.count("0x54445331"), 1)
-        for stream in range(1, 10):
+        for stream in (1, 2, 3, 4, 6, 8, 9):
             self.assertEqual(source.count(f"0x0000_000{stream}"), 1)
+        for retired in (5, 7):
+            self.assertNotIn(f"0x0000_000{retired}", source)
         self.assertEqual(source.count("0x0000_000A"), 1)
         for module in (tensor_dslab, readout):
             self.assertFalse(hasattr(module, "RNG_NAMESPACE"))

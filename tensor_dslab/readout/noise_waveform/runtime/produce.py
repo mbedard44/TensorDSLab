@@ -3,7 +3,7 @@
 import math
 
 import torch
-from tensor_core import CounterRng, RngKey, RngPositions
+from tensor_core import CounterRng, GaussianDistribution, RngElements, RngKey
 
 from tensor_dslab.readout.noise_waveform.field import NoiseWaveform
 from tensor_dslab.readout.noise_waveform.runtime.prepare import (
@@ -13,6 +13,10 @@ from tensor_dslab.readout.noise_waveform.runtime.prepare import (
     ZeroNoiseRuntime,
 )
 from tensor_dslab.readout.photoelectrons.field import Photoelectrons
+from tensor_dslab.readout.runtime.addresses import (
+    psd_noise_address,
+    white_noise_address,
+)
 
 
 def _white_noise(
@@ -24,17 +28,14 @@ def _white_noise(
     rng_key: RngKey,
     represented_rms: float,
 ) -> torch.Tensor:
-    positions = RngPositions.from_shape(shape, device=device)
-    return rng.gaussian(
+    elements = RngElements.from_shape(shape, device=device)
+    return GaussianDistribution(
         mean=0.0,
         standard_deviation=represented_rms,
-        key=rng_key,
-        positions=positions,
         dtype=dtype,
-        quantum=0,
         ordinal=0,
         count=1,
-    )
+    ).draw(rng=rng, address=white_noise_address(elements, key=rng_key))
 
 
 def _psd_noise(
@@ -52,20 +53,17 @@ def _psd_noise(
     non_sample_shape = shape[:sample_dimension] + shape[sample_dimension + 1 :]
     row_count = math.prod(non_sample_shape)
 
-    positions = RngPositions.from_shape(
+    elements = RngElements.from_shape(
         (row_count, frequency_count),
         device=device,
     ).slice(1, 1, None)
-    normals = rng.gaussian(
+    normals = GaussianDistribution(
         mean=0.0,
         standard_deviation=1.0,
-        key=rng_key,
-        positions=positions,
         dtype=dtype,
-        quantum=0,
         ordinal=0,
         count=2,
-    )
+    ).draw(rng=rng, address=psd_noise_address(elements, key=rng_key))
     normal_real = normals[..., 0]
     normal_imaginary = normals[..., 1]
 

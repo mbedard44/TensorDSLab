@@ -5,11 +5,12 @@ from dataclasses import dataclass
 from typing import final
 
 import torch
-from tensor_core import CounterRng, RngKey, RngPositions
+from tensor_core import CounterRng, GaussianDistribution, RngElements, RngKey
 from tensor_core.tensor.validation import require_representable_float
 
 from tensor_dslab.readout.charge.config import ChargeSmearingConfig
 from tensor_dslab.readout.runtime.keys import CHARGE_SMEARING_RNG_KEY
+from tensor_dslab.readout.runtime.addresses import charge_smearing_address
 
 
 @final
@@ -109,6 +110,7 @@ def simulate_charge_smearing(
     *,
     runtime: ChargeSmearingRuntime,
     rng: CounterRng,
+    elements: RngElements,
 ) -> torch.Tensor:
     if charge_pe.dtype not in (torch.float32, torch.float64):
         raise TypeError("charge_pe must use a supported floating dtype")
@@ -125,10 +127,6 @@ def simulate_charge_smearing(
         return charge_pe
     if runtime.represented_sigma <= 0.0:
         raise ValueError("charge-smearing width is invalid in the Charge dtype")
-    positions = RngPositions.from_shape(
-        tuple(charge_pe.shape),
-        device=charge_pe.device,
-    )
     sigma = torch.tensor(
         runtime.represented_sigma,
         dtype=charge_pe.dtype,
@@ -137,15 +135,15 @@ def simulate_charge_smearing(
     zero = torch.tensor(0.0, dtype=charge_pe.dtype, device=charge_pe.device)
     with torch.autocast(device_type=charge_pe.device.type, enabled=False):
         scale = sigma * torch.sqrt(charge_square_sum)
-    draw = rng.gaussian(
+    draw = GaussianDistribution(
         mean=charge_pe,
         standard_deviation=scale,
-        key=runtime.rng_key,
-        positions=positions,
         dtype=charge_pe.dtype,
-        quantum=0,
         ordinal=0,
         count=1,
+    ).draw(
+        rng=rng,
+        address=charge_smearing_address(elements, key=runtime.rng_key),
     )
     with torch.autocast(device_type=charge_pe.device.type, enabled=False):
         result = torch.maximum(draw, zero)

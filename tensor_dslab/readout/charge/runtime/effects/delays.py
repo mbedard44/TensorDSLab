@@ -5,6 +5,10 @@ from dataclasses import dataclass
 from fractions import Fraction
 from typing import final
 
+import torch
+from tensor_core import ProbabilityKernel, TensorKernel
+
+from tensor_dslab.common.axes import SampleAxis
 from tensor_dslab.common.units import canonical_magnitude
 from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 from tensor_dslab.readout.charge.config import (
@@ -21,9 +25,43 @@ _COMPLETE_LAW_TOLERANCE = 1.0e-11
 
 
 @final
+class DelayProbabilityKernel(ProbabilityKernel[tuple[type[SampleAxis]]]):
+    __slots__ = ()
+
+    def _require(self) -> None:
+        if self.axis_types != (SampleAxis,):
+            raise ValueError("delay kernel must use the SampleAxis role")
+        if len(self.shape) != 1 or self.shape[0] < 2:
+            raise ValueError("delay kernel must have one sample-offset dimension")
+
+
+@final
+class AfterpulseRecoveryKernel(TensorKernel[tuple[type[SampleAxis]]]):
+    __slots__ = ()
+
+    def _require(self) -> None:
+        if self.axis_types != (SampleAxis,):
+            raise ValueError("afterpulse recovery kernel must use the SampleAxis role")
+        if len(self.shape) != 1 or self.shape[0] < 2:
+            raise ValueError(
+                "afterpulse recovery kernel must have one sample-offset dimension"
+            )
+        if self.tensor.dtype not in (torch.float32, torch.float64):
+            raise TypeError("afterpulse recovery kernel must use a floating dtype")
+        if not bool(
+            torch.all(
+                torch.isfinite(self.tensor)
+                & (self.tensor >= 0.0)
+                & (self.tensor <= 1.0)
+            ).item()
+        ):
+            raise ValueError("afterpulse recovery kernel values must be in [0, 1]")
+
+
+@final
 @dataclass(frozen=True, slots=True)
 class DelayRuntime:
-    probabilities: tuple[float, ...]
+    kernel: DelayProbabilityKernel
     right_tails: tuple[float, ...]
 
 
@@ -31,8 +69,7 @@ class DelayRuntime:
 @dataclass(frozen=True, slots=True)
 class AfterpulseRuntime:
     delay: DelayRuntime
-    recovery: tuple[float, ...] | None
-    overflow_recovery: tuple[float, ...] | None
+    recovery: AfterpulseRecoveryKernel | None
 
 
 def _q_exp_zero(x: float) -> float:
@@ -52,6 +89,7 @@ def _prepare_exponential_from_inverse(
     x: float,
     *,
     sample_count: int,
+    device: torch.device,
 ) -> DelayRuntime:
     if not math.isfinite(x) or x <= 0.0:
         raise ValueError("exponential inverse ratio must be finite and positive")
@@ -92,13 +130,24 @@ def _prepare_exponential_from_inverse(
         _COMPLETE_LAW_TOLERANCE
     ):
         raise ValueError("exponential complete-law identity failed")
-    return DelayRuntime(tuple(probabilities), tuple(tails))
+    return DelayRuntime(
+        kernel=DelayProbabilityKernel(
+            tensor=torch.tensor(
+                probabilities,
+                dtype=torch.float64,
+                device=device,
+            ),
+            axis_types=(SampleAxis,),
+        ),
+        right_tails=tuple(tails),
+    )
 
 
 def prepare_exponential_delay(
     mean_delay_ns: float,
     *,
     sampling: SamplingRuntime,
+    device: torch.device,
 ) -> DelayRuntime:
     sample_count = sampling.sample_count
     if sample_count > _MAX_SAMPLE_COUNT:
@@ -113,13 +162,18 @@ def prepare_exponential_delay(
     ratio = mean_ps / float(period)
     if not math.isfinite(ratio) or not 2.0**-52 <= ratio <= 2.0**52:
         raise ValueError("exponential delay ratio is outside its represented domain")
-    return _prepare_exponential_from_inverse(1.0 / ratio, sample_count=sample_count)
+    return _prepare_exponential_from_inverse(
+        1.0 / ratio,
+        sample_count=sample_count,
+        device=device,
+    )
 
 
 def _prepare_fixed_delay(
     delay_ns: float,
     *,
     sampling: SamplingRuntime,
+    device: torch.device,
 ) -> DelayRuntime:
     sample_count = sampling.sample_count
     numerator, denominator = delay_ns.as_integer_ratio()
@@ -128,7 +182,14 @@ def _prepare_fixed_delay(
         sampling.sample_count * sampling.sample_period_ps
     ):
         return DelayRuntime(
-            probabilities=(0.0,) * sample_count,
+            kernel=DelayProbabilityKernel(
+                tensor=torch.zeros(
+                    sample_count,
+                    dtype=torch.float64,
+                    device=device,
+                ),
+                axis_types=(SampleAxis,),
+            ),
             right_tails=(1.0,) * (sample_count + 1),
         )
     offset, remainder = divmod(
@@ -154,23 +215,36 @@ def _prepare_fixed_delay(
             tails.append(fraction)
         else:
             tails.append(0.0)
-    return DelayRuntime(tuple(probabilities), tuple(tails))
+    return DelayRuntime(
+        kernel=DelayProbabilityKernel(
+            tensor=torch.tensor(
+                probabilities,
+                dtype=torch.float64,
+                device=device,
+            ),
+            axis_types=(SampleAxis,),
+        ),
+        right_tails=tuple(tails),
+    )
 
 
 def prepare_delay(
     config: FixedDelayConfig | ExponentialDelayConfig,
     *,
     sampling: SamplingRuntime,
+    device: torch.device,
 ) -> DelayRuntime:
     if type(config) is FixedDelayConfig:
         return _prepare_fixed_delay(
             canonical_magnitude(config.delay),
             sampling=sampling,
+            device=device,
         )
     if type(config) is ExponentialDelayConfig:
         return prepare_exponential_delay(
             canonical_magnitude(config.mean_delay),
             sampling=sampling,
+            device=device,
         )
     raise TypeError("crosstalk delay model is not recognized")
 
@@ -258,7 +332,8 @@ def prepare_afterpulse_recovery(
     *,
     sampling: SamplingRuntime,
     delay: DelayRuntime,
-) -> tuple[tuple[float, ...], tuple[float, ...]]:
+    device: torch.device,
+) -> tuple[float, ...]:
     period = sampling.sample_period_ps
     numerator, denominator = time_constant_ns.as_integer_ratio()
     if numerator * 1000 * (1 << 52) < denominator * period:
@@ -279,11 +354,13 @@ def prepare_afterpulse_recovery(
     effective = _prepare_exponential_from_inverse(
         combined,
         sample_count=sampling.sample_count,
+        device=device,
     )
     c = x / combined
     f_difference = _f_difference(x, y)
     recovery_weights: list[float] = []
-    for offset, probability in enumerate(delay.probabilities):
+    for offset in range(delay.kernel.shape[0]):
+        probability = float(delay.kernel.tensor[offset])
         if probability == 0.0:
             recovery_weights.append(0.0)
             continue
@@ -301,32 +378,13 @@ def prepare_afterpulse_recovery(
         if not 0.0 <= recovery_mass <= probability:
             raise ValueError("afterpulse recovery mass is invalid")
         if abs(
-            (recovery_mass + c * effective.probabilities[offset]) - probability
+            (
+                recovery_mass
+                + c * float(effective.kernel.tensor[offset])
+            )
+            - probability
         ) > _LOCAL_PROBABILITY_TOLERANCE:
             raise ValueError("afterpulse recovery category identity failed")
         recovery_weights.append(weight)
 
-    overflow_weights = [0.0]
-    for first_outside in range(1, sampling.sample_count + 1):
-        probability = delay.right_tails[first_outside]
-        if probability == 0.0:
-            overflow_weights.append(0.0)
-            continue
-        ell = (
-            -math.log1p(y / x)
-            + f_difference
-            - (first_outside - 1) * y
-        )
-        if not math.isfinite(ell) or ell > 0.0:
-            raise ValueError("afterpulse overflow recovery log ratio is invalid")
-        weight = -math.expm1(ell)
-        if not math.isfinite(weight) or not 0.0 <= weight <= 1.0:
-            raise ValueError("afterpulse overflow recovery is invalid")
-        recovery_mass = probability * weight
-        if abs(
-            (recovery_mass + c * effective.right_tails[first_outside])
-            - probability
-        ) > _LOCAL_PROBABILITY_TOLERANCE:
-            raise ValueError("afterpulse overflow recovery identity failed")
-        overflow_weights.append(weight)
-    return tuple(recovery_weights), tuple(overflow_weights)
+    return tuple(recovery_weights)

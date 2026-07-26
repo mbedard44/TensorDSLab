@@ -139,6 +139,24 @@ RNG, dependency, or facade semantics. The exact local gate passed with
 conditional unavailable-CUDA skips; integrated CUDA evidence and the first
 push remain separately authorized.
 
+[Maintenance 11](docs/implementation/maintenance_11_tensorcore_0_19_addressed_distributions.md)
+is the active fixed-commit migration to exact TensorCore `0.19.0` containing
+commit `ed17f4b637258f0a7f4544f235648b747f17fa44`. New stochastic code must use
+one semantically complete `RngElements` lattice, explicit `RngAddress`
+metadata, and the public Distribution or ProbabilityKernel owner selected by
+the work order. Do not restore manual offsets, call retired `CounterRng` law
+methods, duplicate TensorCore samplers, reuse retired overflow stream values,
+or expose private role keys. Scientific preparation still owns physical
+probabilities, destination mappings, boundary interpretation, count
+accumulation, and product validation.
+
+If these bytes are not on `main`, they remain a candidate under fixed-commit
+Validation and Review. If they are present unchanged on `main`, Review's
+fast-forward has completed; final Design acceptance is still pending until the
+work order and implementation index record **Merged / Closed**. This local
+CPU gate makes no integrated CUDA, accelerator-support, performance,
+publication, release, or deployment claim.
+
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency
 and no-silent-host-materialization requirements are TensorDSLab Design
@@ -683,20 +701,22 @@ backend failure at the first genuine distribution request as an execution
 failure.
 
 The private `readout/runtime/keys.py` table fixes namespace `0x54445331` and
-these append-only streams:
+these active streams:
 
 ```text
 white noise                                  1
 PSD noise                                    2
 dark count                                   3
 direct crosstalk retained                    4
-direct crosstalk overflow                    5
 delayed crosstalk retained                   6
-delayed crosstalk overflow                   7
 timing jitter                                8
 afterpulse                                   9
 charge smearing                             10
 ```
+
+Maintenance 11 retires former crosstalk overflow streams `5` and `7` without
+reservation or compatibility promise. Do not reuse them inside this
+maintenance or describe them as active roles.
 
 The constants are private immutable package policy and cannot be overridden by
 Config construction. Do not use duplicated literals, `IntEnum`, `auto()`,
@@ -710,18 +730,11 @@ closed Maintenance 2 implementation preserves their default-key outputs
 against selected TensorCore `0.9.0` and removes the old module and enum without
 shims.
 
-Charge timing/AP redistribution uses TensorDSLab-owned aggregate multinomial
-factorization through calls to TensorCore's public `rng.binomial(...)`.
-TensorDSLab prepares stable current-category and later-category masses, fixes
-category order, and assigns the final no-draw remainder. TensorCore owns exact
-no-draw degeneracies, strict reflection, the frozen one-uniform forward-CDF
-inversion below `n * p_star = 10`, and the frozen cancellation-resistant BTRS
-mapping at and above that crossover. BTRD and the cancellation-prone three-log
-grouping are not accepted v1 mappings. Aggregate counts are supported through
-the per-cell ceiling `2**53 - 1`; the stabilized BTRS log bound owns a central
-`1e-6` and complete-support mixed absolute/relative high-precision oracle gate.
-Multinomial preparation must never update a remaining probability by repeated
-subtraction from one or recover a tiny complement as `1-p`.
+Charge redistribution uses public TensorCore ProbabilityKernel,
+MultinomialDistribution, and BinomialDistribution owners. TensorDSLab prepares
+the scientific masses and their semantic category ordering; TensorCore owns
+generic distribution validation, address spans, word schedules, and sampling.
+Aggregate counts remain bounded by the per-cell ceiling `2**53 - 1`.
 
 Timing jitter analytically prepares the latent-uniform plus ideal-Gaussian law
 through the frozen log-domain one-sided tail evaluator in `rebuild.md`. Its
@@ -734,20 +747,20 @@ complete source-law L1 tolerance is `1e-11`. Negative probabilities, clipping,
 residual assignment, normalization, per-PE normals, Box-Muller jitter, and an
 arbitrary timing-tail cutoff are forbidden. Correctness-first quadratic
 sample-count work is accepted until a later measured optimization preserves
-the same law. Dark counts and the four
-crosstalk roles call TensorCore's public `rng.poisson(...)`: exact-zero no-draw,
-one-uniform CDF inversion below mean `10`, and Hoermann PTRS from `10` through
-`1e8`. Discrete probabilities, rate fields, and sampler control use binary64
-independently of the requested `Charge` dtype. TensorCore returns integer
-counts; TensorDSLab's physical charge ledgers retain the requested product
-dtype. Never substitute
+the same law. Dark counts and collapsed crosstalk destination rates use public
+`PoissonDistribution` objects. Direct/delayed crosstalk construct
+deterministic retained destination means and make one tensor-valued draw per
+mechanism, exact by Poisson splitting/superposition. Discrete probabilities,
+rate fields, and sampler control use binary64 independently of the requested
+`Charge` dtype. TensorCore returns integer counts; TensorDSLab's physical
+charge ledgers retain the requested product dtype. Never substitute
 per-avalanche expansion, `torch.poisson`, a normal approximation, global RNG,
 reseed-on-exhaustion, clipping, or a fallback algorithm. The exact caps,
-addressing, repeatability boundary, and validation oracles live in
+addressing, repeatability boundary, kernels, and validation oracles live in
 `docs/architecture/rebuild.md`.
 
 The active Charge numeric envelope is relational. Every source, working,
-frontier, mechanism, overflow, and cumulative count cell is no greater than
+frontier, mechanism, and cumulative count cell is no greater than
 `2**53 - 1`; nonnegative additions are checked before execution and there is no
 whole-grid population cap. Jitter, CT, and AP addresses respectively prove
 `S*N <= 2**63`, `K*N <= 2**63`, and `K*(S+1)*N <= 2**63`. The requested-dtype

@@ -545,6 +545,34 @@ scope, protected bytes, and hygiene all passed. The `13` TensorDSLab and two
 TensorCore CUDA skips are explicit; integrated CUDA and push remain separate
 later authorities.
 
+## Maintenance 11 Addressed Distribution Gate
+
+The
+[Maintenance 11 work order](implementation/maintenance_11_tensorcore_0_19_addressed_distributions.md)
+requires exact TensorCore `0.19.0` containing commit
+`ed17f4b637258f0a7f4544f235648b747f17fa44`, source/archive/package identity,
+and public-root imports. Focused proof must cover exact `RngElements` domains,
+role-named `RngAddress` metadata, raw words, deterministic no-representation
+paths, public Distribution/ProbabilityKernel delegation, retained-capacity
+selection, exact address fixtures, and absence of retired manual offsets,
+category draws, old law methods, and overflow state.
+
+Scientific proof must independently establish normalized prepared kernels,
+collapsed crosstalk destination means, Poisson splitting/superposition,
+afterpulse quantum `0`/`1`, count ceilings, checked accumulation, ledgers,
+boundaries, source/result storage, validation, and same-stack replay. Both
+executed notebooks require deterministic immediate replay, no errors,
+privacy-safe outputs, and source plus isolated-wheel execution. Complete
+source/archive discovery must not regress below `229/216/13`; all new tests
+must be discovered. Pyright must be clean and the dependency-negative fixture
+must report exactly `82` intended diagnostics in both forms.
+
+This local CPU gate authorizes no current integrated CUDA, accelerator-support,
+performance, release, deployment, calibration, or production-readiness claim.
+If the candidate bytes later appear unchanged on `main`, Review's fast-forward
+has completed; final Design acceptance remains pending until the work order
+and index record **Merged / Closed**.
+
 ## Governance Adoption Checks
 
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`.

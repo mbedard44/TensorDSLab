@@ -5,18 +5,24 @@ from dataclasses import dataclass
 from typing import final
 
 import torch
-from tensor_core import CounterRng, RngKey
+from tensor_core import (
+    CounterRng,
+    MultinomialDistribution,
+    ProbabilityKernel,
+    RngElements,
+    RngKey,
+)
 from tensor_core.random.validation import require_count_tensor
 
+from tensor_dslab.common.axes import SampleAxis
 from tensor_dslab.common.units import canonical_magnitude
-from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 from tensor_dslab.readout.charge.config import TimingJitterConfig
 from tensor_dslab.readout.charge.runtime.effects.counts import (
     checked_add,
-    draw_ordered_categories,
-    original_positions,
 )
+from tensor_dslab.readout.runtime.addresses import timing_jitter_address
 from tensor_dslab.readout.runtime.keys import TIMING_JITTER_RNG_KEY
+from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 
 
 _MAX_SAMPLE_COUNT = 8192
@@ -25,10 +31,25 @@ _COMPLETE_LAW_TOLERANCE = 1.0e-11
 
 
 @final
+class TimingJitterProbabilityKernel(
+    ProbabilityKernel[tuple[type[SampleAxis]]]
+):
+    __slots__ = ()
+
+    def _require(self) -> None:
+        if self.axis_types != (SampleAxis,):
+            raise ValueError("timing-jitter kernel must use the SampleAxis role")
+        if len(self.shape) != 1 or self.shape[0] < 3 or self.shape[0] % 2 == 0:
+            raise ValueError(
+                "timing-jitter kernel must have one odd displacement dimension"
+            )
+
+
+@final
 @dataclass(frozen=True, slots=True)
 class TimingJitterRuntime:
-    probabilities: tuple[float, ...]
-    left_tails: tuple[float, ...]
+    kernel: TimingJitterProbabilityKernel
+    completion_probability: float
     rng_key: RngKey
 
 
@@ -66,6 +87,7 @@ def prepare_timing_jitter(
     *,
     sampling: SamplingRuntime,
     tensor_numel: int,
+    device: torch.device,
 ) -> TimingJitterRuntime | None:
     sigma_ns = canonical_magnitude(config.sigma)
     if sigma_ns == 0.0:
@@ -73,7 +95,7 @@ def prepare_timing_jitter(
     sample_count = sampling.sample_count
     if sample_count > _MAX_SAMPLE_COUNT:
         raise ValueError("active timing jitter supports at most 8192 samples")
-    if sample_count * tensor_numel > 1 << 63:
+    if (2 * sample_count - 1) * tensor_numel > 1 << 63:
         raise ValueError("timing-jitter address lattice exceeds its domain")
     period_ps = float(sampling.sample_period_ps)
     if not (
@@ -140,10 +162,22 @@ def prepare_timing_jitter(
         - 1.0
     ) > _COMPLETE_LAW_TOLERANCE:
         raise ValueError("timing-jitter complete-law identity failed")
+    represented = (
+        *reversed(probabilities[1:]),
+        probabilities[0],
+        *probabilities[1:],
+    )
     return TimingJitterRuntime(
-        tuple(probabilities),
-        tuple(left_tails),
-        TIMING_JITTER_RNG_KEY,
+        kernel=TimingJitterProbabilityKernel(
+            tensor=torch.tensor(
+                represented,
+                dtype=torch.float64,
+                device=device,
+            ),
+            axis_types=(SampleAxis,),
+        ),
+        completion_probability=2.0 * left_tails[-1],
+        rng_key=TIMING_JITTER_RNG_KEY,
     )
 
 
@@ -153,74 +187,42 @@ def simulate_timing_jitter(
     sample_dimension: int,
     runtime: TimingJitterRuntime,
     rng: CounterRng,
+    elements: RngElements,
 ) -> torch.Tensor:
     require_count_tensor(counts, "timing-jitter input")
     if sample_dimension < 0 or sample_dimension >= counts.ndim:
         raise ValueError("sample_dimension is outside the count rank")
-    sample_count = len(runtime.probabilities)
+    sample_count = (runtime.kernel.shape[0] + 1) // 2
     if counts.shape[sample_dimension] != sample_count:
         raise ValueError("sample dimension disagrees with the prepared runtime")
     if not bool(torch.any(counts != 0).item()):
         return counts.clone()
 
-    total_count = counts.numel()
     sample_last = counts.movedim(sample_dimension, -1)
-    remaining = sample_last.clone()
     result = torch.zeros_like(sample_last)
-    positions = original_positions(
-        tuple(counts.shape),
-        sample_dimension=sample_dimension,
-        device=counts.device,
-    )
-
-    for target in range(sample_count):
-        destination = result[..., target]
-        for source in range(sample_count):
-            offset = target - source
-            if offset < 0:
-                distance = -offset
-                success = runtime.probabilities[distance]
-                later = (
-                    1.0
-                    - runtime.left_tails[distance - 1]
-                    + runtime.left_tails[source]
-                )
-            elif offset == 0:
-                success = runtime.probabilities[0]
-                later = runtime.left_tails[source] + runtime.left_tails[0]
-            else:
-                success = runtime.probabilities[offset]
-                later = runtime.left_tails[source] + runtime.left_tails[offset]
-            source_remaining = remaining[..., source]
-            shape = tuple(source_remaining.shape)
-            success_mass = torch.full(
-                shape,
-                success,
-                dtype=torch.float64,
-                device=counts.device,
-            )
-            later_mass = torch.full(
-                shape,
-                later,
-                dtype=torch.float64,
-                device=counts.device,
-            )
-            category, source_remainder = draw_ordered_categories(
-                source_remaining,
-                success_masses=(success_mass,),
-                failure_masses=(later_mass,),
-                positions=(
-                    positions.select(-1, source).offset(target * total_count),
-                ),
-                rng=rng,
+    sample_last_elements = elements.movedim(sample_dimension, -1)
+    displacement_origin = sample_count - 1
+    for source in range(sample_count):
+        source_counts = sample_last[..., source]
+        source_elements = sample_last_elements.select(-1, source)
+        allocation = MultinomialDistribution(
+            counts=source_counts,
+            kernel=runtime.kernel,
+            completion_probability=runtime.completion_probability,
+        ).draw(
+            rng=rng,
+            address=timing_jitter_address(
+                source_elements,
                 key=runtime.rng_key,
-                field="timing jitter",
-            )
-            remaining[..., source] = source_remainder
-            destination = checked_add(
-                destination,
-                category,
-                field="timing-jitter destination",
-            )
-        result[..., target] = destination
+                kernel_shape=runtime.kernel.shape,
+            ),
+        )
+        for kernel_index in range(runtime.kernel.shape[0]):
+            destination_index = source + kernel_index - displacement_origin
+            if 0 <= destination_index < sample_count:
+                result[..., destination_index] = checked_add(
+                    result[..., destination_index],
+                    allocation[kernel_index],
+                    field="timing-jitter destination",
+                )
     return result.movedim(-1, sample_dimension)

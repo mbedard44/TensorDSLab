@@ -6,10 +6,11 @@ from unittest.mock import patch
 import torch
 from tensor_core import (
     CounterRng,
+    MultinomialDistribution,
     NonnegativeFloat,
     PositiveInteger,
+    RngElements,
     RngKey,
-    RngPositions,
     Threefry4x32,
 )
 
@@ -82,6 +83,7 @@ def prepare_timing_jitter(
         config,
         sampling=sampling,
         tensor_numel=tensor_numel,
+        device=torch.device("cpu"),
     )
     if runtime is None:
         raise AssertionError("active timing jitter must prepare a runtime")
@@ -110,7 +112,17 @@ def simulate_timing_jitter(
         sample_dimension=sample_dimension,
         runtime=plan,
         rng=rng,
+        elements=RngElements.from_shape(
+            tuple(counts.shape),
+            device=counts.device,
+        ),
     )
+
+
+def _positive_probabilities(runtime: TimingJitterRuntime) -> tuple[float, ...]:
+    sample_count = (runtime.kernel.shape[0] + 1) // 2
+    values = runtime.kernel.tensor.tolist()
+    return tuple(float(value) for value in values[sample_count - 1 :])
 
 
 def _direct_probability(offset: int, ratio: float) -> float:
@@ -166,16 +178,17 @@ class TimingJitterPreparationTest(unittest.TestCase):
             tensor_numel=16,
         )
         ratio = 0.5
-        for offset, actual in enumerate(plan.probabilities):
+        probabilities = _positive_probabilities(plan)
+        for offset, actual in enumerate(probabilities):
             expected = _direct_probability(offset, ratio)
             self.assertLessEqual(abs(actual - expected), 1.0e-12)
         self.assertLessEqual(
             abs(
                 math.fsum(
                     (
-                        plan.probabilities[0],
-                        *(2.0 * value for value in plan.probabilities[1:]),
-                        2.0 * plan.left_tails[-1],
+                        probabilities[0],
+                        *(2.0 * value for value in probabilities[1:]),
+                        plan.completion_probability,
                     )
                 )
                 - 1.0
@@ -195,7 +208,7 @@ class TimingJitterPreparationTest(unittest.TestCase):
                     sampling=sampling,
                     tensor_numel=16,
                 )
-                self.assertEqual(len(plan.probabilities), 4)
+                self.assertEqual(plan.kernel.shape, (7,))
         with self.assertRaises(ValueError):
             prepare_timing_jitter(
                 TimingJitterConfig(
@@ -233,20 +246,20 @@ class TimingJitterPreparationTest(unittest.TestCase):
                     sampling=maximum_sampling,
                     tensor_numel=1,
                 )
-                self.assertEqual(len(plan.probabilities), 8192)
-                self.assertEqual(len(plan.left_tails), 8192)
+                self.assertEqual(plan.kernel.shape, (16383,))
 
+        exact_capacity = (1 << 63) // 15
         exact_address = prepare_timing_jitter(
             TimingJitterConfig(sigma=_ns(1.0)),
             sampling=_sampling(count=8),
-            tensor_numel=1 << 60,
+            tensor_numel=exact_capacity,
         )
-        self.assertEqual(len(exact_address.probabilities), 8)
+        self.assertEqual(exact_address.kernel.shape, (15,))
         with self.assertRaisesRegex(ValueError, "address lattice"):
             prepare_timing_jitter(
                 TimingJitterConfig(sigma=_ns(1.0)),
                 sampling=_sampling(count=8),
-                tensor_numel=(1 << 60) + 1,
+                tensor_numel=exact_capacity + 1,
             )
 
     def test_endpoint_fixtures_and_log_tail_split_match_frozen_oracles(self) -> None:
@@ -308,17 +321,15 @@ class TimingJitterPreparationTest(unittest.TestCase):
                     tensor_numel=16,
                 )
                 complete_error = 0.0
-                for actual, expected in zip(
-                    plan.probabilities,
-                    expected_probabilities,
-                ):
+                probabilities = _positive_probabilities(plan)
+                for actual, expected in zip(probabilities, expected_probabilities):
                     error = abs(actual - expected)
                     complete_error += error
                     self.assertLessEqual(error, 1.0e-12)
-                for actual, expected in zip(plan.left_tails, expected_tails):
-                    error = abs(actual - expected)
-                    complete_error += error
-                    self.assertLessEqual(error, 1.0e-12)
+                self.assertLessEqual(
+                    abs(plan.completion_probability / 2.0 - expected_tails[-1]),
+                    1.0e-12,
+                )
                 self.assertLessEqual(complete_error, 1.0e-11)
 
         expected_logs = (
@@ -364,46 +375,30 @@ class TimingJitterSimulationTest(unittest.TestCase):
         self.assertLessEqual(int(jittered.sum()), int(counts.sum()))
         self.assertTrue(torch.equal(counts, torch.tensor((3, 5, 7, 11), dtype=torch.int64).reshape(1, 1, 4)))
 
-    def test_category_calls_use_increasing_targets_andoriginal_positions(self) -> None:
+    def test_category_calls_use_kernel_addresses_and_original_elements(self) -> None:
         sampling = _sampling()
         counts = torch.ones((1, 1, 4), dtype=torch.int64)
         _PositionRecordingRng.calls = []
-        original = timing_jitter.draw_ordered_categories
-
-        def record(*args: object, **kwargs: object) -> torch.Tensor:
-            positions = kwargs["positions"]
-            assert type(positions) is tuple and len(positions) == 1
-            position = positions[0]
-            assert type(position) is RngPositions
-            _PositionRecordingRng(seed=0).uniform(
-                key=RngKey(namespace=0, stream=0),
-                positions=position,
-                dtype=torch.float64,
-            )
-            return original(*args, **kwargs)  # type: ignore[arg-type]
-
-        with patch.object(
-            timing_jitter,
-            "draw_ordered_categories",
-            side_effect=record,
-        ):
-            simulate_timing_jitter(
-                counts,
-                sample_dimension=2,
-                sampling=sampling,
-                config=TimingJitterConfig(sigma=_ns(1.0)),
-                rng=Threefry4x32(seed=9),
-            )
+        result = simulate_timing_jitter(
+            counts,
+            sample_dimension=2,
+            sampling=sampling,
+            config=TimingJitterConfig(sigma=_ns(1.0)),
+            rng=_PositionRecordingRng(seed=9),
+        )
+        self.assertEqual(result.shape, counts.shape)
         calls = _PositionRecordingRng.calls
-        self.assertEqual(len(calls), 16)
+        flattened = [int(call.item()) for call in calls]
+        self.assertEqual(len(flattened), 16)
         self.assertEqual(
-            [int(call.item()) for call in calls[:4]],
-            [0, 1, 2, 3],
+            flattened,
+            [
+                source + 4 * category
+                for source in range(4)
+                for category in range(4)
+            ],
         )
-        self.assertEqual(
-            [int(call.item()) for call in calls[4:8]],
-            [4, 5, 6, 7],
-        )
+        self.assertEqual(len(set(flattened)), len(flattened))
 
     def test_one_parent_ensemble_matches_prepared_categories(self) -> None:
         sampling = _sampling()

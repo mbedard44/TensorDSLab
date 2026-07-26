@@ -16,7 +16,7 @@ dependencies = [
     "numpy==2.5.1",
     "pint==0.25.3",
     "torch>=2.13,<2.14",
-    "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@e05324699892a8bcea024375720bfae1ed9569cc",
+    "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@ed17f4b637258f0a7f4544f235648b747f17fa44",
 ]
 
 [project.optional-dependencies]

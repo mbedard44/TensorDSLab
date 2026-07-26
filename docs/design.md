@@ -68,6 +68,22 @@ orchestration. It does not add a profile registry, calibration authority,
 hidden source builder, alternate simulator, new facade export, or accelerator
 claim.
 
+Maintenance 11 is the fixed-commit package migration to published TensorCore
+`0.19.0` containing commit
+`ed17f4b637258f0a7f4544f235648b747f17fa44`. It adopts class-first addressed
+distributions and kernels without changing TensorDSLab's public facades,
+caller-supplied `CounterRng`, seed control, Pint boundary, products, or
+validators. It also accepts one predeployment stochastic rebaseline:
+direct/delayed crosstalk collapse deterministic retained destination means
+before one tensor Poisson draw, and their obsolete overflow streams and
+finite-window outputs are retired without reservation.
+
+The candidate is under fixed-commit gates when absent from `main`. If the
+exact bytes later appear on `main`, Review's fast-forward has completed, while
+final Design acceptance remains pending until the work order and index say
+**Merged / Closed**. Integrated CUDA, performance, publication, release, and
+deployment remain separately authorized.
+
 ## Target Collaborator Surface
 
 The normal workflow is one public function plus named product classes:

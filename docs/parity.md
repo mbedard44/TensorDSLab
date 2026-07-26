@@ -260,6 +260,29 @@ Nothing in this refinement strengthens waveform numerical parity, establishes
 digitizer calibration or IV eventwise parity, or changes a scientific
 equation.
 
+## Maintenance 11 Addressed-Randomness Rebaseline
+
+Maintenance 11 is an intentional predeployment RNG comparison-boundary
+change, not a new donor-equivalence claim. TensorCore `0.19.0` supplies public
+addressed elements, addresses, distributions, and probability kernels.
+TensorDSLab retains its model probabilities/rates, fixed active role keys,
+semantic indices, physical displacement and boundary interpretation, checked
+accumulation, and product validation.
+
+| Surface | Classification and boundary |
+| --- | --- |
+| white/PSD noise, dark counts, smearing, timing jitter | **Numerical/statistical continuity at their existing named boundaries**; generic execution moves to TensorCore Distribution/ProbabilityKernel owners without a new donor claim. |
+| direct and delayed crosstalk | **Intentional RNG rebaseline**; deterministic retained destination means are sampled once with a tensor Poisson distribution, exact in law by Poisson splitting/superposition. Eventwise words and completed seeded samples are not required to match the retired factorization. |
+| direct/delayed finite-window overflow outputs | **Not applicable** to the retained product law; the scientifically unused outputs and their streams are retired without a reservation promise. |
+| afterpulse | **Address rebaseline with retained active key**; stream `0x0000_0009` remains, occurrence uses quantum `0`, and conditional delay allocation uses quantum `1`. The physical occurrence, delay, recovery, boundary, and ledger laws remain unchanged. |
+| `demos/random.ipynb` toy frontier | **Not applicable** to detector or donor parity; it is a CPU educational fixture for public address metadata, raw words, repeat equality, retained-capacity chunk equality, and global Torch RNG isolation. |
+
+Exact word/address fixtures apply only to the named new address schemas and
+execution stack. Same-stack repeatability, chunk/traversal invariance where
+specified, analytic probability/rate checks, and product invariants remain
+mandatory. No cross-version completed-value equality, integrated CUDA,
+performance, calibration, deployment, or production-readiness claim follows.
+
 Stage 4's reviewed tests establish the named TPC/Veto pulse checkpoints,
 independent deterministic reference equations, conditional analog composition,
 and representation-mapped ADC behavior in that work order's accepted CPU

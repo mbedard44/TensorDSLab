@@ -290,14 +290,14 @@ this boundary, and Maintenance 7 Candidate 1 preserves it while changing only
 the accepted vector-Quantity representation and pulse-amplitude narrowing
 recorded in its work order.
 
-Maintenance 7 fixes exact TensorCore `RngKey` values in the non-exported
-`readout/runtime/keys.py` table: white/PSD noise use streams `1`/`2`; dark
-count uses `3`; retained/overflow direct crosstalk use `4`/`5`;
-retained/overflow delayed crosstalk use `6`/`7`; timing jitter uses `8`;
-afterpulse uses `9`; and charge smearing uses `10`. All use namespace
-`0x54445331` (`TDS1`). Public Configs contain no role-key fields or override
-surface. The required `CounterRng.seed` remains the caller's realization
-control.
+Maintenance 11 fixes eight active TensorCore `RngKey` values in the
+non-exported `readout/runtime/keys.py` table: white/PSD noise use streams
+`1`/`2`; dark count uses `3`; direct/delayed crosstalk use `4`/`6`; timing
+jitter uses `8`; afterpulse uses `9`; and charge smearing uses `10`. All use
+namespace `0x54445331` (`TDS1`). Retired overflow streams `5` and `7` receive
+no reservation or compatibility promise. Public Configs contain no role-key
+fields or override surface. The required `CounterRng.seed` remains the
+caller's realization control.
 
 Each product preparer receives only its exact product config and shared
 sampling/source facts when relevant. It returns one private immutable product
@@ -459,10 +459,10 @@ For each source bin, private timing jitter marginalizes a uniform latent
 within-bin phase with a zero-mean ideal-normal displacement. The phase and
 displacement are independent within each avalanche and IID across avalanches.
 Preflight analytically integrates that law into binary64 probabilities for
-every target bin that remains inside the finite window. Runtime then
-redistributes aggregate integer counts through TensorDSLab's sequential
-multinomial orchestration, whose nontrivial category steps call TensorCore's
-public `rng.binomial(...)`; it does not draw a Gaussian per PE, invoke
+every target bin that remains inside the finite window and stores the
+reusable result as a public TensorCore `ProbabilityKernel`. Runtime then
+redistributes aggregate integer counts with one public
+`MultinomialDistribution`; it does not draw a Gaussian per PE, invoke
 Box-Muller for jitter, or materialize a jagged PE table.
 
 For a source bin `s`, target bins are sampled in increasing `t` order, which is
@@ -492,20 +492,22 @@ generation. Every primary, dark, direct-crosstalk, delayed-crosstalk, or
 afterpulse avalanche in one frontier receives the same recovery-independent
 offspring laws for the next generation.
 
-- Direct and delayed crosstalk use distinct Poisson means and distinct draws;
-  their rates are never silently combined.
-- Dark counts and retained/overflow crosstalk call TensorCore's public
-  `rng.poisson(...)`: exact-zero no-draw, one-uniform CDF inversion below mean
-  `10`, and Hoermann PTRS from `10` through the accepted per-cell Poisson mean
-  ceiling `1e8`.
+- Direct and delayed crosstalk use distinct collapsed destination-mean tensors
+  and one tensor-valued Poisson draw per mechanism; their rates are never
+  silently combined.
+- Dark counts and crosstalk use public `PoissonDistribution` objects. The
+  crosstalk construction is exact by Poisson splitting/superposition and is
+  not a total-first Poisson-plus-Multinomial factorization.
 - Direct/delayed crosstalk children are fresh unit-charge avalanches.
 - Afterpulse children are integer avalanches whose deposited charge may be
   weighted by the configured delay-dependent recovery response.
 - Recovery affects deposited charge only; it never changes offspring
   probability or creates marked recursive state.
 - Every child enters the same unmarked next frontier.
-- All mechanisms are causal; only right overflow exists, and overflow is
-  excluded from retained charge and later waveform products.
+- All mechanisms are causal; out-of-window children are excluded from retained
+  charge and later waveform products. Only afterpulse keeps an allocation
+  boundary category because its conditional delay law is sampled explicitly;
+  crosstalk finite-window overflow outputs are retired.
 
 The simulator maintains separate physical ledgers:
 
@@ -698,27 +700,23 @@ no simultaneous `seed=`, TensorDSLab RNG wrapper, `torch.Generator`, or global
 RNG.
 
 The private `readout/runtime/keys.py` table owns exact `RngKey` values for the
-ten stochastic roles. It uses namespace `TDS1` and streams `1` through `10` in
-the historical Stage 5/6 order. Afterpulse uses one coupled key; direct and
-delayed crosstalk each use distinct retained/overflow keys. Public Configs
-cannot override those addresses, and the builder performs no closure-wide
-caller-key collision admission.
+eight active stochastic roles. It uses namespace `TDS1`; afterpulse uses one
+coupled key with occurrence quantum `0` and delay-allocation quantum `1`.
+Public Configs cannot override those addresses, and the builder performs no
+closure-wide caller-key collision admission.
 
-TensorCore `0.15.0` owns counter generation, validated `RngPositions`,
-uniforms, parameterized Gaussian draws, Poisson sampling, binomial sampling,
-and the two count distributions' internal word schedules. TensorDSLab owns
-the fixed role table, scientific position/category lattices,
-direct-uniform/Gaussian ordinals, draw-free scientific policy, multinomial
-ordering and final remainders, count accumulation, and ledgers. Positions
-depend on actual
-tensor-dimension indices, not semantic coordinate values, strides, or storage
-addresses. A dimension or coordinate reordering is therefore a different
-positional interpretation and carries no permutation-invariance promise.
+TensorCore `0.19.0` owns counter generation, `RngElements`, `RngAddress`,
+uniform conversion, Distribution execution, TensorKernel, ProbabilityKernel,
+and the generic samplers' internal word schedules. TensorDSLab owns the fixed
+role table, scientific element lattices and address metadata, draw-free
+scientific policy, physical kernels/rates, count accumulation, and ledgers.
+Elements depend on actual tensor-dimension indices, not semantic coordinate
+values, strides, or storage addresses.
 
-Selection and arbitrary chunking are not automatically stable because each
-builder invocation starts logical positions at zero. Callers use different RNG
-seeds for independent invocations. A future chunk-stable API requires explicit
-global offsets.
+Selection and chunking preserve the original root capacity and do not
+renumber retained elements. Only non-renumbered slices of one declared root
+domain have the documented chunk-invariance boundary; separate builder calls
+do not implicitly share global offsets.
 
 Closed Stage 5/6 production used a private `_RngStream` and
 `readout/_random.py`. The Maintenance 2 implementation removes both
@@ -731,7 +729,9 @@ exact candidate and Design closeout above. The closed Stage 5/6 and Maintenance
 Maintenance 5 replaced the installed pin with exact TensorCore `0.13.0`.
 Maintenance 7 adopts exact TensorCore `0.15.0`, replaces
 `logical_positions(...)` with `RngPositions`, and preserves the same address
-values and RNG numerical contracts.
+values and RNG numerical contracts. Maintenance 11 supersedes that execution
+surface with exact TensorCore `0.19.0` addressed objects and the accepted
+crosstalk rebaseline above.
 
 TensorCore exposes no non-consuming concrete-algorithm capability query. The
 public builder accepts nominal `CounterRng` membership, performs no dummy draw,
@@ -792,6 +792,25 @@ request products through `simulate_readout(...)`, and display the pure, noise,
 analog, and digitized relationship. They add no hidden preparation path,
 product action, sampling authority, device policy, or calibrated detector
 claim.
+
+Maintenance 11 migrates only the generic random-execution representation and
+the explicitly accepted predeployment crosstalk rebaseline. Each stochastic
+Charge execution constructs one full-product `RngElements`; stochastic white
+or PSD noise constructs one model-specific element lattice. Private
+role-named `RngAddress` builders attach the fixed key, quantum, and ordinal
+metadata. Deterministic paths construct no elements, addresses, kernels, or
+distributions and request no words.
+
+White and PSD noise plus charge smearing use public Gaussian distributions;
+dark counts and collapsed crosstalk destination rates use Poisson
+distributions; timing jitter and afterpulse delay allocation use prepared
+ProbabilityKernels with Multinomial distributions; and afterpulse occurrence
+uses a Binomial distribution. Afterpulse keeps stream `0x0000_0009` with
+quantum `0` for occurrence and quantum `1` for delay allocation. Retired
+direct/delayed-crosstalk overflow streams and finite-window outputs have no
+reservation or compatibility promise. The physical displacement, boundary,
+ledger, accumulation, validation, and execution-order contracts remain
+TensorDSLab-owned and unchanged except for that accepted rebaseline.
 
 ## Validation
 

@@ -77,6 +77,7 @@ def prepare_charge(
             config.timing_jitter,
             sampling=sampling,
             tensor_numel=tensor_numel,
+            device=device,
         )
     )
 
@@ -95,8 +96,18 @@ def prepare_charge(
             sampling=sampling,
             floating_dtype=floating_dtype,
             tensor_numel=tensor_numel,
+            device=device,
         )
         ledger_bound = correlated_avalanches.ledger_bound
+        if (
+            correlated_avalanches.maximum_generations == 0
+            or (
+                correlated_avalanches.direct_crosstalk is None
+                and correlated_avalanches.delayed_crosstalk is None
+                and correlated_avalanches.afterpulse is None
+            )
+        ):
+            correlated_avalanches = None
 
     smearing = (
         None

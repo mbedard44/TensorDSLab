@@ -8,10 +8,12 @@ from unittest.mock import patch
 import torch
 from tensor_core import (
     CounterRng,
+    GaussianDistribution,
     NonnegativeFloat,
     PositiveFloat,
+    RngAddress,
+    RngElements,
     RngKey,
-    RngPositions,
     TensorAxis,
     Threefry4x32,
 )
@@ -248,19 +250,23 @@ def _psd_normals(
     dtype: torch.dtype,
     device: torch.device | str = "cpu",
 ) -> torch.Tensor:
-    positions = RngPositions.from_shape(
+    elements = RngElements.from_shape(
         (row_count, frequency_count),
         device=device,
     ).slice(1, 1, None)
-    return Threefry4x32(seed=seed).gaussian(
+    return GaussianDistribution(
         mean=0.0,
         standard_deviation=1.0,
-        key=PSD_NOISE_RNG_KEY,
-        positions=positions,
         dtype=dtype,
-        quantum=0,
         ordinal=0,
         count=2,
+    ).draw(
+        rng=Threefry4x32(seed=seed),
+        address=RngAddress.root(
+            key=PSD_NOISE_RNG_KEY,
+            elements=elements,
+            shape=(),
+        ),
     )
 
 
@@ -362,9 +368,9 @@ class NoiseProductBranchTest(unittest.TestCase):
         state = torch.random.get_rng_state().clone()
         with patch(
             "tensor_dslab.readout.noise_waveform.runtime.produce."
-            "RngPositions.from_shape",
-            side_effect=AssertionError("zero noise must not build positions"),
-        ) as positions:
+            "RngElements.from_shape",
+            side_effect=AssertionError("zero noise must not build elements"),
+        ) as elements:
             first = _produce_noise_waveform(
                 source,
                 sampling=sampling,
@@ -379,7 +385,7 @@ class NoiseProductBranchTest(unittest.TestCase):
                 rng=_FailingRng(seed=(1 << 64) - 1),
                 floating_dtype=torch.float32,
             )
-        positions.assert_not_called()
+        elements.assert_not_called()
         self.assertTrue(torch.equal(first.tensor, torch.zeros_like(first.tensor)))
         self.assertTrue(torch.equal(first.tensor, second.tensor))
         self.assertTrue(_independent_storage(first.tensor, second.tensor))
@@ -424,21 +430,23 @@ class NoiseProductBranchTest(unittest.TestCase):
                 )
                 model = _white_config(rms_input).model
                 assert type(model) is WhiteNoiseConfig
-                positions = RngPositions.from_shape(
+                elements = RngElements.from_shape(
                     source.shape,
                     device=source.tensor.device,
                 )
-                expected = Threefry4x32(
-                    seed=0x0123456789ABCDEF
-                ).gaussian(
+                expected = GaussianDistribution(
                     mean=0.0,
                     standard_deviation=represented_rms_mv,
-                    key=WHITE_NOISE_RNG_KEY,
-                    positions=positions,
                     dtype=dtype,
-                    quantum=0,
                     ordinal=0,
                     count=1,
+                ).draw(
+                    rng=Threefry4x32(seed=0x0123456789ABCDEF),
+                    address=RngAddress.root(
+                        key=WHITE_NOISE_RNG_KEY,
+                        elements=elements,
+                        shape=(),
+                    ),
                 )
                 self.assertTrue(torch.equal(result.tensor, expected))
                 self.assertNotEqual(float(torch.mean(result.tensor)), 0.0)
@@ -474,18 +482,22 @@ class NoiseProductBranchTest(unittest.TestCase):
         )
         self.assertTrue(torch.equal(first.tensor, repeated.tensor))
         self.assertTrue(torch.equal(first.tensor, relabeled.tensor))
-        positions = RngPositions.from_shape(first_source.shape, device="cpu")
+        elements = RngElements.from_shape(first_source.shape, device="cpu")
         psd_model = _flat_psd_config().model
         assert type(psd_model) is PsdNoiseConfig
-        other_stream = Threefry4x32(seed=99).gaussian(
+        other_stream = GaussianDistribution(
             mean=0.0,
             standard_deviation=1.0,
-            key=PSD_NOISE_RNG_KEY,
-            positions=positions,
             dtype=torch.float64,
-            quantum=0,
             ordinal=0,
             count=1,
+        ).draw(
+            rng=Threefry4x32(seed=99),
+            address=RngAddress.root(
+                key=PSD_NOISE_RNG_KEY,
+                elements=elements,
+                shape=(),
+            ),
         )
         self.assertFalse(torch.equal(first.tensor, other_stream))
 

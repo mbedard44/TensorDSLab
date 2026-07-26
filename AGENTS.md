@@ -339,6 +339,29 @@ passed with `13` conditional TensorDSLab and two TensorCore CUDA skips. No
 accelerator or push claim follows; the integrated CUDA gate and first push
 remain separate later authorities.
 
+Maintenance 11 TensorCore 0.19 Addressed Distributions is the active
+fixed-commit package gate under
+`docs/implementation/maintenance_11_tensorcore_0_19_addressed_distributions.md`.
+It selects exact published TensorCore `0.19.0` containing commit
+`ed17f4b637258f0a7f4544f235648b747f17fa44` and migrates stochastic execution
+from `RngPositions` plus `CounterRng` law methods to public `RngElements`,
+`RngAddress`, `Distribution`, `TensorKernel`, and `ProbabilityKernel`
+objects. TensorDSLab retains its physical laws, package-owned keys and address
+schemas, count ceilings, checked accumulation, and product postconditions.
+Direct and delayed crosstalk use their exact collapsed destination means
+followed by one tensor Poisson draw; afterpulse keeps stream `0x0000_0009`
+with occurrence quantum `0` and delay-allocation quantum `1`. The obsolete
+crosstalk overflow streams and scientifically unused finite-window outputs
+have no compatibility reservation.
+
+The Maintenance 11 bytes use three-state lifecycle wording. If they are absent
+from `main`, they are a feature-branch candidate under fixed-commit gates. If
+they are present unchanged on `main`, Review's fast-forward has completed, but
+final Design acceptance remains pending unless and until the work order and
+implementation index say **Merged / Closed**. No current integrated CUDA,
+accelerator-support, performance, release, deployment, or production-readiness
+claim follows.
+
 The first Stage 8 real-CUDA attempt correctly stopped before any accepted
 measurement when its protected-suite gate over-applied those macOS literals to
 the frozen Della Linux/x86_64 stack. Exact Stage 8 authority
@@ -708,6 +731,18 @@ key admission, and preserves all addresses. TensorDSLab continues to own
 scientific position/category lattices, direct-uniform/Gaussian ordinals,
 multinomial ordering and final remainders, draw-free scientific policy, count
 accumulation, and ledgers.
+
+Maintenance 11 supersedes that live execution description. Exact TensorCore
+`0.19.0` owns `RngElements`, `RngAddress`, Distribution, TensorKernel, and
+ProbabilityKernel mechanics. Eight role keys remain active: streams `1`, `2`,
+`3`, `4`, `6`, `8`, `9`, and `10`; former crosstalk overflow streams `5` and
+`7` are retired without reservation. Afterpulse stream `9` uses occurrence
+quantum `0` and delay-allocation quantum `1`. TensorDSLab retains its
+scientific element lattices and address schemas, physical kernels/rates,
+boundary meaning, count ceilings, checked accumulation, ledgers, and product
+validation. Do not restore the old methods, offsets, category helper, overflow
+roles, or finite-window outputs.
+
 Import only public TensorCore package-root names; do not copy or import
 protected RNG or promoted distribution mechanics. Published TensorCore
 `0.13.0` preserves that accepted public RNG surface while adding compact axes,
