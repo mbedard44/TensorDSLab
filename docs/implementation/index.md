@@ -882,6 +882,34 @@ dependency, metadata, demo, test, API, science, RNG, parity, or governance
 byte. Review verification of the exact closeout remains the final gate before
 the authorized qualified ordinary GitHub push.
 
+## Provisional Maintenance 11 Design
+
+### [Maintenance 11 TensorCore 0.19 Addressed Distributions](maintenance_11_tensorcore_0_19_addressed_distributions.md)
+
+Status: **Provisional Design / Non-dispatchable**.
+
+This future maintenance records the package-owned migration from TensorCore
+`0.16.0` `RngPositions` and `CounterRng` distribution methods to the
+TensorCore `0.19.0` `RngElements`, `RngAddress`, `Distribution`,
+`TensorKernel`, and `ProbabilityKernel` architecture. It freezes the intended
+effect mapping: Gaussian noise and charge smearing, Poisson dark counts,
+ProbabilityKernel-backed timing-jitter and afterpulse allocation, and the
+collapsed rate-first Poisson construction for direct and delayed crosstalk.
+TensorDSLab continues to own detector axes, displacement and boundary
+semantics, physical laws, fixed scientific keys and address schemas, count
+ceilings, accumulation, and product validation.
+
+The draft deliberately retires manual position offsets, private duplicate
+distribution orchestration, and scientifically unused tail/finite-window
+overflow outputs while reserving retired RNG identities. It is not executable
+authority. Dispatch remains blocked until TensorCore publishes an exact
+containing `0.19.0` commit, TensorDSLab selects that immutable dependency pin,
+the afterpulse occurrence/delay address separation is frozen, exact scope and
+evidence allowlists are committed, all required package roles are active, and
+the user separately authorizes Implementation. No dependency adoption,
+production/test edit, CUDA action, merge, push, or compatibility claim follows
+from this provisional record.
+
 ## Expected Stage Discipline
 
 Each stage should stay scoped to its work order. If implementation reveals a
