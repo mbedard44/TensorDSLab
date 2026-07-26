@@ -500,35 +500,239 @@ class CorrelatedAvalancheStatisticalTest(unittest.TestCase):
     def test_afterpulse_occurrence_delay_recovery_and_boundary_statistics(
         self,
     ) -> None:
-        sample_size = 1 << 15
-        roots = torch.zeros((sample_size, 1, 4), dtype=torch.int64)
-        roots[:, 0, 0] = 4
-        result = _simulate(
-            roots,
-            CorrelatedAvalancheConfig(
-                maximum_generations=NonnegativeInteger(1),
-                afterpulse=_afterpulse(probability=0.5, recovery=True),
+        sample_size = 1 << 16
+        sample_period_ns = 2.0
+        root_pattern = torch.tensor(
+            (4, 3, 2, 1, 5, 2),
+            dtype=torch.int64,
+        )
+        roots = root_pattern.reshape(1, 1, -1).expand(
+            sample_size,
+            1,
+            -1,
+        ).clone()
+        afterpulse = AfterpulseConfig(
+            probability=Probability(0.35),
+            mean_delay=_ns(5.0),
+            recovery=AfterpulseRecoveryConfig(
+                time_constant=_ns(8.0),
             ),
         )
-        assert result.afterpulse_count is not None
-        retained = result.afterpulse_count.sum(dim=-1)[:, 0].to(torch.float64)
-        expected_retained_probability = 0.5 * (
+        maximum_generations = 3
+        config = CorrelatedAvalancheConfig(
+            maximum_generations=NonnegativeInteger(maximum_generations),
+            afterpulse=afterpulse,
+        )
+        result = _simulate(
+            roots,
+            config,
+            rng=Threefry4x32(seed=7_321),
+        )
+        replay = _simulate(
+            roots,
+            config,
+            rng=Threefry4x32(seed=7_321),
+        )
+        for field in result.__dataclass_fields__:
+            first = getattr(result, field)
+            second = getattr(replay, field)
+            if first is None:
+                self.assertIsNone(second)
+            else:
+                assert second is not None
+                self.assertTrue(torch.equal(first, second), field)
+
+        occurrence_probability = afterpulse.probability.value
+        mean_delay_ns = float(afterpulse.mean_delay.magnitude)
+        assert afterpulse.recovery is not None
+        recovery_time_ns = float(
+            afterpulse.recovery.time_constant.magnitude
+        )
+        delay_rate = 1.0 / mean_delay_ns
+        recovery_rate = 1.0 / recovery_time_ns
+        sample_count = root_pattern.numel()
+
+        def phase_marginal_probability(
+            rate: float,
+            offset: int,
+        ) -> float:
+            def primitive(
+                time_ns: float,
+                *,
+                constant: float,
+                slope: float,
+            ) -> float:
+                return -math.exp(-rate * time_ns) * (
+                    constant
+                    + slope * time_ns
+                    + slope / rate
+                )
+
+            if offset == 0:
+                return primitive(
+                    sample_period_ns,
+                    constant=1.0,
+                    slope=-1.0 / sample_period_ns,
+                ) - primitive(
+                    0.0,
+                    constant=1.0,
+                    slope=-1.0 / sample_period_ns,
+                )
+            left = (offset - 1) * sample_period_ns
+            center = offset * sample_period_ns
+            right = (offset + 1) * sample_period_ns
+            rising = primitive(
+                center,
+                constant=-(offset - 1),
+                slope=1.0 / sample_period_ns,
+            ) - primitive(
+                left,
+                constant=-(offset - 1),
+                slope=1.0 / sample_period_ns,
+            )
+            falling = primitive(
+                right,
+                constant=offset + 1,
+                slope=-1.0 / sample_period_ns,
+            ) - primitive(
+                center,
+                constant=offset + 1,
+                slope=-1.0 / sample_period_ns,
+            )
+            return rising + falling
+
+        delay_probabilities = tuple(
+            phase_marginal_probability(delay_rate, offset)
+            for offset in range(sample_count)
+        )
+        combined_rate = delay_rate + recovery_rate
+        recovery_weights = tuple(
             1.0
-            - math.fsum(
-                (0.0,)
+            - (
+                delay_rate
+                / combined_rate
+                * phase_marginal_probability(combined_rate, offset)
+                / delay_probabilities[offset]
+            )
+            for offset in range(sample_count)
+        )
+        self.assertTrue(
+            all(0.0 < probability < 1.0 for probability in delay_probabilities)
+        )
+        self.assertLess(math.fsum(delay_probabilities), 1.0)
+        self.assertTrue(
+            all(0.0 < weight < 1.0 for weight in recovery_weights)
+        )
+
+        count_matrix = torch.zeros(
+            (sample_count, sample_count),
+            dtype=torch.float64,
+        )
+        charge_matrix = torch.zeros_like(count_matrix)
+        square_matrix = torch.zeros_like(count_matrix)
+        for source in range(sample_count):
+            for destination in range(source, sample_count):
+                offset = destination - source
+                probability = (
+                    occurrence_probability * delay_probabilities[offset]
+                )
+                weight = recovery_weights[offset]
+                count_matrix[source, destination] = probability
+                charge_matrix[source, destination] = probability * weight
+                square_matrix[source, destination] = (
+                    probability * weight * weight
+                )
+        self.assertTrue(
+            torch.equal(
+                torch.tril(count_matrix, diagonal=-1),
+                torch.zeros_like(count_matrix),
             )
         )
-        self.assertGreater(float(retained.mean()), 0.0)
-        self.assertLess(float(retained.mean()), 4.0 * expected_retained_probability)
+        discarded_probability = (
+            occurrence_probability - count_matrix.sum(dim=1)
+        )
+        self.assertTrue(torch.all(discarded_probability > 0.0))
+        self.assertGreater(
+            float(discarded_probability[-1]),
+            float(discarded_probability[0]),
+        )
+
+        expected_roots = root_pattern.to(torch.float64)
+        expected_frontier = expected_roots
+        expected_afterpulse_count = torch.zeros_like(expected_roots)
+        expected_afterpulse_charge = torch.zeros_like(expected_roots)
+        expected_afterpulse_square_sum = torch.zeros_like(expected_roots)
+        for _ in range(maximum_generations):
+            expected_afterpulse_count = (
+                expected_afterpulse_count
+                + expected_frontier @ count_matrix
+            )
+            expected_afterpulse_charge = (
+                expected_afterpulse_charge
+                + expected_frontier @ charge_matrix
+            )
+            expected_afterpulse_square_sum = (
+                expected_afterpulse_square_sum
+                + expected_frontier @ square_matrix
+            )
+            expected_frontier = expected_frontier @ count_matrix
+        expected_total_count = expected_roots + expected_afterpulse_count
+        expected_S1 = expected_roots + expected_afterpulse_charge
+        expected_S2 = expected_roots + expected_afterpulse_square_sum
+
+        assert result.afterpulse_count is not None
         assert result.afterpulse_charge is not None
         assert result.afterpulse_charge_square_sum is not None
-        self.assertTrue(torch.all(result.afterpulse_charge >= 0))
-        self.assertTrue(
-            torch.all(
-                result.afterpulse_charge_square_sum
-                <= result.afterpulse_charge
-            )
+        observed_and_expected = (
+            (
+                "afterpulse_count",
+                result.afterpulse_count,
+                expected_afterpulse_count,
+            ),
+            (
+                "afterpulse_charge",
+                result.afterpulse_charge,
+                expected_afterpulse_charge,
+            ),
+            (
+                "afterpulse_charge_square_sum",
+                result.afterpulse_charge_square_sum,
+                expected_afterpulse_square_sum,
+            ),
+            (
+                "final_frontier",
+                result.final_frontier,
+                expected_frontier,
+            ),
+            (
+                "total_count",
+                result.total_count,
+                expected_total_count,
+            ),
+            ("S1", result.S1, expected_S1),
+            ("S2", result.S2, expected_S2),
         )
+        for field, observed, expected in observed_and_expected:
+            values = observed[:, 0].to(torch.float64)
+            mean = values.mean(dim=0)
+            empirical_error = (
+                values.std(dim=0, correction=1) / math.sqrt(sample_size)
+            )
+            conservative_error = torch.sqrt(
+                torch.clamp(expected.abs(), min=1.0) / sample_size
+            )
+            standard_error = torch.maximum(
+                empirical_error,
+                conservative_error,
+            )
+            for destination in range(sample_count):
+                with self.subTest(field=field, destination=destination):
+                    _assert_statistic(
+                        self,
+                        float(mean[destination]),
+                        float(expected[destination]),
+                        float(standard_error[destination]),
+                    )
 
     def test_fixed_and_exponential_crosstalk_with_recovered_afterpulses(self) -> None:
         roots = torch.tensor([[[5, 0, 0, 0]]], dtype=torch.int64)
