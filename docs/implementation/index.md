@@ -882,13 +882,13 @@ dependency, metadata, demo, test, API, science, RNG, parity, or governance
 byte. Review verification of the exact closeout remains the final gate before
 the authorized qualified ordinary GitHub push.
 
-## Provisional Maintenance 11 Design
+## Maintenance 11 Production Work Order
 
 ### [Maintenance 11 TensorCore 0.19 Addressed Distributions](maintenance_11_tensorcore_0_19_addressed_distributions.md)
 
-Status: **Provisional Design / Non-dispatchable**.
+Status: **Design-complete / Implementation pending**.
 
-This future maintenance records the package-owned migration from TensorCore
+This maintenance records the package-owned migration from TensorCore
 `0.16.0` `RngPositions` and `CounterRng` distribution methods to the
 TensorCore `0.19.0` `RngElements`, `RngAddress`, `Distribution`,
 `TensorKernel`, and `ProbabilityKernel` architecture. It freezes the intended
@@ -899,22 +899,25 @@ TensorDSLab continues to own detector axes, displacement and boundary
 semantics, physical laws, fixed scientific keys and address schemas, count
 ceilings, accumulation, and product validation.
 
-The draft deliberately retires manual position offsets, private duplicate
+The work order deliberately retires manual position offsets, private duplicate
 distribution orchestration, and scientifically unused tail/finite-window
-overflow outputs while reserving retired RNG identities. It also proposes one
-executed CPU `demos/random.ipynb` walkthrough of elements, addresses, raw
-Threefry words, deterministic delayed-crosstalk rate construction, one-step
-tensor Poisson sampling, replay, chunk invariance, and global-RNG isolation.
+overflow outputs. The retired overflow stream values receive no permanent
+reservation promise in this predeployment rebaseline. Afterpulse retains
+stream `0x0000_0009`, with quantum `0` for occurrence and quantum `1` for
+delay allocation. The work order also adds one executed CPU
+`demos/random.ipynb` walkthrough of elements, addresses, raw Threefry words,
+deterministic delayed-crosstalk rate construction, one-step tensor Poisson
+sampling, replay, chunk invariance, and global-RNG isolation.
 Exact published TensorCore containing commit
-`ed17f4b637258f0a7f4544f235648b747f17fa44` is the selected future dependency
-target, while current TensorDSLab remains pinned to
-`e05324699892a8bcea024375720bfae1ed9569cc`. The record is not executable
-authority. Dispatch remains blocked until the afterpulse occurrence/delay
-address separation is frozen, exact scope and evidence allowlists are
-committed, all required package roles are active, and the user separately
-authorizes Implementation. No dependency adoption, production/test/demo edit,
-CUDA action, merge, push, or compatibility claim follows from this provisional
-record.
+`ed17f4b637258f0a7f4544f235648b747f17fa44` is the selected dependency
+target, while the pre-implementation TensorDSLab baseline remains pinned to
+`e05324699892a8bcea024375720bfae1ed9569cc`. The exact committed work-order
+bytes are executable authority and freeze a `48`-endpoint ceiling, one new
+production address owner, the afterpulse quantum `0`/`1` split, the finite
+candidate route, and complete
+CPU/typing/artifact/demo evidence. Implementation may begin only from those
+exact committed bytes. CUDA, merge, push, publication, and compatibility
+claims remain prohibited.
 
 ## Expected Stage Discipline
 

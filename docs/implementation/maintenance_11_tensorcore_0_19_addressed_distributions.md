@@ -1,6 +1,6 @@
 # Maintenance 11 TensorCore 0.19 Addressed Distributions
 
-Status: **Provisional Design / Non-dispatchable**
+Status: **Design-complete / Implementation pending**
 
 Stable key:
 `TensorDSLab/maintenance-11-tensorcore-0-19-addressed-distributions`
@@ -13,15 +13,16 @@ class-first addressed Distribution and TensorKernel surfaces, and add one
 focused educational notebook that makes the resulting counter-based RNG
 architecture inspectable through a delayed-crosstalk example.
 
-This record preserves the accepted migration decisions and exact TensorCore
-publication evidence. It is not yet a production work order. It authorizes no
-dependency change, implementation, test or demo edit, compatibility claim,
-CUDA work, merge, or push.
+This is the package-owned executable production work order. It freezes the
+accepted migration decisions, exact TensorCore publication evidence,
+predeployment RNG rebaseline, changed-path ceiling, protected paths, and
+required evidence.
 
-Before dispatch, TensorDSLab Design must reverify the exact published
-TensorCore containing commit and package bytes, freeze the remaining address
-decision and final changed-file/test allowlists, obtain renewed exact consumer
-evidence, and record explicit user authorization.
+The user authorized finalization and Implementation after accepting the
+predeployment stream rebaseline. This authority permits only the
+Implementation-to-Validation-to-Review candidate loop described below. It
+does not authorize compatibility claims, CUDA work, merge, push, publication,
+or release.
 
 This maintenance follows:
 
@@ -71,7 +72,7 @@ The current stochastic implementation uses:
 - ten package-owned role keys in namespace `0x54445331`.
 
 Those are operative current facts until this maintenance is separately
-completed. This provisional record does not silently supersede the current
+completed. This work order does not silently supersede the current
 source, architecture, parity, or validation contract.
 
 ## Selected TensorCore Target
@@ -210,8 +211,10 @@ intermediate published or merged state may:
 `0x54445331` and fixed role streams.
 
 Existing active role identifiers are not reassigned. Stream identifiers
-retired by this maintenance remain permanently reserved and must be recorded
-as such rather than reused for a new law.
+retired by this maintenance are removed from the active table. Because this is
+a predeployment package-wide RNG rebaseline, their former numeric values carry
+no permanent reservation or compatibility promise. Any later reuse still
+requires an explicit future Design decision.
 
 The selected role treatment is:
 
@@ -221,17 +224,18 @@ The selected role treatment is:
 | PSD noise | retained |
 | dark counts | retained |
 | direct crosstalk retained | retained for collapsed destination Poisson |
-| direct crosstalk overflow | retired and permanently reserved |
+| direct crosstalk overflow | retired with no surviving key |
 | delayed crosstalk retained | retained for collapsed destination Poisson |
-| delayed crosstalk overflow | retired and permanently reserved |
+| delayed crosstalk overflow | retired with no surviving key |
 | timing jitter | retained for kernel allocation |
-| afterpulse | retained for occurrence Binomial |
+| afterpulse | retained for occurrence and delay under distinct quanta |
 | charge smearing | retained |
 
-Afterpulse delay allocation requires identity distinct from afterpulse
-occurrence. The final dispatch amendment must freeze either one new append-only
-role stream or an equally collision-safe explicit quantum/domain separation.
-No Implementation thread may choose that distinction implicitly.
+`AFTERPULSE_RNG_KEY` remains exact stream `0x0000_0009`. Afterpulse occurrence
+uses quantum `0`; afterpulse delay allocation uses quantum `1`. This keeps one
+scientific role key while giving the two laws collision-distinct counter
+domains. No new stream is added, and the retired overflow streams are not
+repurposed by this maintenance.
 
 ### Address Construction
 
@@ -278,10 +282,51 @@ generation_address = root.select(generation_index)
 `generation_address` is atomic and its element shape equals the complete
 destination-rate tensor.
 
-Exact constructors and Runtime storage locations remain to be frozen in the
-dispatch amendment after a focused source/test inventory. Reusable roots may
-be prepared once; per-source and bounded-chunk selection remains downstream
-execution policy.
+For generation-indexed afterpulse occurrence, the selected conceptual address
+uses the complete frontier elements:
+
+```python
+occurrence_root = RngAddress.root(
+    key=AFTERPULSE_RNG_KEY,
+    elements=frontier_elements,
+    shape=(maximum_generations,),
+    quantum=0,
+)
+occurrence_address = occurrence_root.select(generation_index)
+```
+
+For delay allocation from one selected source sample, the source
+`RngElements` retain their original identities and root capacity:
+
+```python
+delay_root = RngAddress.root(
+    key=AFTERPULSE_RNG_KEY,
+    elements=source_elements,
+    shape=(maximum_generations, *delay_kernel.shape),
+    quantum=1,
+)
+delay_address = delay_root.select(generation_index)
+```
+
+`occurrence_address` is atomic. `delay_address.shape` equals
+`delay_kernel.shape`, as required by `MultinomialDistribution`. Source identity
+comes from the non-renumbered selected `RngElements`; no extra source-domain
+dimension or positional offset is added.
+
+`produce_charge(...)` constructs one canonical full-product `RngElements`
+lattice when at least one stochastic Charge effect is active and passes that
+same exact object through the effect sequence. A fully deterministic Charge
+request constructs no random lattice. `produce_noise_waveform(...)` constructs
+one model-specific lattice: the complete output lattice for white noise, the
+coefficient lattice for PSD noise, and no lattice for exact-zero noise.
+
+Reusable timing-jitter, delay, and recovery probability kernels are prepared
+once by the existing Charge preparation actions and stored by their existing
+private Runtime records. Dynamic laws whose operands depend on the current
+frontier remain execution-local. White-noise, PSD-noise, dark-count, and charge-
+smearing Distribution objects are one-use execution values and do not add
+Runtime fields merely to cache one draw. Per-source and bounded-chunk
+selection remains downstream execution policy.
 
 ## Distribution Selection By Effect
 
@@ -300,9 +345,10 @@ execution policy.
 `UniformDistribution` has no current production consumer and must not be added
 merely to exercise the dependency surface.
 
-Reusable immutable scalar laws and kernels may be stored by private product
-Runtime records when preparation owns all their inputs. The Runtime record
-itself remains a final frozen slotted dataclass with no base, execution method,
+Reusable immutable ProbabilityKernels are stored by the existing private
+Charge Runtime records when preparation owns all their inputs. No scalar
+Distribution is stored solely to reuse a one-draw value. Each Runtime record
+remains a final frozen slotted dataclass with no base, execution method,
 mutable cache, Config, product, or collection.
 
 Dynamic laws whose tensor parameters depend on the current frontier, counts,
@@ -468,7 +514,8 @@ The following retire:
 - manual category position offsets.
 
 Occurrence and delay allocation require collision-distinct addresses. Their
-exact role-key/quantum choice is a mandatory pre-dispatch decision.
+exact selected split is the shared stream-`0x0000_0009` key with quantum `0`
+for occurrence and quantum `1` for delay allocation.
 
 This factorization preserves the intended occurrence and conditional delay
 laws but deliberately rebaselines exact results and word schedules.
@@ -544,8 +591,9 @@ The following retire without replacement:
 - overflow role-key use; and
 - any overflow recovery/bookkeeping path.
 
-The two historical overflow stream identifiers remain permanently reserved.
-They must not be reassigned to another role.
+The two historical overflow key constants and semantic assignments are
+removed. Their former numeric stream values receive no reservation or
+compatibility status through this predeployment rebaseline.
 
 The public `Charge` product already excludes these private diagnostic values.
 Their removal changes private execution and exact RNG traces, not the public
@@ -623,8 +671,8 @@ The mechanical portion includes:
 
 The following are not mechanical:
 
-- every role's complete address-domain shape and selection order;
-- afterpulse occurrence/allocation identity separation;
+- every role's complete address-domain shape and selection order, including
+  the selected afterpulse quantum split;
 - timing-jitter displacement kernel order;
 - boundary-discard behavior under represented cells;
 - collapsed crosstalk destination-rate execution;
@@ -766,8 +814,9 @@ The notebook should include compact plots of:
 
 It should also include a small table relating displayed destination element
 identities, selected address-domain state, raw ordinals, and returned
-Threefry words. The dependency is now exact `ed17f4b`; exact displayed values
-are frozen after the final address schema is selected.
+Threefry words. The dependency and delayed-crosstalk address schema are now
+selected; exact displayed values are frozen during implementation and then
+locked by the committed notebook proof.
 
 The existing root `create_environment.sh` and the existing `[demos]` optional
 dependency group remain the sole environment path. The new notebook adds no
@@ -790,16 +839,157 @@ The notebook must be committed with a clean deterministic execution:
 
 Prefer a focused new `tests/test_random_demo.py` proof owner rather than
 further expanding the already broad readout-profile/demo test module. The
-final dispatch amendment must freeze the exact test path and allowlist; this
-provisional filename is not permission to create a placeholder test.
+new test must contain the real notebook contract and execution proof; it is
+not a placeholder.
 
-## Provisional Implementation Sequence
+## Exact Changed-Path Ceiling
 
-After the exact publication and dispatch gates close, one atomic candidate
-should proceed internally in this order:
+Implementation may change only the exact paths in this section. Rename pairs
+count as both old and new endpoints. A required path outside this ceiling is a
+Design contradiction and stops Implementation before that byte changes.
+
+### Dependency, Environment, And Demos
+
+```text
+pyproject.toml
+create_environment.sh
+demos/readout.ipynb
+demos/random.ipynb
+```
+
+`demos/random.ipynb` is new. The existing readout notebook may change only to
+refresh exact executed stochastic outputs and synchronized dependency wording;
+its source Config/profile/product/plot contract otherwise remains exact.
+
+### Production
+
+```text
+tensor_dslab/readout/runtime/addresses.py
+tensor_dslab/readout/runtime/keys.py
+tensor_dslab/readout/noise_waveform/runtime/produce.py
+tensor_dslab/readout/charge/runtime/prepare.py
+tensor_dslab/readout/charge/runtime/produce.py
+tensor_dslab/readout/charge/runtime/effects/counts.py
+tensor_dslab/readout/charge/runtime/effects/dark_counts.py
+tensor_dslab/readout/charge/runtime/effects/delays.py
+tensor_dslab/readout/charge/runtime/effects/smearing.py
+tensor_dslab/readout/charge/runtime/effects/timing_jitter.py
+tensor_dslab/readout/charge/runtime/effects/correlated_avalanches.py
+```
+
+`addresses.py` is the sole new production module. The exact production target
+is therefore `61` `.py` modules. No package facade or `__init__.py` changes.
+
+### Tests
+
+```text
+tests/test_charge_correlated_avalanches.py
+tests/test_charge_count_orchestration.py
+tests/test_charge_delay_preparation.py
+tests/test_charge_product.py
+tests/test_charge_timing_jitter.py
+tests/test_noise_waveform_product.py
+tests/test_package_contracts.py
+tests/test_pint_physical_configuration.py
+tests/test_random_demo.py
+tests/test_readout_profiles_and_demos.py
+tests/test_readout_simulation.py
+tests/test_rng_ownership_migration.py
+tests/test_runtime_action_ownership.py
+tests/test_tensorcore_0_16_modernization.py
+tests/test_tensorcore_0_19_adoption.py
+tests/typing/maintenance_2_rng_and_product_module_ownership_migration.py
+tests/typing/maintenance_11_tensorcore_0_19_addressed_distributions.py
+```
+
+The exact planned topology changes are:
+
+- delete `tests/test_charge_count_orchestration.py` after its
+  TensorDSLab-owned generic category sampler is removed;
+- add `tests/test_random_demo.py`;
+- rename `tests/test_tensorcore_0_16_modernization.py` to
+  `tests/test_tensorcore_0_19_adoption.py`; and
+- rename the active Maintenance 2 typing fixture to the Maintenance 11 path
+  while replacing `RngPositions` with the supported addressed surface.
+
+Historical work-order documents are not renamed or rewritten. Tests retain
+historical facts only where they are still operative package contracts.
+
+### Current Package Documents
+
+```text
+AGENTS.md
+CONTRIBUTING.md
+README.md
+docs/api.md
+docs/architecture/readout.md
+docs/architecture/rebuild.md
+docs/architecture/tensors.md
+docs/design.md
+docs/decisions.md
+docs/integration.md
+docs/overview.md
+docs/parity.md
+docs/quickstart.md
+docs/validation.md
+docs/implementation/index.md
+docs/implementation/maintenance_11_tensorcore_0_19_addressed_distributions.md
+```
+
+These are current-state synchronization paths, not permission to rewrite
+unrelated architecture or historical evidence. Candidate lifecycle wording
+must be branch/main-neutral and remain truthful before Validation, after a
+clearance handoff, after an unchanged Review fast-forward, and until the
+evidence-only closeout.
+
+The complete changed-path ceiling is `48` rename-expanded endpoints:
+
+- `4` dependency/environment/demo paths;
+- `11` production paths;
+- `17` test endpoints; and
+- `16` current documentation paths.
+
+Every other tracked or untracked repository path is protected. In particular,
+`LICENSE`, `tensor_dslab/py.typed`, all package facades, public Config and
+field modules, `docs/implementation/` historical work orders, the provisional
+DS20k profile proposal, and all nonlisted tests remain byte-identical.
+
+## Candidate Route
+
+The ordinary finite route is:
+
+```text
+Design authority
+    -> Implementation Candidate 1
+    -> fixed-commit Validation
+    -> independent read-only Review
+    -> final same-byte Design approval
+    -> Review-owned clean fast-forward
+    -> Design evidence-only closeout
+    -> Review closeout verification
+```
+
+Implementation-to-Validation submissions are limited to `3`. Validation
+returns to Implementation are limited to `3`. A Design-owned documentation
+finding returns to Design and does not authorize Implementation to alter
+Design-owned bytes outside the committed ceiling. No fourth ordinary
+candidate, exceptional correction, or widened scope is implicit.
+
+Implementation works on:
+
+```text
+codex/maintenance-11-tensorcore-0-19-addressed-distributions
+```
+
+The candidate is one atomic dependency/scientific-address/demo rebaseline.
+No partial migration commit may be merged or published.
+
+## Implementation Sequence
+
+The one atomic candidate should proceed internally in this order:
 
 1. exact dependency pin, package probes, imports, and negative typing;
-2. fixed key/reserved-stream ledger and role-named address construction;
+2. fixed key/quantum ledger and role-named address construction;
 3. white noise and PSD Gaussian migration;
 4. dark-count Poisson migration;
 5. tensor-valued charge-smearing Gaussian migration;
@@ -818,9 +1008,11 @@ candidate states or widen the final allowlist.
 
 ## Required Evidence Before Review
 
-The final dispatch amendment must freeze exact commands, environments,
-dependency artifacts, file counts, export counts, test counts, candidate
-allowlist, and finite candidate-loop accounting.
+The candidate handoff must report exact commands, environments, dependency
+artifacts, file/export/test counts, candidate scope, and finite-loop
+accounting. Artifact hashes generated from immutable candidate bytes are
+handoff evidence; candidate-bearing documentation must not make a
+self-referential hash claim.
 
 At minimum, the exact candidate must prove:
 
@@ -828,17 +1020,24 @@ At minimum, the exact candidate must prove:
 
 - exact published TensorCore containing commit, tree, parent, version, and
   live GitHub ref;
+- exact containing wheel `51208` bytes /
+  `9666ff7811cc1bdfe289290f3ae18517d7f47c316ad1ff766477a7d08f075dda`;
+- exact containing source archive `492382` bytes /
+  `a76983491a0b6dc019be725695010f38707a5a90a0cfd151da4596eab77fef07`;
 - source/archive package-byte identity;
 - exact supported TensorCore export counts and package topology;
 - retired `RngPositions`, central validation, and old CounterRng law methods
   remain absent;
 - exact TensorDSLab pin in source, wheel, and sdist metadata;
+- unchanged TensorDSLab version `0.1.0`, Python `>=3.14`, Torch
+  `>=2.13,<2.14`, NumPy `2.5.1`, Pint `0.25.3`, Hatchling `1.31.0`, and
+  Pyright `1.1.411`;
 - exact TensorDSLab facades remain `35/5/30`; and
 - import isolation and no downstream-package import.
 
 ### Address And Word Identity
 
-- exact package-owned role keys, reserved stream identifiers, quantum values,
+- exact package-owned role keys, removed overflow keys, quantum values,
   address-domain shapes, and selection order;
 - no encoded-position collision over every accepted shape/generation/kernel
   ceiling;
@@ -891,8 +1090,15 @@ At minimum, the exact candidate must prove:
 
 ### Package And Documentation
 
-- focused and complete source/archive suites;
-- strict Pyright and exact negative fixture;
+- focused source/archive suites covering every changed effect, address owner,
+  dependency contract, and both notebooks;
+- complete source/archive discovery with no regression below the current
+  `229` discovered / `216` passed / `13` unavailable-CUDA-skipped baseline
+  and with every added test discovered;
+- exact TensorCore source/archive suite with its two accepted
+  unavailable-CUDA skips;
+- strict Pyright with zero TensorDSLab diagnostics and the exact TensorCore
+  `82`-diagnostic negative fixture in both dependency forms;
 - fresh wheel and sdist with source-equal package bytes;
 - isolated core-wheel and demos-wheel execution;
 - CPU script and stored notebook replay after exact-output refresh if needed;
@@ -912,9 +1118,16 @@ At minimum, the exact candidate must prove:
 - independent fixed-commit Validation and Review under the accepted finite
   route.
 
+The ordinary local matrix uses exact CPython `3.14.6`, PyTorch `2.13.0`,
+NumPy `2.5.1`, Pint `0.25.3`, Hatchling `1.31.0`, and Pyright `1.1.411`.
+Implementation and independent roles may each create at most one temporary
+role-named environment when needed to prove the root environment script; it
+must be removed after the recorded check. Do not create repeated exploratory
+Conda environments.
+
 ## CUDA And Release Qualification
 
-No fresh CUDA or cluster work is authorized for this provisional stage.
+No fresh CUDA or cluster work is authorized for this maintenance.
 
 The current ecosystem schedule intentionally defers integrated accelerator
 evidence until TensorCore and TensorDSLab freeze one exact mutually adopted
@@ -926,33 +1139,42 @@ CPU, strict typing, exact word/address fixtures, chunk/traversal invariance,
 artifacts, documentation, and consumer evidence remain mandatory during this
 pre-1.0 migration.
 
-## Pre-Dispatch Gates
+## Dispatch Readiness
 
-TensorDSLab Design must complete all of the following before dispatch:
+Design has completed the dispatch gates:
 
-1. reverify live GitHub main at exact `ed17f4b` and the package-anchor byte
-   identity;
-2. reverify the selected containing wheel/archive identities;
-3. freeze afterpulse occurrence/allocation identity separation;
-4. perform the final exact source/test/document inventory;
-5. freeze the complete changed-path and protected-path allowlists;
-6. freeze exact tests, counts, artifacts, hashes, and environment inputs;
-7. synchronize any package-authoritative architecture/parity decision bytes
-   needed before production starts;
-8. verify persistent TensorDSLab Implementation, Validation, and Review roles;
-9. commit one immutable Design/work-order authority; and
-10. obtain explicit user authorization to dispatch.
+1. TensorCore local main and tracking `origin/main` resolve exact published
+   containing commit `ed17f4b` / tree `ef8c706`, with package bytes exact to
+   Stage 26 anchor `fdfc96d`.
+2. The publication handoff supplies the selected containing wheel/archive
+   identities and exact package/export evidence.
+3. The afterpulse occurrence/delay identity is frozen as one key with quantum
+   `0`/`1`.
+4. The exact `48`-endpoint changed-path ceiling and all-path protection rule
+   are frozen above.
+5. The required dependency, address, scientific, runtime, typing, artifact,
+   demo, documentation, and hygiene evidence is frozen above.
+6. Persistent TensorDSLab Implementation, Validation, and Review routes were
+   independently located in their package-owned worktrees and are dormant at
+   clean command boundaries.
+7. The user explicitly accepted the predeployment RNG rebaseline and
+   authorized proceeding toward Implementation.
+8. Integrated CUDA remains prohibited and deferred to the mutually adopted
+   `1.0.0` release-candidate pairing.
 
-Any TensorCore contract change, publication mismatch, unresolved address
-collision, scientific-domain narrowing, public-surface change, or
-package-source contradiction returns to Design and requires renewed review.
+The exact committed bytes containing this section are the immutable Design
+authority. Any TensorCore contract change, publication mismatch, required
+path outside the ceiling, unresolved address collision, scientific-domain
+narrowing, public-surface change, or package-source contradiction stops
+Implementation and returns to Design.
 
 ## Non-Goals
 
-This provisional maintenance does not authorize or imply:
+This maintenance does not authorize or imply:
 
-- a TensorCore dependency edit;
-- implementation or test changes;
+- a TensorCore repository edit or a dependency target other than exact
+  published `0.19.0` containing commit `ed17f4b`;
+- implementation or test changes outside the frozen allowlist;
 - a compatibility shim, alias, or deprecation layer;
 - a public TensorDSLab API change;
 - a public TensorDSLab RNG tutorial API or supported import for private role
@@ -972,11 +1194,18 @@ This provisional maintenance does not authorize or imply:
 
 ## Authority
 
-This document records accepted provisional TensorDSLab Design direction only.
-Implementation remains undispatched.
+This document is Design-complete executable authority. Implementation is
+authorized to create the exact feature branch, change only the frozen
+allowlist, execute the required local evidence, freeze one coherent candidate,
+and dispatch that immutable candidate to persistent Validation.
 
-TensorCore's exact published containing commit `ed17f4b` is the selected
-future dependency target, while the current package remains pinned to
-`e05324699892a8bcea024375720bfae1ed9569cc`. Only a later exact TensorDSLab
-Design amendment satisfying every remaining pre-dispatch gate can convert
-this record into executable authority.
+Validation may inspect only a fixed commit, return findings within the finite
+route, or dispatch unchanged clear bytes to persistent independent Review.
+Review remains read-only until a Validation-cleared fixed commit arrives.
+
+No role may infer permission to change a protected path, run CUDA or cluster
+work, merge, push, publish, claim compatibility, or broaden the scientific
+boundary. Final same-byte Design approval remains required before Review may
+fast-forward local main. A later Design-owned evidence-only closeout and
+independent Review verification remain required before any separately
+authorized push.
