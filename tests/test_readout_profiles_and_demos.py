@@ -25,7 +25,7 @@ from tensor_dslab.readout.profiles import ds20k_veto
 
 
 READOUT_NOTEBOOK_SHA256 = (
-    "f04eb4b801595fe5874ada2eaf777b38e8ed89cb8cd7232e78b0c4bee8ee6e33"
+    "4599c62aa4c51f91c7ca0f6d7695609fa80582f5c532c8a853164fc90bc09d2b"
 )
 
 
@@ -179,6 +179,7 @@ class ReadoutProfileContractTest(unittest.TestCase):
         )
         for phrase in (
             "TensorDSLab readout quickstart",
+            "The complete workflow at a glance",
             "Define the geometry and input photoelectrons",
             "Load a readout profile",
             "Simulate the requested products",
