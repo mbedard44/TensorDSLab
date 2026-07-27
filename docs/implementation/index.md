@@ -343,6 +343,38 @@ private support owner contains twenty unique helpers/oracles and no test case
 or `test*` callable. Complete source/archive and negative-typing clearance
 remain Validation-owned.
 
+### [Maintenance 15: Tensor-Native Config Punchcard Architecture](maintenance_15_tensor_native_config_punchcard_architecture.md)
+
+Status: **Architecture selected; TensorCore ownership consultation pending;
+Implementation undispatched**.
+
+This documentation-only architecture record starts from exact locally closed
+Maintenance 14 `856df702c124365c929bf993851a51fb8ff3c245`, tree
+`9e5ff69920699dc522980b164eaf1073116914c6`. It selects immutable tensor-native
+Configs as execution punchcards: each Product's `prepare(...)` returns a fresh
+aligned Config of the exact same concrete type, and `produce(...)` consumes
+that representation without Pint interpretation, coordinate alignment, device
+movement, dtype conversion, or another model-preparation pass.
+
+The selected end state retires every Runtime value, `QuantityFieldSpec`,
+prepared wrappers/tokens, `ReadoutCollection`, `Pulse`, and
+`simulate_readout(...)` without aliases. It selects `Readout`,
+`PulseResponse`, instance-owned units on `QuantityField` and `QuantityKernel`,
+`QuantityConfig` with exact axes/device/unit/dtype, Config-selected product
+closure, product-owned `create/prepare/produce/validate`, and the one-shot
+golden path `Readout.create(source=..., config=..., rng=...)`.
+
+TensorDSLab retains all Pint, physical-kernel, product, profile, scientific
+law, RNG-role/address, boundary, preparation, validation, and orchestration
+ownership. TensorCore is asked only to disposition a proposed generic
+unit-independent `TensorConfig` root over exact axes and one target device. If
+TensorCore declines, TensorDSLab owns the equivalent structural root locally;
+no provisional dependency or TensorCore fork is allowed. Production remains
+undispatched pending that exact consultation and a bounded per-product
+implementation work order. No dependency, science, runtime, test, CUDA,
+compatibility, publication, or package byte changes through this Design
+record.
+
 ### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
 
 Status: **Architecture selected / TensorCore Stage 29 published /
