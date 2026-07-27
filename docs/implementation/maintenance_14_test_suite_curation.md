@@ -1,11 +1,11 @@
 # Maintenance 14 Test Suite Curation
 
-Status: **Implementation Candidate 1; fixed-commit Validation pending**.
+Status: **Self-effecting under the frozen exact-byte route**.
 
-This status describes the feature-branch state while the candidate is absent
-from local `main`. If the exact candidate tree later appears unchanged on
-local `main` through the authorized same-byte workflow, that presence records
-Review's clean fast-forward and this maintenance is **Merged / Closed**.
+Before the complete same-byte gate and clean local-`main` fast-forward, the
+applicable state is the latest completed exact-byte handoff under the frozen
+route. After the exact candidate appears unchanged on local `main` through
+Review's clean fast-forward, this maintenance is **Merged / Closed**.
 
 Stable key:
 `TensorDSLab/maintenance-14-test-suite-curation`

@@ -308,12 +308,12 @@ no accelerator claim follows.
 
 ### [Maintenance 14: Test Suite Curation](maintenance_14_test_suite_curation.md)
 
-Status: **Implementation Candidate 1; fixed-commit Validation pending**.
+Status: **Self-effecting under the frozen exact-byte route**.
 
-This is the feature-branch state while the candidate is absent from local
-`main`. If the exact candidate tree later appears unchanged on local `main`
-through the authorized same-byte workflow, that presence records Review's
-clean fast-forward and Maintenance 14 is **Merged / Closed**.
+Before the complete same-byte gate and clean local-`main` fast-forward, the
+applicable state is the latest completed exact-byte handoff under the frozen
+route. After the exact candidate appears unchanged on local `main` through
+Review's clean fast-forward, Maintenance 14 is **Merged / Closed**.
 
 The draft starts from exact closed Maintenance 13
 `af23b129de41601f825f08a50f7783980e6e9551`, tree
