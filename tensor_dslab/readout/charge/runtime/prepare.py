@@ -5,16 +5,14 @@ import itertools
 from typing import final
 
 import torch
-from tensor_core import OffsetAxis, TensorAxis
+from tensor_core import OffsetAxis
 from tensor_core.random.validation import require_count_tensor
 from tensor_core.tensor.validation import (
-    require_kernel_dimensions,
     require_shape_span,
     require_tensor_allocation,
 )
 
 from tensor_dslab.common import SampleAxis
-from tensor_dslab.common.kernel import QuantityKernel
 from tensor_dslab.readout.charge.config import ChargeConfig
 from tensor_dslab.readout.charge.kernel import (
     Afterpulse,
@@ -24,9 +22,10 @@ from tensor_dslab.readout.charge.kernel import (
     SmearingWidth,
     TimingJitter,
 )
-from tensor_dslab.readout.photoelectrons.field import Photoelectrons
-from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 from tensor_dslab.readout.charge.runtime.counts import MAX_COUNT
+from tensor_dslab.readout.photoelectrons.field import Photoelectrons
+from tensor_dslab.readout.runtime.kernel import align_quantity_kernel
+from tensor_dslab.readout.runtime.sampling import SamplingRuntime
 
 
 @final
@@ -60,64 +59,6 @@ class ChargeRuntime:
     smearing_width: torch.Tensor | None
 
 
-def _aligned_magnitude(
-    kernel: QuantityKernel,
-    *,
-    photoelectrons: Photoelectrons,
-    device: torch.device,
-) -> tuple[torch.Tensor, tuple[int, ...]]:
-    require_kernel_dimensions(photoelectrons, kernel)
-    tensor = kernel.tensor
-    dimensions: list[int] = []
-    for kernel_dimension, axis in enumerate(kernel.conditioning_axes):
-        role = type(axis)
-        try:
-            target = photoelectrons.axis(role)
-            target_dimension = photoelectrons.dimension_of(role)
-        except KeyError as error:
-            raise ValueError(
-                f"{type(kernel).__name__} conditioning role is absent "
-                "from the readout geometry"
-            ) from error
-        if len(axis.coordinates) != len(target.coordinates):
-            raise ValueError(
-                f"{type(kernel).__name__} conditioning coordinates "
-                "must match the readout axis"
-            )
-        if len(set(axis.coordinates)) != len(axis.coordinates):
-            raise ValueError(
-                f"{type(kernel).__name__} conditioning coordinates "
-                "must be unique"
-            )
-        try:
-            indices = tuple(
-                axis.index_of(coordinate) for coordinate in target.coordinates
-            )
-        except KeyError as error:
-            raise ValueError(
-                f"{type(kernel).__name__} conditioning coordinates "
-                "must match the readout axis"
-            ) from error
-        tensor = tensor.index_select(
-            kernel_dimension,
-            torch.tensor(indices, dtype=torch.int64),
-        )
-        dimensions.append(target_dimension)
-
-    order = tuple(
-        sorted(range(len(dimensions)), key=lambda index: dimensions[index])
-    )
-    if order != tuple(range(len(order))):
-        tensor = tensor.permute(
-            *order,
-            *range(len(order), tensor.ndim),
-        )
-    return (
-        tensor.to(device=device, dtype=torch.float64).contiguous(),
-        tuple(dimensions[index] for index in order),
-    )
-
-
 def _broadcast_conditioning(
     tensor: torch.Tensor,
     *,
@@ -136,12 +77,11 @@ def _prepare_branching(
     kernel: DirectCrosstalk | DelayedCrosstalk | Afterpulse,
     *,
     photoelectrons: Photoelectrons,
-    device: torch.device,
 ) -> BranchingRuntime:
-    intensities, conditioning_dimensions = _aligned_magnitude(
+    intensities, conditioning_dimensions = align_quantity_kernel(
         kernel,
-        photoelectrons=photoelectrons,
-        device=device,
+        field=photoelectrons,
+        dtype=torch.float64,
     )
     target_dimensions = tuple(
         photoelectrons.dimension_of(axis.relative_to)
@@ -186,14 +126,12 @@ def prepare_charge(
         element_size=torch.empty((), dtype=floating_dtype).element_size(),
         upper=1 << 63,
     )
-    device = source.device
-
     dark_count_mean: torch.Tensor | None = None
     if config.dark_counts is not None:
-        rate, dimensions = _aligned_magnitude(
+        rate, dimensions = align_quantity_kernel(
             config.dark_counts,
-            photoelectrons=photoelectrons,
-            device=device,
+            field=photoelectrons,
+            dtype=torch.float64,
         )
         exposure_seconds = sampling.sample_period_ps * 1.0e-12
         dark_count_mean = _broadcast_conditioning(
@@ -206,10 +144,10 @@ def prepare_charge(
 
     timing_jitter: TimingJitterRuntime | None = None
     if config.timing_jitter is not None:
-        probabilities, dimensions = _aligned_magnitude(
+        probabilities, dimensions = align_quantity_kernel(
             config.timing_jitter,
-            photoelectrons=photoelectrons,
-            device=device,
+            field=photoelectrons,
+            dtype=torch.float64,
         )
         axis = config.timing_jitter.operation_axes[0]
         timing_jitter = TimingJitterRuntime(
@@ -224,7 +162,6 @@ def prepare_charge(
         else _prepare_branching(
             config.direct_crosstalk,
             photoelectrons=photoelectrons,
-            device=device,
         )
     )
     delayed = (
@@ -233,7 +170,6 @@ def prepare_charge(
         else _prepare_branching(
             config.delayed_crosstalk,
             photoelectrons=photoelectrons,
-            device=device,
         )
     )
     afterpulse = (
@@ -242,16 +178,15 @@ def prepare_charge(
         else _prepare_branching(
             config.afterpulse,
             photoelectrons=photoelectrons,
-            device=device,
         )
     )
 
     smearing_width: torch.Tensor | None = None
     if config.smearing_width is not None:
-        width, dimensions = _aligned_magnitude(
+        width, dimensions = align_quantity_kernel(
             config.smearing_width,
-            photoelectrons=photoelectrons,
-            device=device,
+            field=photoelectrons,
+            dtype=torch.float64,
         )
         smearing_width = _broadcast_conditioning(
             width,

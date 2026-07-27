@@ -6,7 +6,11 @@ if [[ $# -gt 1 ]]; then
     exit 2
 fi
 
-environment_name="${1:-tensor_dslab}"
+if [[ $# -eq 0 ]]; then
+    environment_name="tensor_dslab"
+else
+    environment_name="$1"
+fi
 conda_executable="${CONDA_EXE:-conda}"
 
 if [[ -z "${environment_name}" ]]; then
@@ -49,9 +53,22 @@ fi
     --no-input \
     "${repository_root}[demos]"
 
-"${conda_executable}" run --name "${environment_name}" \
-    python -c \
-    'import platform; from importlib.metadata import version; import tensor_dslab; from tensor_dslab.readout.profiles import ds20k_veto; assert platform.python_version() == "3.14.6"; assert version("tensor-dslab") == "0.1.0"; assert version("tensor-core") == "0.19.0"; assert type(ds20k_veto()).__name__ == "ReadoutConfig"; print("TensorDSLab", version("tensor-dslab"), "TensorCore", version("tensor-core"), "Python", platform.python_version())'
+smoke_directory="$(mktemp -d "/tmp/tensor-dslab-smoke.XXXXXX")"
+cleanup_smoke_directory() {
+    rm -rf -- "${smoke_directory}"
+}
+trap cleanup_smoke_directory EXIT
+
+(
+    cd -- "${smoke_directory}"
+    "${conda_executable}" run --name "${environment_name}" \
+        python -c \
+        'import json, platform, site, sys; from importlib.metadata import distribution, version; from pathlib import Path; import tensor_dslab; from tensor_dslab import ReadoutConfig, SampleAxis, quantity; from tensor_dslab.readout.profiles import ds20k_veto; repository_root = Path(sys.argv[1]).resolve(); module_path = Path(tensor_dslab.__file__).resolve(); site_roots = tuple(Path(path).resolve() for path in site.getsitepackages()); direct_url_text = distribution("tensor-core").read_text("direct_url.json"); assert direct_url_text is not None; direct_url = json.loads(direct_url_text); assert platform.python_version() == "3.14.6"; assert version("tensor-dslab") == "0.1.0"; assert version("tensor-core") == "0.21.0"; assert direct_url["vcs_info"]["commit_id"] == "78d0891bf6c0fefbcad4abe09980867c54202a9e"; assert not module_path.is_relative_to(repository_root); assert any(module_path.is_relative_to(root) for root in site_roots); sample_axis = SampleAxis.from_period(period=quantity(2, "ns"), count=8); config = ds20k_veto(sample_axis=sample_axis); assert type(config) is ReadoutConfig; print("TensorDSLab", version("tensor-dslab"), "TensorCore", version("tensor-core"), "Python", platform.python_version())' \
+        "${repository_root}"
+)
+
+cleanup_smoke_directory
+trap - EXIT
 
 echo "Environment '${environment_name}' is ready."
 echo "Run:"

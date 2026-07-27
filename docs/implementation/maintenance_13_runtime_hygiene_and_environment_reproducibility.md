@@ -1,6 +1,11 @@
 # Maintenance 13 Runtime Hygiene And Environment Reproducibility
 
-Status: **Design-complete; implementation pending**.
+Status is self-effecting. While these exact bytes are absent from `main`, they
+are an **Implementation candidate under fixed-commit Validation and Review
+gates**, with the latest completed same-byte handoff determining the pending
+role. If these exact bytes appear unchanged on `main` after complete
+Validation, independent Review, final same-byte Design approval, and Review's
+clean fast-forward, the status is **Merged / Closed**.
 
 Stable key:
 `TensorDSLab/maintenance-13-runtime-hygiene-and-environment-reproducibility`
@@ -89,6 +94,37 @@ bytecode disabled:
 368 passed
 3 conditional unavailable-CUDA skips
 ```
+
+## Implementation Candidate Evidence
+
+Implementation prepared one coherent direct descendant of the exact Design
+authority. Its changed-path set is exactly the ten-path allowlist in this work
+order. The focused local gate used CPython `3.14.6`, PyTorch `2.13.0`, NumPy
+`2.5.1`, Pint `0.25.3`, exact TensorCore `0.21.0` source commit
+`78d0891bf6c0fefbcad4abe09980867c54202a9e`, and Pyright `1.1.411`.
+
+The focused count, alignment, package-contract, fake-Conda environment-script,
+Charge, PureWaveform, and public-readout matrix passed:
+
+```text
+147 tests run
+147 passed
+0 skipped
+```
+
+Pyright reported zero errors, warnings, or informations. `bash -n` passed and
+the environment creator retained exact mode `100755`. Separate process-local
+mutants that omitted conditioning-coordinate reorder or conditioning-dimension
+permutation were both rejected by the committed combined-alignment proof.
+Source, scope, protected-byte, facade, retired-symbol, diff, and artifact
+hygiene gates passed before candidate dispatch.
+
+Per the final-candidate evidence cadence, Implementation did not create a real
+Conda environment, rebuild package artifacts, run the complete source/archive
+suite, or claim final package/environment clearance. Those gates belong to
+Validation on the exact immutable candidate. CUDA was unavailable
+(`torch.cuda.is_available() is False`), no CUDA test was run, and no
+accelerator claim follows.
 
 This is the current baseline. The historical Maintenance 12 `383/380/3`
 result predates removal of the provisional random notebook and its dedicated

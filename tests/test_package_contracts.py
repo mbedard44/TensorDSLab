@@ -88,17 +88,30 @@ class PackageContractTest(unittest.TestCase):
         for name in readout.__all__:
             self.assertIs(getattr(tensor_dslab, name), getattr(readout, name))
 
-    def test_exact_production_module_count_and_retired_paths(self) -> None:
-        modules = tuple(path for path in pathlib.Path("tensor_dslab").rglob("*.py"))
-        self.assertEqual(len(modules), 59)
-        self.assertFalse(pathlib.Path("tensor_dslab/common/axes.py").exists())
-        self.assertFalse(
-            any(
-                pathlib.Path("tensor_dslab/readout/charge/runtime/effects").glob(
-                    "*.py"
-                )
-            )
+    def test_required_and_retired_production_paths(self) -> None:
+        required = (
+            "tensor_dslab/common/axis.py",
+            "tensor_dslab/common/kernel.py",
+            "tensor_dslab/readout/runtime/kernel.py",
+            "tensor_dslab/readout/charge/runtime/counts.py",
+            "tensor_dslab/readout/charge/runtime/branching.py",
+            "tensor_dslab/readout/charge/runtime/prepare.py",
+            "tensor_dslab/readout/pure_waveform/runtime/prepare.py",
         )
+        for path in required:
+            with self.subTest(required=path):
+                self.assertTrue(pathlib.Path(path).is_file())
+
+        retired = (
+            "tensor_dslab/common/axes.py",
+            "tensor_dslab/readout/charge/runtime/effects",
+            "tensor_dslab/readout/charge/effects",
+            "tensor_dslab/readout/_random.py",
+            "tensor_dslab/readout/_rng.py",
+        )
+        for path in retired:
+            with self.subTest(retired=path):
+                self.assertFalse(pathlib.Path(path).exists())
 
     def test_runtime_packages_export_nothing(self) -> None:
         for name in (

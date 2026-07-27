@@ -279,7 +279,12 @@ deployment, publication, or push claim follows.
 
 ### [Maintenance 13: Runtime Hygiene And Environment Reproducibility](maintenance_13_runtime_hygiene_and_environment_reproducibility.md)
 
-Status: **Design-complete; implementation pending**.
+Status is self-effecting. While the exact Maintenance 13 bytes are absent from
+`main`, they are an **Implementation candidate under fixed-commit Validation
+and Review gates**, with the latest completed same-byte handoff determining the
+pending role. If those exact bytes appear unchanged on `main` after complete
+Validation, independent Review, final same-byte Design approval, and Review's
+clean fast-forward, the status is **Merged / Closed**.
 
 The draft is bound to exact published TensorDSLab main
 `c8de1528d1ed57d3e86a9c37d1ad307127a23feb`, tree
@@ -302,6 +307,15 @@ One real Conda reconstruction is reserved for the final immutable Validation
 candidate; focused fake-Conda evidence covers ordinary corrections. The
 broader tests-only consolidation is explicitly deferred to a separate
 Maintenance 14 work order, and living-documentation curation remains separate.
+
+Implementation's focused candidate gate passed `147/147/0` against exact
+TensorCore `0.21.0` source, with Pyright at zero diagnostics, `bash -n` and
+mode `100755`, fake-Conda environment-script coverage, two required alignment
+mutants killed, exact ten-path scope, and protected-byte/diff/hygiene checks.
+Implementation intentionally did not create the real Conda environment,
+rebuild artifacts, or claim complete source/archive clearance; the complete
+final-candidate gate remains Validation-owned. CUDA was unavailable and no
+accelerator claim follows.
 
 ### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
 
