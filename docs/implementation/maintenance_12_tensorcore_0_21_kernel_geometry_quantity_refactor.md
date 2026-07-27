@@ -1,14 +1,14 @@
 # Maintenance 12 TensorCore 0.21 Kernel Geometry And Quantity Refactor
 
-Status: **Provisional Design-complete / exact TensorCore Stage 29 publication
-and renewed consumer confirmation pending / implementation undispatched**
+Status: **Design-complete / exact TensorCore 0.21.0 publication confirmed /
+Implementation authorized under the exact containing work-order bytes**
 
 Stable key:
 `TensorDSLab/maintenance-12-tensorcore-0-21-kernel-geometry-quantity-refactor`
 
 ## Purpose
 
-Adopt the future exact published TensorCore Stage 29 foundation and replace
+Adopt exact published TensorCore `0.21.0` Stage 29 and replace
 TensorDSLab's current effect-specific scalar Config hierarchy with literal
 physical quantity kernels, compiled product Runtime state, and direct
 TensorCore Distribution execution.
@@ -30,9 +30,9 @@ This is one atomic predeployment architecture and scientific rebaseline. It:
 The accepted architecture is specified in
 [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md).
 This work order extracts that architecture into an executable package boundary.
-Where this work order and the planning record differ after the exact TensorCore
-publication is incorporated, the later exact replacement work order must state
-and justify the difference before dispatch.
+This publication-bound work order supersedes provisional dependency and
+dispatch wording in the planning record. The physical-kernel architecture is
+unchanged.
 
 The stage follows:
 
@@ -49,46 +49,52 @@ The stage follows:
 
 ## Dispatch State And Hard Stop
 
-This committed draft is not Implementation authority.
-
-TensorCore `0.21.0` is still a provisional target. Before TensorDSLab
-Implementation may start, all of the following must be true:
-
-1. TensorCore Design freezes an exact Stage 29 work order that matches the
-   consumer contract below.
-2. TensorDSLab Design independently reviews that exact Design commit/tree.
-3. TensorCore completes its package-owned Implementation, Validation,
-   independent Review, local closeout, and ordinary GitHub publication.
-4. TensorDSLab Design reviews the exact published containing commit and the
-   immutable package implementation anchor.
-5. This document receives one exact documentation-only replacement recording
-   the dependency commit/tree/version, archive/artifact identities, final
-   export/file census, exact changed-path allowlist, and dispatch state.
-6. The replacement is independently checked for package-source consistency.
-7. The persistent TensorDSLab Implementation, Validation, and Review routes
-   are Active and verified.
-8. The user explicitly authorizes dispatch against that replacement.
-
-No role may replace the missing exact TensorCore target with a branch head,
-package anchor, nearby release, floating Git dependency, or inferred API.
-Any contract difference returns to TensorDSLab Design and TensorCore Design.
-
-The first two Design prerequisites are complete:
+Every cross-package prerequisite is complete:
 
 ```text
-TensorCore Stage 29 Design:
+TensorCore Stage 29 substantive Design:
     397807ce634c29e6f3909acab7006cf2b8d5267d
 tree:
     e7a853d173c71f53e58787f1678126ca88e8bb61
+TensorCore Stage 29 final Design authority:
+    828017780321269fbace28e481aadf2d9e39adde
+tree:
+    5aaf779caec72cec25a9f37ea5c3cd69c66071f0
 parent / published 0.20.0:
     e20b1e1594be894f210bafee2f55e7c46d6caf9c
 TensorDSLab consumer disposition:
-    exact-byte CONFIRMED / zero findings
+    exact substantive contract CONFIRMED / zero findings
+TensorCore final implementation and publication:
+    78d0891bf6c0fefbcad4abe09980867c54202a9e
+tree:
+    af5c4f6d693fa25cf767f3aaae31a47d86cf3a8d
+TensorDSLab published-byte disposition:
+    exact package and publication contract CONFIRMED / zero findings
 ```
 
-That confirmation authorizes no implementation or adoption. TensorCore
-package execution, local closeout, publication, and the later exact published
-consumer review remain pending.
+TensorDSLab Design independently verified the live GitHub main ref, local
+TensorCore main/tracking identity, exact package source, direct constructor
+signatures, retired surfaces, supported exports, and tracked topology. The
+user explicitly authorized Maintenance 12 to begin against these bytes.
+
+The exact containing commit of this work order is the TensorDSLab Design
+authority. Persistent Implementation, Validation, and Review routes must
+verify their role and clean exact starting state in the dispatch handoff.
+Implementation must branch from the exact Design authority as:
+
+```text
+codex/maintenance-12-tensorcore-0-21-kernel-geometry-quantity-refactor
+```
+
+It may use only the allowlist below. Validation and Review inspect immutable
+fixed commits in their role-private checkouts rather than a moving
+Implementation branch.
+
+No role may replace exact TensorCore `78d0891` with a branch head, nearby
+release, floating Git dependency, superseded implementation candidate
+`c7065074e798e4f61bb555779a6ee675023ad492`, or inferred API. Any contract
+difference stops the affected work and returns to both package Design
+authorities.
 
 ## Exact Current Baseline
 
@@ -119,48 +125,56 @@ TensorCore:
 Maintenance 11 is Merged / Closed at this exact commit. It is the current
 scientific and addressed-Distribution baseline.
 
-The current published TensorCore planning baseline is:
+The exact selected TensorCore dependency is:
 
 ```text
 version:
-    0.20.0
-containing commit:
-    e20b1e1594be894f210bafee2f55e7c46d6caf9c
-tree:
-    46453935b9e95d30cc178deb5ecb54f2cd154d80
+    0.21.0
+published containing commit:
+    78d0891bf6c0fefbcad4abe09980867c54202a9e
+published containing tree:
+    af5c4f6d693fa25cf767f3aaae31a47d86cf3a8d
+package implementation anchor:
+    78d0891bf6c0fefbcad4abe09980867c54202a9e
+exact parent / superseded initial implementation candidate:
+    c7065074e798e4f61bb555779a6ee675023ad492
+canonical commit-bound source archive:
+    tensorcore-stage29-78d0891.tar
+    1,003,520 bytes
+    SHA-256 0f8ca6a5270845c272e941ef928a325f1a0e57aa7fe81c965d04086a5823363f
+    git archive --format=tar
+    --prefix=tensorcore-stage29-78d0891/
+    78d0891bf6c0fefbcad4abe09980867c54202a9e
+wheel:
+    tensor_core-0.21.0-py3-none-any.whl
+    51,644 bytes
+    SHA-256 29ff9dc4f0fcead0120da2b3c1993dae2bc6c79106c757cc90fd2a446c4f8bc6
+    SOURCE_DATE_EPOCH=0
+supported export census:
+    root/scalar/scalar.validation/tensor/tensor.validation/table/random/
+    random.generator/random.distribution/random.validation
+    30/7/3/9/16/3/11/2/6/1
+tracked package-file census:
+    41 files / 40 Python modules
 ```
 
-TensorDSLab does not adopt that intermediate release. The future exact
-TensorCore Stage 29 containing commit, tree, implementation anchor, archive,
-wheel, export census, and package topology remain intentionally blank until
-publication:
+`pyproject.toml` must select exactly:
 
 ```text
-target version:
-    provisionally 0.21.0
-published containing commit:
-    PENDING
-published containing tree:
-    PENDING
-package implementation anchor:
-    PENDING
-canonical source archive:
-    PENDING
-wheel:
-    PENDING
-supported export census:
-    PENDING
-tracked package-file census:
-    PENDING
+tensor-core @ git+https://github.com/mbedard44/TensorCore.git@78d0891bf6c0fefbcad4abe09980867c54202a9e
 ```
 
-The confirmed Design target predicts exact 30-name root, nine-name tensor
-facade, 41 tracked package files, and 40 Python modules. Those values remain
-Design inputs rather than published-package evidence until the exact
-containing commit exists.
+Python, Torch, NumPy, Pint, Hatchling, Pyright, and demo-tool versions remain
+exactly those of the current TensorDSLab baseline.
 
-The dispatch-authority replacement must replace every `PENDING` value. It may
-not leave an exact dependency selection to Implementation.
+TensorCore's final package evidence used CPython `3.14.6`, Torch `2.13.0` CPU,
+Hatchling `1.31.0`, and Pyright `1.1.411`: `88` unique tests passed with
+exactly two accepted unavailable-CUDA skips; positive typing had zero
+diagnostics and the negative fixture had exactly `82` intentional errors.
+Two independent checkout wheel builds and one extracted-archive build were
+byte-identical. The canonical archive reproduced all `118` tracked blobs,
+the same suite result, and the accepted wheel. No fresh CUDA or accelerator
+claim follows.
 
 ## Atomicity
 
@@ -195,8 +209,8 @@ below, but Candidate 1 must be one coherent final package state.
 
 ## TensorCore-Owned Contract
 
-The dispatch-authority replacement must quote or link the exact published
-TensorCore contract. The expected consumer boundary is:
+The exact published TensorCore contract is linked and frozen above. Its
+consumer boundary is:
 
 ### `OffsetAxis`
 
@@ -304,7 +318,7 @@ constructor, or compatibility keyword. One probability scan per Distribution
 construction is accepted. No draw-time host probability materialization is
 accepted.
 
-The exact published contract must preserve:
+The exact published contract preserves:
 
 - address shape equal to represented probability shape;
 - category-major contiguous int64 results;
@@ -313,8 +327,8 @@ The exact published contract must preserve:
 - fixed completed-law tolerance;
 - the internal completion outcome as unaddressed, word-free, and unreturned;
 - exact input-count conservation including that internal outcome; and
-- accepted Binomial branch/address/word behavior unless Stage 29 explicitly
-  and separately rebaselines it.
+- accepted Binomial branch/address/word behavior under the exact Stage 29
+  package evidence.
 
 ### `ProbabilityKernel` retirement
 
@@ -346,8 +360,9 @@ Distribution algorithms, counter words, or address encoding.
 
 ## Target Module Topology
 
-The intended production target is 59 Python modules. The exact final census
-must be rechecked after the published TensorCore API is known.
+The exact production target is 59 Python modules. This census was reconciled
+against the published TensorCore API and the current 61-module TensorDSLab
+baseline: eight deletion endpoints and six addition endpoints yield 59.
 
 ```text
 tensor_dslab/
@@ -702,6 +717,35 @@ Therefore:
 - returned kernels retain the exact supplied axis values where conditioned;
 - every call returns a fresh complete Config/kernel tree.
 
+The provisional `ds20k_veto()` profile retains its accepted demonstration
+numbers while expressing them through the new physical values:
+
+- `ChargeConfig` has `correlated_avalanche_generations=0`, one global
+  `DarkCountRate` of exactly `100 kHz`, and no timing-jitter, crosstalk,
+  afterpulse, or smearing kernel;
+- `Pulse` is the chronological sampled form of the current Veto PDU law using
+  exact binary64 parameters `232.89 ns`, `507.72 ns`, `-81.92 ns`,
+  `147.28 ns`, `-176.50 ns`, `45.69 ns`, support `2020.27 ns`, and a final
+  negative peak of `-14.5912372 mV` per PE-equivalent charge;
+- pulse sampling uses the supplied `SampleAxis` period, the first excluded
+  left edge at the support time, the existing full-support maximum-absolute
+  normalization, and then caps represented offsets to the supplied sample
+  count;
+- the pulse operation axis is an `OffsetAxis` relative to `SampleAxis` with
+  `offsets=tuple(range(coefficient_count))`;
+- the accepted nine-edge/eight-band IV-like PSD, `250 MHz` stop, empty
+  `AnalogWaveformConfig`, and `16`-bit `[-3900, 100] mV` digitizer with
+  `3.5218 dB` analog gain remain exact;
+- supplied `channel_axis` and `example_axis` are availability declarations
+  only in this profile version; none of its returned kernels condition on
+  them; and
+- two calls share no Config, kernel, Quantity, or axis-container node other
+  than the caller-supplied immutable semantic axis values.
+
+The profile may use a private module-local evaluator for its fixed Veto pulse
+law. That is profile-owned construction, not a public analytic kernel builder
+or a second pulse Config surface.
+
 No profile loader, named calibration registry, file format, or Silex profile is
 added. Silex remains a future demonstrated consumer.
 
@@ -1013,7 +1057,7 @@ occurrence/delay/overflow identifiers. It must still prove:
 
 ## Public API Target
 
-The provisional exact facade counts are:
+The exact target facade counts are:
 
 ```text
 tensor_dslab root:
@@ -1136,9 +1180,9 @@ __all__ = (
 )
 ```
 
-The dispatch replacement must reconcile these counts with the exact published
-TensorCore API and current source. Any changed count or order requires an
-explicit Design amendment, not Implementation discretion.
+These counts were reconciled against exact published TensorCore `0.21.0` and
+the current TensorDSLab source. Any changed count or order requires an explicit
+Design amendment, not Implementation discretion.
 
 Runtime records, actions, requirements, address factories, and branching/count
 mechanics remain unsupported precise implementation details. Physical kernel
@@ -1171,10 +1215,12 @@ Notebook stored outputs are refreshed only after real execution in the exact
 final environment. They must contain no timestamp, private path, token,
 environment-specific prefix, or error output.
 
-## Provisional Changed-Path Allowlist
+## Exact Changed-Path Allowlist
 
-The exact dispatch replacement must verify and, if necessary, narrow this
-provisional allowlist. No path outside the final replacement is authorized.
+The final allowlist contains exactly `81` unique endpoints: `35` dependency
+and production paths, three demos, `27` tests/typing paths, and `16` current
+documents. Rename/delete pairs count as separate endpoints. No path outside
+this final allowlist is authorized.
 
 ### Dependency and production
 
@@ -1247,6 +1293,7 @@ tests/test_random_demo.py
 tests/test_readout_axes_and_sampling.py
 tests/test_readout_configs.py
 tests/test_readout_profiles_and_demos.py
+tests/test_readout_product_types.py
 tests/test_readout_simulation.py
 tests/test_rng_ownership_migration.py
 tests/test_runtime_action_ownership.py
@@ -1264,9 +1311,9 @@ tests/typing/stage_7_public_readout_orchestration.py
 ```
 
 `test_charge_delay_preparation.py`, the 0.19 adoption test, and the Maintenance
-11 typing fixture are deletion/rename endpoints. The exact replacement must
-state whether each historical typing fixture is updated or protected after
-running the final Python 3.14/Pyright discovery.
+11 typing fixture are deletion/rename endpoints. The listed historical typing
+fixtures are allowlisted because their live import and Config contracts change;
+unlisted historical fixtures remain protected.
 
 ### Current documentation
 
@@ -1280,11 +1327,9 @@ docs/architecture/rebuild.md
 docs/architecture/tensors.md
 docs/design.md
 docs/decisions.md
-docs/integration.md
 docs/overview.md
 docs/parity.md
 docs/physics/correlated_avalanches.md
-docs/quickstart.md
 docs/validation.md
 docs/implementation/index.md
 docs/implementation/proposed_kernel_geometry_and_quantity_architecture.md
@@ -1297,7 +1342,7 @@ unchanged bytes advance.
 
 ### Protected paths
 
-Unless the dispatch replacement explicitly says otherwise, all other paths are
+Unless this work order explicitly says otherwise, all other paths are
 protected, including:
 
 ```text
@@ -1394,6 +1439,9 @@ bytes.
 - caller mutation isolation;
 - unit conversion and incompatible-unit rejection;
 - exact facade order/counts;
+- exact `ds20k_veto(...)` signature, fixed value signature, availability
+  ceiling, and complete fresh-node tree;
+- hand-built/profile Config equivalence in the readout demonstration;
 - retired Config/module imports fail;
 - no alias or forwarding module.
 
@@ -1486,8 +1534,7 @@ release-candidate pairing.
 
 ## Loop And Candidate Policy
 
-The final dispatch replacement must state the exact active route and finite
-candidate/return budgets. It should prefer:
+The exact active route uses these finite candidate/return budgets:
 
 ```text
 Implementation -> Validation:
@@ -1531,9 +1578,7 @@ It must preserve unchanged product field/collection contracts and explicitly
 rebaseline every changed scientific/RNG fixture.
 
 Local merge/closeout does not authorize push. Any later ordinary GitHub
-publication requires its own narrow Design-owned lifecycle authority unless
-the final replacement explicitly and truthfully makes publication
-self-effecting after the complete closeout gate.
+publication requires its own narrow Design-owned lifecycle authority.
 
 ## Non-Goals
 
@@ -1561,14 +1606,18 @@ Maintenance 12 does not add:
 ## Design Authority
 
 TensorDSLab Design owns this package work order. TensorCore Design owns Stage
-29 and the future dependency publication. Agreement between the two Design
+29 and its published dependency bytes. Agreement between the two Design
 threads is required for the cross-package boundary, but neither package role
 may edit, dispatch, validate, review, merge, or publish the other package.
 
-The accepted architectural decisions in this draft are frozen for planning.
-Its exact execution authority remains blocked on the published TensorCore
-target and the documentation-only dispatch replacement described above.
+The accepted architecture and exact TensorCore dependency are frozen for
+execution. The user authorizes TensorDSLab Implementation under the exact
+containing work-order bytes. Implementation may edit only allowlisted
+production, dependency, test, demo, and synchronized current-document paths
+and may dispatch one coherent committed candidate to persistent Validation.
+Validation may return findings or dispatch the exact unchanged clear candidate
+to independent Review. Review remains read-only until Validation dispatch and
+must obtain final same-byte Design approval before any local fast-forward.
 
-No production/test/dependency edit, Implementation dispatch, Validation
-dispatch, Review dispatch, merge, push, CUDA action, compatibility claim, or
-publication is authorized by this draft.
+No merge, push, CUDA action, compatibility claim, release, deployment, or
+publication is authorized by this work order.

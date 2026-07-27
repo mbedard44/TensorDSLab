@@ -1,8 +1,7 @@
 # Proposed Kernel Geometry And Quantity Architecture
 
-Status: **Architecture selected / provisional TensorDSLab Maintenance 12
-drafted / exact TensorCore Stage 29 publication pending / implementation
-undispatched**
+Status: **Architecture selected / TensorCore 0.21.0 Stage 29 published /
+publication-bound TensorDSLab Maintenance 12 is the execution authority**
 
 Stable planning key:
 `TensorDSLab/kernel-geometry-and-quantity-architecture`
@@ -33,7 +32,7 @@ The selected direction follows:
 - the user-accepted kernel architecture handoff that supersedes the earlier
   behavioral-effect hierarchy proposal.
 
-## Nonoperative Baseline
+## Planning Baseline And Selected Publication
 
 The current TensorDSLab baseline remains exact:
 
@@ -48,42 +47,46 @@ TensorCore dependency:
     0.19.0 at ed17f4b637258f0a7f4544f235648b747f17fa44
 ```
 
-The current TensorCore published main is:
+The selected TensorCore publication is:
 
 ```text
 TensorCore main/origin-main:
-    e20b1e1594be894f210bafee2f55e7c46d6caf9c
+    78d0891bf6c0fefbcad4abe09980867c54202a9e
 TensorCore tree:
-    46453935b9e95d30cc178deb5ecb54f2cd154d80
+    af5c4f6d693fa25cf767f3aaae31a47d86cf3a8d
 package version:
-    0.20.0
+    0.21.0
+package implementation anchor:
+    78d0891bf6c0fefbcad4abe09980867c54202a9e
 ```
 
-TensorCore `0.20.0` does not yet supply the final foundation described here.
-TensorDSLab therefore remains on its exact `0.19.0` pin until TensorCore
-independently designs, validates, reviews, closes, and publishes an accepted
-replacement. This document does not bind an exact future published TensorCore
-containing commit; `0.21.0` remains a provisional package-owned target until
-TensorCore closes and publishes Stage 29.
+TensorCore `0.21.0` supplies the final foundation described here. TensorDSLab
+production remains on its exact `0.19.0` pin until Maintenance 12 atomically
+closes its package-owned adoption and scientific rebaseline; publication of a
+dependency does not alter the current resolved package by itself.
 
-TensorCore Design has now frozen the package-owned Stage 29 contract for
-consumer review:
+The package-owned Stage 29 lineage is:
 
 ```text
 stable key:
     TensorCore/stage-29-literal-kernel-offset-axis-multinomial
-Design commit:
+substantive Design commit:
     397807ce634c29e6f3909acab7006cf2b8d5267d
 Design tree:
     e7a853d173c71f53e58787f1678126ca88e8bb61
+final Design authority:
+    828017780321269fbace28e481aadf2d9e39adde
+final implementation/publication:
+    78d0891bf6c0fefbcad4abe09980867c54202a9e
 exact parent / published 0.20.0:
     e20b1e1594be894f210bafee2f55e7c46d6caf9c
 ```
 
-TensorDSLab Design independently confirmed those exact bytes with zero
-findings. This confirmation closes the Design-contract prerequisite only. It
-does not publish TensorCore `0.21.0`, adopt a dependency, dispatch either
-package's Implementation, or make a compatibility claim.
+TensorDSLab Design independently confirmed the substantive Design contract and
+the exact published package bytes with zero findings. The publication does not
+itself adopt a dependency or make a compatibility claim. The linked
+publication-bound Maintenance 12 work order separately owns TensorDSLab
+dispatch.
 
 Current production remains authoritative until a later complete package gate:
 
@@ -1500,11 +1503,11 @@ address constructors remain unsupported implementation details.
 The architecture should be implemented through bounded package-owned stages,
 not one uncontrolled rewrite.
 
-### Foundation A: TensorCore Stage 29 / `0.21.0`
+### Foundation A: TensorCore Stage 29 / `0.21.0` — complete
 
-TensorCore Design recommends one focused package-owned Stage 29 rather than a
-transitional public topology. It independently designs, implements, validates,
-reviews, closes, and publishes:
+TensorCore completed one focused package-owned Stage 29 rather than a
+transitional public topology. It independently designed, implemented,
+validated, reviewed, closed, and published:
 
 - `OffsetAxis`;
 - literal-axis `TensorKernel`;
@@ -1518,9 +1521,8 @@ reviews, closes, and publishes:
   results for the same numerical law/address; and
 - exact typing, validation, snapshot, synchronization, and export contracts.
 
-The natural target version is TensorCore `0.21.0`. TensorDSLab and TensorG4DS
-perform exact-byte consumer review before TensorCore dispatch. TensorDSLab
-does not author or implement that stage.
+The exact published version is TensorCore `0.21.0`. TensorDSLab did not author
+or implement that stage.
 
 ### Foundation B: TensorDSLab representation
 
@@ -1721,21 +1723,23 @@ This architecture does not authorize:
 
 ## Cross-Package Stop Conditions
 
-Before a production work order may dispatch:
+The publication-bound Maintenance 12 work order records these prerequisites as
+complete:
 
 1. TensorCore Design must freeze exact Stage 29 `OffsetAxis`, `TensorKernel`,
    `require_kernel_dimensions`, direct-probability
    `MultinomialDistribution`, no-parameters, and `ProbabilityKernel`
    retirement contracts. This is satisfied by exact confirmed Design commit
-   `397807ce634c29e6f3909acab7006cf2b8d5267d`.
-2. TensorCore must complete its package-owned implementation, validation,
-   review, local closeout, and GitHub publication.
-3. TensorDSLab must review the exact published containing commit.
-4. TensorDSLab Design must select that exact commit in a new immutable work
-   order.
+   `397807ce634c29e6f3909acab7006cf2b8d5267d` and its contract-identical
+   evidence-cadence authority `828017780321269fbace28e481aadf2d9e39adde`.
+2. TensorCore completed package-owned implementation, validation, review,
+   local closeout, and GitHub publication at exact `78d0891`.
+3. TensorDSLab reviewed that exact published containing commit.
+4. TensorDSLab Design selected that exact commit in the linked Maintenance 12
+   work order.
 5. Exact changed paths, exports, diagnostics, tests, scientific rebaseline,
-   and old-surface retirements must be frozen.
-6. Implementation, Validation, and Review routes must be active and verified.
+   and old-surface retirements are frozen there.
+6. Implementation, Validation, and Review routes are verified at dispatch.
 
 Any mismatch between this planning record, current package sources, later
 TensorCore contracts, or a future work order returns to TensorDSLab Design.
@@ -1754,9 +1758,8 @@ scientific target because it makes direct crosstalk, delayed crosstalk, and
 afterpulse share one exact intensity-to-Poisson branching pattern. Recovery is
 deferred deliberately.
 
-This record remains non-dispatchable. Its focused provisional TensorDSLab work
-order is
+This planning record remains non-dispatchable. Its focused, publication-bound
+TensorDSLab work order is
 [Maintenance 12](maintenance_12_tensorcore_0_21_kernel_geometry_quantity_refactor.md),
-but that work order cannot become execution authority until the TensorCore
-foundation is returned as an exact package-authoritative published contract
-and incorporated by an independently checked documentation-only replacement.
+which is the sole execution authority for the adopted package and scientific
+scope.
