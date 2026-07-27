@@ -69,10 +69,13 @@ def _charge_runtime(source: Photoelectrons, dtype: torch.dtype) -> ChargeRuntime
     return ChargeRuntime(
         sampling=_sampling_runtime(source),
         floating_dtype=dtype,
-        dark=None,
+        correlated_avalanche_generations=0,
+        dark_count_mean=None,
         timing_jitter=None,
-        correlated_avalanches=None,
-        smearing=None,
+        direct_crosstalk=None,
+        delayed_crosstalk=None,
+        afterpulse=None,
+        smearing_width=None,
     )
 
 

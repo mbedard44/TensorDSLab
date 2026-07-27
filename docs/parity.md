@@ -10,6 +10,31 @@ comprehensive donor fixture corpus, public requested-`Charge` donor
 comparison, accepted IV equivalence margin, CUDA evidence, or broad stochastic
 donor parity.
 
+## Maintenance 12 Literal-Kernel Scientific Rebaseline
+
+Maintenance 12 deliberately changes the comparison boundary. Geometry and
+physical coefficients are literal `OffsetAxis`/`QuantityKernel` values bound
+by the profile. Timing jitter consumes its supplied finite probability mass
+directly and discards the unassigned completion mass; it is no longer derived
+from the former Gaussian-jitter parameterization. Direct and delayed
+crosstalk retain collapsed destination-rate Poisson superposition, now driven
+by literal kernels. Afterpulse becomes full-charge Poisson offspring with no
+recovery factor or separate occurrence/delay allocation. Pure-waveform
+rendering becomes literal discrete Pulse convolution.
+
+These are intentional predeployment scientific divergences, so Maintenance 11
+completed stochastic fixtures are not continuity goldens. Evidence compares
+each new law to an independent analytic/direct oracle, checks exact same-stack
+replay and the compact role/address table, and preserves unchanged downstream
+field, storage, autograd, analog, and digitization relationships. The
+provisional `ds20k_veto(...)` values remain illustrative rather than an
+approved calibration.
+
+This section describes candidate bytes while absent from `main`. If present
+unchanged on `main`, Review's fast-forward has completed; final Design
+acceptance remains pending until the Maintenance 12 work order and index say
+**Merged / Closed**. Evidence is CPU-only.
+
 The bounded Stage 6 evidence is exact implementation candidate
 `fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58` and Review closeout
 `ea979862b05f4ef543f6971c86641df317232479`, against TensorCore `0.7.0`

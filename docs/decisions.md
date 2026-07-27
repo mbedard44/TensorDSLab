@@ -6,6 +6,27 @@ and comparison policy in [`parity.md`](parity.md).
 
 ## Accepted
 
+### Maintenance 12 Selects Literal Physical Kernels
+
+TensorDSLab selects exact TensorCore `0.21.0` concrete `OffsetAxis`, literal
+`TensorKernel`, role resolution, and direct-probability Multinomial execution.
+TensorDSLab owns a Pint-aware `QuantityKernel` boundary and seven semantic
+physical leaves. Public Configs hold those leaves directly; preparation
+validates availability, aligns conditioning coordinates, and compiles plain
+tensor Runtime state.
+
+The selected scientific rebaseline uses direct Multinomial timing,
+destination-rate Poisson direct/delayed crosstalk and afterpulse, full-charge
+afterpulse without recovery, and literal Pulse convolution. The old
+effect-specific Config hierarchy, `ProbabilityKernel`, recovery-weighted
+afterpulse, nested effect tree, plural axes module, and their aliases are
+retired. The eight active stochastic roles are compactly rebaselined as private
+package policy.
+
+This is candidate state while absent from `main`. If present unchanged on
+`main`, Review's fast-forward has completed; final Design acceptance still
+requires the Maintenance 12 lifecycle records to say **Merged / Closed**.
+
 ### TensorDSLab Is Tensor-Native From The Start
 
 TensorDSLab is a clean-slate detector data-lab package. It defines its own
@@ -261,8 +282,9 @@ package table.
 ### The Package Tree Is Product-Centered
 
 Shared `ExampleAxis`, `ChannelAxis`, and `SampleAxis` live in
-`common/axes.py`. Maintenance 5 deletes `common/sampling.py` without a
-replacement public sampling module.
+`common/axis.py`. Maintenance 12 renames the former `common/axes.py` module
+without a forwarding shim. Maintenance 5 deleted `common/sampling.py` without
+a replacement public sampling module.
 
 `readout/config.py` contains only `ReadoutConfig`;
 `readout/collection.py` contains only `ReadoutCollection`; and

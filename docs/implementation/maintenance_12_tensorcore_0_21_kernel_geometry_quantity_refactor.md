@@ -1,7 +1,11 @@
 # Maintenance 12 TensorCore 0.21 Kernel Geometry And Quantity Refactor
 
-Status: **Design-complete / exact TensorCore 0.21.0 publication confirmed /
-Implementation authorized under the exact containing work-order bytes**
+Status: **Implementation candidate lifecycle active**. If these exact bytes are
+absent from `main`, they are under fixed-commit
+Implementation/Validation/Review gates. If present unchanged on `main`,
+Review's fast-forward has completed; final Design acceptance remains pending
+until this work order and the implementation index record
+**Merged / Closed**.
 
 Stable key:
 `TensorDSLab/maintenance-12-tensorcore-0-21-kernel-geometry-quantity-refactor`

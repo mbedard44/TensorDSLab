@@ -366,6 +366,26 @@ skips are explicit: no current integrated CUDA, accelerator-support,
 performance, release, deployment, compatibility, publication, or
 production-readiness claim follows.
 
+Maintenance 12 TensorCore 0.21 Kernel Geometry And Quantity Refactor is the
+active fixed-commit package gate under
+`docs/implementation/maintenance_12_tensorcore_0_21_kernel_geometry_quantity_refactor.md`.
+It selects exact published TensorCore `0.21.0` commit
+`78d0891bf6c0fefbcad4abe09980867c54202a9e` and atomically replaces
+`ProbabilityKernel`, parametric Charge/Pulse Config records, and the nested
+Charge-effect tree with literal `OffsetAxis`/`TensorKernel` geometry,
+TensorDSLab-owned `QuantityKernel` leaves, compiled Runtime state, direct
+Multinomial timing allocation, collapsed-rate Poisson branching, and literal
+Pulse convolution. It also moves `common/axes.py` to `common/axis.py` without
+a shim and rebaselines the eight active private RNG roles.
+
+The Maintenance 12 bytes use three-state lifecycle wording. When they are
+absent from `main`, they are a feature-branch candidate under fixed-commit
+gates. If they appear unchanged on `main`, Review's fast-forward has completed,
+but final Design acceptance remains pending until the work order and
+implementation index say **Merged / Closed**. The candidate is CPU-qualified
+only and makes no accelerator, compatibility, release, deployment, or
+production-readiness claim.
+
 The first Stage 8 real-CUDA attempt correctly stopped before any accepted
 measurement when its protected-suite gate over-applied those macOS literals to
 the frozen Della Linux/x86_64 stack. Exact Stage 8 authority
@@ -394,14 +414,14 @@ The checkout root is the project folder. The `tensor_dslab/` directory is the
 Python import package. Do not create a
 flat TitleCase Python package that imports as `TensorDSLab`.
 
-The implemented Maintenance 5 baseline uses this product-centered readout
-tree. It retains Maintenance 4's product/runtime structure while removing the
-redundant public sampling-config module:
+The Maintenance 12 target uses this product-centered readout tree:
 
 ```text
 tensor_dslab/
   common/
-    axes.py
+    axis.py
+    kernel.py
+    units.py
   readout/
     config.py
     collection.py
@@ -418,20 +438,17 @@ tensor_dslab/
     charge/
       config.py
       field.py
+      kernel.py
       runtime/
+        branching.py
+        counts.py
         prepare.py
         produce.py
         validate.py
-        effects/
-          counts.py
-          delays.py
-          dark_counts.py
-          timing_jitter.py
-          correlated_avalanches.py
-          smearing.py
     pure_waveform/
       config.py
       field.py
+      kernel.py
       runtime/{prepare.py,produce.py,validate.py}
     noise_waveform/
       config.py
@@ -447,17 +464,10 @@ tensor_dslab/
       runtime/{prepare.py,produce.py,validate.py}
 ```
 
-This is the implemented Maintenance 5 package tree, not permission to create
-additional placeholders. Maintenance 6 may add only the accepted
-`common/units.py` behavior and the exact allowlisted physical-config/runtime
-changes in its work order; it does not reorganize this product tree.
-The accepted Maintenance 7 target adds only the non-exported
-`readout/runtime/keys.py` policy module, relocates the sole remaining
-readout-domain requirement to `readout/runtime/requirements.py` without a
-shim, and changes the exact validation/RngPositions migration paths in its work
-order; it creates no generic RNG wrapper or compatibility layer. The tree above
-shows that accepted target. The former root `readout/requirements.py` remains
-only a Maintenance 4 through Maintenance 6 historical fact.
+This is the selected concrete tree, not permission to create additional
+placeholders. The former `common/axes.py`, root `readout/requirements.py`,
+and Charge `runtime/effects/` paths are historical facts and have no forwarding
+shim. Do not create a generic kernel/effect framework or RNG wrapper.
 Maintenance 2 realized the preceding product/module ownership
 migration without compatibility shims, and Stage 7 completed
 `readout/simulation.py`; their private `_produce.py`, `*Plan`,
@@ -481,9 +491,11 @@ retention, and final collection construction. Shared semantic axes remain in
 authority and removes `SamplingConfig`. Maintenance 6 keeps those compact
 integer axes, adds deliberate Pint construction/access conveniences at the
 TensorDSLab boundary, and never sends quantities into `SamplingRuntime` or
-tensor execution. Charge-specific multinomial/category
-orchestration, count-domain helpers, and scientific effects remain private
-under `charge/runtime/effects/`.
+tensor execution. Maintenance 12 flattens Charge branching and count
+bookkeeping into non-exported `charge/runtime/branching.py` and
+`charge/runtime/counts.py`, with the adjacent prepare/produce actions owning
+the remaining execution steps; the former `charge/runtime/effects/` package is
+absent.
 
 Runtime privacy is export-driven. Runtime modules and records remain ordinary
 importable Python implementation details, but no Runtime, action, requirement,
@@ -570,35 +582,21 @@ intact to
 `readout/charge/runtime/effects/counts.py`; it does not change the historical
 Maintenance 2 record or any RNG behavior.
 
-The active MVP crosstalk delay union is exactly
-`FixedDelayConfig | ExponentialDelayConfig`. Although Stage 3 historically
-implemented and exported `NormalDelayConfig`, Stage 6 removed that class, both
-union memberships, all three export layers, and its tests without a
-compatibility shim. Do not restore it or revive its zero-clipped law. Any later
-normal, lognormal, tabulated, or other delay family requires a new calibrated
-scientific and API decision. Closed Stage 3 records remain historical and are
-not rewritten.
+The active Maintenance 12 Charge configuration uses literal
+`DirectCrosstalk`, `DelayedCrosstalk`, and `Afterpulse` quantity kernels.
+Direct sample offsets are nonnegative; delayed and afterpulse sample offsets
+are strictly positive. Each mechanism maps one immutable generation frontier
+to in-window destination rates and performs one tensor Poisson draw. All
+mechanisms in one generation see the same frontier, and only pooled children
+form the next frontier. Afterpulse children deposit full unit charge; no delay
+Config, recovery response, separate occurrence draw, conditional delay draw,
+or overflow product remains.
 
-Fixed and exponential phase-marginalized delay preparation is frozen in
-`docs/architecture/rebuild.md`. Fixed delay accepts every finite nonnegative
-value and uses its exact represented two-point law with no PMF tolerance.
-Exponential delay and AP recovery use their documented bounded ratio/sample
-domains, analytic right tails, stable binary64 branches, and `1e-12` local /
-`1e-11` complete-law tolerances. Do not replace these mappings with per-edge
-latent draws, cutoff tails, clipping, residual assignment, renormalization, or
-subtraction-derived overflow.
-
-Timing jitter specifically integrates the latent-uniform plus ideal-Gaussian
-law into binary64 destination probabilities during preflight. Its frozen log-
-tail evaluator supports `2**-52 <= sigma / T <= 64`,
-`2 <= sample_count <= 8192`, and `S * N <= 2**63`, with exact zero sigma as a
-separate identity, `1e-12` local probability tolerance, and `1e-11` complete-
-source-law L1 tolerance. Runtime scans every in-window target bin in increasing
-order through aggregate conditional binomials and leaves one combined drop
-category as the final no-draw count remainder. It must not draw a normal per
-PE, call Box-Muller for jitter, impose an arbitrary Gaussian tail cutoff, clip
-or normalize its law, or trade correctness for subquadratic sample-count work
-without a later focused Design decision.
+`TimingJitter` supplies one literal complete sample-offset PMF. Runtime uses
+direct `MultinomialDistribution` probabilities with zero completion
+probability, then discards allocations whose offsets leave the finite window.
+It must not normalize the kernel, reconstruct a Gaussian law, draw per-PE
+normals, or copy generic multinomial mechanics.
 
 `Photoelectrons` is an already-produced dense truth input. It has no
 `PhotoelectronsConfig`, no TensorDSLab readout preparer, producer, or Runtime
@@ -736,16 +734,16 @@ scientific position/category lattices, direct-uniform/Gaussian ordinals,
 multinomial ordering and final remainders, draw-free scientific policy, count
 accumulation, and ledgers.
 
-Maintenance 11 supersedes that live execution description. Exact TensorCore
-`0.19.0` owns `RngElements`, `RngAddress`, Distribution, TensorKernel, and
-ProbabilityKernel mechanics. Eight role keys remain active: streams `1`, `2`,
-`3`, `4`, `6`, `8`, `9`, and `10`; former crosstalk overflow streams `5` and
-`7` are retired without reservation. Afterpulse stream `9` uses occurrence
-quantum `0` and delay-allocation quantum `1`. TensorDSLab retains its
-scientific element lattices and address schemas, physical kernels/rates,
-boundary meaning, count ceilings, checked accumulation, ledgers, and product
-validation. Do not restore the old methods, offsets, category helper, overflow
-roles, or finite-window outputs.
+Maintenance 12 supersedes that live execution description. Exact TensorCore
+`0.21.0` owns `RngElements`, `RngAddress`, Distribution, literal
+`TensorKernel`, concrete `OffsetAxis`, role resolution, and direct Multinomial
+mechanics. Eight role keys remain active as compact streams `1` through `8`
+for white, PSD, dark, timing, direct, delayed, afterpulse, and smearing.
+TensorDSLab retains scientific element lattices and address schemas, physical
+kernels/rates, boundary meaning, count ceilings, checked accumulation,
+ledgers, and product validation. Do not restore `ProbabilityKernel`, old
+methods/offsets/category helpers, recovery state, overflow roles, or
+finite-window outputs.
 
 Import only public TensorCore package-root names; do not copy or import
 protected RNG or promoted distribution mechanics. Published TensorCore

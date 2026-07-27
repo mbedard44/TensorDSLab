@@ -6,6 +6,7 @@ from typing import cast
 import numpy as np
 import pint
 from pint import Quantity
+import torch
 from tensor_core import FiniteFloat, Scalar
 
 
@@ -50,26 +51,90 @@ def quantity(magnitude: int | float, unit: str) -> Quantity:
 
 
 def quantities(
-    magnitudes: tuple[int | float, ...],
+    magnitudes: tuple[int | float, ...] | torch.Tensor,
     unit: str,
 ) -> Quantity:
-    """Return one copied immutable vector quantity in canonical package units."""
+    """Return one copied immutable tensor quantity in canonical package units."""
 
-    if type(magnitudes) is not tuple:
-        raise TypeError("magnitudes must be exactly tuple")
     parsed_unit = _require_unit(unit)
-    normalized = np.array(
-        tuple(
-            _finite_magnitude(
-                magnitude,
-                field=f"quantity magnitude[{index}]",
-            )
-            for index, magnitude in enumerate(magnitudes)
-        ),
-        dtype=np.float64,
-    )
+    if type(magnitudes) is tuple:
+        normalized = np.array(
+            tuple(
+                _finite_magnitude(
+                    magnitude,
+                    field=f"quantity magnitude[{index}]",
+                )
+                for index, magnitude in enumerate(magnitudes)
+            ),
+            dtype=np.float64,
+        )
+    elif type(magnitudes) is torch.Tensor:
+        if magnitudes.device.type != "cpu":
+            raise ValueError("magnitudes tensor must be on CPU")
+        if magnitudes.layout is not torch.strided:
+            raise ValueError("magnitudes tensor must use torch.strided layout")
+        if magnitudes.requires_grad:
+            raise ValueError("magnitudes tensor must not require gradients")
+        if not magnitudes.dtype.is_floating_point and magnitudes.dtype not in (
+            torch.int8,
+            torch.int16,
+            torch.int32,
+            torch.int64,
+            torch.uint8,
+        ):
+            raise TypeError("magnitudes tensor must have a real numeric dtype")
+        converted = magnitudes.to(dtype=torch.float64).contiguous()
+        if not bool(torch.isfinite(converted).all()):
+            raise ValueError("magnitudes tensor values must be finite")
+        normalized = converted.numpy().copy()
+    else:
+        raise TypeError("magnitudes must be exactly tuple or torch.Tensor")
     normalized.setflags(write=False)
     return cast(Quantity, _REGISTRY.Quantity(normalized, parsed_unit))
+
+
+def _canonical_tensor_quantity(
+    value: object,
+    *,
+    unit: str,
+    field: str,
+) -> tuple[torch.Tensor, pint.Unit]:
+    if not isinstance(value, pint.Quantity):
+        raise TypeError(f"{field} must be a Pint Quantity")
+    try:
+        converted = value.to(unit)
+    except (pint.PintError, OverflowError) as error:
+        raise ValueError(f"{field} must be convertible to {unit}") from error
+    magnitude = converted.magnitude
+    if type(magnitude) in (int, float):
+        normalized = torch.tensor(
+            _finite_magnitude(magnitude, field=field),
+            dtype=torch.float64,
+        )
+    elif type(magnitude) is np.ndarray:
+        if magnitude.dtype.kind not in "iuf":
+            raise TypeError(f"{field} magnitude must have a real numeric dtype")
+        try:
+            normalized = torch.from_numpy(
+                np.array(magnitude, dtype=np.float64, copy=True)
+            )
+        except (TypeError, ValueError, OverflowError) as error:
+            raise ValueError(f"{field} magnitude cannot be represented") from error
+    elif type(magnitude) is torch.Tensor:
+        if magnitude.device.type != "cpu":
+            raise ValueError(f"{field} magnitude tensor must be on CPU")
+        if magnitude.layout is not torch.strided:
+            raise ValueError(f"{field} magnitude tensor must use torch.strided layout")
+        if magnitude.requires_grad:
+            raise ValueError(f"{field} magnitude tensor must not require gradients")
+        normalized = magnitude.to(dtype=torch.float64).contiguous().clone()
+    else:
+        raise TypeError(
+            f"{field} magnitude must be a scalar, NumPy array, or CPU torch.Tensor"
+        )
+    if not bool(torch.isfinite(normalized).all()):
+        raise ValueError(f"{field} magnitude values must be finite")
+    return normalized.contiguous(), _require_unit(unit)
 
 
 def _canonical_quantity(

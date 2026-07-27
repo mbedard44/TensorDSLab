@@ -6,6 +6,20 @@ This page defines how the TensorDSLab rebuild uses TensorCore. Scientific
 readout behavior belongs in [`readout.md`](readout.md) and the complete rebuild
 contract in [`rebuild.md`](rebuild.md).
 
+Maintenance 12 is the active adoption target for exact published TensorCore
+`0.21.0` commit `78d0891bf6c0fefbcad4abe09980867c54202a9e`.
+TensorDSLab consumes concrete compositional `OffsetAxis`, literal
+`TensorKernel`, direct-probability `MultinomialDistribution`, and the matching
+generic validation surface. It owns Pint-aware `QuantityKernel` snapshots and
+physical semantic leaves, then resolves their named conditioning roles and
+materializes plain target-device tensors during preparation. Public kernels
+retain literal coefficient storage and are never expanded to product shape.
+
+These bytes are candidate architecture while absent from `main`. If present
+unchanged on `main`, Review's fast-forward has completed; final Design
+acceptance still requires **Merged / Closed** in the Maintenance 12 work order
+and index.
+
 Closed Stage 3 through 6 evidence uses exact TensorCore `0.7.0` commit
 `b454d738f6385ce6489d85492a618a3dab139bb6`. Maintenance 2 installed exact
 published TensorCore `0.9.0` commit
@@ -83,6 +97,10 @@ TensorCore `0.19.0` containing commit
 physical laws, fixed key/address policy, product relationships, storage
 rules, and validation. `tensor_dslab.readout.runtime.addresses` is the sole
 new non-exported production module; no package facade changes.
+
+That Maintenance 11 paragraph is historical baseline evidence. Maintenance 12
+supersedes its `ProbabilityKernel` and exact dependency details with the
+literal-kernel target described above.
 
 Every stochastic Charge request uses one complete product element domain and
 every stochastic noise model one model-specific element domain. Selection

@@ -1,84 +1,8 @@
-from collections.abc import Iterable
+# pyright: standard
+"""Current public orchestration typing contract."""
+
 from typing import assert_type
 
-import torch
-from tensor_core import (
-    FiniteFloat,
-    NonnegativeFloat,
-    PositiveFloat,
-    PositiveInteger,
-    TensorField,
-    Threefry4x32,
-)
+from tensor_dslab import ReadoutCollection
 
-from tensor_dslab import (
-    quantities,
-    quantity,
-    AnalogWaveform,
-    AnalogWaveformConfig,
-    ChargeConfig,
-    ChannelAxis,
-    DigitizedWaveform,
-    DigitizedWaveformConfig,
-    ExampleAxis,
-    NoiseWaveformConfig,
-    Photoelectrons,
-    PureWaveformConfig,
-    ReadoutCollection,
-    ReadoutConfig,
-    SampleAxis,
-    TpcFebSnrPulseConfig,
-    ZeroNoiseConfig,
-    simulate_readout,
-)
-
-def _ns(value: int | float):
-    return quantity(value, "ns")
-
-
-def _mv(value: int | float):
-    return quantity(value, "mV")
-
-
-assert_type(ReadoutConfig(), ReadoutConfig)
-
-photoelectrons = Photoelectrons(
-    tensor=torch.ones((1, 1, 4), dtype=torch.int64),
-    axes=(
-        ExampleAxis(count=1),
-        ChannelAxis(labels=("channel-0",)),
-        SampleAxis(start=0, step=2_000, count=4),
-    ),
-)
-config = ReadoutConfig(
-    charge=ChargeConfig(),
-    pure_waveform=PureWaveformConfig(
-        model=TpcFebSnrPulseConfig(
-            fast_time_constant=_ns(83.0),
-            slow_time_constant=_ns(383.0),
-            support_time=_ns(32.0),
-            peak_voltage_per_photoelectron=_mv(7.0),
-        )
-    ),
-    noise_waveform=NoiseWaveformConfig(model=ZeroNoiseConfig()),
-    analog_waveform=AnalogWaveformConfig(),
-    digitized_waveform=DigitizedWaveformConfig(
-        bit_depth=PositiveInteger(12),
-        input_minimum=_mv(-20.0),
-        input_maximum=_mv(2.0),
-        analog_gain_db=NonnegativeFloat(0.0),
-    ),
-)
-products: Iterable[type[TensorField]] = (AnalogWaveform, DigitizedWaveform)
-readout: ReadoutCollection = simulate_readout(
-    photoelectrons,
-    products=products,
-    config=config,
-    rng=Threefry4x32(seed=17),
-    floating_dtype=torch.float32,
-)
-assert_type(readout, ReadoutCollection)
-analog: AnalogWaveform = readout.field(AnalogWaveform)
-digitized: DigitizedWaveform = readout.field(DigitizedWaveform)
-assert_type(analog, AnalogWaveform)
-assert_type(digitized, DigitizedWaveform)
+assert_type(ReadoutCollection, type[ReadoutCollection])

@@ -11,6 +11,20 @@ citations live in
 [`rebuild.md`](rebuild.md). Donor comparison and intentional divergences live
 in [`../parity.md`](../parity.md).
 
+Maintenance 12 is the active exact TensorCore `0.21.0` target. It replaces the
+effect-specific scalar Charge/Pulse Config graph with literal physical
+`QuantityKernel` leaves, compiles aligned coefficient tensors during complete
+request preparation, and executes direct Multinomial timing allocation,
+collapsed destination-rate Poisson branching, and literal Pulse convolution.
+The profile binds available sample/channel/example geometry explicitly, while
+product fields continue to reuse the exact source axes. `common/axis.py` is the
+sole live semantic-axis module; the former plural module has no shim.
+
+When these bytes are absent from `main`, they describe a fixed-commit
+candidate. If present unchanged on `main`, Review's fast-forward has completed;
+final Design acceptance remains pending unless the Maintenance 12 work order
+and index record **Merged / Closed**.
+
 Architecture pages do not themselves dispatch production. Stages 3 through 6
 are Merged / Closed. Stage 6 implemented the complete private Charge slice at
 exact candidate `fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58`; Review's
@@ -235,25 +249,22 @@ workflow graph.
 
 ## Scientific Configuration
 
-Every config is a final frozen slotted keyword-only dataclass. Exact component
-types and TensorCore constrained scalars express the accepted domain. `None`
-disables an optional submodel; a closed exact union selects an alternative
-model.
+Every Config is a final frozen slotted keyword-only dataclass. `None` disables
+an optional physical kernel. Maintenance 12 removes the effect-specific scalar
+Charge hierarchy and exposes literal physical geometry directly:
 
 ```text
 ReadoutConfig
 ├── ChargeConfig | None
-│   ├── DarkCountConfig | None
-│   ├── TimingJitterConfig | None
-│   ├── CorrelatedAvalancheConfig | None
-│   │   ├── maximum_generations
-│   │   ├── DirectCrosstalkConfig | None
-│   │   ├── DelayedCrosstalkConfig | None
-│   │   └── AfterpulseConfig | None
-│   │       └── AfterpulseRecoveryConfig | None
-│   └── ChargeSmearingConfig | None
+│   ├── correlated_avalanche_generations
+│   ├── DarkCountRate | None
+│   ├── TimingJitter | None
+│   ├── DirectCrosstalk | None
+│   ├── DelayedCrosstalk | None
+│   ├── Afterpulse | None
+│   └── SmearingWidth | None
 ├── PureWaveformConfig | None
-│   └── TpcFebSnrPulseConfig | VetoPduPulseConfig
+│   └── Pulse
 ├── NoiseWaveformConfig | None
 │   └── ZeroNoiseConfig | WhiteNoiseConfig | PsdNoiseConfig
 ├── AnalogWaveformConfig | None
@@ -267,37 +278,26 @@ or runtime workspace policy in scientific config.
 `ReadoutConfig()` is the valid truth-only configuration; source sampling is
 not duplicated in a public config.
 
-Maintenance 6 replaces each public physical scalar field with a scalar Pint
-Quantity in the field's documented dimension and removes the unit suffix from
-that public name. One private TensorDSLab registry and one common canonicalizer
-copy every accepted caller Quantity into a canonical package-owned Quantity
-and invoke the selected TensorCore `Scalar.require(...)` rule exactly once.
-Dimensionless, algorithmic, key, and composition fields retain their current
-types. All public Configs become explicitly unhashable.
+`QuantityKernel` combines a canonical copied CPU `float64` Pint Quantity with
+zero or more concrete conditioning axes and one or more operation axes where
+the physical law requires them. The seven final semantic leaves own their
+dimensions and intrinsic domains. Configs hold those immutable snapshots
+directly; they contain no Distribution or Runtime state.
 
-The unit boundary ends during preparation:
+The unit and public-geometry boundary ends during preparation:
 
 ```text
-physical Config Quantity
-  -> one canonical magnitude extraction
-  -> unit-suffixed plain Runtime fact
+physical QuantityKernel
+  -> role/availability validation and coordinate alignment
+  -> plain target-device Runtime tensor
   -> tensor/RNG production
 ```
 
 Runtime records, products, collections, producers, validators, and RNG
-addresses contain no Pint object or unit string. Maintenance 6 established
-this boundary, and Maintenance 7 Candidate 1 preserves it while changing only
-the accepted vector-Quantity representation and pulse-amplitude narrowing
-recorded in its work order.
-
-Maintenance 11 fixes eight active TensorCore `RngKey` values in the
-non-exported `readout/runtime/keys.py` table: white/PSD noise use streams
-`1`/`2`; dark count uses `3`; direct/delayed crosstalk use `4`/`6`; timing
-jitter uses `8`; afterpulse uses `9`; and charge smearing uses `10`. All use
-namespace `0x54445331` (`TDS1`). Retired overflow streams `5` and `7` receive
-no reservation or compatibility promise. Public Configs contain no role-key
-fields or override surface. The required `CounterRng.seed` remains the
-caller's realization control.
+addresses contain no Pint object or unit string. The eight active private keys
+are compactly rebaselined to streams `1` through `8` in execution order:
+white, PSD, dark, timing, direct, delayed, afterpulse, smearing. All use
+namespace `0x54445331` (`TDS1`). Public Configs contain no key override.
 
 Each product preparer receives only its exact product config and shared
 sampling/source facts when relevant. It returns one private immutable product
@@ -455,59 +455,34 @@ unchanged.
 
 ### Timing Jitter
 
-For each source bin, private timing jitter marginalizes a uniform latent
-within-bin phase with a zero-mean ideal-normal displacement. The phase and
-displacement are independent within each avalanche and IID across avalanches.
-Preflight analytically integrates that law into binary64 probabilities for
-every target bin that remains inside the finite window and stores the
-reusable result as a public TensorCore `ProbabilityKernel`. Runtime then
-redistributes aggregate integer counts with one public
-`MultinomialDistribution`; it does not draw a Gaussian per PE, invoke
-Box-Muller for jitter, or materialize a jagged PE table.
-
-For a source bin `s`, target bins are sampled in increasing `t` order, which is
-also increasing signed offset `t - s`. The one combined out-of-window category
-is the exact final count remainder and consumes no draw. No arbitrary Gaussian
-tail cutoff may discard a destination that can still land in the window.
-`sigma == 0` is draw-free identity. Retained counts plus explicit dropped
-counts conserve the input exactly.
-
-The first implementation prepares a log-domain one-sided cumulative tail for
-`2**-52 <= sigma / T <= 64` and `2 <= sample_count <= 8192`, also requiring
-`S * N <= 2**63`. It derives exact-symmetric offset masses and stable success/
-later-category masses for each conditional binomial; it never repeatedly
-subtracts categories from one, clips, or renormalizes. Category/tail/identity
-error is bounded by `1e-12`, the complete represented source law by `1e-11`
-L1, and the package-owned timing-jitter key uses dedicated stream `8`. Full
-evaluator and validation details are normative in `rebuild.md`.
+`TimingJitter` is a literal dimensionless probability tensor with one
+sample-relative `OffsetAxis`. Preparation aligns optional conditioning roles
+and materializes the literal PMF once. Runtime calls public
+`MultinomialDistribution` directly with those probabilities and
+`completion_probability=0`. Out-of-window destinations are discarded after
+allocation; the PMF is not clipped, renormalized, or reconstructed from a
+parametric Gaussian. A unity offset-zero kernel is draw-free identity.
 
 This is a private Charge stage, not a transform that returns jittered
 `Photoelectrons`.
 
 ### Fixed-Generation Correlated Avalanches
 
-The only active cascade baseline uses a caller-configured
-`maximum_generations = K` and one frozen unmarked integer count frontier per
-generation. Every primary, dark, direct-crosstalk, delayed-crosstalk, or
-afterpulse avalanche in one frontier receives the same recovery-independent
-offspring laws for the next generation.
+The active cascade uses `correlated_avalanche_generations = K` and one frozen
+integer frontier per generation. Every literal branching kernel maps the same
+frontier to deterministic in-window destination rates for that generation.
 
 - Direct and delayed crosstalk use distinct collapsed destination-mean tensors
   and one tensor-valued Poisson draw per mechanism; their rates are never
   silently combined.
-- Dark counts and crosstalk use public `PoissonDistribution` objects. The
-  crosstalk construction is exact by Poisson splitting/superposition and is
-  not a total-first Poisson-plus-Multinomial factorization.
-- Direct/delayed crosstalk children are fresh unit-charge avalanches.
-- Afterpulse children are integer avalanches whose deposited charge may be
-  weighted by the configured delay-dependent recovery response.
-- Recovery affects deposited charge only; it never changes offspring
-  probability or creates marked recursive state.
+- All three mechanisms use public tensor-valued `PoissonDistribution` draws;
+  no total-first Poisson-plus-Multinomial factorization is used.
+- Direct, delayed, and afterpulse children are full unit-charge avalanches.
 - Every child enters the same unmarked next frontier.
 - All mechanisms are causal; out-of-window children are excluded from retained
-  charge and later waveform products. Only afterpulse keeps an allocation
-  boundary category because its conditional delay law is sampled explicitly;
-  crosstalk finite-window overflow outputs are retired.
+  charge and later waveform products. No mechanism exposes an overflow result.
+- Children born in a generation cannot become parents until the next
+  generation.
 
 The simulator maintains separate physical ledgers:
 
@@ -580,15 +555,11 @@ samplers.
 
 ### PureWaveform
 
-`PureWaveformConfig.model` is exactly one of:
-
-- `TpcFebSnrPulseConfig`; or
-- `VetoPduPulseConfig`.
-
-The MVP provisionally adopts the two audited IV-DSLab pulse equations while
-giving their actual mathematical parameters explicit config names. A later
-collaborator calibration review may change a model through Design; an
-implementation stage may not silently reinterpret it.
+`PureWaveformConfig.pulse` is one literal signed millivolt `Pulse` kernel with
+one sample-relative operation axis. Preparation aligns any conditioning axes;
+production performs exact discrete convolution with finite-window discard.
+The profile samples its audited provisional Veto donor equation into this
+literal kernel. Runtime never reinterprets parametric pulse coefficients.
 
 ### NoiseWaveform
 
@@ -700,16 +671,16 @@ no simultaneous `seed=`, TensorDSLab RNG wrapper, `torch.Generator`, or global
 RNG.
 
 The private `readout/runtime/keys.py` table owns exact `RngKey` values for the
-eight active stochastic roles. It uses namespace `TDS1`; afterpulse uses one
-coupled key with occurrence quantum `0` and delay-allocation quantum `1`.
+eight active stochastic roles in compact stream order `1` through `8`.
 Public Configs cannot override those addresses, and the builder performs no
 closure-wide caller-key collision admission.
 
-TensorCore `0.19.0` owns counter generation, `RngElements`, `RngAddress`,
-uniform conversion, Distribution execution, TensorKernel, ProbabilityKernel,
-and the generic samplers' internal word schedules. TensorDSLab owns the fixed
-role table, scientific element lattices and address metadata, draw-free
-scientific policy, physical kernels/rates, count accumulation, and ledgers.
+TensorCore `0.21.0` owns counter generation, `RngElements`, `RngAddress`,
+uniform conversion, literal `TensorKernel`, role resolution, Distribution
+execution, direct Multinomial probabilities, and generic sampler word
+schedules. TensorDSLab owns the fixed role table, scientific element lattices
+and address metadata, draw-free policy, physical kernels/rates, finite-window
+mapping, count accumulation, and ledgers.
 Elements depend on actual tensor-dimension indices, not semantic coordinate
 values, strides, or storage addresses.
 
@@ -803,6 +774,11 @@ model-specific element lattice. Private role-named `RngAddress` builders
 attach the fixed key, quantum, and ordinal metadata. Deterministic paths
 construct no elements, addresses, kernels, or distributions and request no
 words.
+
+That paragraph and the following Maintenance 11 distribution mapping are
+historical baseline evidence. The active Maintenance 12 target at the top of
+this page supersedes its `ProbabilityKernel`, afterpulse, key/address, and
+Pulse details.
 
 White and PSD noise plus charge smearing use public Gaussian distributions;
 dark counts and collapsed crosstalk destination rates use Poisson

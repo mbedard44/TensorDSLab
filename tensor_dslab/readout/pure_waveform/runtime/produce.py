@@ -1,7 +1,6 @@
-"""Private tensor execution for pure waveform products."""
+"""Private deterministic literal pulse convolution."""
 
 import torch
-from torch.nn import functional
 
 from tensor_dslab.readout.charge.field import Charge
 from tensor_dslab.readout.pure_waveform.field import PureWaveform
@@ -13,13 +12,32 @@ def produce_pure_waveform(
     *,
     runtime: PureWaveformRuntime,
 ) -> PureWaveform:
+    """Convolve Charge with one prepared signed finite Pulse."""
+
+    result = torch.zeros_like(charge.tensor)
     sample_dimension = runtime.sampling.sample_dimension
-    sample_last = charge.tensor.movedim(sample_dimension, -1)
-    sample_count = sample_last.shape[-1]
-    rows = sample_last.reshape(-1, 1, sample_count)
-    coefficient_count = runtime.kernel.shape[-1]
-    with torch.autocast(device_type=charge.tensor.device.type, enabled=False):
-        padded = functional.pad(rows, (coefficient_count - 1, 0))
-        convolved = functional.conv1d(padded, runtime.kernel)
-    values = convolved.reshape(sample_last.shape).movedim(-1, sample_dimension)
-    return PureWaveform(tensor=values, axes=charge.axes)
+    sample_count = charge.shape[sample_dimension]
+    flat = runtime.coefficients.reshape(
+        *runtime.coefficients.shape[: len(runtime.conditioning_dimensions)],
+        -1,
+    )
+    for operation_index, offset in enumerate(runtime.sample_offsets):
+        if offset >= sample_count:
+            continue
+        coefficient = flat[..., operation_index]
+        view_shape = [1] * charge.tensor.ndim
+        for source_dimension, target_dimension in enumerate(
+            runtime.conditioning_dimensions
+        ):
+            view_shape[target_dimension] = coefficient.shape[source_dimension]
+        aligned = coefficient.reshape(tuple(view_shape))
+        source_slices = [slice(None)] * charge.tensor.ndim
+        target_slices = [slice(None)] * charge.tensor.ndim
+        source_slices[sample_dimension] = slice(0, sample_count - offset)
+        target_slices[sample_dimension] = slice(offset, sample_count)
+        result[tuple(target_slices)] = (
+            result[tuple(target_slices)]
+            + charge.tensor[tuple(source_slices)]
+            * aligned[tuple(source_slices)]
+        )
+    return PureWaveform(tensor=result, axes=charge.axes)

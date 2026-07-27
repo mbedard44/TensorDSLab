@@ -148,6 +148,7 @@ def prepare_readout(
             raise RuntimeError("required PureWaveform configuration disappeared")
         pure_runtime = prepare_pure_waveform(
             pure_config,
+            source=photoelectrons,
             sampling=sampling,
             floating_dtype=floating_dtype,
             device=device,

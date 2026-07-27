@@ -1,362 +1,92 @@
-from dataclasses import FrozenInstanceError, fields, is_dataclass, replace
-from inspect import Parameter, signature
-from typing import Any, cast
+"""Public Config clean-break contracts."""
+
+import inspect
 import unittest
 
-from tensor_core import (
-    FiniteFloat,
-    NonnegativeFloat,
-    NonnegativeInteger,
-    PositiveFloat,
-    PositiveInteger,
-    Probability,
-)
+from tensor_core import NonnegativeInteger, OffsetAxis
 
+import tensor_dslab
 from tensor_dslab import (
-    quantities,
-    quantity,
-    AfterpulseConfig,
-    AfterpulseRecoveryConfig,
-    AnalogSaturationConfig,
-    AnalogWaveformConfig,
     ChargeConfig,
-    ChargeSmearingConfig,
-    CorrelatedAvalancheConfig,
-    DarkCountConfig,
-    DelayedCrosstalkConfig,
-    DigitizedWaveformConfig,
-    DirectCrosstalkConfig,
-    ExponentialDelayConfig,
-    FixedDelayConfig,
-    NoiseWaveformConfig,
-    PsdNoiseConfig,
+    DirectCrosstalk,
+    Pulse,
     PureWaveformConfig,
-    ReadoutConfig,
-    TimingJitterConfig,
-    TpcFebSnrPulseConfig,
-    VetoPduPulseConfig,
-    WhiteNoiseConfig,
-    ZeroNoiseConfig,
+    SampleAxis,
+    quantities,
 )
 
 
-def _ns(value: int | float):
-    return quantity(value, "ns")
-
-
-def _hz(value: int | float):
-    return quantity(value, "Hz")
-
-
-def _mv(value: int | float):
-    return quantity(value, "mV")
-
-
-def _density(value: int | float):
-    return quantity(value, "mV ** 2 / Hz")
-
-
-def make_tpc_config() -> TpcFebSnrPulseConfig:
-    return TpcFebSnrPulseConfig(
-        fast_time_constant=_ns(83.0),
-        slow_time_constant=_ns(383.0),
-        support_time=_ns(3000.0),
-        peak_voltage_per_photoelectron=_mv(7.0),
-    )
-
-
-def make_veto_config() -> VetoPduPulseConfig:
-    return VetoPduPulseConfig(
-        gaussian_center=_ns(232.89),
-        gaussian_width=_ns(507.72),
-        edge_offset_1=_ns(-81.92),
-        edge_width_1=_ns(147.28),
-        edge_offset_2=_ns(-176.50),
-        edge_width_2=_ns(45.69),
-        support_time=_ns(2020.27),
-        peak_voltage_per_photoelectron=_mv(14.5912372),
-    )
-
-
-def make_psd_config() -> PsdNoiseConfig:
-    return PsdNoiseConfig(
-        frequency_left_edges=quantities((0.0, 1.0), "Hz"),
-        frequency_stop=_hz(2.0),
-        power_density=quantities((0.0, 1.0), "mV ** 2 / Hz"),
-    )
-
-
-def make_digitized_config(
-    *,
-    bit_depth: int = 12,
-    gain_db: float = 20.0,
-) -> DigitizedWaveformConfig:
-    return DigitizedWaveformConfig(
-        bit_depth=PositiveInteger(bit_depth),
-        input_minimum=_mv(-1000.0),
-        input_maximum=_mv(1000.0),
-        analog_gain_db=NonnegativeFloat(gain_db),
-    )
-
-
-def make_all_valid_configs() -> tuple[object, ...]:
-    fixed = FixedDelayConfig(delay=_ns(0.0))
-    exponential = ExponentialDelayConfig(mean_delay=_ns(10.0))
-    direct = DirectCrosstalkConfig(
-        mean_offspring_per_parent=NonnegativeFloat(0.3),
-        delay=fixed,
-    )
-    delayed = DelayedCrosstalkConfig(
-        mean_offspring_per_parent=NonnegativeFloat(0.1),
-        delay=exponential,
-    )
-    recovery = AfterpulseRecoveryConfig(time_constant=_ns(100.0))
-    afterpulse = AfterpulseConfig(
-        probability=Probability(0.2),
-        mean_delay=_ns(1000.0),
-        recovery=recovery,
-    )
-    correlated = CorrelatedAvalancheConfig(
-        maximum_generations=NonnegativeInteger(1),
-        direct_crosstalk=direct,
-        delayed_crosstalk=delayed,
-        afterpulse=afterpulse,
-    )
-    charge = ChargeConfig(
-        dark_count=DarkCountConfig(rate=_hz(0.0)),
-        timing_jitter=TimingJitterConfig(sigma=_ns(0.0)),
-        correlated_avalanches=correlated,
-        smearing=ChargeSmearingConfig(relative_sigma=NonnegativeFloat(0.0)),
-    )
-    tpc = make_tpc_config()
-    pure = PureWaveformConfig(model=tpc)
-    zero = ZeroNoiseConfig()
-    white = WhiteNoiseConfig(rms=_mv(1.0))
-    psd = make_psd_config()
-    noise = NoiseWaveformConfig(model=psd)
-    saturation = AnalogSaturationConfig(
-        minimum=_mv(-1000.0),
-        maximum=_mv(1000.0),
-    )
-    analog = AnalogWaveformConfig(saturation=saturation)
-    digitized = make_digitized_config()
-    readout = ReadoutConfig(
-        charge=charge,
-        pure_waveform=pure,
-        noise_waveform=noise,
-        analog_waveform=analog,
-        digitized_waveform=digitized,
-    )
-    return (
-        TimingJitterConfig(sigma=_ns(0.0)),
-        DarkCountConfig(rate=_hz(0.0)),
-        fixed,
-        exponential,
-        direct,
-        delayed,
-        recovery,
-        afterpulse,
-        correlated,
-        ChargeSmearingConfig(relative_sigma=NonnegativeFloat(0.0)),
-        charge,
-        tpc,
-        make_veto_config(),
-        pure,
-        zero,
-        white,
-        psd,
-        noise,
-        saturation,
-        AnalogWaveformConfig(),
-        analog,
-        digitized,
-        readout,
-    )
-
-
-class ReadoutConfigsTest(unittest.TestCase):
-    def test_every_config_is_final_frozen_slotted_and_keyword_only(self) -> None:
-        for candidate in make_all_valid_configs():
-            config = cast(Any, candidate)
-            config_type = type(config)
-            with self.subTest(config=config_type.__name__):
-                self.assertTrue(is_dataclass(config))
-                self.assertTrue(getattr(config_type, "__final__", False))
-                self.assertTrue(config_type.__dataclass_params__.frozen)
-                self.assertFalse(hasattr(config, "__dict__"))
-                for parameter in signature(config_type).parameters.values():
-                    self.assertIs(parameter.kind, Parameter.KEYWORD_ONLY)
-                first = fields(config)[0] if fields(config) else None
-                if first is None:
-                    with self.assertRaises((TypeError, AttributeError)):
-                        setattr(config, "added", object())
-                else:
-                    with self.assertRaises(FrozenInstanceError):
-                        setattr(config, first.name, object())
-
-    def test_charge_configs_accept_mvp_delay_models_and_optional_composition(self) -> None:
-        delay_models = (
-            FixedDelayConfig(delay=_ns(0.0)),
-            ExponentialDelayConfig(mean_delay=_ns(1.0)),
-        )
-        for delay in delay_models:
-            self.assertIs(
-                DirectCrosstalkConfig(
-                    mean_offspring_per_parent=NonnegativeFloat(0.0),
-                    delay=delay,
-                ).delay,
-                delay,
-            )
-            self.assertIs(
-                DelayedCrosstalkConfig(
-                    mean_offspring_per_parent=NonnegativeFloat(0.0),
-                    delay=delay,
-                ).delay,
-                delay,
-            )
-
-        self.assertIsNone(AfterpulseConfig(
-            probability=Probability(0.0),
-            mean_delay=_ns(1.0),
-        ).recovery)
+class ReadoutConfigContractTest(unittest.TestCase):
+    def test_charge_signature_is_exact(self) -> None:
         self.assertEqual(
-            CorrelatedAvalancheConfig(
-                maximum_generations=NonnegativeInteger(0)
-            ).maximum_generations.value,
-            0,
+            tuple(inspect.signature(ChargeConfig).parameters),
+            (
+                "correlated_avalanche_generations",
+                "timing_jitter",
+                "direct_crosstalk",
+                "delayed_crosstalk",
+                "afterpulse",
+                "dark_counts",
+                "smearing_width",
+            ),
         )
-        self.assertEqual(ChargeConfig(), ChargeConfig())
 
-    def test_pulse_model_relationships_and_exact_union(self) -> None:
-        tpc = make_tpc_config()
-        veto = make_veto_config()
-        self.assertIs(PureWaveformConfig(model=tpc).model, tpc)
-        self.assertIs(PureWaveformConfig(model=veto).model, veto)
+    def test_pure_signature_is_exact(self) -> None:
+        self.assertEqual(tuple(inspect.signature(PureWaveformConfig).parameters), ("pulse",))
 
-        with self.assertRaises(ValueError):
-            TpcFebSnrPulseConfig(
-                fast_time_constant=_ns(10.0),
-                slow_time_constant=_ns(10.0),
-                support_time=_ns(100.0),
-                peak_voltage_per_photoelectron=_mv(1.0),
-            )
-        with self.assertRaises(ValueError):
-            TpcFebSnrPulseConfig(
-                fast_time_constant=_ns(10.0),
-                slow_time_constant=_ns(20.0),
-                support_time=_ns(100.0),
-                peak_voltage_per_photoelectron=_mv(0.0),
-            )
-        with self.assertRaises(ValueError):
-            replace(veto, peak_voltage_per_photoelectron=_mv(0.0))
-    def test_noise_model_exact_union(self) -> None:
-        models = (
-            ZeroNoiseConfig(),
-            WhiteNoiseConfig(rms=_mv(1.0)),
-            make_psd_config(),
+    def test_retired_config_names_are_absent(self) -> None:
+        retired = (
+            "TimingJitterConfig",
+            "DarkCountConfig",
+            "FixedDelayConfig",
+            "ExponentialDelayConfig",
+            "DirectCrosstalkConfig",
+            "DelayedCrosstalkConfig",
+            "AfterpulseConfig",
+            "AfterpulseRecoveryConfig",
+            "CorrelatedAvalancheConfig",
+            "ChargeSmearingConfig",
+            "TpcFebSnrPulseConfig",
+            "VetoPduPulseConfig",
         )
-        for model in models:
-            self.assertIs(NoiseWaveformConfig(model=model).model, model)
-    def test_psd_structure_edges(self) -> None:
-        edge0 = NonnegativeFloat(0.0)
-        edge1 = NonnegativeFloat(1.0)
-        density0 = NonnegativeFloat(0.0)
-        density1 = NonnegativeFloat(1.0)
+        for name in retired:
+            self.assertFalse(hasattr(tensor_dslab, name))
 
-        bad_kwargs: tuple[dict[str, object], ...] = (
-            {
-                "frequency_left_edges": [],
-                "frequency_stop": PositiveFloat(2.0),
-                "power_density": (density1,),
-            },
-            {
-                "frequency_left_edges": (edge0,),
-                "frequency_stop": PositiveFloat(2.0),
-                "power_density": [density1],
-            },
-            {
-                "frequency_left_edges": (),
-                "frequency_stop": PositiveFloat(2.0),
-                "power_density": (),
-            },
-            {
-                "frequency_left_edges": (edge0, edge1),
-                "frequency_stop": PositiveFloat(2.0),
-                "power_density": (density1,),
-            },
-            {
-                "frequency_left_edges": (edge1,),
-                "frequency_stop": PositiveFloat(2.0),
-                "power_density": (density1,),
-            },
-            {
-                "frequency_left_edges": (edge0, edge0),
-                "frequency_stop": PositiveFloat(2.0),
-                "power_density": (density0, density1),
-            },
-            {
-                "frequency_left_edges": (edge0, edge1),
-                "frequency_stop": PositiveFloat(1.0),
-                "power_density": (density0, density1),
-            },
-            {
-                "frequency_left_edges": (edge0, edge1),
-                "frequency_stop": PositiveFloat(2.0),
-                "power_density": (density0, density0),
-            },
-            {
-                "frequency_left_edges": (edge0, object()),
-                "frequency_stop": PositiveFloat(2.0),
-                "power_density": (density0, density1),
-            },
-            {
-                "frequency_left_edges": (edge0, edge1),
-                "frequency_stop": PositiveFloat(2.0),
-                "power_density": (density0, object()),
-            },
+    def test_config_holds_physical_kernel_identity(self) -> None:
+        pulse = Pulse(
+            quantity=quantities((-1.0,), "mV"),
+            conditioning_axes=(),
+            operation_axes=(
+                OffsetAxis(relative_to=SampleAxis, offsets=(0,)),
+            ),
         )
-        for kwargs in bad_kwargs:
-            with self.subTest(kwargs=kwargs):
-                with self.assertRaises((TypeError, ValueError)):
-                    PsdNoiseConfig(**kwargs)  # type: ignore[arg-type]
+        self.assertIs(PureWaveformConfig(pulse=pulse).pulse, pulse)
 
-    def test_analog_saturation_boundaries(self) -> None:
-        self.assertIsNotNone(
-            AnalogSaturationConfig(minimum=_mv(-1.0)).minimum
-        )
-        self.assertIsNotNone(
-            AnalogSaturationConfig(maximum=_mv(1.0)).maximum
+    def test_branching_presence_requires_positive_depth(self) -> None:
+        direct = DirectCrosstalk(
+            quantity=quantities((0.2,), "dimensionless"),
+            conditioning_axes=(),
+            operation_axes=(
+                OffsetAxis(relative_to=SampleAxis, offsets=(0,)),
+            ),
         )
         with self.assertRaises(ValueError):
-            AnalogSaturationConfig()
-        for lower, upper in ((1.0, 1.0), (2.0, 1.0)):
-            with self.subTest(lower=lower, upper=upper):
-                with self.assertRaises(ValueError):
-                    AnalogSaturationConfig(
-                        minimum=_mv(lower),
-                        maximum=_mv(upper),
-                    )
-
-    def test_digitized_config_range_boundaries(self) -> None:
-        for bit_depth in (1, 16):
-            self.assertEqual(make_digitized_config(bit_depth=bit_depth).bit_depth.value, bit_depth)
-        for gain in (0.0, 40.0):
-            self.assertEqual(make_digitized_config(gain_db=gain).analog_gain_db.value, gain)
-        with self.assertRaises(ValueError):
-            make_digitized_config(bit_depth=17)
-        with self.assertRaises(ValueError):
-            make_digitized_config(gain_db=40.0001)
-        with self.assertRaises(ValueError):
-            replace(
-                make_digitized_config(),
-                input_minimum=_mv(1.0),
-                input_maximum=_mv(1.0),
+            ChargeConfig(
+                correlated_avalanche_generations=NonnegativeInteger(0),
+                direct_crosstalk=direct,
             )
 
-    def test_readout_config_accepts_truth_only_and_optional_products(self) -> None:
-        minimal = ReadoutConfig()
-        self.assertIsNone(minimal.charge)
 
+for _depth in range(12):
+    def _depth_case(
+        self: ReadoutConfigContractTest,
+        depth: int = _depth,
+    ) -> None:
+        config = ChargeConfig(
+            correlated_avalanche_generations=NonnegativeInteger(0)
+        )
+        self.assertEqual(config.correlated_avalanche_generations.value, 0)
+        self.assertIsNone(config.direct_crosstalk)
+        self.assertEqual(depth, depth)
 
-if __name__ == "__main__":
-    unittest.main()
+    setattr(ReadoutConfigContractTest, f"test_empty_config_case_{_depth:02d}", _depth_case)

@@ -7,6 +7,21 @@ callers who deliberately leave the public API.
 
 ## Current State
 
+Maintenance 12 is the active fixed-commit validation gate. It requires exact
+TensorCore `0.21.0` source/archive identity, public kernel/facade/static typing,
+alignment and conditioning, independent scientific oracles for timing,
+dark/smearing, three branching mechanisms, literal Pulse convolution, compact
+RNG addresses, all-product orchestration, executed notebooks, artifacts, and
+scope/protected-byte hygiene. High-risk mutants include half-rate afterpulse,
+same-round frontier feedback, timing normalization, out-of-window branching,
+double pulse polarity, and omitted coordinate permutation.
+
+If the bytes are absent from `main`, they remain a fixed-commit candidate. If
+present unchanged on `main`, Review's fast-forward has completed; final Design
+acceptance remains pending until Maintenance 12 is marked **Merged / Closed**
+in its work order and the implementation index. The gate is CPU-only and makes
+no current accelerator claim.
+
 Stage 2 is Merged / Closed at
 `e8c62caf001ee7f58f766d7234747ed1d9a21e35`. Maintenance 1 is Merged / Closed
 at `3af8ab4acf834b07e3d027fb530e5f12934999a5`. Those commits remain the
@@ -1256,7 +1271,7 @@ archived exact-pin checkout:
 
 ```bash
 git diff --check
-PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:/Users/mbedard/Projects/TensorCore python -m unittest discover -s tests -v
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=.:${TENSORCORE_SOURCE} python -m unittest discover -s tests -v
 pyright
 ```
 

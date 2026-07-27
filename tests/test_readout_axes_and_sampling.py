@@ -296,7 +296,7 @@ class ReadoutAxesAndSamplingTest(unittest.TestCase):
                 side_effect=AssertionError("sampling materialized coordinates"),
             ) as coordinates,
             patch(
-                "tensor_dslab.common.axes._integer_quantity",
+                "tensor_dslab.common.axis._integer_quantity",
                 side_effect=AssertionError("sampling created a Pint quantity"),
             ) as integer_quantity,
         ):

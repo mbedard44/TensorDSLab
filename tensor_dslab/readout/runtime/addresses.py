@@ -49,7 +49,7 @@ def timing_jitter_address(
     )
 
 
-def crosstalk_generation_address(
+def branching_generation_address(
     elements: RngElements,
     *,
     key: RngKey,
@@ -61,35 +61,4 @@ def crosstalk_generation_address(
         elements=elements,
         shape=(maximum_generations,),
         quantum=0,
-    ).select(generation_index)
-
-
-def afterpulse_occurrence_address(
-    elements: RngElements,
-    *,
-    key: RngKey,
-    maximum_generations: int,
-    generation_index: int,
-) -> RngAddress:
-    return RngAddress.root(
-        key=key,
-        elements=elements,
-        shape=(maximum_generations,),
-        quantum=0,
-    ).select(generation_index)
-
-
-def afterpulse_delay_address(
-    elements: RngElements,
-    *,
-    key: RngKey,
-    maximum_generations: int,
-    generation_index: int,
-    kernel_shape: tuple[int, ...],
-) -> RngAddress:
-    return RngAddress.root(
-        key=key,
-        elements=elements,
-        shape=(maximum_generations, *kernel_shape),
-        quantum=1,
     ).select(generation_index)

@@ -1,31 +1,23 @@
 """Public charge product facade."""
 
-from tensor_dslab.readout.charge.config import (
-    AfterpulseConfig,
-    AfterpulseRecoveryConfig,
-    ChargeConfig,
-    ChargeSmearingConfig,
-    CorrelatedAvalancheConfig,
-    DarkCountConfig,
-    DelayedCrosstalkConfig,
-    DirectCrosstalkConfig,
-    ExponentialDelayConfig,
-    FixedDelayConfig,
-    TimingJitterConfig,
-)
+from tensor_dslab.readout.charge.config import ChargeConfig
 from tensor_dslab.readout.charge.field import Charge
+from tensor_dslab.readout.charge.kernel import (
+    Afterpulse,
+    DarkCountRate,
+    DelayedCrosstalk,
+    DirectCrosstalk,
+    SmearingWidth,
+    TimingJitter,
+)
 
 __all__ = (
-    "AfterpulseConfig",
-    "AfterpulseRecoveryConfig",
+    "Afterpulse",
     "Charge",
     "ChargeConfig",
-    "ChargeSmearingConfig",
-    "CorrelatedAvalancheConfig",
-    "DarkCountConfig",
-    "DelayedCrosstalkConfig",
-    "DirectCrosstalkConfig",
-    "ExponentialDelayConfig",
-    "FixedDelayConfig",
-    "TimingJitterConfig",
+    "DarkCountRate",
+    "DelayedCrosstalk",
+    "DirectCrosstalk",
+    "SmearingWidth",
+    "TimingJitter",
 )

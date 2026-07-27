@@ -21,6 +21,17 @@ DAG orchestration, and the exact cross-package adapters remain deferred.
 
 ## Current State
 
+Maintenance 12 is the active fixed-commit gate. It adopts exact published
+TensorCore `0.21.0`, replaces the scalar effect-specific Charge/Pulse Config
+hierarchy with literal physical quantity kernels and compiled Runtime state,
+and rebaselines timing, branching, afterpulse, pulse rendering, and private RNG
+addresses exactly as recorded in the
+[work order](implementation/maintenance_12_tensorcore_0_21_kernel_geometry_quantity_refactor.md).
+If those bytes are absent from `main`, they remain a candidate under
+fixed-commit gates. If present unchanged on `main`, Review's fast-forward has
+completed; final Design acceptance remains pending until the work order and
+implementation index record **Merged / Closed**. No accelerator claim follows.
+
 Stage 2 and Maintenance 1 are Merged / Closed historical TensorCore `0.6`
 baselines. Stage 3 is Merged / Closed through exact implementation candidate
 `9250192587d1e05e71f09c9cda4ba9d0bce09bde` and Review's clean fast-forward

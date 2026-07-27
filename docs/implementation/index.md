@@ -241,8 +241,11 @@ acceptance criteria, and intentional divergences defined in
 
 ### [Maintenance 12: TensorCore 0.21 Kernel Geometry And Quantity Refactor](maintenance_12_tensorcore_0_21_kernel_geometry_quantity_refactor.md)
 
-Status: **Design-complete / exact TensorCore 0.21.0 publication confirmed /
-Implementation authorized under the exact containing work-order bytes**.
+Status: **Implementation candidate lifecycle active**. If the exact
+Maintenance 12 bytes are absent from `main`, they are under fixed-commit
+Implementation/Validation/Review gates. If present unchanged on `main`,
+Review's fast-forward has completed; final Design acceptance remains pending
+until this entry and the work order record **Merged / Closed**.
 
 This dispatchable work order extracts the accepted kernel architecture into
 one atomic TensorDSLab dependency/science/API rebaseline. It specifies
@@ -274,9 +277,12 @@ explicitly defers recovery weighting. The formerly provisional Maintenance 12
 work order has been replaced by the publication-bound dispatch authority
 linked above. Current production, the TensorCore `0.19.0`
 pin, at-most-one afterpulse behavior, recovery weighting, profile signature,
-package topology, and public API remain operative until later exact
-Maintenance 12 bytes close. This planning record is not TensorCore authority
-or a TensorDSLab production dispatch.
+package topology, and public API remain the governed `main` baseline while the
+Maintenance 12 candidate is absent. If the candidate appears unchanged on
+`main`, Review's fast-forward has completed and the new target is present, but
+final Design acceptance remains pending until the two lifecycle records say
+**Merged / Closed**. This planning record is not TensorCore authority or a
+TensorDSLab production dispatch.
 
 ### [Historical TensorCore Counter RNG And Distributions Consumer Proposal](proposed_tensorcore_counter_rng_and_distributions.md)
 

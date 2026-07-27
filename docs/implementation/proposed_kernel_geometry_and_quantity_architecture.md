@@ -1,7 +1,7 @@
 # Proposed Kernel Geometry And Quantity Architecture
 
 Status: **Architecture selected / TensorCore 0.21.0 Stage 29 published /
-publication-bound TensorDSLab Maintenance 12 is the execution authority**
+Maintenance 12 fixed-commit candidate lifecycle active**
 
 Stable planning key:
 `TensorDSLab/kernel-geometry-and-quantity-architecture`
@@ -88,7 +88,8 @@ itself adopt a dependency or make a compatibility claim. The linked
 publication-bound Maintenance 12 work order separately owns TensorDSLab
 dispatch.
 
-Current production remains authoritative until a later complete package gate:
+The governed `main` production baseline remains authoritative while the
+Maintenance 12 bytes are absent from `main`:
 
 - `ProbabilityKernel` remains a current dependency surface;
 - afterpulse occurrence remains at-most-one per parent per generation;
@@ -97,6 +98,11 @@ Current production remains authoritative until a later complete package gate:
 - the current parametric pulse Configs remain public;
 - `ds20k_veto()` remains the current no-argument provisional profile; and
 - `common/axes.py` remains the current module path.
+
+If the Maintenance 12 bytes appear unchanged on `main`, Review's fast-forward
+has completed and the selected target is present, but final Design acceptance
+remains pending until the work order and implementation index record
+**Merged / Closed**.
 
 The target below must not be described as already implemented.
 

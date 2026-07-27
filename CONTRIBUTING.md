@@ -21,7 +21,7 @@ Python import: tensor_dslab (accepted on main through Maintenance 5)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
 Package maturity: Maintenance 11 Merged / Closed
-Next production gate: separately authorized post-Maintenance-11 work
+Active production gate: Maintenance 12 fixed-commit candidate
 Stage 8: separately stopped; any restart requires a new Design authority after
 Maintenance 6
 ```
@@ -157,6 +157,19 @@ Candidate 2 changes only the independent afterpulse analytical proof from
 immutable Candidate 1 `6eca602bdc6e4e2869d28efd36347a168791751f`.
 This local CPU gate makes no integrated CUDA, accelerator-support,
 performance, compatibility, publication, release, or deployment claim.
+
+[Maintenance 12](docs/implementation/maintenance_12_tensorcore_0_21_kernel_geometry_quantity_refactor.md)
+is the active atomic TensorCore `0.21.0`, literal-kernel, physical-quantity,
+compiled-Runtime, and Charge/Pulse scientific rebaseline. New code in that
+candidate must use literal `OffsetAxis`/`TensorKernel` geometry, direct
+Multinomial probabilities, collapsed destination-rate Poisson branching, and
+package-owned `QuantityKernel` leaves. It must not restore
+`ProbabilityKernel`, Config reflection in Runtime, the retired effect tree,
+parametric pulse Configs, recovery-weighted afterpulse, or compatibility
+aliases. If the bytes are absent from `main`, they remain a fixed-commit
+candidate; if present unchanged on `main`, Review's fast-forward has completed
+and final Design acceptance still depends on the Maintenance 12 work order and
+index recording **Merged / Closed**.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency
@@ -372,8 +385,9 @@ Product `field.py` modules own final field leaves and their cheap intrinsic
 TensorCore `_require()` narrowing; product `config.py` modules own configs.
 Each generated product's non-exported `runtime/` package owns one concrete
 final frozen ProductRuntime plus explicit `prepare_*`, `produce_*`, and `validate_*`
-actions. Charge's scientific submodels, multinomial/category orchestration,
-and count bookkeeping remain private under `charge/runtime/effects`.
+actions. Maintenance 12 keeps Charge branching and count bookkeeping private
+in flat `charge/runtime/branching.py` and `charge/runtime/counts.py` modules;
+the adjacent prepare/produce actions own the remaining execution steps.
 `Photoelectrons` is already-produced dense truth and has neither a config,
 preparer, producer, nor Runtime record; it owns only its field and runtime deep
 validator. There is no global `configs/`, `fields.py`, `builders.py`, generic
@@ -584,7 +598,9 @@ non-exported `runtime/` package with `prepare.py`, `produce.py`, and
 `validate.py`; those modules own the exact Config-to-Runtime,
 Runtime-to-Product, and Product-to-validation actions. Charge's focused
 scientific submodels, multinomial/category orchestration, and count bookkeeping
-live under non-exported `charge/runtime/effects`. Do not create global
+live in non-exported `charge/runtime/branching.py` and
+`charge/runtime/counts.py`, with the remaining execution in the adjacent
+prepare/produce actions. Do not create global
 `configs/`, `fields.py`, `builders.py`, `validation.py`, or `tensors.py`
 dumping grounds, or a generic Runtime/Action framework.
 
@@ -599,11 +615,14 @@ closure, RNG-capability admission, and composition of product Runtime values.
 `readout/runtime/sampling.py` is a small private source-derived dependency leaf
 shared by request and product preparation.
 `readout/runtime/requirements.py`, `readout/runtime/keys.py`, and every product
-runtime/effect module are non-exported implementation modules. There is no
+runtime module are non-exported implementation modules. Maintenance 12 removes
+the Charge `runtime/effects/` package and keeps its concrete branching/count
+owners flat under `charge/runtime/`. There is no
 root `readout/requirements.py`, `readout/_random.py`, or replacement `_rng.py`;
 generic validation and RNG mechanics come from TensorCore when its exact
 public contract matches. Under Maintenance 5,
-`common/axes.py` is the sole common sampling-coordinate owner and
+`common/axes.py` was the common sampling-coordinate owner; Maintenance 12
+renames it to singular `common/axis.py` without a shim. The historical
 `common/sampling.py` is removed without a shim.
 
 Keep import direction acyclic: TensorCore, common, private readout runtime
@@ -708,16 +727,15 @@ these active streams:
 white noise                                  1
 PSD noise                                    2
 dark count                                   3
-direct crosstalk retained                    4
-delayed crosstalk retained                   6
-timing jitter                                8
-afterpulse                                   9
-charge smearing                             10
+timing jitter                                4
+direct crosstalk                             5
+delayed crosstalk                            6
+afterpulse                                   7
+charge smearing                              8
 ```
 
-Maintenance 11 retires former crosstalk overflow streams `5` and `7` without
-reservation or compatibility promise. Do not reuse them inside this
-maintenance or describe them as active roles.
+Maintenance 12 intentionally rebaselines the active role table. Maintenance
+11 values are historical fixtures, not reservations or compatibility promises.
 
 The constants are private immutable package policy and cannot be overridden by
 Config construction. Do not use duplicated literals, `IntEnum`, `auto()`,
@@ -731,60 +749,35 @@ closed Maintenance 2 implementation preserves their default-key outputs
 against selected TensorCore `0.9.0` and removes the old module and enum without
 shims.
 
-Charge redistribution uses public TensorCore ProbabilityKernel,
-MultinomialDistribution, and BinomialDistribution owners. TensorDSLab prepares
-the scientific masses and their semantic category ordering; TensorCore owns
-generic distribution validation, address spans, word schedules, and sampling.
-Aggregate counts remain bounded by the per-cell ceiling `2**53 - 1`.
+Maintenance 12 Charge redistribution uses direct public
+`MultinomialDistribution` for literal timing probabilities and public
+tensor-valued `PoissonDistribution` for literal destination-rate direct,
+delayed, and afterpulse branching. TensorDSLab owns coefficient alignment,
+finite-window mapping, category ordering, accumulation, and scientific
+preflight; TensorCore owns generic distribution validation, address spans,
+word schedules, and sampling. Aggregate counts remain bounded by the per-cell
+ceiling `2**53 - 1`.
 
-Timing jitter analytically prepares the latent-uniform plus ideal-Gaussian law
-through the frozen log-domain one-sided tail evaluator in `rebuild.md`. Its
-initial domain is `2**-52 <= sigma / T <= 64`,
-`2 <= sample_count <= 8192`, and `S * N <= 2**63`; exact zero sigma is a
-separate identity. It scans every possibly in-window target in increasing
-order, uses the package-owned timing-jitter key at stream `8`, and leaves one
-final no-draw drop remainder. The local absolute tolerance is `1e-12` and the
-complete source-law L1 tolerance is `1e-11`. Negative probabilities, clipping,
-residual assignment, normalization, per-PE normals, Box-Muller jitter, and an
-arbitrary timing-tail cutoff are forbidden. Correctness-first quadratic
-sample-count work is accepted until a later measured optimization preserves
-the same law. Dark counts and collapsed crosstalk destination rates use public
-`PoissonDistribution` objects. Direct/delayed crosstalk construct
-deterministic retained destination means and make one tensor-valued draw per
-mechanism, exact by Poisson splitting/superposition. Discrete probabilities,
-rate fields, and sampler control use binary64 independently of the requested
-`Charge` dtype. TensorCore returns integer counts; TensorDSLab's physical
-charge ledgers retain the requested product dtype. Never substitute
-per-avalanche expansion, `torch.poisson`, a normal approximation, global RNG,
-reseed-on-exhaustion, clipping, or a fallback algorithm. The exact caps,
-addressing, repeatability boundary, kernels, and validation oracles live in
-`docs/architecture/rebuild.md`.
+Timing probabilities are used exactly as supplied by `TimingJitter`; they are
+not normalized or reconstructed from a parametric law. All branching
+mechanisms consume the same immutable generation frontier, discard
+out-of-window rates, and feed pooled children only to the next generation.
+Afterpulse children carry full unit charge and no recovery state.
+Discrete probabilities, rate fields, and sampler control use binary64
+independently of the requested `Charge` dtype. TensorCore returns integer
+counts; TensorDSLab's physical charge ledgers retain the requested product
+dtype. Never substitute per-avalanche expansion, `torch.poisson`, a normal
+approximation, global RNG, reseed-on-exhaustion, clipping, recovery weighting,
+or a fallback algorithm. The exact caps, addressing, repeatability boundary,
+kernels, and validation oracles live in `docs/architecture/rebuild.md`.
 
-The active Charge numeric envelope is relational. Every source, working,
+The active Charge numeric envelope remains relational. Every source, working,
 frontier, mechanism, and cumulative count cell is no greater than
-`2**53 - 1`; nonnegative additions are checked before execution and there is no
-whole-grid population cap. Jitter, CT, and AP addresses respectively prove
-`S*N <= 2**63`, `K*N <= 2**63`, and `K*(S+1)*N <= 2**63`. The requested-dtype
-ledger depth must satisfy the frozen `L < 2**p_d` relation, and enabled
-smearing proves finiteness against the maximum dtype-specific Box-Muller
-radius. Do not replace these with wrapping arithmetic, an arbitrary `K`, a
-silent clamp, or a guessed memory ceiling.
-
-The MVP accepts exactly `FixedDelayConfig | ExponentialDelayConfig` for each
-crosstalk mode. `NormalDelayConfig` is retired despite its historical Stage 3
-implementation; Stage 6 removed its class, union memberships, exports, and
-tests without a compatibility shim. Do not restore an unsupported public
-config. A later calibrated delay family requires a new explicit type and
-Design decision.
-
-Fixed and exponential phase-marginalized delay preparation is closed Design.
-The fixed law accepts every finite nonnegative delay, uses an exact two-point
-mapping, and has no PMF tolerance. Exponential delay and recovery use the
-bounded ratio/sample domains, binary64 evaluation branches, analytic right
-tails, and `1e-12` local / `1e-11` complete-law tolerances normative in
-`docs/architecture/rebuild.md`. Implementations must not replace either law
-with latent per-edge draws, clipping, a cutoff, residual assignment,
-renormalization, or subtraction-derived tiny tails.
+`2**53 - 1`; nonnegative additions and representable Poisson means are checked
+before execution. Address/result spans and requested-dtype smearing finiteness
+must clear before a distribution request or product write. Do not replace
+these checks with wrapping arithmetic, an arbitrary generation cap, a silent
+clamp, or a guessed memory ceiling.
 
 White RMS and PSD cells are prepared in Python binary64, PSD overlaps use
 `math.fsum`, and executed values round once into the selected output dtype.

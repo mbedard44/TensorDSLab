@@ -56,7 +56,11 @@ def main() -> None:
     readout = simulate_readout(
         photoelectrons,
         products=requested,
-        config=ds20k_veto(),
+        config=ds20k_veto(
+            sample_axis=axes[2],
+            channel_axis=axes[1],
+            example_axis=axes[0],
+        ),
         rng=Threefry4x32(seed=17),
         floating_dtype=torch.float32,
     )
@@ -79,7 +83,11 @@ def main() -> None:
     digitized_only = simulate_readout(
         photoelectrons,
         products=(DigitizedWaveform,),
-        config=ds20k_veto(),
+        config=ds20k_veto(
+            sample_axis=axes[2],
+            channel_axis=axes[1],
+            example_axis=axes[0],
+        ),
         rng=Threefry4x32(seed=17),
     )
     assert tuple(digitized_only.fields) == (DigitizedWaveform,)

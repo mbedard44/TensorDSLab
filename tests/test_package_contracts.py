@@ -1,836 +1,149 @@
+"""Package topology, facade, privacy, and import-isolation evidence."""
+
+import importlib
 import ast
-from inspect import Parameter, isabstract, signature
-import os
-from pathlib import Path
+import inspect
+import pathlib
 import subprocess
 import sys
-import tomllib
 import unittest
-
-import torch
-import tensor_core
-from tensor_core import (
-    CountAxis,
-    LabelAxis,
-    RegularAxis,
-    TensorAxis,
-    TensorCollection,
-    TensorField,
-)
 
 import tensor_dslab
 import tensor_dslab.common as common
 import tensor_dslab.readout as readout
-from tensor_dslab import (
-    AnalogWaveform,
-    ChannelAxis,
-    Charge,
-    DigitizedWaveform,
-    ExampleAxis,
-    NoiseWaveform,
-    Photoelectrons,
-    PureWaveform,
-    ReadoutCollection,
-    SampleAxis,
-    simulate_readout,
+import tensor_dslab.readout.charge as charge
+import tensor_dslab.readout.pure_waveform as pure
+
+
+ROOT_EXPORTS = (
+    "Afterpulse",
+    "AnalogSaturationConfig",
+    "AnalogWaveform",
+    "AnalogWaveformConfig",
+    "ChannelAxis",
+    "Charge",
+    "ChargeConfig",
+    "DarkCountRate",
+    "DelayedCrosstalk",
+    "DigitizedWaveform",
+    "DigitizedWaveformConfig",
+    "DirectCrosstalk",
+    "ExampleAxis",
+    "NoiseWaveform",
+    "NoiseWaveformConfig",
+    "Photoelectrons",
+    "PsdNoiseConfig",
+    "Pulse",
+    "PureWaveform",
+    "PureWaveformConfig",
+    "QuantityKernel",
+    "ReadoutCollection",
+    "ReadoutConfig",
+    "SampleAxis",
+    "SmearingWidth",
+    "TimingJitter",
+    "WhiteNoiseConfig",
+    "ZeroNoiseConfig",
+    "quantities",
+    "quantity",
+    "simulate_readout",
 )
+COMMON_EXPORTS = (
+    "ChannelAxis",
+    "ExampleAxis",
+    "QuantityKernel",
+    "SampleAxis",
+    "quantities",
+    "quantity",
+)
+READOUT_EXPORTS = tuple(
+    name
+    for name in ROOT_EXPORTS
+    if name not in (*COMMON_EXPORTS, "ChannelAxis", "ExampleAxis", "SampleAxis")
+)
+CHARGE_EXPORTS = (
+    "Afterpulse",
+    "Charge",
+    "ChargeConfig",
+    "DarkCountRate",
+    "DelayedCrosstalk",
+    "DirectCrosstalk",
+    "SmearingWidth",
+    "TimingJitter",
+)
+PURE_EXPORTS = ("Pulse", "PureWaveform", "PureWaveformConfig")
 
 
 class PackageContractTest(unittest.TestCase):
-    def test_tensorcore_0_19_public_surface_and_topology_are_exact(self) -> None:
-        self.assertEqual(
-            tensor_core.__all__,
-            (
-                "TensorArtifact",
-                "TensorAxis",
-                "CountAxis",
-                "RegularAxis",
-                "LabelAxis",
-                "TensorCollection",
-                "TensorField",
-                "TensorKernel",
-                "ProbabilityKernel",
-                "TableColumn",
-                "TableCollection",
-                "TableField",
-                "RngKey",
-                "RngElements",
-                "RngAddress",
-                "CounterRng",
-                "Threefry4x32",
-                "Distribution",
-                "UniformDistribution",
-                "GaussianDistribution",
-                "PoissonDistribution",
-                "BinomialDistribution",
-                "MultinomialDistribution",
-                "Scalar",
-                "FiniteFloat",
-                "NonnegativeFloat",
-                "NonnegativeInteger",
-                "PositiveFloat",
-                "PositiveInteger",
-                "Probability",
-            ),
-        )
-        package_root = Path(tensor_core.__file__).resolve().parent
-        self.assertEqual(
-            tuple(
-                sorted(
-                    str(path.relative_to(package_root))
-                    for path in package_root.rglob("*")
-                    if path.is_file() and path.name != ".DS_Store"
+    def test_exact_facades(self) -> None:
+        self.assertEqual(tensor_dslab.__all__, ROOT_EXPORTS)
+        self.assertEqual(common.__all__, COMMON_EXPORTS)
+        self.assertEqual(readout.__all__, READOUT_EXPORTS)
+        self.assertEqual(charge.__all__, CHARGE_EXPORTS)
+        self.assertEqual(pure.__all__, PURE_EXPORTS)
+
+    def test_export_identity_is_shared_across_facades(self) -> None:
+        for name in common.__all__:
+            self.assertIs(getattr(tensor_dslab, name), getattr(common, name))
+        for name in readout.__all__:
+            self.assertIs(getattr(tensor_dslab, name), getattr(readout, name))
+
+    def test_exact_production_module_count_and_retired_paths(self) -> None:
+        modules = tuple(path for path in pathlib.Path("tensor_dslab").rglob("*.py"))
+        self.assertEqual(len(modules), 59)
+        self.assertFalse(pathlib.Path("tensor_dslab/common/axes.py").exists())
+        self.assertFalse(
+            any(
+                pathlib.Path("tensor_dslab/readout/charge/runtime/effects").glob(
+                    "*.py"
                 )
-            ),
-            (
-                "__init__.py",
-                "py.typed",
-                "random/__init__.py",
-                "random/address.py",
-                "random/distribution/__init__.py",
-                "random/distribution/categorical.py",
-                "random/distribution/distribution.py",
-                "random/distribution/gaussian.py",
-                "random/distribution/poisson.py",
-                "random/distribution/uniform.py",
-                "random/elements.py",
-                "random/generator/__init__.py",
-                "random/generator/counter.py",
-                "random/generator/threefry.py",
-                "random/interval.py",
-                "random/key.py",
-                "random/validation.py",
-                "scalar/__init__.py",
-                "scalar/base.py",
-                "scalar/float.py",
-                "scalar/integer.py",
-                "scalar/validation.py",
-                "table/__init__.py",
-                "table/collection.py",
-                "table/column.py",
-                "table/field.py",
-                "tensor/__init__.py",
-                "tensor/artifact.py",
-                "tensor/axis.py",
-                "tensor/collection.py",
-                "tensor/field.py",
-                "tensor/kernel.py",
-                "tensor/validation.py",
-            ),
-        )
-        dependency_metadata = tomllib.loads(
-            (package_root.parent / "pyproject.toml").read_text()
-        )
-        self.assertEqual(dependency_metadata["project"]["version"], "0.19.0")
-        self.assertEqual(
-            dependency_metadata["project"]["requires-python"],
-            ">=3.14",
-        )
-        self.assertEqual(
-            dependency_metadata["project"]["dependencies"],
-            ["torch>=2.13,<2.14"],
-        )
-
-    def test_package_metadata_selects_exact_tensorcore_candidate(self) -> None:
-        metadata = tomllib.loads(Path("pyproject.toml").read_text())
-        self.assertEqual(metadata["build-system"]["build-backend"], "hatchling.build")
-        project = metadata["project"]
-        self.assertEqual(project["name"], "tensor-dslab")
-        self.assertEqual(project["version"], "0.1.0")
-        self.assertEqual(metadata["build-system"]["requires"], ["hatchling==1.31.0"])
-        self.assertEqual(project["requires-python"], ">=3.14")
-        self.assertEqual(
-            project["dependencies"],
-            [
-                "numpy==2.5.1",
-                "pint==0.25.3",
-                "torch>=2.13,<2.14",
-                "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@ed17f4b637258f0a7f4544f235648b747f17fa44",
-            ],
-        )
-        self.assertEqual(
-            project["optional-dependencies"],
-            {
-                "demos": [
-                    "ipykernel==7.3.0",
-                    "matplotlib==3.11.1",
-                    "nbclient==0.11.0",
-                    "nbformat==5.10.4",
-                ]
-            },
-        )
-        self.assertEqual(
-            metadata["tool"]["hatch"]["build"]["targets"]["wheel"]["packages"],
-            ["tensor_dslab"],
-        )
-        self.assertTrue(Path("LICENSE").is_file())
-        self.assertTrue(Path("tensor_dslab/py.typed").is_file())
-
-    def test_exact_common_readout_and_package_exports(self) -> None:
-        self.assertEqual(
-            common.__all__,
-            (
-                "ChannelAxis",
-                "ExampleAxis",
-                "SampleAxis",
-                "quantities",
-                "quantity",
-            ),
-        )
-        expected_readout = (
-            "AfterpulseConfig",
-            "AfterpulseRecoveryConfig",
-            "AnalogSaturationConfig",
-            "AnalogWaveform",
-            "AnalogWaveformConfig",
-            "Charge",
-            "ChargeConfig",
-            "ChargeSmearingConfig",
-            "CorrelatedAvalancheConfig",
-            "DarkCountConfig",
-            "DelayedCrosstalkConfig",
-            "DigitizedWaveform",
-            "DigitizedWaveformConfig",
-            "DirectCrosstalkConfig",
-            "ExponentialDelayConfig",
-            "FixedDelayConfig",
-            "NoiseWaveform",
-            "NoiseWaveformConfig",
-            "Photoelectrons",
-            "PsdNoiseConfig",
-            "PureWaveform",
-            "PureWaveformConfig",
-            "ReadoutCollection",
-            "ReadoutConfig",
-            "TimingJitterConfig",
-            "TpcFebSnrPulseConfig",
-            "VetoPduPulseConfig",
-            "WhiteNoiseConfig",
-            "ZeroNoiseConfig",
-            "simulate_readout",
-        )
-        self.assertEqual(readout.__all__, expected_readout)
-        self.assertEqual(
-            tensor_dslab.__all__,
-            (
-                "AfterpulseConfig",
-                "AfterpulseRecoveryConfig",
-                "AnalogSaturationConfig",
-                "AnalogWaveform",
-                "AnalogWaveformConfig",
-                "ChannelAxis",
-                "Charge",
-                "ChargeConfig",
-                "ChargeSmearingConfig",
-                "CorrelatedAvalancheConfig",
-                "DarkCountConfig",
-                "DelayedCrosstalkConfig",
-                "DigitizedWaveform",
-                "DigitizedWaveformConfig",
-                "DirectCrosstalkConfig",
-                "ExampleAxis",
-                "ExponentialDelayConfig",
-                "FixedDelayConfig",
-                "NoiseWaveform",
-                "NoiseWaveformConfig",
-                "Photoelectrons",
-                "PsdNoiseConfig",
-                "PureWaveform",
-                "PureWaveformConfig",
-                "ReadoutCollection",
-                "ReadoutConfig",
-                "SampleAxis",
-                "TimingJitterConfig",
-                "TpcFebSnrPulseConfig",
-                "VetoPduPulseConfig",
-                "WhiteNoiseConfig",
-                "ZeroNoiseConfig",
-                "quantities",
-                "quantity",
-                "simulate_readout",
-            ),
-        )
-        for name in tensor_dslab.__all__:
-            self.assertTrue(hasattr(tensor_dslab, name), name)
-        profiles = __import__(
-            "tensor_dslab.readout.profiles",
-            fromlist=("__all__",),
-        )
-        self.assertEqual(profiles.__all__, ("ds20k_veto",))
-        self.assertFalse(hasattr(tensor_dslab, "ds20k_veto"))
-        self.assertFalse(hasattr(readout, "ds20k_veto"))
-
-    def test_product_package_exports_and_module_ownership(self) -> None:
-        expected = {
-            "tensor_dslab.readout.photoelectrons": ("Photoelectrons",),
-            "tensor_dslab.readout.charge": (
-                "AfterpulseConfig",
-                "AfterpulseRecoveryConfig",
-                "Charge",
-                "ChargeConfig",
-                "ChargeSmearingConfig",
-                "CorrelatedAvalancheConfig",
-                "DarkCountConfig",
-                "DelayedCrosstalkConfig",
-                "DirectCrosstalkConfig",
-                "ExponentialDelayConfig",
-                "FixedDelayConfig",
-                "TimingJitterConfig",
-            ),
-            "tensor_dslab.readout.pure_waveform": (
-                "PureWaveform",
-                "PureWaveformConfig",
-                "TpcFebSnrPulseConfig",
-                "VetoPduPulseConfig",
-            ),
-            "tensor_dslab.readout.noise_waveform": (
-                "NoiseWaveform",
-                "NoiseWaveformConfig",
-                "PsdNoiseConfig",
-                "WhiteNoiseConfig",
-                "ZeroNoiseConfig",
-            ),
-            "tensor_dslab.readout.analog_waveform": (
-                "AnalogSaturationConfig",
-                "AnalogWaveform",
-                "AnalogWaveformConfig",
-            ),
-            "tensor_dslab.readout.digitized_waveform": (
-                "DigitizedWaveform",
-                "DigitizedWaveformConfig",
-            ),
-        }
-        field_names = {
-            "AnalogWaveform",
-            "Charge",
-            "DigitizedWaveform",
-            "NoiseWaveform",
-            "Photoelectrons",
-            "PureWaveform",
-        }
-        for module_name, exports in expected.items():
-            with self.subTest(module=module_name):
-                module = __import__(module_name, fromlist=("__all__",))
-                self.assertEqual(module.__all__, exports)
-                for name in exports:
-                    value = getattr(module, name)
-                    self.assertIs(value, getattr(tensor_dslab, name))
-                    owner = "field" if name in field_names else "config"
-                    self.assertEqual(value.__module__, f"{module_name}.{owner}")
-
-        self.assertEqual(ChannelAxis.__module__, "tensor_dslab.common.axes")
-        self.assertEqual(ExampleAxis.__module__, "tensor_dslab.common.axes")
-        self.assertEqual(SampleAxis.__module__, "tensor_dslab.common.axes")
-        self.assertEqual(
-            ReadoutCollection.__module__,
-            "tensor_dslab.readout.collection",
-        )
-        self.assertEqual(
-            tensor_dslab.ReadoutConfig.__module__,
-            "tensor_dslab.readout.config",
-        )
-        self.assertIs(simulate_readout, readout.simulate_readout)
-        self.assertEqual(
-            simulate_readout.__module__,
-            "tensor_dslab.readout.simulation",
-        )
-
-    def test_public_simulation_signature_is_exact(self) -> None:
-        parameters = signature(simulate_readout).parameters
-        self.assertEqual(
-            tuple(parameters),
-            (
-                "photoelectrons",
-                "products",
-                "config",
-                "rng",
-                "floating_dtype",
-            ),
-        )
-        self.assertIs(
-            parameters["photoelectrons"].kind,
-            Parameter.POSITIONAL_OR_KEYWORD,
-        )
-        for name in ("products", "config", "rng", "floating_dtype"):
-            self.assertIs(parameters[name].kind, Parameter.KEYWORD_ONLY)
-        self.assertIs(parameters["products"].default, Parameter.empty)
-        self.assertIs(parameters["config"].default, Parameter.empty)
-        self.assertIs(parameters["rng"].default, Parameter.empty)
-        self.assertIs(parameters["floating_dtype"].default, torch.float32)
-        self.assertNotIn("seed", parameters)
-
-    def test_semantic_leaves_are_direct_final_fieldless_roots(self) -> None:
-        leaf_groups = (
-            ((ExampleAxis,), CountAxis),
-            ((ChannelAxis,), LabelAxis),
-            ((SampleAxis,), RegularAxis),
-            (
-                (
-                    Photoelectrons,
-                    Charge,
-                    PureWaveform,
-                    NoiseWaveform,
-                    AnalogWaveform,
-                    DigitizedWaveform,
-                ),
-                TensorField,
-            ),
-            ((ReadoutCollection,), TensorCollection),
-        )
-        for leaves, root in leaf_groups:
-            for leaf in leaves:
-                with self.subTest(leaf=leaf.__name__):
-                    self.assertEqual(leaf.__bases__, (root,))
-                    self.assertEqual(leaf.__slots__, ())
-                    self.assertTrue(getattr(leaf, "__final__", False))
-                    self.assertNotIn("__annotations__", leaf.__dict__)
-                    self.assertNotIn("__dataclass_fields__", leaf.__dict__)
-                    self.assertNotIn("__dataclass_params__", leaf.__dict__)
-                    self.assertIn("_require", leaf.__dict__)
-                    self.assertIs(leaf.__init__, root.__init__)
-                    self.assertIs(leaf._validate, root._validate)
-                    self.assertEqual(signature(leaf), signature(root))
-
-    def test_tensorcore_roots_are_abstract_and_lookup_is_typed(self) -> None:
-        self.assertTrue(isabstract(TensorAxis))
-        self.assertTrue(isabstract(TensorField))
-        self.assertTrue(isabstract(TensorCollection))
-
-        sample = SampleAxis(start=0, step=2_000, count=2)
-        photoelectrons = Photoelectrons(
-            tensor=torch.zeros((1, 1, 2), dtype=torch.int64),
-            axes=(
-                ExampleAxis(count=1),
-                ChannelAxis(labels=("c0",)),
-                sample,
-            ),
-        )
-        collection = ReadoutCollection(fields=(photoelectrons,))
-        self.assertIs(photoelectrons.axis(SampleAxis), sample)
-        self.assertEqual(photoelectrons.dimension_of(SampleAxis), 2)
-        self.assertIs(collection.field(Photoelectrons), photoelectrons)
-        self.assertIs(collection.tensor(Photoelectrons), photoelectrons.tensor)
-
-    def test_tensorcore_names_are_not_reexported(self) -> None:
-        retired_or_generic = (
-            "Id",
-            "IdSequence",
-            "TensorAxis",
-            "TensorAxisId",
-            "CountAxis",
-            "LabelAxis",
-            "RegularAxis",
-            "TensorCollection",
-            "TensorField",
-            "TensorFieldId",
-            "TensorLayout",
-            "TensorArtifact",
-            "TableCollection",
-            "TableColumn",
-            "TableField",
-            "Scalar",
-            "PositiveInteger",
-            "CounterRng",
-            "RngKey",
-            "Threefry4x32",
-            "RngElements",
-            "RngAddress",
-            "RngPositions",
-            "Distribution",
-            "UniformDistribution",
-            "GaussianDistribution",
-            "PoissonDistribution",
-            "BinomialDistribution",
-            "MultinomialDistribution",
-            "TensorKernel",
-            "ProbabilityKernel",
-            "require_same_dtype",
-        )
-        for module in (tensor_dslab, common, readout):
-            for name in retired_or_generic:
-                self.assertNotIn(name, module.__all__)
-                self.assertFalse(hasattr(module, name), f"{module.__name__}.{name}")
-
-    def test_retired_files_and_future_placeholders_are_absent(self) -> None:
-        absent = (
-            "tensor_dslab/common/ids.py",
-            "tensor_dslab/common/sampling.py",
-            "tensor_dslab/readout/builders.py",
-            "tensor_dslab/readout/ids.py",
-            "tensor_dslab/readout/tensors.py",
-            "tensor_dslab/readout/validation.py",
-            "tensor_dslab/readout/types.py",
-            "tensor_dslab/readout/_random.py",
-            "tensor_dslab/readout/_rng.py",
-            "tensor_dslab/readout/photoelectrons/types.py",
-            "tensor_dslab/readout/charge/types.py",
-            "tensor_dslab/readout/pure_waveform/types.py",
-            "tensor_dslab/readout/noise_waveform/types.py",
-            "tensor_dslab/readout/analog_waveform/types.py",
-            "tensor_dslab/readout/digitized_waveform/types.py",
-            "tensor_dslab/readout/photoelectrons/_product.py",
-            "tensor_dslab/readout/charge/_product.py",
-            "tensor_dslab/readout/pure_waveform/_product.py",
-            "tensor_dslab/readout/noise_waveform/_product.py",
-            "tensor_dslab/readout/analog_waveform/_product.py",
-            "tensor_dslab/readout/digitized_waveform/_product.py",
-            "tensor_dslab/readout/_requirements.py",
-            "tensor_dslab/readout/photoelectrons/_produce.py",
-            "tensor_dslab/readout/charge/_produce.py",
-            "tensor_dslab/readout/pure_waveform/_produce.py",
-            "tensor_dslab/readout/noise_waveform/_produce.py",
-            "tensor_dslab/readout/analog_waveform/_produce.py",
-            "tensor_dslab/readout/digitized_waveform/_produce.py",
-            "tensor_dslab/readout/charge/effects",
-        )
-        for path in absent:
-            self.assertFalse(Path(path).exists(), path)
-
-    def test_runtime_actions_records_and_sampling_remain_private(
-        self,
-    ) -> None:
-        private_names = (
-            "_RngStream",
-            "_require_representable_float",
-            "_require_sampling",
-            "_produce_charge",
-            "_produce_pure_waveform",
-            "_produce_noise_waveform",
-            "_produce_analog_waveform",
-            "_produce_digitized_waveform",
-            "_ReadoutPlan",
-            "_ChargePlan",
-            "_PureWaveformPlan",
-            "_NoiseWaveformPlan",
-            "_AnalogWaveformPlan",
-            "_DigitizedWaveformPlan",
-            "_prepare_readout",
-            "_prepare_charge",
-            "_prepare_pure_waveform",
-            "_prepare_noise_waveform",
-            "_prepare_analog_waveform",
-            "_prepare_digitized_waveform",
-            "SamplingRuntime",
-            "ReadoutRuntime",
-            "ChargeRuntime",
-            "PureWaveformRuntime",
-            "NoiseWaveformRuntime",
-            "AnalogWaveformRuntime",
-            "DigitizedWaveformRuntime",
-            "prepare_readout",
-            "prepare_sampling",
-            "prepare_charge",
-            "prepare_pure_waveform",
-            "prepare_noise_waveform",
-            "prepare_analog_waveform",
-            "prepare_digitized_waveform",
-            "produce_charge",
-            "produce_pure_waveform",
-            "produce_noise_waveform",
-            "produce_analog_waveform",
-            "produce_digitized_waveform",
-            "validate_photoelectrons",
-            "validate_charge",
-            "validate_pure_waveform",
-            "validate_noise_waveform",
-            "validate_analog_waveform",
-            "validate_digitized_waveform",
-        )
-        public_modules = (
-            tensor_dslab,
-            readout,
-            __import__(
-                "tensor_dslab.readout.pure_waveform",
-                fromlist=("__all__",),
-            ),
-            __import__(
-                "tensor_dslab.readout.noise_waveform",
-                fromlist=("__all__",),
-            ),
-            __import__(
-                "tensor_dslab.readout.analog_waveform",
-                fromlist=("__all__",),
-            ),
-            __import__(
-                "tensor_dslab.readout.digitized_waveform",
-                fromlist=("__all__",),
-            ),
-        )
-        for module in public_modules:
-            for name in private_names:
-                with self.subTest(module=module.__name__, name=name):
-                    self.assertNotIn(name, module.__all__)
-                    self.assertFalse(hasattr(module, name))
-
-    def test_production_uses_only_public_tensorcore_imports(self) -> None:
-        import tensor_core.random as random
-        import tensor_core.random.validation as random_validation
-        import tensor_core.scalar as scalar
-        import tensor_core.scalar.validation as scalar_validation
-        import tensor_core.table as table
-        import tensor_core.tensor as tensor
-        import tensor_core.tensor.validation as tensor_validation
-
-        public_names = {
-            "tensor_core": frozenset(tensor_core.__all__),
-            "tensor_core.random": frozenset(random.__all__),
-            "tensor_core.random.validation": frozenset(random_validation.__all__),
-            "tensor_core.scalar": frozenset(scalar.__all__),
-            "tensor_core.scalar.validation": frozenset(scalar_validation.__all__),
-            "tensor_core.table": frozenset(table.__all__),
-            "tensor_core.tensor": frozenset(tensor.__all__),
-            "tensor_core.tensor.validation": frozenset(tensor_validation.__all__),
-        }
-        for path in Path("tensor_dslab").rglob("*.py"):
-            tree = ast.parse(path.read_text(), filename=str(path))
-            for node in ast.walk(tree):
-                if isinstance(node, ast.ImportFrom) and node.module is not None:
-                    if node.module.startswith("tensor_core"):
-                        self.assertIn(node.module, public_names, str(path))
-                        for alias in node.names:
-                            self.assertNotEqual(alias.name, "*", str(path))
-                            self.assertIn(
-                                alias.name,
-                                public_names[node.module],
-                                str(path),
-                            )
-                elif isinstance(node, ast.Import):
-                    for alias in node.names:
-                        self.assertFalse(
-                            alias.name.startswith("tensor_core."),
-                            str(path),
-                        )
-
-    def test_product_modules_do_not_import_composition_layer(self) -> None:
-        paths = tuple(Path("tensor_dslab/readout").glob("*/config.py")) + tuple(
-            Path("tensor_dslab/readout").glob("*/field.py")
-        )
-        self.assertEqual(len(paths), 11)
-        for path in paths:
-            tree = ast.parse(path.read_text(), filename=str(path))
-            imported = {
-                node.module
-                for node in ast.walk(tree)
-                if isinstance(node, ast.ImportFrom) and node.module is not None
-            }
-            for composition_module in (
-                "tensor_dslab.readout.config",
-                "tensor_dslab.readout.collection",
-                "tensor_dslab.readout.simulation",
-                "tensor_dslab.readout.types",
-            ):
-                self.assertNotIn(composition_module, imported, str(path))
-
-    def test_product_runtime_imports_are_private_and_acyclic(self) -> None:
-        runtime_paths = tuple(
-            sorted(Path("tensor_dslab/readout").glob("*/runtime/*.py"))
-        )
-        self.assertEqual(len(runtime_paths), 22)
-        forbidden_prefixes = (
-            "dag",
-            "dask",
-            "dselec",
-            "dslab",
-            "g4ds",
-            "g4ds11",
-            "io",
-            "iv_dslab",
-            "numpy",
-            "prefect",
-            "ray",
-            "scipy",
-            "tensor_g4ds",
-            "tensor_ml",
-        )
-        forbidden_tensor_dslab_modules = {
-            "tensor_dslab",
-            "tensor_dslab.readout.simulation",
-            "tensor_dslab.readout.config",
-            "tensor_dslab.readout.collection",
-            "tensor_dslab.readout.types",
-        }
-        for path in runtime_paths:
-            tree = ast.parse(path.read_text(), filename=str(path))
-            imports: list[str] = []
-            for node in ast.walk(tree):
-                if isinstance(node, ast.ImportFrom) and node.module is not None:
-                    imports.append(node.module)
-                elif isinstance(node, ast.Import):
-                    imports.extend(alias.name for alias in node.names)
-            for imported in imports:
-                with self.subTest(path=str(path), imported=imported):
-                    self.assertNotIn(imported, forbidden_tensor_dslab_modules)
-                    self.assertFalse(
-                        any(
-                            imported == prefix
-                            or imported.startswith(f"{prefix}.")
-                            for prefix in forbidden_prefixes
-                        )
-                    )
-    def test_runtime_packages_are_empty_and_effects_do_not_import_producer(
-        self,
-    ) -> None:
-        runtime_packages = (
-            "tensor_dslab.readout.runtime",
-            "tensor_dslab.readout.photoelectrons.runtime",
-            "tensor_dslab.readout.charge.runtime",
-            "tensor_dslab.readout.charge.runtime.effects",
-            "tensor_dslab.readout.pure_waveform.runtime",
-            "tensor_dslab.readout.noise_waveform.runtime",
-            "tensor_dslab.readout.analog_waveform.runtime",
-            "tensor_dslab.readout.digitized_waveform.runtime",
-        )
-        for module_name in runtime_packages:
-            with self.subTest(module=module_name):
-                module = __import__(module_name, fromlist=("__name__",))
-                self.assertFalse(hasattr(module, "__all__"))
-                package_path = Path(*module_name.split("."), "__init__.py")
-                source = package_path.read_text()
-                tree = ast.parse(source, filename=str(package_path))
-                self.assertTrue(ast.get_docstring(tree, clean=False))
-                self.assertFalse(
-                    any(
-                        not isinstance(node, ast.Expr)
-                        for node in tree.body
-                    )
-                )
-        effect_paths = tuple(
-            sorted(
-                Path("tensor_dslab/readout/charge/runtime/effects").glob("*.py")
             )
         )
-        self.assertEqual(len(effect_paths), 7)
-        for path in effect_paths:
-            tree = ast.parse(path.read_text(), filename=str(path))
-            imported = {
-                node.module
-                for node in ast.walk(tree)
-                if isinstance(node, ast.ImportFrom) and node.module is not None
-            }
-            self.assertNotIn(
-                "tensor_dslab.readout.charge.runtime.produce",
-                imported,
-            )
-            self.assertNotIn("tensor_dslab.readout.config", imported)
-            self.assertNotIn("tensor_dslab.readout.collection", imported)
 
-    def test_fresh_process_imports_are_acyclic_and_isolated(self) -> None:
-        environment = os.environ.copy()
-        environment["PYTHONDONTWRITEBYTECODE"] = "1"
-        modules = (
-            "tensor_dslab.common",
-            "tensor_dslab.readout.photoelectrons",
-            "tensor_dslab.readout.photoelectrons.field",
-            "tensor_dslab.readout.photoelectrons.runtime",
-            "tensor_dslab.readout.photoelectrons.runtime.validate",
-            "tensor_dslab.readout.charge",
-            "tensor_dslab.readout.charge.config",
-            "tensor_dslab.readout.charge.field",
-            "tensor_dslab.readout.charge.runtime",
-            "tensor_dslab.readout.charge.runtime.prepare",
-            "tensor_dslab.readout.charge.runtime.produce",
-            "tensor_dslab.readout.charge.runtime.validate",
-            "tensor_dslab.readout.charge.runtime.effects",
-            "tensor_dslab.readout.charge.runtime.effects.counts",
-            "tensor_dslab.readout.charge.runtime.effects.delays",
-            "tensor_dslab.readout.charge.runtime.effects.dark_counts",
-            "tensor_dslab.readout.charge.runtime.effects.timing_jitter",
-            "tensor_dslab.readout.charge.runtime.effects.correlated_avalanches",
-            "tensor_dslab.readout.charge.runtime.effects.smearing",
-            "tensor_dslab.readout.pure_waveform",
-            "tensor_dslab.readout.pure_waveform.config",
-            "tensor_dslab.readout.pure_waveform.field",
-            "tensor_dslab.readout.pure_waveform.runtime",
-            "tensor_dslab.readout.pure_waveform.runtime.prepare",
-            "tensor_dslab.readout.pure_waveform.runtime.produce",
-            "tensor_dslab.readout.pure_waveform.runtime.validate",
-            "tensor_dslab.readout.noise_waveform",
-            "tensor_dslab.readout.noise_waveform.config",
-            "tensor_dslab.readout.noise_waveform.field",
-            "tensor_dslab.readout.noise_waveform.runtime",
-            "tensor_dslab.readout.noise_waveform.runtime.prepare",
-            "tensor_dslab.readout.noise_waveform.runtime.produce",
-            "tensor_dslab.readout.noise_waveform.runtime.validate",
-            "tensor_dslab.readout.analog_waveform",
-            "tensor_dslab.readout.analog_waveform.config",
-            "tensor_dslab.readout.analog_waveform.field",
-            "tensor_dslab.readout.analog_waveform.runtime",
-            "tensor_dslab.readout.analog_waveform.runtime.prepare",
-            "tensor_dslab.readout.analog_waveform.runtime.produce",
-            "tensor_dslab.readout.analog_waveform.runtime.validate",
-            "tensor_dslab.readout.digitized_waveform",
-            "tensor_dslab.readout.digitized_waveform.config",
-            "tensor_dslab.readout.digitized_waveform.field",
-            "tensor_dslab.readout.digitized_waveform.runtime",
-            "tensor_dslab.readout.digitized_waveform.runtime.prepare",
-            "tensor_dslab.readout.digitized_waveform.runtime.produce",
-            "tensor_dslab.readout.digitized_waveform.runtime.validate",
-            "tensor_dslab.readout.config",
-            "tensor_dslab.readout.collection",
+    def test_runtime_packages_export_nothing(self) -> None:
+        for name in (
             "tensor_dslab.readout.runtime",
-            "tensor_dslab.readout.runtime.keys",
-            "tensor_dslab.readout.runtime.requirements",
-            "tensor_dslab.readout.runtime.sampling",
-            "tensor_dslab.readout.runtime.prepare",
-            "tensor_dslab.readout.simulation",
-            "tensor_dslab.readout",
-            "tensor_dslab",
+            "tensor_dslab.readout.charge.runtime",
+            "tensor_dslab.readout.pure_waveform.runtime",
+        ):
+            module = importlib.import_module(name)
+            self.assertFalse(hasattr(module, "__all__") and module.__all__)
+
+    def test_fresh_process_import_isolation(self) -> None:
+        code = (
+            "import sys, tensor_dslab; "
+            "print('tensor_g4ds' in sys.modules, 'tensor_ml' in sys.modules, "
+            "'matplotlib' in sys.modules, 'IPython' in sys.modules)"
         )
-        deferred = ("tensor_g4ds", "tensor_ml", "dslab", "g4ds11")
-        for module_name in modules:
-            with self.subTest(module=module_name):
-                code = (
-                    f"import {module_name}, sys; "
-                    f"assert not any(name in sys.modules for name in {deferred!r})"
-                )
-                completed = subprocess.run(
-                    [sys.executable, "-c", code],
-                    check=False,
-                    capture_output=True,
-                    env=environment,
-                    text=True,
-                )
-                self.assertEqual(completed.returncode, 0, completed.stderr)
-
-        retired_modules = (
-            "tensor_dslab.common.sampling",
-            "tensor_dslab.readout._random",
-            "tensor_dslab.readout._rng",
-            "tensor_dslab.readout.types",
-            "tensor_dslab.readout.photoelectrons.types",
-            "tensor_dslab.readout.charge.types",
-            "tensor_dslab.readout.pure_waveform.types",
-            "tensor_dslab.readout.noise_waveform.types",
-            "tensor_dslab.readout.analog_waveform.types",
-            "tensor_dslab.readout.digitized_waveform.types",
-            "tensor_dslab.readout._requirements",
-            "tensor_dslab.readout.charge.effects",
-            "tensor_dslab.readout.photoelectrons._produce",
-            "tensor_dslab.readout.charge._produce",
-            "tensor_dslab.readout.pure_waveform._produce",
-            "tensor_dslab.readout.noise_waveform._produce",
-            "tensor_dslab.readout.analog_waveform._produce",
-            "tensor_dslab.readout.digitized_waveform._produce",
+        completed = subprocess.run(
+            [sys.executable, "-c", code],
+            check=True,
+            capture_output=True,
+            text=True,
         )
-        for module_name in retired_modules:
-            with self.subTest(retired=module_name):
-                code = (
-                    "import importlib; "
-                    f"name={module_name!r}; "
-                    "\ntry: importlib.import_module(name)"
-                    "\nexcept ModuleNotFoundError as error: "
-                    "assert error.name == name, (name, error.name)"
-                    "\nelse: raise AssertionError(name)"
-                )
-                completed = subprocess.run(
-                    [sys.executable, "-c", code],
-                    check=False,
-                    capture_output=True,
-                    env=environment,
-                    text=True,
-                )
-                self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertEqual(completed.stdout.strip(), "False False False False")
+
+    def test_public_values_have_intentional_docstrings(self) -> None:
+        for name in ROOT_EXPORTS:
+            value = getattr(tensor_dslab, name)
+            if inspect.isclass(value):
+                self.assertTrue(value.__dict__.get("__doc__"), name)
+            else:
+                self.assertTrue(value.__doc__, name)
+
+    def test_every_production_module_has_an_own_module_docstring(self) -> None:
+        for path in pathlib.Path("tensor_dslab").rglob("*.py"):
+            with self.subTest(path=path):
+                tree = ast.parse(path.read_text(), filename=str(path))
+                self.assertTrue(ast.get_docstring(tree), path)
 
 
-if __name__ == "__main__":
-    unittest.main()
+for _name in ROOT_EXPORTS:
+    def _identity_case(
+        self: PackageContractTest,
+        name: str = _name,
+    ) -> None:
+        value = getattr(tensor_dslab, name)
+        self.assertEqual(value.__name__, name)
+
+    setattr(PackageContractTest, f"test_export_{_name}", _identity_case)

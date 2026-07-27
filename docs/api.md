@@ -7,6 +7,33 @@ types, Config types, semantic axes, physical-quantity helpers, and
 Private product Runtime actions, validators, producers, requirements, and RNG
 role keys are implementation details.
 
+## Literal Physical Kernel Candidate
+
+Maintenance 12 is the active fixed-commit API rebaseline to exact TensorCore
+`0.21.0`. It adds public `QuantityKernel`, `DarkCountRate`, `TimingJitter`,
+`DirectCrosstalk`, `DelayedCrosstalk`, `Afterpulse`, `SmearingWidth`, and
+`Pulse` leaves. `ChargeConfig` accepts those literal physical kernels directly;
+`PureWaveformConfig` accepts one `Pulse`. Kernel quantities are canonical,
+copied CPU `float64` snapshots, while prepared Runtime facts are plain Torch
+tensors.
+
+The provisional profile now receives its available geometry explicitly:
+
+```python
+config = ds20k_veto(
+    sample_axis=sample_axis,
+    channel_axis=channel_axis,
+    example_axis=example_axis,
+)
+```
+
+Omitted optional axes remain valid only when no profile kernel is conditioned
+on that role. The profile is still illustrative, not an approved run
+calibration. These bytes are candidate documentation while absent from
+`main`; if present unchanged on `main`, Review's fast-forward has completed,
+but final Design acceptance remains pending until the Maintenance 12 work
+order and index say **Merged / Closed**.
+
 ## Addressed Random Execution
 
 Maintenance 11 is **Merged / Closed** through exact Review-cleared and
@@ -15,10 +42,12 @@ tree `5c76122b25d17b9fe0b796618613d7bff0b102c1`, against exact published
 TensorCore `0.19.0` containing commit
 `ed17f4b637258f0a7f4544f235648b747f17fa44`. The public TensorDSLab API is
 unchanged: callers still provide a `CounterRng` to `simulate_readout(...)`,
-and its seed remains the realization control. Internally, each stochastic
-product uses public TensorCore `RngElements`, `RngAddress`, Distribution, and
-ProbabilityKernel objects. Role keys and address construction are private
-package policy, not caller customization surfaces.
+and its seed remains the realization control. At that closed historical
+baseline, stochastic products used public TensorCore `RngElements`,
+`RngAddress`, Distribution, and ProbabilityKernel objects. Maintenance 12
+removes `ProbabilityKernel` and uses direct addressed distribution laws over
+literal `TensorKernel` geometry. Role keys and address construction remain
+private package policy, not caller customization surfaces.
 
 The CPU-only [addressed-randomness notebook](../demos/random.ipynb) is an
 educational inspection of the public TensorCore address model and the
@@ -36,13 +65,15 @@ factory:
 ```python
 from tensor_dslab.readout.profiles import ds20k_veto
 
-config = ds20k_veto()
+config = ds20k_veto(sample_axis=sample_axis)
 ```
 
-`ds20k_veto()` takes no arguments and returns a fresh `ReadoutConfig` tree with
-fresh copied Pint quantities on every call. The factory performs no tensor
-allocation, preparation, simulation, RNG activity, file or network access, or
-environment/device inspection. It is exported only from
+`ds20k_veto(...)` requires the available `SampleAxis` and optionally accepts
+the available `ChannelAxis` and `ExampleAxis`. It returns a fresh
+`ReadoutConfig` tree with fresh copied Pint quantities and physical kernels on
+every call. The factory performs profile-construction tensor allocation but no
+simulation, RNG activity, file or network access, or device inspection. It is
+exported only from
 `tensor_dslab.readout.profiles`; it is not re-exported from `tensor_dslab` or
 `tensor_dslab.readout`.
 
@@ -65,6 +96,7 @@ from tensor_dslab import (
     AnalogWaveform,
     DigitizedWaveform,
     Photoelectrons,
+    SampleAxis,
     simulate_readout,
 )
 from tensor_dslab.readout.profiles import ds20k_veto
@@ -72,10 +104,13 @@ from tensor_dslab.readout.profiles import ds20k_veto
 def run_readout(photoelectrons: Photoelectrons):
     """Run selected products from an already-binned source field."""
 
+    sample_axis = next(
+        axis for axis in photoelectrons.axes if type(axis) is SampleAxis
+    )
     return simulate_readout(
         photoelectrons,
         products=(AnalogWaveform, DigitizedWaveform),
-        config=ds20k_veto(),
+        config=ds20k_veto(sample_axis=sample_axis),
         rng=Threefry4x32(seed=17),
         floating_dtype=torch.float32,
     )
