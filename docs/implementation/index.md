@@ -279,43 +279,56 @@ deployment, publication, or push claim follows.
 
 ### [Maintenance 13: Runtime Hygiene And Environment Reproducibility](maintenance_13_runtime_hygiene_and_environment_reproducibility.md)
 
-Status is self-effecting. While the exact Maintenance 13 bytes are absent from
-`main`, they are an **Implementation candidate under fixed-commit Validation
-and Review gates**, with the latest completed same-byte handoff determining the
-pending role. If those exact bytes appear unchanged on `main` after complete
-Validation, independent Review, final same-byte Design approval, and Review's
-clean fast-forward, the status is **Merged / Closed**.
+Status: **Merged / Closed** on local `main` at exact Review-cleared Candidate 1
+`af23b129de41601f825f08a50f7783980e6e9551`, tree
+`ecf20f237ca685ff697111211d260dfadec4ab9b`. Its exact parent is Design
+authority `dded046893365d3489cd3b2b9b2402c3f65e2c4c`, whose parent is the
+published baseline `c8de1528d1ed57d3e86a9c37d1ad307127a23feb`. Review
+performed a clean unchanged fast-forward; no push occurred.
 
-The draft is bound to exact published TensorDSLab main
-`c8de1528d1ed57d3e86a9c37d1ad307127a23feb`, tree
-`1d58e398428f35600e9bc582366c846c90d5f47c`, and the unchanged exact
-TensorCore `0.21.0` dependency
-`78d0891bf6c0fefbcad4abe09980867c54202a9e`.
-
-The proposed maintenance removes one unused Charge count function/constant,
-extracts the duplicated Charge/PureWaveform conditioning alignment into one
-private `align_quantity_kernel(...)` Runtime action, replaces the brittle
-exact-`59` production-module assertion with required/retired path invariants,
-and repairs `create_environment.sh` so a fresh noneditable environment proves
-the current geometry-requiring `ds20k_veto(...)` signature, TensorCore
-`0.21.0` at the exact pinned Git commit, and installed-site-packages import
-without project-root shadowing.
+The maintenance removes one unused Charge count function/constant, extracts
+the duplicated Charge/PureWaveform conditioning alignment into one private
+`align_quantity_kernel(...)` Runtime action, replaces the brittle exact-`59`
+production-module assertion with required/retired path invariants, and repairs
+`create_environment.sh` so a fresh noneditable environment proves the current
+geometry-requiring `ds20k_veto(...)` signature, TensorCore `0.21.0` at exact
+commit `78d0891bf6c0fefbcad4abe09980867c54202a9e`, and
+installed-site-packages import without project-root shadowing.
 
 It changes no public facade, Config, Runtime record, product, scientific law,
 RNG address/word/result, dependency, version, or supported device boundary.
-One real Conda reconstruction is reserved for the final immutable Validation
-candidate; focused fake-Conda evidence covers ordinary corrections. The
-broader tests-only consolidation is explicitly deferred to a separate
-Maintenance 14 work order, and living-documentation curation remains separate.
+The focused candidate gate passed `147/147/0`. Complete source/archive
+Validation passed `384/381/3` in each dependency form; Pyright was clean; the
+negative fixture retained `82` intended diagnostics; final wheel/sdist,
+isolated-wheel, fake-Conda, one fresh real environment, exact PEP 610 pin,
+installed import, CPU demo, privacy, and hygiene gates passed. Independent
+Review repeated the highest-risk alignment, environment, typing, and mutation
+checks with no finding. The three unavailable-CUDA skips remain explicit and
+no accelerator claim follows.
 
-Implementation's focused candidate gate passed `147/147/0` against exact
-TensorCore `0.21.0` source, with Pyright at zero diagnostics, `bash -n` and
-mode `100755`, fake-Conda environment-script coverage, two required alignment
-mutants killed, exact ten-path scope, and protected-byte/diff/hygiene checks.
-Implementation intentionally did not create the real Conda environment,
-rebuild artifacts, or claim complete source/archive clearance; the complete
-final-candidate gate remains Validation-owned. CUDA was unavailable and no
-accelerator claim follows.
+### [Maintenance 14: Test Suite Curation](maintenance_14_test_suite_curation.md)
+
+Status: **Design-complete; implementation pending**.
+
+The draft starts from exact closed Maintenance 13
+`af23b129de41601f825f08a50f7783980e6e9551`, tree
+`ecf20f237ca685ff697111211d260dfadec4ab9b`, and keeps exact TensorCore
+`0.21.0` commit `78d0891bf6c0fefbcad4abe09980867c54202a9e`.
+
+The tests-only maintenance splits the `1,291`-line noise test monolith into
+four cohesive flat test modules plus one private support owner, preserves all
+eighteen substantive noise methods one-for-one, replaces seventy generated
+physical-kernel construction methods with one seven-subtest contract, and
+replaces ten generated Runtime methods with one meaningful execution-facts
+test. It explicitly permits the discovered method total to decrease only
+through removal of those redundant copies.
+
+Production, dependencies, environment tooling, demos, notebooks, public
+facades, scientific/RNG/device contracts, other tests, living documentation,
+and historical records are protected. The exact candidate allowlist is ten
+paths. Final Validation runs focused and complete source/archive/typing gates
+but does not rebuild unchanged artifacts, recreate Conda, or execute notebooks.
+CUDA remains deferred and unclaimed.
 
 ### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
 
