@@ -241,14 +241,15 @@ acceptance criteria, and intentional divergences defined in
 
 ### [Maintenance 12: TensorCore 0.21 Kernel Geometry And Quantity Refactor](maintenance_12_tensorcore_0_21_kernel_geometry_quantity_refactor.md)
 
-Status: **Implementation candidate lifecycle active**. If the exact
-Maintenance 12 bytes are absent from `main`, they are under fixed-commit
-Implementation/Validation/Review gates. If present unchanged on `main`,
-Review's fast-forward has completed; final Design acceptance remains pending
-until this entry and the work order record **Merged / Closed**.
+Status: **Merged / Closed** through exact Review-cleared and fast-forwarded
+Candidate 2 `ba4f3408bf6b5cbd34d6736741026297b3e05c19`, tree
+`4e3b34be19841de016f7c99a668999d2d8dadcc9`. Immutable Candidate 1 is
+`da33a7e7f12e07341c06d66a96cbfdfccae4ebd1`, tree
+`86cd7c6ac0bf3ba87cbddf42c2c8ca61a3bb26e8`; exact Design authority is
+`a0c2182024792856b8d76966dd7a1bced89806ac`.
 
-This dispatchable work order extracts the accepted kernel architecture into
-one atomic TensorDSLab dependency/science/API rebaseline. It specifies
+This work order extracted the accepted kernel architecture into one atomic
+TensorDSLab dependency/science/API rebaseline. It specified
 the concrete compositional `OffsetAxis`, literal `TensorKernel`,
 direct-probability `MultinomialDistribution`, public `QuantityKernel` and
 physical leaves, direct Config fields, profile-supplied geometry, compiled
@@ -262,27 +263,36 @@ publication commit and final package implementation anchor after independent
 Review's Multinomial storage repair. TensorDSLab confirmed the exact published
 contract and the user authorized this package-owned maintenance.
 
+Candidate 1 cleared every complete package gate except the frozen/slotted
+leaf contract. Candidate 2 changes exactly three authorized paths, `31`
+insertions / zero deletions, adding empty slots to all seven public physical
+leaves and an all-seven immutability proof. Independent Review cleared all six
+required high-risk mutants. Source/archive evidence passed `383/380/3`;
+TensorCore source/archive passed `88/86/2`; Pyright was clean; and the exact
+negative fixture retained `82` intended diagnostics. The accepted Candidate 2
+wheel is `52723` bytes with SHA-256
+`e51e4662b39485bd0026322934f39fd48f03d41c92287e0bbc1aaa537ec8af5a`; its
+sdist is `850208` bytes with SHA-256
+`5d3d047d5aac5185d06898546f3cf2e62860d4537a8405db69684d50cf7615a0`.
+Evidence is CPU-only; no current accelerator, compatibility, release,
+deployment, publication, or push claim follows.
+
 ### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
 
 Status: **Architecture selected / TensorCore Stage 29 published /
-Maintenance 12 dispatch authority linked above**.
+Maintenance 12 Merged / Closed**.
 
-This planning record sketches the coordinated future `OffsetAxis`, literal
+This planning record preserves the coordinated `OffsetAxis`, literal
 `TensorKernel`, direct-probability `MultinomialDistribution`, and
 `QuantityKernel` boundary; profile-supplied axis availability;
 global/conditioned kernel broadcasting; product-owned physical kernels; and an
-easy-to-hard migration. It selects no separate reusable multinomial-parameter
-surface, chooses a future Poisson/full-charge afterpulse rebaseline, and
+easy-to-hard migration. It selected no separate reusable multinomial-parameter
+surface, selected a Poisson/full-charge afterpulse rebaseline, and
 explicitly defers recovery weighting. The formerly provisional Maintenance 12
-work order has been replaced by the publication-bound dispatch authority
-linked above. Current production, the TensorCore `0.19.0`
-pin, at-most-one afterpulse behavior, recovery weighting, profile signature,
-package topology, and public API remain the governed `main` baseline while the
-Maintenance 12 candidate is absent. If the candidate appears unchanged on
-`main`, Review's fast-forward has completed and the new target is present, but
-final Design acceptance remains pending until the two lifecycle records say
-**Merged / Closed**. This planning record is not TensorCore authority or a
-TensorDSLab production dispatch.
+work order was replaced by the publication-bound authority linked above, and
+exact Candidate 2 now implements that selected architecture on `main`. This
+planning record is not TensorCore authority or a separate TensorDSLab
+production dispatch.
 
 ### [Historical TensorCore Counter RNG And Distributions Consumer Proposal](proposed_tensorcore_counter_rng_and_distributions.md)
 

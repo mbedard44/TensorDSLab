@@ -16,10 +16,10 @@ clustering, TensorML training, durable IO, or campaign orchestration.
 
 The package provides the post-binned readout foundation introduced against
 TensorCore `0.7`, reorganized through Maintenance 4, migrated to compact axes
-through closed Maintenance 5, and rebaselined by the active
+through closed Maintenance 5, and rebaselined by the closed
 [Maintenance 12 migration](docs/implementation/maintenance_12_tensorcore_0_21_kernel_geometry_quantity_refactor.md)
 to exact published TensorCore `0.21.0` commit
-`78d0891bf6c0fefbcad4abe09980867c54202a9e`. The current candidate surface
+`78d0891bf6c0fefbcad4abe09980867c54202a9e`. The current surface
 contains:
 
 - identity-free zero-based `ExampleAxis`, string-label `ChannelAxis`, and
@@ -171,7 +171,7 @@ Candidate 2 `a527042701ac56f368f26248381244fdfcfb7fd3`, tree
 position-plus-method RNG calls with public addressed `RngElements`,
 `RngAddress`, Distribution, and ProbabilityKernel objects while retaining the
 public TensorDSLab facades and downstream physical laws. That statement
-describes the closed Maintenance 11 baseline; active Maintenance 12 removes
+describes the closed Maintenance 11 baseline; closed Maintenance 12 removes
 `ProbabilityKernel` in favor of direct distributions over literal
 `TensorKernel` geometry. The CPU-only
 [addressed-randomness notebook](demos/random.ipynb) shows exact address
@@ -185,16 +185,18 @@ CUDA, performance, compatibility, release, publication, deployment, or
 production-readiness claim.
 
 [Maintenance 12](docs/implementation/maintenance_12_tensorcore_0_21_kernel_geometry_quantity_refactor.md)
-is the active fixed-commit rebaseline to exact TensorCore `0.21.0`. The
-candidate replaces effect-specific scalar Charge/Pulse configuration with
+is **Merged / Closed** through exact Review-cleared and fast-forwarded
+Candidate 2 `ba4f3408bf6b5cbd34d6736741026297b3e05c19`, tree
+`4e3b34be19841de016f7c99a668999d2d8dadcc9`. It replaces effect-specific
+scalar Charge/Pulse configuration with
 literal physical kernels, compiles them into execution Runtime state, uses
 direct Multinomial timing allocation and collapsed-rate Poisson branching, and
 requires detector geometry when constructing `ds20k_veto(...)`. Its public
 kernel types are snapshots of physical coefficients; execution still consumes
-plain Torch tensors. Before unchanged bytes reach `main`, this is candidate
-documentation. If they reach `main`, Review's fast-forward is complete but
-final Design acceptance remains pending until the Maintenance 12 lifecycle
-records say **Merged / Closed**. Current evidence is CPU-only.
+plain Torch tensors. Immutable Candidate 1 is
+`da33a7e7f12e07341c06d66a96cbfdfccae4ebd1`; Candidate 2 changes only the
+seven leaf slot declarations and their immutability proof. Accepted evidence
+is CPU-only.
 
 The historical [TensorCore consumer proposal](docs/implementation/proposed_tensorcore_counter_rng_and_distributions.md)
 is now fulfilled by published TensorCore `0.9.0` commit

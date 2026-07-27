@@ -23,9 +23,10 @@ afterpulse, nested effect tree, plural axes module, and their aliases are
 retired. The eight active stochastic roles are compactly rebaselined as private
 package policy.
 
-This is candidate state while absent from `main`. If present unchanged on
-`main`, Review's fast-forward has completed; final Design acceptance still
-requires the Maintenance 12 lifecycle records to say **Merged / Closed**.
+Maintenance 12 is **Merged / Closed** through exact Review-cleared and
+fast-forwarded Candidate 2
+`ba4f3408bf6b5cbd34d6736741026297b3e05c19`. Its accepted evidence is
+CPU-only and makes no current accelerator claim.
 
 ### TensorDSLab Is Tensor-Native From The Start
 

@@ -20,8 +20,8 @@ Project/display name: TensorDSLab
 Python import: tensor_dslab (accepted on main through Maintenance 5)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
-Package maturity: Maintenance 11 Merged / Closed
-Active production gate: Maintenance 12 fixed-commit candidate
+Package maturity: Maintenance 12 Merged / Closed
+Active production gate: none
 Stage 8: separately stopped; any restart requires a new Design authority after
 Maintenance 6
 ```
@@ -159,17 +159,18 @@ This local CPU gate makes no integrated CUDA, accelerator-support,
 performance, compatibility, publication, release, or deployment claim.
 
 [Maintenance 12](docs/implementation/maintenance_12_tensorcore_0_21_kernel_geometry_quantity_refactor.md)
-is the active atomic TensorCore `0.21.0`, literal-kernel, physical-quantity,
-compiled-Runtime, and Charge/Pulse scientific rebaseline. New code in that
-candidate must use literal `OffsetAxis`/`TensorKernel` geometry, direct
+is **Merged / Closed** through exact Review-cleared and fast-forwarded
+Candidate 2 `ba4f3408bf6b5cbd34d6736741026297b3e05c19`, tree
+`4e3b34be19841de016f7c99a668999d2d8dadcc9`. New code must use literal
+`OffsetAxis`/`TensorKernel` geometry, direct
 Multinomial probabilities, collapsed destination-rate Poisson branching, and
 package-owned `QuantityKernel` leaves. It must not restore
 `ProbabilityKernel`, Config reflection in Runtime, the retired effect tree,
 parametric pulse Configs, recovery-weighted afterpulse, or compatibility
-aliases. If the bytes are absent from `main`, they remain a fixed-commit
-candidate; if present unchanged on `main`, Review's fast-forward has completed
-and final Design acceptance still depends on the Maintenance 12 work order and
-index recording **Merged / Closed**.
+aliases. Immutable Candidate 1 is
+`da33a7e7f12e07341c06d66a96cbfdfccae4ebd1`; Candidate 2 changes exactly the
+seven public leaf slot declarations and their all-seven immutability proof.
+The accepted evidence is CPU-only and makes no current accelerator claim.
 
 The `tensor-dslab` distribution spelling is accepted package metadata, not an
 installed, published, or released distribution claim. GPU residency

@@ -1,14 +1,57 @@
 # Maintenance 12 TensorCore 0.21 Kernel Geometry And Quantity Refactor
 
-Status: **Implementation candidate lifecycle active**. If these exact bytes are
-absent from `main`, they are under fixed-commit
-Implementation/Validation/Review gates. If present unchanged on `main`,
-Review's fast-forward has completed; final Design acceptance remains pending
-until this work order and the implementation index record
-**Merged / Closed**.
+Status: **Merged / Closed** through exact Review-cleared and fast-forwarded
+Candidate 2 `ba4f3408bf6b5cbd34d6736741026297b3e05c19`, tree
+`4e3b34be19841de016f7c99a668999d2d8dadcc9`. Immutable Candidate 1 remains
+`da33a7e7f12e07341c06d66a96cbfdfccae4ebd1`, tree
+`86cd7c6ac0bf3ba87cbddf42c2c8ca61a3bb26e8`. Exact Design authority is
+`a0c2182024792856b8d76966dd7a1bced89806ac`.
 
 Stable key:
 `TensorDSLab/maintenance-12-tensorcore-0-21-kernel-geometry-quantity-refactor`
+
+## Closeout Evidence
+
+Candidate 1 passed the complete package gate but Validation returned one
+frozen/slotted-value defect: all seven concrete physical leaves inherited a
+mutable instance dictionary. Candidate 2 is its exact direct child and changes
+only:
+
+```text
+tensor_dslab/readout/charge/kernel.py
+tensor_dslab/readout/pure_waveform/kernel.py
+tests/test_kernel_geometry_and_quantity.py
+```
+
+The delta is `31` insertions / zero deletions. It adds `__slots__ = ()` to all
+seven leaves and an all-seven proof that each has no `__dict__` and rejects
+arbitrary assignment. Constructor signatures and exact `31/6/25/8/3` facade
+sequences remain unchanged.
+
+Independent Review cleared the exact candidate with:
+
+- focused source/archive suites at `81/81/0` each;
+- full TensorDSLab source/archive suites at `383/380/3` each;
+- TensorCore source/archive suites at `88/86/2` each;
+- Pyright `1.1.411` at zero diagnostics and the exact dependency negative
+  fixture at `82` intended diagnostics;
+- all six required high-risk mutants rejected;
+- isolated wheel import, truth-only simulation, demos, both notebooks,
+  source/artifact equality, protected-byte, privacy, scope, link, fence, and
+  hygiene gates clear;
+- Candidate 2 wheel `52723` bytes, SHA-256
+  `e51e4662b39485bd0026322934f39fd48f03d41c92287e0bbc1aaa537ec8af5a`;
+  and
+- Candidate 2 sdist `850208` bytes, SHA-256
+  `5d3d047d5aac5185d06898546f3cf2e62860d4537a8405db69684d50cf7615a0`.
+
+The accepted environment is macOS `15.7.4` arm64, CPython `3.14.6`, PyTorch
+`2.13.0` eager CPU, NumPy `2.5.1`, and Pint `0.25.3`. Three TensorDSLab and two
+TensorCore unavailable-CUDA skips remain explicit. No current integrated CUDA,
+accelerator-support, performance, compatibility, release, deployment,
+publication, production-readiness, or push claim follows. This closeout
+changes only the sixteen authorized current documentation records and makes no
+recursive closeout artifact or self-hash claim.
 
 ## Purpose
 
@@ -100,9 +143,9 @@ release, floating Git dependency, superseded implementation candidate
 difference stops the affected work and returns to both package Design
 authorities.
 
-## Exact Current Baseline
+## Exact Pre-Maintenance Baseline
 
-The operative TensorDSLab baseline is:
+The governed pre-Maintenance TensorDSLab baseline was:
 
 ```text
 branch:
@@ -126,8 +169,8 @@ TensorCore:
     ed17f4b637258f0a7f4544f235648b747f17fa44
 ```
 
-Maintenance 11 is Merged / Closed at this exact commit. It is the current
-scientific and addressed-Distribution baseline.
+Maintenance 11 is Merged / Closed at this exact historical commit. Maintenance
+12 supersedes its changed scientific and addressed-Distribution boundaries.
 
 The exact selected TensorCore dependency is:
 
@@ -1574,8 +1617,8 @@ promise for:
 - RNG stream numbers;
 - address schemas;
 - completed stochastic outputs;
-- current afterpulse occurrence/recovery law;
-- current analytic pulse models;
+- retired pre-Maintenance afterpulse occurrence/recovery law;
+- retired pre-Maintenance analytic pulse models;
 - raw reflection, pickle, or qualified-name provenance.
 
 It must preserve unchanged product field/collection contracts and explicitly

@@ -5,10 +5,10 @@ model. The normative package contract is the
 [rebuild architecture](../architecture/rebuild.md), and deliberate comparison
 changes are classified in [parity](../parity.md).
 
-When these bytes are absent from `main`, they describe a fixed-commit
-candidate. If present unchanged on `main`, Review's fast-forward has completed;
-final Design acceptance remains pending until the Maintenance 12 work order
-and implementation index record **Merged / Closed**.
+Maintenance 12 is **Merged / Closed** through exact Review-cleared and
+fast-forwarded Candidate 2
+`ba4f3408bf6b5cbd34d6736741026297b3e05c19`. Its evidence is CPU-only and
+makes no current accelerator or calibration claim.
 
 ## The Short Version
 
@@ -104,7 +104,7 @@ The Charge producer tracks:
 - S1, the sum of deposited PE-equivalent charge; and
 - S2, the sum of squared deposited charge.
 
-For the active Maintenance 12 full-charge branching law, every retained child
+For the current Maintenance 12 full-charge branching law, every retained child
 adds one to all three ledgers. This equality is deliberate. S1 and S2 remain
 separate because later smearing consumes both and because a future separately
 authorized scientific model could introduce non-unit deposits.

@@ -366,10 +366,14 @@ skips are explicit: no current integrated CUDA, accelerator-support,
 performance, release, deployment, compatibility, publication, or
 production-readiness claim follows.
 
-Maintenance 12 TensorCore 0.21 Kernel Geometry And Quantity Refactor is the
-active fixed-commit package gate under
+Maintenance 12 TensorCore 0.21 Kernel Geometry And Quantity Refactor is
+**Merged / Closed** under
 `docs/implementation/maintenance_12_tensorcore_0_21_kernel_geometry_quantity_refactor.md`.
-It selects exact published TensorCore `0.21.0` commit
+Its exact Review-cleared and fast-forwarded Candidate 2 is
+`ba4f3408bf6b5cbd34d6736741026297b3e05c19`, tree
+`4e3b34be19841de016f7c99a668999d2d8dadcc9`; immutable Candidate 1 remains
+`da33a7e7f12e07341c06d66a96cbfdfccae4ebd1`. It selects exact published
+TensorCore `0.21.0` commit
 `78d0891bf6c0fefbcad4abe09980867c54202a9e` and atomically replaces
 `ProbabilityKernel`, parametric Charge/Pulse Config records, and the nested
 Charge-effect tree with literal `OffsetAxis`/`TensorKernel` geometry,
@@ -378,13 +382,13 @@ Multinomial timing allocation, collapsed-rate Poisson branching, and literal
 Pulse convolution. It also moves `common/axes.py` to `common/axis.py` without
 a shim and rebaselines the eight active private RNG roles.
 
-The Maintenance 12 bytes use three-state lifecycle wording. When they are
-absent from `main`, they are a feature-branch candidate under fixed-commit
-gates. If they appear unchanged on `main`, Review's fast-forward has completed,
-but final Design acceptance remains pending until the work order and
-implementation index say **Merged / Closed**. The candidate is CPU-qualified
-only and makes no accelerator, compatibility, release, deployment, or
-production-readiness claim.
+Candidate 2 adds only the seven-leaf frozen/slotted proof and corresponding
+empty slots to Candidate 1. Complete source/archive evidence passed at
+`383/380/3`; TensorCore passed at `88/86/2`; Pyright was clean; and the exact
+dependency negative fixture retained `82` intended diagnostics. The
+unavailable-CUDA skips are explicit: no current integrated CUDA,
+accelerator-support, performance, release, deployment, compatibility,
+publication, or production-readiness claim follows.
 
 The first Stage 8 real-CUDA attempt correctly stopped before any accepted
 measurement when its protected-suite gate over-applied those macOS literals to
@@ -414,7 +418,7 @@ The checkout root is the project folder. The `tensor_dslab/` directory is the
 Python import package. Do not create a
 flat TitleCase Python package that imports as `TensorDSLab`.
 
-The Maintenance 12 target uses this product-centered readout tree:
+The closed Maintenance 12 package uses this product-centered readout tree:
 
 ```text
 tensor_dslab/
@@ -582,7 +586,7 @@ intact to
 `readout/charge/runtime/effects/counts.py`; it does not change the historical
 Maintenance 2 record or any RNG behavior.
 
-The active Maintenance 12 Charge configuration uses literal
+The current Maintenance 12 Charge configuration uses literal
 `DirectCrosstalk`, `DelayedCrosstalk`, and `Afterpulse` quantity kernels.
 Direct sample offsets are nonnegative; delayed and afterpulse sample offsets
 are strictly positive. Each mechanism maps one immutable generation frontier

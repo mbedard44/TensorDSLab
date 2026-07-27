@@ -1,23 +1,22 @@
 # Proposed Kernel Geometry And Quantity Architecture
 
 Status: **Architecture selected / TensorCore 0.21.0 Stage 29 published /
-Maintenance 12 fixed-commit candidate lifecycle active**
+Maintenance 12 Merged / Closed**
 
 Stable planning key:
 `TensorDSLab/kernel-geometry-and-quantity-architecture`
 
 ## Purpose
 
-Define the future TensorCore and TensorDSLab ownership boundary for literal
+Record the selected TensorCore and TensorDSLab ownership boundary for literal
 N-dimensional physical kernels, Pint-aware tensor coefficients, profile-bound
 geometry, Runtime alignment, and a staged Charge/PureWaveform migration.
 
-This record is deliberately detailed enough to review class shape and
-scientific meaning before production work begins. It is not an implementation
-work order, dependency adoption, public compatibility promise, or permission
-to edit TensorCore. Exact production allowlists, dependency commits, API
-censuses, diagnostics, and candidate routes must be frozen by later
-package-owned work orders.
+This record preserves the class shape and scientific meaning reviewed before
+production work began. It is not an implementation work order, public
+compatibility promise, or permission to edit TensorCore. Exact implementation
+authority and closeout evidence belong to the linked Maintenance 12 work
+order.
 
 The selected direction follows:
 
@@ -34,10 +33,10 @@ The selected direction follows:
 
 ## Planning Baseline And Selected Publication
 
-The current TensorDSLab baseline remains exact:
+The pre-Maintenance 12 TensorDSLab baseline was:
 
 ```text
-TensorDSLab main/origin-main:
+pre-Maintenance TensorDSLab main/origin-main:
     8517f09d6ecdf72434626bce0524f9f032998fd8
 TensorDSLab tree:
     3506fbf92d79473a3431e390ba3518ad5f166414
@@ -60,10 +59,10 @@ package implementation anchor:
     78d0891bf6c0fefbcad4abe09980867c54202a9e
 ```
 
-TensorCore `0.21.0` supplies the final foundation described here. TensorDSLab
-production remains on its exact `0.19.0` pin until Maintenance 12 atomically
-closes its package-owned adoption and scientific rebaseline; publication of a
-dependency does not alter the current resolved package by itself.
+TensorCore `0.21.0` supplies the final foundation described here. Maintenance
+12 is now Merged / Closed through exact Candidate 2
+`ba4f3408bf6b5cbd34d6736741026297b3e05c19`; publication of the dependency
+alone did not perform that adoption.
 
 The package-owned Stage 29 lineage is:
 
@@ -83,28 +82,24 @@ exact parent / published 0.20.0:
 ```
 
 TensorDSLab Design independently confirmed the substantive Design contract and
-the exact published package bytes with zero findings. The publication does not
+the exact published package bytes with zero findings. The publication did not
 itself adopt a dependency or make a compatibility claim. The linked
-publication-bound Maintenance 12 work order separately owns TensorDSLab
+publication-bound Maintenance 12 work order separately owned TensorDSLab
 dispatch.
 
-The governed `main` production baseline remains authoritative while the
-Maintenance 12 bytes are absent from `main`:
+Before Maintenance 12, the governed production baseline had these historical
+properties:
 
-- `ProbabilityKernel` remains a current dependency surface;
-- afterpulse occurrence remains at-most-one per parent per generation;
-- afterpulse delay remains conditionally multinomial;
-- optional recovery weighting remains implemented;
-- the current parametric pulse Configs remain public;
-- `ds20k_veto()` remains the current no-argument provisional profile; and
-- `common/axes.py` remains the current module path.
+- `ProbabilityKernel` was a dependency surface;
+- afterpulse occurrence was at-most-one per parent per generation;
+- afterpulse delay was conditionally multinomial;
+- optional recovery weighting was implemented;
+- parametric pulse Configs were public;
+- `ds20k_veto()` was the no-argument provisional profile; and
+- `common/axes.py` was the live module path.
 
-If the Maintenance 12 bytes appear unchanged on `main`, Review's fast-forward
-has completed and the selected target is present, but final Design acceptance
-remains pending until the work order and implementation index record
-**Merged / Closed**.
-
-The target below must not be described as already implemented.
+Exact Candidate 2 now implements the selected target below on `main`. The
+accepted gate is CPU-only and makes no current accelerator claim.
 
 ## Architectural Outcome
 
@@ -515,10 +510,10 @@ Pulse:
     signed voltage response; no probability meaning
 ```
 
-The current `ProbabilityKernel` also flattens its complete tensor for one
-represented total and reverse suffix. For a `(channel, offset)` tensor that
-would incorrectly create one global channel-offset law rather than one offset
-law per channel.
+The pre-Maintenance `ProbabilityKernel` also flattened its complete tensor for
+one represented total and reverse suffix. For a `(channel, offset)` tensor
+that would incorrectly create one global channel-offset law rather than one
+offset law per channel.
 
 TensorCore does not replace `ProbabilityKernel` with another public parameter
 class in the first target. TensorDSLab selects one operation slab from its
@@ -1267,10 +1262,10 @@ The afterpulse change is not behavior-preserving.
 | RNG | occurrence and delay quanta | one addressed destination Poisson law |
 | tail/boundary | current conditional-law remainder and finite discard | finite represented in-window rate only |
 
-This is an intentional scientific divergence from:
+This selected an intentional scientific divergence from:
 
-- the current TensorDSLab at-most-one afterpulse law;
-- the current recovery-weighted Charge ledgers; and
+- the pre-Maintenance TensorDSLab at-most-one afterpulse law;
+- the pre-Maintenance recovery-weighted Charge ledgers; and
 - donor behavior wherever the donor models one exclusive afterpulse or
   recovery suppression.
 
@@ -1569,8 +1564,8 @@ Migrate:
 - flat `branching.py`; and
 - full-charge count/ledger identities.
 
-Retire the current at-most-one and recovery-weighted afterpulse behavior in
-this same exact scientific rebaseline.
+Retire the pre-Maintenance at-most-one and recovery-weighted afterpulse
+behavior in this same exact scientific rebaseline.
 
 ### Conservative allocation
 

@@ -7,8 +7,11 @@ accepts dense TensorDSLab truth photoelectrons, simulates the configured
 readout response, and returns exact typed products without asking ordinary
 collaborators to understand TensorCore internals.
 
-Maintenance 12 is the active package-owned rebaseline to exact TensorCore
-`0.21.0`. Its accepted direction is literal kernel geometry and quantities,
+Maintenance 12 is **Merged / Closed** through exact Review-cleared and
+fast-forwarded Candidate 2
+`ba4f3408bf6b5cbd34d6736741026297b3e05c19`, rebaselining the package to exact
+TensorCore `0.21.0`. Its accepted architecture is literal kernel geometry and
+quantities,
 profile-bound availability, compiled product Runtime state, direct
 Multinomial timing, collapsed-rate Poisson branching, full-charge Poisson
 afterpulse, and deterministic literal Pulse convolution. TensorDSLab retains
@@ -16,10 +19,7 @@ physical meaning, role/address policy, product relationships, and publication
 validation; TensorCore owns the generic axes, kernels, role resolution, and
 distributions.
 
-When the Maintenance 12 bytes are absent from `main`, they remain a
-fixed-commit candidate. If they are present unchanged on `main`, Review's
-fast-forward has completed, but final Design acceptance remains pending until
-the work order and implementation index record **Merged / Closed**.
+The accepted evidence is CPU-only and makes no current accelerator claim.
 
 The intended ecosystem flow is:
 

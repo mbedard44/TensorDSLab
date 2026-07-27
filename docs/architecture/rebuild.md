@@ -1,19 +1,17 @@
 # TensorDSLab Rebuild Architecture
 
 Status: accepted Design architecture for the TensorCore-based rebuild.
-Maintenance 12 is the active exact TensorCore `0.21.0` target: literal
+Maintenance 12 is **Merged / Closed** through exact Review-cleared and
+fast-forwarded Candidate 2
+`ba4f3408bf6b5cbd34d6736741026297b3e05c19`: literal
 `OffsetAxis`/`TensorKernel` geometry, TensorDSLab `QuantityKernel` leaves,
 direct Config-to-compiled-Runtime mapping, direct Multinomial timing,
 collapsed-rate Poisson branching, full-charge Poisson afterpulse, and literal
-Pulse convolution supersede the Maintenance 11 execution model on the
-candidate. The former Charge `runtime/effects/` tree and
+Pulse convolution supersede the Maintenance 11 execution model. The former
+Charge `runtime/effects/` tree and
 `ProbabilityKernel` consumption are retired without shims.
 
-If these bytes are absent from `main`, they are fixed-commit candidate
-architecture. If present unchanged on `main`, Review's fast-forward has
-completed and final Design acceptance remains pending until the Maintenance 12
-work order and implementation index say **Merged / Closed**. Current evidence
-is CPU-only.
+The accepted evidence is CPU-only and makes no current accelerator claim.
 
 The detailed Stage 3–Maintenance 11 sketches below remain historical design
 and evidence where Maintenance 12 changes their Config names, module paths,

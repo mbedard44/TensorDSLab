@@ -6,8 +6,11 @@ This page defines how the TensorDSLab rebuild uses TensorCore. Scientific
 readout behavior belongs in [`readout.md`](readout.md) and the complete rebuild
 contract in [`rebuild.md`](rebuild.md).
 
-Maintenance 12 is the active adoption target for exact published TensorCore
-`0.21.0` commit `78d0891bf6c0fefbcad4abe09980867c54202a9e`.
+Maintenance 12 is **Merged / Closed** through exact Review-cleared and
+fast-forwarded Candidate 2
+`ba4f3408bf6b5cbd34d6736741026297b3e05c19`, tree
+`4e3b34be19841de016f7c99a668999d2d8dadcc9`, adopting exact published
+TensorCore `0.21.0` commit `78d0891bf6c0fefbcad4abe09980867c54202a9e`.
 TensorDSLab consumes concrete compositional `OffsetAxis`, literal
 `TensorKernel`, direct-probability `MultinomialDistribution`, and the matching
 generic validation surface. It owns Pint-aware `QuantityKernel` snapshots and
@@ -15,10 +18,7 @@ physical semantic leaves, then resolves their named conditioning roles and
 materializes plain target-device tensors during preparation. Public kernels
 retain literal coefficient storage and are never expanded to product shape.
 
-These bytes are candidate architecture while absent from `main`. If present
-unchanged on `main`, Review's fast-forward has completed; final Design
-acceptance still requires **Merged / Closed** in the Maintenance 12 work order
-and index.
+The accepted evidence is CPU-only and makes no current accelerator claim.
 
 Closed Stage 3 through 6 evidence uses exact TensorCore `0.7.0` commit
 `b454d738f6385ce6489d85492a618a3dab139bb6`. Maintenance 2 installed exact

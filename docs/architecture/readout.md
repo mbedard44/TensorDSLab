@@ -11,7 +11,11 @@ citations live in
 [`rebuild.md`](rebuild.md). Donor comparison and intentional divergences live
 in [`../parity.md`](../parity.md).
 
-Maintenance 12 is the active exact TensorCore `0.21.0` target. It replaces the
+Maintenance 12 is **Merged / Closed** through exact Review-cleared and
+fast-forwarded Candidate 2
+`ba4f3408bf6b5cbd34d6736741026297b3e05c19`, tree
+`4e3b34be19841de016f7c99a668999d2d8dadcc9`, against exact TensorCore
+`0.21.0`. It replaces the
 effect-specific scalar Charge/Pulse Config graph with literal physical
 `QuantityKernel` leaves, compiles aligned coefficient tensors during complete
 request preparation, and executes direct Multinomial timing allocation,
@@ -20,10 +24,8 @@ The profile binds available sample/channel/example geometry explicitly, while
 product fields continue to reuse the exact source axes. `common/axis.py` is the
 sole live semantic-axis module; the former plural module has no shim.
 
-When these bytes are absent from `main`, they describe a fixed-commit
-candidate. If present unchanged on `main`, Review's fast-forward has completed;
-final Design acceptance remains pending unless the Maintenance 12 work order
-and index record **Merged / Closed**.
+The accepted evidence is CPU-only. No current accelerator, compatibility,
+release, deployment, or production-readiness claim follows.
 
 Architecture pages do not themselves dispatch production. Stages 3 through 6
 are Merged / Closed. Stage 6 implemented the complete private Charge slice at
@@ -776,7 +778,7 @@ construct no elements, addresses, kernels, or distributions and request no
 words.
 
 That paragraph and the following Maintenance 11 distribution mapping are
-historical baseline evidence. The active Maintenance 12 target at the top of
+historical baseline evidence. The closed Maintenance 12 contract at the top of
 this page supersedes its `ProbabilityKernel`, afterpulse, key/address, and
 Pulse details.
 

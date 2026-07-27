@@ -30,10 +30,10 @@ field, storage, autograd, analog, and digitization relationships. The
 provisional `ds20k_veto(...)` values remain illustrative rather than an
 approved calibration.
 
-This section describes candidate bytes while absent from `main`. If present
-unchanged on `main`, Review's fast-forward has completed; final Design
-acceptance remains pending until the Maintenance 12 work order and index say
-**Merged / Closed**. Evidence is CPU-only.
+Maintenance 12 is **Merged / Closed** through exact Review-cleared and
+fast-forwarded Candidate 2
+`ba4f3408bf6b5cbd34d6736741026297b3e05c19`. Evidence is CPU-only and makes
+no current accelerator or broad donor-parity claim.
 
 The bounded Stage 6 evidence is exact implementation candidate
 `fb8d15e8658d6f72dfc1bbfbc2bf6a14a6b39b58` and Review closeout
@@ -104,15 +104,15 @@ not mean that TensorDSLab should reproduce IV-DSLab package structure, global
 state, RNG streams, sparse PE-row growth, condition-database loading, fixed
 array rank, or incidental implementation defects.
 
-The semantic-root architecture was introduced against TensorCore `0.7` and is
-installed in the current production baseline against exact TensorCore
-`0.13.0` after Maintenance 5. Maintenance 6 retains those compact-axis roots
-and changes only the physical Config representation and bounded private
-admission ownership without changing scientific behavior. The architecture is governed by
+The semantic-root architecture was introduced against TensorCore `0.7` and
+used exact TensorCore `0.13.0` at the historical Maintenance 5 baseline.
+Maintenance 12 now adopts exact TensorCore `0.21.0` while retaining the
+semantic-root boundary and deliberately changing the physical Config and
+scientific execution surfaces recorded above. The architecture is governed by
 [Rebuild Architecture](architecture/rebuild.md),
 [Post-Binned Readout Architecture](architecture/readout.md), and
-[TensorCore Integration](architecture/tensors.md). The fixed-`K` section of
-the rebuild architecture is the sole active correlated-avalanche baseline.
+[TensorCore Integration](architecture/tensors.md). The Maintenance 12 section
+of the rebuild architecture is the sole current correlated-avalanche baseline.
 TensorDSLab retains no competing avalanche-algorithm architecture page. This
 page classifies donor relationships; it does not independently dispatch
 implementation or override an architecture contract.

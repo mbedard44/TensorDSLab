@@ -7,7 +7,10 @@ callers who deliberately leave the public API.
 
 ## Current State
 
-Maintenance 12 is the active fixed-commit validation gate. It requires exact
+Maintenance 12 is **Merged / Closed** through exact Review-cleared and
+fast-forwarded Candidate 2
+`ba4f3408bf6b5cbd34d6736741026297b3e05c19`, tree
+`4e3b34be19841de016f7c99a668999d2d8dadcc9`. Its gate covered exact
 TensorCore `0.21.0` source/archive identity, public kernel/facade/static typing,
 alignment and conditioning, independent scientific oracles for timing,
 dark/smearing, three branching mechanisms, literal Pulse convolution, compact
@@ -16,11 +19,10 @@ scope/protected-byte hygiene. High-risk mutants include half-rate afterpulse,
 same-round frontier feedback, timing normalization, out-of-window branching,
 double pulse polarity, and omitted coordinate permutation.
 
-If the bytes are absent from `main`, they remain a fixed-commit candidate. If
-present unchanged on `main`, Review's fast-forward has completed; final Design
-acceptance remains pending until Maintenance 12 is marked **Merged / Closed**
-in its work order and the implementation index. The gate is CPU-only and makes
-no current accelerator claim.
+Candidate 2's source/archive suites passed `383/380/3`; TensorCore passed
+`88/86/2`; Pyright was clean; and the dependency negative fixture retained
+exactly `82` intended diagnostics. The gate is CPU-only and makes no current
+accelerator claim.
 
 Stage 2 is Merged / Closed at
 `e8c62caf001ee7f58f766d7234747ed1d9a21e35`. Maintenance 1 is Merged / Closed

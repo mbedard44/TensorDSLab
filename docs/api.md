@@ -7,9 +7,12 @@ types, Config types, semantic axes, physical-quantity helpers, and
 Private product Runtime actions, validators, producers, requirements, and RNG
 role keys are implementation details.
 
-## Literal Physical Kernel Candidate
+## Literal Physical Kernel API
 
-Maintenance 12 is the active fixed-commit API rebaseline to exact TensorCore
+Maintenance 12 is **Merged / Closed** through exact Review-cleared and
+fast-forwarded Candidate 2
+`ba4f3408bf6b5cbd34d6736741026297b3e05c19`, tree
+`4e3b34be19841de016f7c99a668999d2d8dadcc9`, against exact TensorCore
 `0.21.0`. It adds public `QuantityKernel`, `DarkCountRate`, `TimingJitter`,
 `DirectCrosstalk`, `DelayedCrosstalk`, `Afterpulse`, `SmearingWidth`, and
 `Pulse` leaves. `ChargeConfig` accepts those literal physical kernels directly;
@@ -29,10 +32,8 @@ config = ds20k_veto(
 
 Omitted optional axes remain valid only when no profile kernel is conditioned
 on that role. The profile is still illustrative, not an approved run
-calibration. These bytes are candidate documentation while absent from
-`main`; if present unchanged on `main`, Review's fast-forward has completed,
-but final Design acceptance remains pending until the Maintenance 12 work
-order and index say **Merged / Closed**.
+calibration. The accepted package evidence is CPU-only and makes no current
+accelerator, calibration, compatibility, or release claim.
 
 ## Addressed Random Execution
 
