@@ -157,10 +157,11 @@ authorized.
 is **Merged / Closed** through exact Review-cleared target
 `2a04942229ab06d2cfc17ab7a5fd09afaf4e3c58`. It adds a provisional
 `ds20k_veto()` Config profile and executable CPU script/notebook demonstrations
-of manual versus profile construction and
-`PureWaveform + NoiseWaveform = AnalogWaveform -> DigitizedWaveform`. The
-profile is illustrative rather than calibrated, and the accepted local
-evidence makes no accelerator or push claim.
+of the `PureWaveform + NoiseWaveform = AnalogWaveform ->
+DigitizedWaveform` chain. At that fixed historical target, the notebook also
+compared manual and profile construction; the current notebook is a shorter
+profile-based quickstart. The profile is illustrative rather than calibrated,
+and the accepted local evidence makes no accelerator or push claim.
 
 [Maintenance 11](docs/implementation/maintenance_11_tensorcore_0_19_addressed_distributions.md)
 is **Merged / Closed** through exact Review-cleared and fast-forwarded
@@ -173,11 +174,7 @@ position-plus-method RNG calls with public addressed `RngElements`,
 public TensorDSLab facades and downstream physical laws. That statement
 describes the closed Maintenance 11 baseline; closed Maintenance 12 removes
 `ProbabilityKernel` in favor of direct distributions over literal
-`TensorKernel` geometry. The CPU-only
-[addressed-randomness notebook](demos/random.ipynb) shows exact address
-metadata, raw words, one delayed-crosstalk collapsed-rate Poisson draw,
-repeatability, chunk invariance, and global Torch RNG isolation. Its private
-role-key import is explicitly unsupported.
+`TensorKernel` geometry.
 
 Complete source/archive evidence passed at `232/221/11`; the `11`
 TensorDSLab and two TensorCore unavailable-CUDA skips authorize no integrated

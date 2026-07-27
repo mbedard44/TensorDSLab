@@ -25,7 +25,7 @@ from tensor_dslab.readout.profiles import ds20k_veto
 
 
 READOUT_NOTEBOOK_SHA256 = (
-    "c37e089c336d5c7254e64a12f8d920bb9fa0eea013d91ef77cfd4bbb83c301f5"
+    "f04eb4b801595fe5874ada2eaf777b38e8ed89cb8cd7232e78b0c4bee8ee6e33"
 )
 
 
@@ -171,20 +171,25 @@ class ReadoutProfileContractTest(unittest.TestCase):
             namespace = runpy.run_path("demos/readout.py", run_name="not_main")
             namespace["main"]()
 
-    def test_notebook_builds_an_independent_equivalent_config(self) -> None:
+    def test_notebook_is_a_profile_only_quickstart(self) -> None:
         notebook = nbformat.read("demos/readout.ipynb", as_version=4)
         code = {cell.id: cell.source for cell in notebook.cells if cell.cell_type == "code"}
-        self.assertEqual(code["config"].count("ds20k_veto("), 1)
-        for constructor in (
-            "ReadoutConfig(",
-            "ChargeConfig(",
-            "DarkCountRate(",
-            "Pulse(",
-            "PureWaveformConfig(",
-            "PsdNoiseConfig(",
-            "DigitizedWaveformConfig(",
+        markdown = "\n".join(
+            cell.source for cell in notebook.cells if cell.cell_type == "markdown"
+        )
+        for phrase in (
+            "TensorDSLab readout quickstart",
+            "Define the geometry and input photoelectrons",
+            "Load a readout profile",
+            "Simulate the requested products",
+            "Inspect the product relationships",
+            "Compare the waveform stages",
         ):
-            self.assertIn(constructor, code["config"])
+            self.assertIn(phrase, markdown)
+        self.assertNotIn("misleading extra legend", markdown)
+        self.assertEqual(code["config"].count("ds20k_veto("), 1)
+        self.assertNotIn("manual_config", code["config"])
+        self.assertNotIn("ReadoutConfig(", code["config"])
         namespace: dict[str, object] = {}
         with mock.patch("builtins.print"):
             for cell_id in ("imports", "source", "config"):
@@ -192,27 +197,12 @@ class ReadoutProfileContractTest(unittest.TestCase):
                     compile(code[cell_id], f"<{cell_id}>", "exec"),
                     namespace,
                 )
-        profile = cast(ReadoutConfig, namespace["profile_config"])
-        manual = cast(ReadoutConfig, namespace["manual_config"])
-        assert profile.pure_waveform is not None
-        assert manual.pure_waveform is not None
-        assert profile.charge is not None
-        assert manual.charge is not None
-        assert profile.charge.dark_counts is not None
-        assert manual.charge.dark_counts is not None
-        self.assertIsNot(profile, manual)
-        self.assertTrue(
-            torch.equal(
-                profile.pure_waveform.pulse.tensor,
-                manual.pure_waveform.pulse.tensor,
-            )
-        )
-        self.assertTrue(
-            torch.equal(
-                profile.charge.dark_counts.tensor,
-                manual.charge.dark_counts.tensor,
-            )
-        )
+        config = cast(ReadoutConfig, namespace["config"])
+        assert config.pure_waveform is not None
+        assert config.charge is not None
+        assert config.charge.dark_counts is not None
+        self.assertEqual(config.pure_waveform.pulse.operation_axes[0].size, 1011)
+        self.assertEqual(float(config.charge.dark_counts.tensor), 100_000.0)
 
     def test_notebook_is_executed_privacy_safe_and_timestamp_free(self) -> None:
         notebook = nbformat.read("demos/readout.ipynb", as_version=4)

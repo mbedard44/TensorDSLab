@@ -148,11 +148,9 @@ Candidate 2 `a527042701ac56f368f26248381244fdfcfb7fd3`, tree
 address owner, migrates stochastic effects to public Distribution and
 ProbabilityKernel objects, retains the afterpulse stream with separate
 occurrence/delay quanta, and rebaselines crosstalk through exact collapsed-rate
-Poisson superposition. The CPU-only `demos/random.ipynb` makes addresses, raw
-words, repeatability, chunk invariance, and global-RNG isolation inspectable
-without creating a public TensorDSLab RNG surface. No integrated CUDA,
-performance, compatibility, publication, release, deployment, calibration, or
-production-readiness claim follows.
+Poisson superposition. No integrated CUDA, performance, compatibility,
+publication, release, deployment, calibration, or production-readiness claim
+follows.
 
 [Stage 4](implementation/stage_4_deterministic_waveform_products.md) is Merged /
 Closed through exact implementation candidate

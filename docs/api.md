@@ -50,13 +50,6 @@ removes `ProbabilityKernel` and uses direct addressed distribution laws over
 literal `TensorKernel` geometry. Role keys and address construction remain
 private package policy, not caller customization surfaces.
 
-The CPU-only [addressed-randomness notebook](../demos/random.ipynb) is an
-educational inspection of the public TensorCore address model and the
-TensorDSLab delayed-crosstalk mapping. Its private role-key import is clearly
-marked unsupported; applications must not depend on that module or duplicate
-its numeric values. The notebook does not add a TensorDSLab RNG facade,
-calibration, CUDA, performance, release, or deployment contract.
-
 ## Provisional DS20k Veto Profile
 
 Maintenance 9 is **Merged / Closed** through exact Review-cleared target
@@ -119,12 +112,12 @@ def run_readout(photoelectrons: Photoelectrons):
 
 The executable [readout demonstration](../demos/readout.py) and
 [notebook](../demos/readout.ipynb) construct their `Photoelectrons` input and
-sampling axes separately, compare manual and profile Config construction, and
-retain only the requested products. They use a `2 ns`, `5000`-sample CPU grid
-with explicit `1`, `2`, `3`, and `4` PE source deposits at `200`, `2600`,
-`5000`, and `7400 ns`. The seeded readout may add separate dark-count Charge
-events. The source pattern, labels, grid, seed, plot selection, and requested
-products are demonstration choices, not hidden profile state.
+sampling axes separately, load `ds20k_veto(...)`, and retain only the requested
+products. They use a `2 ns`, `5000`-sample CPU grid with explicit `1`, `2`, `3`,
+and `4` PE source deposits at `200`, `2600`, `5000`, and `7400 ns`. The seeded
+readout may add separate dark-count Charge events. The source pattern, labels,
+grid, seed, plot selection, and requested products are demonstration choices,
+not hidden profile state.
 
 Create the ordinary project/demo environment from the repository root before
 running either form:
