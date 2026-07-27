@@ -1,6 +1,11 @@
 # Maintenance 14 Test Suite Curation
 
-Status: **Design-complete; implementation pending**.
+Status: **Implementation Candidate 1; fixed-commit Validation pending**.
+
+This status describes the feature-branch state while the candidate is absent
+from local `main`. If the exact candidate tree later appears unchanged on
+local `main` through the authorized same-byte workflow, that presence records
+Review's clean fast-forward and this maintenance is **Merged / Closed**.
 
 Stable key:
 `TensorDSLab/maintenance-14-test-suite-curation`
@@ -89,6 +94,16 @@ Pyright reported zero diagnostics. The exact dependency negative fixture
 retained `82` intended diagnostics. Maintenance 13 also passed its focused
 source/archive, artifact, isolated-wheel, environment-script, installed import,
 and fresh real Conda-environment gates.
+
+Candidate 1 preserves the eighteen noise methods with exact class/method
+identities and byte-identical method bodies in the required `7 / 4 / 4 / 3`
+partition. Its focused source gate passed `79` tests: `78` passed and the one
+established CUDA case was skipped because CUDA was unavailable. Pyright
+`1.1.411` reported zero errors, warnings, or informations. The private support
+module defines the twenty shared helpers/oracles exactly once, owns no
+`TestCase` and no `test*` callable, and the generated kernel/Runtime families
+and no-op assertion are absent. Complete source/archive and negative-typing
+clearance remain Validation-owned.
 
 Those results are baseline evidence, not a frozen test-count contract.
 Maintenance 14 deliberately removes seventy-eight redundant discovered

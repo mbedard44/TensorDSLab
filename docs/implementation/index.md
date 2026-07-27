@@ -308,7 +308,12 @@ no accelerator claim follows.
 
 ### [Maintenance 14: Test Suite Curation](maintenance_14_test_suite_curation.md)
 
-Status: **Design-complete; implementation pending**.
+Status: **Implementation Candidate 1; fixed-commit Validation pending**.
+
+This is the feature-branch state while the candidate is absent from local
+`main`. If the exact candidate tree later appears unchanged on local `main`
+through the authorized same-byte workflow, that presence records Review's
+clean fast-forward and Maintenance 14 is **Merged / Closed**.
 
 The draft starts from exact closed Maintenance 13
 `af23b129de41601f825f08a50f7783980e6e9551`, tree
@@ -329,6 +334,14 @@ and historical records are protected. The exact candidate allowlist is ten
 paths. Final Validation runs focused and complete source/archive/typing gates
 but does not rebuild unchanged artifacts, recreate Conda, or execute notebooks.
 CUDA remains deferred and unclaimed.
+
+Candidate 1 retains all eighteen noise methods with exact identities and
+byte-identical method bodies in the required `7 / 4 / 4 / 3` partition. The
+focused source gate passed `79/78/1`, with the sole skip being the established
+unavailable-CUDA case, and Pyright `1.1.411` reported zero diagnostics. The
+private support owner contains twenty unique helpers/oracles and no test case
+or `test*` callable. Complete source/archive and negative-typing clearance
+remain Validation-owned.
 
 ### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
 

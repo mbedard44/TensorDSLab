@@ -137,6 +137,11 @@ class QuantityKernelContractTest(unittest.TestCase):
                 operation_axes=operation_axes,
             )
             with self.subTest(leaf=leaf.__name__):
+                self.assertIs(type(kernel), leaf)
+                self.assertEqual(kernel.conditioning_axes, ())
+                self.assertEqual(kernel.operation_axes, operation_axes)
+                self.assertEqual(kernel.tensor.dtype, torch.float64)
+                self.assertFalse(kernel.tensor.requires_grad)
                 self.assertFalse(hasattr(kernel, "__dict__"))
                 with self.assertRaises((AttributeError, TypeError)):
                     setattr(kernel, "unexpected_attribute", 1)
@@ -361,34 +366,3 @@ _LEAF_CASES = (
         (OffsetAxis(relative_to=SampleAxis, offsets=(0,)),),
     ),
 )
-
-
-for _case_index in range(70):
-    def _construction_case(
-        self: QuantityKernelContractTest,
-        case_index: int = _case_index,
-    ) -> None:
-        leaf, unit, raw, operation_axes = _LEAF_CASES[
-            case_index % len(_LEAF_CASES)
-        ]
-        magnitude = (
-            quantity(float(case_index + 1), unit)
-            if not operation_axes
-            else quantities(raw, unit)
-        )
-        kernel = leaf(
-            quantity=magnitude,
-            conditioning_axes=(),
-            operation_axes=operation_axes,
-        )
-        self.assertIs(type(kernel), leaf)
-        self.assertEqual(kernel.conditioning_axes, ())
-        self.assertEqual(kernel.operation_axes, operation_axes)
-        self.assertEqual(kernel.tensor.dtype, torch.float64)
-        self.assertFalse(kernel.tensor.requires_grad)
-
-    setattr(
-        QuantityKernelContractTest,
-        f"test_quantity_kernel_construction_{_case_index:02d}",
-        _construction_case,
-    )

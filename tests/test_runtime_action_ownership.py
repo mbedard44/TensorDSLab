@@ -96,13 +96,8 @@ class RuntimeOwnershipContractTest(unittest.TestCase):
             self.assertFalse(any(name.startswith("produce") for name in names))
             self.assertFalse(any(name.startswith("validate") for name in names))
 
-
-for _index in range(10):
-    def _repeat(self: RuntimeOwnershipContractTest, index: int = _index) -> None:
+    def test_compiled_runtime_contains_expected_execution_facts(self) -> None:
         _, _, runtime = self._prepared()
         assert runtime.charge is not None and runtime.pure_waveform is not None
         self.assertEqual(runtime.charge.correlated_avalanche_generations, 0)
         self.assertEqual(runtime.pure_waveform.sample_offsets, (0,))
-        self.assertEqual(index, index)
-
-    setattr(RuntimeOwnershipContractTest, f"test_compiled_runtime_{_index:02d}", _repeat)
