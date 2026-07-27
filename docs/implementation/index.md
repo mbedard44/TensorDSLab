@@ -277,6 +277,32 @@ sdist is `850208` bytes with SHA-256
 Evidence is CPU-only; no current accelerator, compatibility, release,
 deployment, publication, or push claim follows.
 
+### [Maintenance 13: Runtime Hygiene And Environment Reproducibility](maintenance_13_runtime_hygiene_and_environment_reproducibility.md)
+
+Status: **Design-complete; implementation pending**.
+
+The draft is bound to exact published TensorDSLab main
+`c8de1528d1ed57d3e86a9c37d1ad307127a23feb`, tree
+`1d58e398428f35600e9bc582366c846c90d5f47c`, and the unchanged exact
+TensorCore `0.21.0` dependency
+`78d0891bf6c0fefbcad4abe09980867c54202a9e`.
+
+The proposed maintenance removes one unused Charge count function/constant,
+extracts the duplicated Charge/PureWaveform conditioning alignment into one
+private `align_quantity_kernel(...)` Runtime action, replaces the brittle
+exact-`59` production-module assertion with required/retired path invariants,
+and repairs `create_environment.sh` so a fresh noneditable environment proves
+the current geometry-requiring `ds20k_veto(...)` signature, TensorCore
+`0.21.0` at the exact pinned Git commit, and installed-site-packages import
+without project-root shadowing.
+
+It changes no public facade, Config, Runtime record, product, scientific law,
+RNG address/word/result, dependency, version, or supported device boundary.
+One real Conda reconstruction is reserved for the final immutable Validation
+candidate; focused fake-Conda evidence covers ordinary corrections. The
+broader tests-only consolidation is explicitly deferred to a separate
+Maintenance 14 work order, and living-documentation curation remains separate.
+
 ### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
 
 Status: **Architecture selected / TensorCore Stage 29 published /
