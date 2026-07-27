@@ -1,7 +1,7 @@
 # Maintenance 15 Tensor-Native Config Punchcard Architecture
 
-Status: **Architecture selected; TensorCore ownership consultation pending;
-Implementation undispatched**.
+Status: **Architecture selected; TensorCore consultation complete;
+TensorDSLab-local `TensorConfig` selected; Implementation undispatched**.
 
 Stable key:
 `TensorDSLab/maintenance-15-tensor-native-config-punchcard-architecture`
@@ -50,11 +50,11 @@ readout = Readout.create(
 removal without an alias.
 
 This document is the detailed TensorDSLab architecture selection. It is not
-production dispatch. The proposed generic TensorCore `TensorConfig` root
-requires an independent TensorCore Design disposition before TensorDSLab may
-depend on it. If TensorCore does not accept that generic root, TensorDSLab owns
-an equivalent package-local structural root and the remaining architecture is
-unchanged.
+production dispatch. TensorCore Design independently reviewed the generic
+`TensorConfig` ownership question against the exact initial architecture
+commit and declined current TensorCore ownership. TensorDSLab therefore owns
+`TensorConfig` locally as the structural root of its punchcard model. No
+TensorCore change or new dependency publication is required.
 
 ## Governing Standards
 
@@ -282,9 +282,40 @@ generic tensor validation and relationship requirements
 TensorDSLab must not fork, duplicate, wrap for compatibility, or reinterpret
 those generic contracts.
 
-### Proposed generic `TensorConfig`
+### TensorCore disposition on `TensorConfig`
 
-TensorCore Design is asked to consider one generic representation root:
+TensorCore Design reviewed exact initial TensorDSLab architecture commit
+`cb24c9b6ed187a2b77ec4648c3e554d50a54027f`, tree
+`6d2abe61cfbe4d9c2af5707f4ed463269fd82320`, and **declined current
+TensorCore ownership**.
+
+The package-owned reasons are:
+
+- TensorCore's living requirements explicitly exclude a generic
+  configuration root;
+- axes plus a target device describe future execution intent rather than a
+  realized generic tensor representation;
+- TensorCore has no package operation consuming that state;
+- neither TensorML nor TensorG4DS currently demonstrates the same exact state,
+  invariants, lookup needs, and package-neutral operation; and
+- a generic superclass permitting arbitrary downstream Config fields would
+  enforce little beyond shared dataclass mechanics while blurring
+  TensorCore's semantic representation boundary.
+
+This is an ownership decision, not a contradiction in the punchcard
+architecture. TensorCore does not reserve or export `TensorConfig`. No
+TensorCore `0.22` stage or publication is required.
+
+TensorCore may reconsider only after a genuine second package independently
+demonstrates the same exact state and invariants plus a package-neutral
+operation consuming them. Such a future review must first determine whether
+the concept is more precisely a tensor domain or tensor target rather than a
+general Config. TensorDSLab does not anticipate or depend on that possibility.
+
+### TensorDSLab-local `TensorConfig`
+
+TensorDSLab owns the structural representation root in
+`tensor_dslab.common.config`:
 
 ```python
 @dataclass(
@@ -306,51 +337,53 @@ class TensorConfig[
         """Enforce the concrete semantic Config contract."""
 ```
 
-The exact TensorCore contract, if accepted, may own only:
+The exact TensorDSLab-local root owns only:
 
-- admission of one exact `torch.device`;
+- admission and retention of one exact `torch.device`; device availability is
+  not checked;
 - one exact ordered tuple of semantic `TensorAxis` values;
-- generic axis tuple validation;
+- exact constructed-axis admission;
+- exact-axis-type uniqueness within one completed product domain;
+- preservation of the exact supplied axis objects and tuple;
 - frozen, slotted, identity-equal, explicitly unhashable value semantics;
-- derived `rank`, `shape`, and `element_count` properties if generically
-  justified;
-- exact semantic-axis lookup such as `dimension_of(...)` if generically
-  justified; and
-- one protected semantic `_require()` hook.
+- zero-rank and zero-extent domain admission;
+- derived `rank`, `shape`, and `element_count`;
+- strict `axis_at(...)`, `dimension_of(...)`, and exact-type `axis(...)`
+  lookup;
+- Python-integer element-count multiplication, where a scalar domain has one
+  element and any zero extent makes the count zero;
+- final universal root validation followed by one protected semantic
+  `_require()` hook; and
+- no tensor allocation, transfer, host extraction, or device-availability
+  effect.
 
-TensorCore must not own:
+`TensorConfig` owns no:
 
 - Pint, physical units, or quantity conversion;
-- TensorDSLab products, kernels, Config leaves, or profiles;
+- output dtype;
+- concrete Product, kernel, Config-leaf, or profile meaning;
 - Config preparation or materialization;
-- output dtype policy;
 - `create()`, `prepare()`, `produce()`, or `validate()`;
 - Config iteration, reflection, registries, or factories;
 - readout product selection or closure;
 - scientific validation;
 - detector axes, geometry, boundary policy, or RNG roles;
 - Runtime or a Runtime replacement; or
-- TensorDSLab artifact and IO policy.
+- artifact or IO policy.
 
-Symmetry with `TensorField` and `TensorKernel` is not sufficient authority.
-TensorCore must independently determine whether immutable tensor-domain intent
-over exact axes and one target device has a real generic second consumer.
+The local name is appropriate because it has one concrete meaning inside
+TensorDSLab: immutable intent for a TensorDSLab Product punchcard. It is not a
+compatibility wrapper, provisional TensorCore import, or claim of ecosystem
+generality.
 
-### Fallback if TensorCore declines
-
-If TensorCore does not accept `TensorConfig`, TensorDSLab owns the exact
-structural root locally. TensorDSLab does not block the remaining architecture,
-fork TensorCore, or add a placeholder dependency module. The future work order
-must bind exactly one accepted owner before production dispatch.
-
-No TensorDSLab production work may import a provisional or unaccepted
-TensorCore Config root.
+No TensorDSLab production work may import or probe for a TensorCore
+`TensorConfig`.
 
 ## TensorDSLab Ownership
 
 TensorDSLab owns:
 
-- `QuantityField`, `QuantityKernel`, and `QuantityConfig`;
+- `TensorConfig`, `QuantityField`, `QuantityKernel`, and `QuantityConfig`;
 - the private Pint registry and public quantity/unit construction boundary;
 - instance unit admission and normalization;
 - every concrete readout Product, Config, and physical kernel;
@@ -1523,7 +1556,7 @@ This architecture does not:
 
 - implement or dispatch production;
 - edit TensorCore;
-- infer TensorCore acceptance of `TensorConfig`;
+- add, request, probe for, or infer a TensorCore `TensorConfig`;
 - change the exact TensorCore dependency pin;
 - design PSD discretization;
 - add a graph planner, transform registry, effect framework, or callbacks;
@@ -1537,27 +1570,32 @@ This architecture does not:
   production readiness; or
 - change the paired exact-1.0 integrated-CUDA schedule.
 
-## Required TensorCore Consultation
+## Completed TensorCore Consultation
 
-Before an implementation work order can freeze, TensorDSLab Design must obtain
-an exact read-only TensorCore Design disposition covering:
+TensorCore Design completed the required exact read-only consultation against
+the initial architecture bytes. Its disposition is frozen here:
 
-1. whether a generic `TensorConfig` root is accepted at all;
-2. its exact package/module ownership;
-3. exact generic parameters and stored state;
-4. exact axes and device admission;
-5. derived properties and lookup behavior;
-6. equality, hash, slots, dataclass, and subclass-hook contracts;
-7. exact exports and typing;
-8. diagnostics;
-9. whether TensorG4DS or TensorML demonstrates a genuine second consumer; and
-10. publication/version sequencing if accepted.
+```text
+TensorCore ownership:
+    declined for the current package
 
-TensorCore consultation does not authorize TensorCore implementation,
-publication, or TensorDSLab adoption.
+TensorDSLab ownership:
+    accepted package-local structural fallback
 
-If TensorCore declines, TensorDSLab Design records the package-local fallback
-before its own implementation dispatch.
+TensorCore publication:
+    none required
+
+TensorDSLab dependency baseline:
+    published TensorCore 0.21.0 remains exact
+```
+
+The disposition changes no TensorCore or TensorDSLab production byte and makes
+no adoption, compatibility, CUDA, merge, push, or publication claim.
+
+The future implementation work order must freeze the local root's exact
+constructor, validation order, diagnostics, properties, lookup signatures,
+typing, module export, and subclass contract. It must not reopen TensorCore
+ownership merely to avoid local boilerplate.
 
 ## Required Per-Product Inventory
 
@@ -1595,7 +1633,7 @@ unbounded rewrite.
 
 ### Phase 1: representation foundation
 
-- accepted `TensorConfig` owner;
+- TensorDSLab-local `TensorConfig`;
 - `QuantityField`;
 - instance-unit `QuantityKernel`;
 - `QuantityConfig`;
@@ -1719,7 +1757,7 @@ state that no current integrated CUDA or accelerator-support claim is made.
 
 Stop and return to TensorDSLab Design if implementation would require:
 
-- importing an unaccepted TensorCore `TensorConfig`;
+- importing, probing for, or adding a TensorCore `TensorConfig`;
 - retaining Runtime under another public or private name;
 - adding a readiness token or prepared wrapper;
 - making `produce(...)` repair or convert Config;
@@ -1742,14 +1780,14 @@ Stop and return to TensorDSLab Design if implementation would require:
 This document records TensorDSLab Design's selected punchcard architecture.
 Implementation remains undispatched.
 
-The next authorized action after this documentation-only commit is a read-only
-TensorCore Design consultation on the proposed generic `TensorConfig`
-ownership. TensorDSLab Design may then:
+The TensorCore ownership consultation is complete and the
+TensorDSLab-local root is selected. TensorDSLab Design may next:
 
-1. record TensorCore's exact disposition;
-2. select the accepted TensorConfig owner;
-3. complete the per-product Config/derived-state inventory;
-4. freeze one bounded implementation work order; and
+1. complete the per-product Config and derived-state inventory;
+2. freeze exact local `TensorConfig` diagnostics, typing, and exports;
+3. divide the end state into bounded implementation work orders;
+4. define exact dependency, scientific, typing, artifact, and mutation
+   evidence for the first bounded candidate; and
 5. verify persistent Implementation, Validation, and Review routes before any
    production dispatch.
 

@@ -345,8 +345,8 @@ remain Validation-owned.
 
 ### [Maintenance 15: Tensor-Native Config Punchcard Architecture](maintenance_15_tensor_native_config_punchcard_architecture.md)
 
-Status: **Architecture selected; TensorCore ownership consultation pending;
-Implementation undispatched**.
+Status: **Architecture selected; TensorCore consultation complete;
+TensorDSLab-local `TensorConfig` selected; Implementation undispatched**.
 
 This documentation-only architecture record starts from exact locally closed
 Maintenance 14 `856df702c124365c929bf993851a51fb8ff3c245`, tree
@@ -366,11 +366,13 @@ golden path `Readout.create(source=..., config=..., rng=...)`.
 
 TensorDSLab retains all Pint, physical-kernel, product, profile, scientific
 law, RNG-role/address, boundary, preparation, validation, and orchestration
-ownership. TensorCore is asked only to disposition a proposed generic
-unit-independent `TensorConfig` root over exact axes and one target device. If
-TensorCore declines, TensorDSLab owns the equivalent structural root locally;
-no provisional dependency or TensorCore fork is allowed. Production remains
-undispatched pending that exact consultation and a bounded per-product
+ownership. TensorCore Design reviewed the exact initial architecture bytes and
+declined current ownership of a generic `TensorConfig`: axes plus a target
+device describe downstream execution intent, TensorCore has no consuming
+operation, and no genuine second package currently demonstrates the same
+contract. TensorDSLab therefore owns the exact structural root locally; no
+provisional dependency, TensorCore fork, or new TensorCore publication is
+required. Production remains undispatched pending a bounded per-product
 implementation work order. No dependency, science, runtime, test, CUDA,
 compatibility, publication, or package byte changes through this Design
 record.
