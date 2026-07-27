@@ -65,6 +65,8 @@ def _require_branching(kernel: QuantityKernel, *, delayed: bool) -> None:
 class DarkCountRate[ConditioningAxesT: tuple](QuantityKernel):
     """Represent finite nonnegative dark-count rates."""
 
+    __slots__ = ()
+
     canonical_unit = "Hz"
 
     @override
@@ -77,6 +79,8 @@ class DarkCountRate[ConditioningAxesT: tuple](QuantityKernel):
 @final
 class TimingJitter[ConditioningAxesT: tuple](QuantityKernel):
     """Represent a complete finite sample-offset probability law."""
+
+    __slots__ = ()
 
     canonical_unit = "dimensionless"
 
@@ -95,6 +99,8 @@ class DirectCrosstalk[ConditioningAxesT: tuple, OperationAxesT: tuple](
 ):
     """Represent expected prompt crosstalk offspring by destination offset."""
 
+    __slots__ = ()
+
     canonical_unit = "dimensionless"
 
     @override
@@ -108,6 +114,8 @@ class DelayedCrosstalk[ConditioningAxesT: tuple, OperationAxesT: tuple](
 ):
     """Represent expected delayed crosstalk offspring by destination offset."""
 
+    __slots__ = ()
+
     canonical_unit = "dimensionless"
 
     @override
@@ -118,6 +126,8 @@ class DelayedCrosstalk[ConditioningAxesT: tuple, OperationAxesT: tuple](
 @final
 class Afterpulse[ConditioningAxesT: tuple](QuantityKernel):
     """Represent expected full-charge afterpulses by positive sample offset."""
+
+    __slots__ = ()
 
     canonical_unit = "dimensionless"
 
@@ -130,6 +140,8 @@ class Afterpulse[ConditioningAxesT: tuple](QuantityKernel):
 @final
 class SmearingWidth[ConditioningAxesT: tuple](QuantityKernel):
     """Represent relative one-photoelectron Gaussian response width."""
+
+    __slots__ = ()
 
     canonical_unit = "dimensionless"
 

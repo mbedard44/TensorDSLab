@@ -124,6 +124,23 @@ class QuantityKernelContractTest(unittest.TestCase):
             hash(width)
         self.assertNotIn("tensor(", repr(width))
 
+    def test_all_concrete_kernel_leaves_are_fieldless_and_immutable(self) -> None:
+        for leaf, unit, raw, operation_axes in _LEAF_CASES:
+            magnitude = (
+                quantity(1.0, unit)
+                if not operation_axes
+                else quantities(raw, unit)
+            )
+            kernel = leaf(
+                quantity=magnitude,
+                conditioning_axes=(),
+                operation_axes=operation_axes,
+            )
+            with self.subTest(leaf=leaf.__name__):
+                self.assertFalse(hasattr(kernel, "__dict__"))
+                with self.assertRaises((AttributeError, TypeError)):
+                    setattr(kernel, "unexpected_attribute", 1)
+
     def test_operation_target_roles_are_unique(self) -> None:
         with self.assertRaises(ValueError):
             DirectCrosstalk(

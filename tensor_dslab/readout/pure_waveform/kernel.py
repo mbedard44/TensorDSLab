@@ -12,6 +12,8 @@ from tensor_dslab.common.kernel import QuantityKernel
 class Pulse[ConditioningAxesT: tuple](QuantityKernel):
     """Represent signed millivolt response coefficients per PE-equivalent."""
 
+    __slots__ = ()
+
     canonical_unit = "mV"
 
     @override
