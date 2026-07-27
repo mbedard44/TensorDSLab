@@ -239,6 +239,43 @@ scope, the work order must name the comparison boundary, parity classification,
 acceptance criteria, and intentional divergences defined in
 [Parity](../parity.md).
 
+### [Maintenance 12: TensorCore 0.21 Kernel Geometry And Quantity Refactor](maintenance_12_tensorcore_0_21_kernel_geometry_quantity_refactor.md)
+
+Status: **Provisional Design-complete / exact TensorCore Stage 29 publication
+and renewed consumer confirmation pending / implementation undispatched**.
+
+This non-dispatchable work order extracts the accepted kernel architecture into
+one atomic future TensorDSLab dependency/science/API rebaseline. It specifies
+the concrete compositional `OffsetAxis`, literal `TensorKernel`,
+direct-probability `MultinomialDistribution`, public `QuantityKernel` and
+physical leaves, direct Config fields, profile-supplied geometry, compiled
+Runtime granularity, collapsed Poisson branching, Poisson/full-charge
+afterpulse, compact RNG rebaseline, exact execution order, public facade
+target, provisional allowlist, and final-candidate-oriented evidence route.
+Every exact TensorCore dependency identity remains pending until TensorCore
+independently closes and publishes Stage 29. TensorDSLab has confirmed exact
+Stage 29 Design commit `397807ce634c29e6f3909acab7006cf2b8d5267d` /
+tree `e7a853d173c71f53e58787f1678126ca88e8bb61` with zero findings, but that
+Design confirmation grants no production or route authority.
+
+### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
+
+Status: **Architecture selected / provisional Maintenance 12 drafted /
+TensorCore Stage 29 publication pending / implementation undispatched**.
+
+This planning record sketches the coordinated future `OffsetAxis`, literal
+`TensorKernel`, direct-probability `MultinomialDistribution`, and
+`QuantityKernel` boundary; profile-supplied axis availability;
+global/conditioned kernel broadcasting; product-owned physical kernels; and an
+easy-to-hard migration. It selects no separate reusable multinomial-parameter
+surface, chooses a future Poisson/full-charge afterpulse rebaseline, and
+explicitly defers recovery weighting. The dependent provisional Maintenance
+12 work order is now linked above. Current production, the TensorCore `0.19.0`
+pin, at-most-one afterpulse behavior, recovery weighting, profile signature,
+package topology, and public API remain operative until later exact
+package-owned work orders close. The record is not TensorCore authority or a
+TensorDSLab production dispatch.
+
 ### [Historical TensorCore Counter RNG And Distributions Consumer Proposal](proposed_tensorcore_counter_rng_and_distributions.md)
 
 Status: **Fulfilled by TensorCore Stage 15 / Historical consumer proposal /
