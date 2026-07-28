@@ -1427,6 +1427,72 @@ A Product whose source operation is not addition must freeze its own complete
 unit equation with the same fail-before-effects rule. The generic source-tuple
 surface never means that arbitrary QuantityFields can be numerically combined.
 
+### Source device identity
+
+Every nonempty Product source tuple has one exact execution device:
+
+```text
+source.spec.device is equal to config.spec.device
+```
+
+for every source. Therefore:
+
+- all sources are on the same exact device as one another;
+- every source device equals the configured output device;
+- accelerator-backed Product Specs use an indexed concrete device such as
+  `cuda:0`, not an unresolved current-device spelling;
+- `prepare()` validates the complete source tuple before moving or converting
+  any Config-owned kernel;
+- `create()` does not move sources as a convenience;
+- `produce()` does not move sources;
+- source dtype casts and unit-scale multiplication occur only on the already
+  selected device;
+- Config-owned kernels may be explicitly converted and materialized onto that
+  device during same-type Config preparation; and
+- stochastic address elements and distribution tensors must satisfy the
+  Product's exact same-device relationship before words.
+
+If one source is on `cpu` and another is on `cuda:0`, or if every source is on
+`cpu` while the output Spec requests `cuda:0`, preparation fails before:
+
+```text
+unit conversion
+dtype casting
+kernel movement
+summation
+allocation
+RNG word requests
+```
+
+The error identifies the Product, source tuple index, supplied device, and
+required output device.
+
+Callers choose movement explicitly:
+
+```python
+photoelectrons_gpu = photoelectrons.to(
+    device=torch.device("cuda:0"),
+)
+
+axioelectrons_gpu = axioelectrons.to(
+    device=torch.device("cuda:0"),
+)
+
+charge = Charge.create(
+    sources=(
+        photoelectrons_gpu,
+        axioelectrons_gpu,
+    ),
+    config=charge_config,
+    rng=rng,
+)
+```
+
+Zero-source Products, such as configured NoiseWaveform generation, have no
+source-device relationship. Their output Spec still selects the exact device,
+and every participating kernel/RNG representation must satisfy that Product's
+explicit device contract.
+
 ### No Pint on the hot path
 
 Preparation computes immutable scalar conversion facts. Production uses:
@@ -1605,6 +1671,7 @@ Each Product owns:
 - axis and coordinate relationships;
 - the complete source-unit equation;
 - per-source conversion into one declared compute representation;
+- exact source-to-output device identity;
 - combination order;
 - count and allocation ceilings;
 - dtype promotion;
@@ -1721,7 +1788,9 @@ Product.validate(
 ```
 
 Both paths call the same Product-owned preparation, production, and validation
-actions.
+actions. Neither path moves a source. An application that chooses another
+device explicitly moves its source Products and constructs or transforms the
+output Spec before preparation.
 
 ### Private action modules
 
@@ -1784,19 +1853,20 @@ applicable:
 2. admit the exact source-Spec tuple;
 3. validate Product source count and relationship;
 4. validate output Spec semantic requirements;
-5. resolve required semantic roles;
-6. validate exact source/output coordinate relationships;
-7. validate kernel conditioning availability;
-8. determine coordinate reordering and dimension permutation;
-9. validate Product unit equations;
-10. select the deterministic working dtype;
-11. convert kernel units;
-12. align kernel conditioning coordinates and dimensions;
-13. materialize aligned kernels on the output device and selected dtype;
-14. prepare immutable scalar conversion facts;
-15. preflight element, byte, count, and address ceilings;
-16. return a fresh Config of the same exact type; and
-17. perform no random draw and consume no RNG word.
+5. validate every source device equals the exact output Spec device;
+6. resolve required semantic roles;
+7. validate exact source/output coordinate relationships;
+8. validate kernel conditioning availability;
+9. determine coordinate reordering and dimension permutation;
+10. validate Product unit equations;
+11. select the deterministic working dtype;
+12. convert kernel units;
+13. align kernel conditioning coordinates and dimensions;
+14. materialize aligned kernels on the output device and selected dtype;
+15. prepare immutable scalar conversion facts;
+16. preflight element, byte, count, and address ceilings;
+17. return a fresh Config of the same exact type; and
+18. perform no random draw and consume no RNG word.
 
 The exact order matters. Invalid public meaning fails before expensive
 materialization, allocation, or stochastic execution.
@@ -2049,8 +2119,10 @@ Preparation requires:
 - each source-to-Charge conversion scale is prepared independently;
 - a source such as an AnalogWaveform represented in millivolts is rejected
   when the other source and Charge output represent avalanche counts;
-- source tensors can be explicitly converted to the output device and working
-  dtype under the Product policy;
+- every source device exactly equals `ChargeConfig.spec.device`;
+- no source is moved by Charge preparation or production;
+- source tensors may be explicitly cast to the working dtype only on that
+  already selected device;
 - source element counts and checked sum stay within accepted count and Charge
   ceilings; and
 - source tuple order is retained for deterministic accumulation.
@@ -3259,6 +3331,12 @@ Future TensorDSLab implementation must prove:
   freeze one exact conversion per source;
 - reject a multi-source `[avalanche] + [mV]` mutant at the intended source
   index before effects;
+- require every source device to equal every other source device and the exact
+  output Spec device;
+- reject mixed `cpu` / `cuda:0` sources and same-device sources targeting a
+  different output device before unit conversion, dtype casts, kernel
+  movement, summation, allocation, or RNG words;
+- prove that `create()` and `produce()` never call source `.to(...)`;
 - exact no-op behavior if selected;
 - source-Spec relationship;
 - coordinate correspondence;

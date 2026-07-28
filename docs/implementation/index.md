@@ -369,7 +369,10 @@ tuples allow application-owned compositions such as
 every collaboration source class. Every multi-source Product must prove the
 complete dimensional unit relationship before conversion, casting, movement,
 summation, allocation, or RNG use; a source combination such as
-`[avalanche] + [mV]` is rejected during Product preparation.
+`[avalanche] + [mV]` is rejected during Product preparation. Every source must
+also be on the same exact device as every other source and the configured
+output Spec. Product entry points never move sources implicitly; callers use
+explicit `.to(...)` before preparation.
 
 `ChargeConfig` is the complete Charge punchcard, while `ChargeKernels` is only
 its typed physical-kernel collection. `PulseResponse` replaces `Pulse`.
