@@ -1,9 +1,9 @@
 # Maintenance 15 Spec-Composed Products And Application Boundary
 
-Status: **Architecture selected; configurable-coefficient-kernel amendment
-integrated; renewed exact TensorCore package-feasibility confirmation pending;
-TensorCore Stage 31 work-order authorship and TensorDSLab Implementation
-undispatched**.
+Status: **Architecture selected; corrected configurable-coefficient-kernel
+amendment exactly confirmed by TensorCore Design at
+`00d37496973870b91038f4091a02b4bacf9cc8f6`; TensorCore Stage 31 work-order
+authorship pending; TensorDSLab Implementation undispatched**.
 
 Stable key:
 `TensorDSLab/maintenance-15-spec-composed-products-and-application-boundary`

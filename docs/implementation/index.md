@@ -345,10 +345,10 @@ remain Validation-owned.
 
 ### [Maintenance 15: Spec-Composed Products And Application Boundary](maintenance_15_spec_composed_products_and_application_boundary.md)
 
-Status: **Architecture selected; configurable-coefficient-kernel amendment
-integrated; renewed exact TensorCore package-feasibility confirmation pending;
-TensorCore Stage 31 work-order authorship and TensorDSLab Implementation
-undispatched**.
+Status: **Architecture selected; corrected configurable-coefficient-kernel
+amendment exactly confirmed by TensorCore Design at
+`00d37496973870b91038f4091a02b4bacf9cc8f6`; TensorCore Stage 31 work-order
+authorship pending; TensorDSLab Implementation undispatched**.
 
 This documentation-only architecture record starts from exact locally closed
 Maintenance 14 `856df702c124365c929bf993851a51fb8ff3c245`, tree
