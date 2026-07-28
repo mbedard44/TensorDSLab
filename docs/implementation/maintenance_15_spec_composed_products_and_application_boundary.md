@@ -1375,6 +1375,58 @@ The executable work order must freeze the precise equations for every Product.
 Unit admission is fail-closed and occurs before stochastic words or large
 allocations.
 
+### Multi-source unit compatibility
+
+Every Product that accepts more than one source must validate the complete
+source-unit relationship before combining any tensor values.
+
+For an additive Product, preparation requires:
+
+1. every source has a QuantityFieldSpec;
+2. every source unit is dimensionally convertible to the Product's selected
+   common compute unit;
+3. the common compute unit is dimensionally convertible to the configured
+   output unit;
+4. an exact conversion scale is prepared independently for every source;
+5. no source tensor is cast, moved, converted, or summed until every source
+   passes; and
+6. failure identifies the Product, source tuple index, source unit, and
+   required unit relationship.
+
+Compatibility is dimensional, not exact-spelling equality. These may be valid
+when the Product equation admits them:
+
+```text
+V + mV -> mV
+avalanche + photoelectron-equivalent -> avalanche
+```
+
+These must fail before tensor work:
+
+```text
+avalanche + mV
+voltage + time
+count + spectral-density
+```
+
+For example:
+
+```python
+sources = (
+    photoelectrons,
+    axioelectrons,
+)
+```
+
+is a valid Charge candidate only when both represented units are convertible
+to the Charge source/accumulation dimension selected by `ChargeConfig`.
+Replacing either source with a voltage waveform must fail during
+`Charge.prepare(...)`.
+
+A Product whose source operation is not addition must freeze its own complete
+unit equation with the same fail-before-effects rule. The generic source-tuple
+surface never means that arbitrary QuantityFields can be numerically combined.
+
 ### No Pint on the hot path
 
 Preparation computes immutable scalar conversion facts. Production uses:
@@ -1551,7 +1603,8 @@ Each Product owns:
 - whether zero sources are meaningful;
 - whether source semantic classes matter;
 - axis and coordinate relationships;
-- unit equations;
+- the complete source-unit equation;
+- per-source conversion into one declared compute representation;
 - combination order;
 - count and allocation ceilings;
 - dtype promotion;
@@ -1560,7 +1613,9 @@ Each Product owns:
 
 This deliberately does not try to prevent every scientifically foolish user
 combination at a generic framework layer. It ensures that each Product's own
-mathematical contract is validated and statically visible.
+mathematical contract is validated and statically visible. In particular, it
+does not permit a Product to add dimensionally incompatible sources merely
+because both are QuantityField values.
 
 ### Lifecycle
 
@@ -1989,6 +2044,11 @@ Preparation requires:
 - each corresponding semantic axis has exactly equivalent coordinate
   representation and downstream axis state;
 - every source unit is compatible with the configured Charge output unit;
+- every source unit is dimensionally compatible with every other source under
+  the exact Charge accumulation equation;
+- each source-to-Charge conversion scale is prepared independently;
+- a source such as an AnalogWaveform represented in millivolts is rejected
+  when the other source and Charge output represent avalanche counts;
 - source tensors can be explicitly converted to the output device and working
   dtype under the Product policy;
 - source element counts and checked sum stay within accepted count and Charge
@@ -3193,6 +3253,12 @@ Future TensorDSLab implementation must prove:
 
 - same-exact-Config return type;
 - fresh Config when representation changes;
+- complete all-source dimensional compatibility before any source conversion,
+  cast, movement, summation, allocation, or RNG request;
+- accept differently scaled but dimensionally compatible source units and
+  freeze one exact conversion per source;
+- reject a multi-source `[avalanche] + [mV]` mutant at the intended source
+  index before effects;
 - exact no-op behavior if selected;
 - source-Spec relationship;
 - coordinate correspondence;

@@ -366,7 +366,10 @@ Production performs no Pint interpretation, coordinate-policy discovery,
 silent device movement, or dtype-policy selection. Ordered quantity-source
 tuples allow application-owned compositions such as
 `Axioelectrons + Photoelectrons -> Charge` without making TensorDSLab import
-every collaboration source class.
+every collaboration source class. Every multi-source Product must prove the
+complete dimensional unit relationship before conversion, casting, movement,
+summation, allocation, or RNG use; a source combination such as
+`[avalanche] + [mV]` is rejected during Product preparation.
 
 `ChargeConfig` is the complete Charge punchcard, while `ChargeKernels` is only
 its typed physical-kernel collection. `PulseResponse` replaces `Pulse`.
