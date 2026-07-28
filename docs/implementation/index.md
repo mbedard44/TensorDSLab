@@ -417,6 +417,17 @@ scalar/Pint/raw-tensor coefficient shortcuts applies to caller-supplied
 configurable coefficients; prepared same-type Configs may retain immutable
 derived conversion scales, dimensions, dtypes, and checked ceilings under
 their exact Product contract.
+
+The migration also requires an explicit test-suite reconciliation rather than
+accumulating replacement tests beside obsolete architecture tests. The current
+Maintenance 14 total is baseline evidence, not a count contract. A complete
+obligation ledger must map every current test module to retained, rewritten,
+application-moved, consolidated, or deliberately retired proof; preserve all
+scientific/statistical/RNG/typing/artifact obligations; replace Runtime,
+generic Readout, scalar Config, old TensorCore-surface, and collaboration-owned
+tests with the exact new contracts; prohibit repository-wide method/file/line/
+module-count assertions; and freeze a navigable replacement filetree plus
+mutation-resistant evidence in the executable work order.
 Current timing-jitter Multinomial, collapsed-Poisson
 direct/delayed/afterpulse, dark-count, smearing, convolution, noise, analog,
 and digitizer laws remain the selected scientific baseline unless a later

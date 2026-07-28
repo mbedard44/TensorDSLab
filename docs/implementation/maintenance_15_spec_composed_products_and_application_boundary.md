@@ -3623,6 +3623,8 @@ TensorDSLab Design then freezes one bounded work order for:
 - explicit movement;
 - common alignment;
 - facade and typing migration;
+- the generic-representation slice of the test-obligation ledger, including
+  replacement of the TensorCore 0.21 adoption/typing fixtures;
 - protected scientific bytes where possible; and
 - removal of obsolete generic representation use.
 
@@ -3643,7 +3645,10 @@ TensorDSLab may migrate Products in increasing risk order:
 
 Each stage must leave the package coherent. Temporary compatibility surfaces
 are prohibited, so exact grouping may change if an intermediate state could
-not be importable or truthful.
+not be importable or truthful. Each Product stage carries its exact slice of
+the test-obligation ledger: the replacement proof lands in the same candidate
+that retires the old Product/Runtime/Config surface, and stale tests are not
+deferred to a later cleanup stage.
 
 ### Phase 5: application extraction
 
@@ -3656,6 +3661,8 @@ One or more application package Design authorities must:
 - adopt reusable TensorDSLab Products;
 - migrate the DS20k demo where appropriate;
 - define application result collection;
+- migrate the exact collaboration-owned profile/workflow/demo/notebook test
+  obligations before TensorDSLab removes their current proofs;
 - validate wheel isolation;
 - and publish, if desired, under separate authority.
 
@@ -3923,6 +3930,159 @@ Future TensorDSLab implementation must prove:
 - no embedded hidden application;
 - and no retired aliases.
 
+## TensorDSLab Test-Suite Reconciliation
+
+Maintenance 15 changes enough public and internal architecture that its tests
+must be deliberately reconciled with the replacement. The current
+Maintenance 14 suite is valid evidence for the current production baseline;
+it is not a requirement to retain tests whose subject no longer exists.
+
+The accepted Maintenance 14 source/archive total was:
+
+```text
+305 tests run
+302 passed
+3 conditional unavailable-CUDA skips
+```
+
+Those totals are evidence, not a target count. No replacement test may assert
+a repository-wide test-method, file, line, package-module, or import-edge
+count. Validation reports actual discovered totals and proves obligations.
+
+### Obligation ledger before deletion
+
+Before editing tests, the executable work order must inventory every current
+test module and map each substantive obligation to exactly one disposition:
+
+```text
+retain unchanged
+rewrite against the replacement public contract
+move to an application-owned package with synchronized evidence
+merge into one stronger test
+retire because the tested surface is deliberately absent
+```
+
+No test disappears merely because its import path or fixture is inconvenient.
+A deletion is accepted only when the ledger identifies the replaced
+obligation, the exact new proof, or the explicit architectural retirement.
+Scientific and stochastic proofs survive independently of the class/module
+layout that currently hosts them.
+
+The ledger must distinguish:
+
+- public contract tests;
+- generic representation and quantity tests;
+- Product preparation/production/validation tests;
+- independent scientific oracles and statistical tests;
+- deterministic RNG address/word/replay tests;
+- strict positive and negative typing fixtures;
+- package topology, facade, isolation, and retired-path tests;
+- artifact/source/archive/environment evidence; and
+- collaboration-specific profile, workflow, demo, and notebook tests that
+  require an application owner.
+
+### Required replacements
+
+The following current test subjects are architectural migration targets, not
+permanent compatibility surfaces:
+
+- TensorCore 0.21 Axis/Field/Kernel/Collection adoption becomes exact
+  published Stage 31/0.22 adoption evidence;
+- current `QuantityKernel` geometry tests become composed
+  Coordinates/Axis/Spec/Kernel and coefficient-leaf tests;
+- Runtime preparation/alignment/action-ownership tests become same-type
+  Config preparation and Product classmethod tests;
+- `ReadoutConfig`, `ReadoutCollection`, `simulate_readout()`, and DS20k
+  profile/demo tests move to the accepted application owner or retire only
+  after synchronized replacement evidence;
+- current `Pulse` assertions become literal `PulseResponse` tests;
+- current scalar Config/digitizer tests become rank-zero and conditioned
+  Product-specific kernel tests;
+- current package-contract tests replace 0.21 exports and paths with the exact
+  new facade, Spec, Product, and retired-surface inventory; and
+- historical typing fixtures that import retired public names are replaced by
+  focused current positive/negative fixtures rather than kept through aliases.
+
+The exact file deletions, renames, splits, and new paths remain executable
+work-order decisions. The package must not temporarily weaken coverage while
+waiting for a later cleanup stage.
+
+### Selected replacement organization
+
+The future suite should mirror supported concepts rather than reproduce the
+old production filetree mechanically. Its first-order ownership is:
+
+```text
+generic TensorCore adoption and composed representations
+TensorDSLab quantity Specs, Fields, Kernels, and movement
+Product-specific Config and typed kernel collections
+Product prepare / produce / validate / create equivalence
+independent Product scientific laws
+stochastic identity and deterministic replay
+application/core isolation
+public typing, facades, artifacts, and environment
+```
+
+Product modules may split deterministic contract tests from expensive
+statistical/scientific proofs when that improves navigability. Shared private
+test support may own immutable fixtures and independent oracle calculations,
+but it must not own discovered tests, import target test modules, depend on
+production preparation helpers for expected values, or become a generic
+testing framework.
+
+Use explicit test methods and clear table-driven `subTest` cases where several
+semantic leaves share one genuine contract. Do not dynamically attach dozens
+of near-identical methods, retain no-op assertions, or clone cases that change
+only a magnitude/index without increasing mutation resistance.
+
+### Required preserved proof strength
+
+Reconciliation must preserve or strengthen:
+
+- every accepted scientific equation and parity boundary;
+- exact source order, unit conversion, device admission, coordinate
+  permutation, and dtype-plan behavior;
+- each configured global and conditioned coefficient law;
+- stochastic role/address identity and same-input replay;
+- independent analytic/statistical Charge and noise oracles;
+- exact Product one-shot/staged equivalence and output Spec identity;
+- strict rejection of retired imports and compatibility aliases;
+- public facade and subclass typing;
+- source/archive/package-byte equality and isolated-wheel behavior; and
+- explicit unavailable-CUDA qualifications.
+
+Tests should assert stable observable behavior and exact supported type
+surfaces, not incidental private call graphs, helper names, line numbers, or
+module counts. A private implementation detail receives a direct test only
+when it is itself the narrowest owner of a mandatory effect such as defensive
+ownership, host observation, or RNG-word use.
+
+### Mutation and evidence cadence
+
+The executable work order must name a bounded mutation set for the highest-risk
+replacement boundaries. At minimum it must kill:
+
+- skipping source-unit compatibility or same-device admission;
+- resolving roles by name rather than exact semantic type;
+- omitting conditioning-coordinate reordering or dimension permutation;
+- accepting a caller scalar/Pint/raw-tensor coefficient shortcut;
+- homogenizing a heterogeneous kernel collection;
+- casting integer BitDepth to the floating working dtype;
+- bypassing most-derived validation during Spec/Field/Kernel/Collection
+  movement;
+- duplicating the defensive Kernel snapshot;
+- restoring Runtime or generic Readout orchestration;
+- weakening timing conservation or collapsed branching means; and
+- importing a collaboration profile into TensorDSLab core.
+
+Implementation runs focused changed-area tests and reports the obligation
+ledger. Validation owns one complete final source and canonical-archive gate,
+strict typing and negative fixtures, artifact/isolation checks, scientific
+oracles, and the selected mutants. Risk-based Review audits the ledger,
+high-risk public/scientific boundaries, and proof strength without rerunning
+every complete gate. Documentation-only corrections carry executable evidence
+forward only when every executable/test/dependency byte is identical.
+
 ## Risk-Based Review
 
 Independent Review must focus on the highest-risk boundaries rather than
@@ -4119,6 +4279,13 @@ Before TensorDSLab production dispatch, Design must freeze:
 - exact Charge temporal-axis rules;
 - exact kernel value and geometry constraints;
 - exact source and kernel movement policy;
+- exact current-test obligation ledger and disposition for every test module;
+- exact replacement test filetree, focused groups, and shared-support owners;
+- exact retained scientific/statistical/RNG obligations and their new proof
+  locations;
+- exact positive/negative typing fixture replacement;
+- exact test deletions/renames/splits and the no-alias retirement proofs;
+- exact bounded mutation set and evidence cadence;
 - exact stochastic roles, addresses, and any rebaseline;
 - exact count/allocation ceilings;
 - exact current scientific fixtures;
