@@ -367,6 +367,9 @@ exactly once. TensorArtifact remains field-only through an explicit static
 return narrowing, and the former `fields` / `field_types` / `field` / `tensor`
 Collection vocabulary and `require_field_types` are retired without aliases
 in favor of `members` / `member_types` / `member`.
+TensorKernelSpec retains unambiguous complete-tuple `axis_at(dimension)` but
+adds no global `dimension_of(...)` or `axis(...)` lookup because repeated
+OffsetAxis values and conditioning/operation role overlap are both valid.
 
 TensorCore's provisional forward boundary is
 `TensorCore/stage-31-compositional-tensor-spec-substrate`, based on its

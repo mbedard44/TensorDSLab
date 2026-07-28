@@ -828,13 +828,26 @@ conditioning_element_count
 operation_element_count
 element_count
 axis_at
-dimension_of
-axis
 operation_target_roles
 ```
 
 All element counts use exact Python-integer multiplication. Complete row-major
 index conversion remains structural and deterministic.
+
+`axis_at(dimension)` is the only generic complete-axis lookup in the first
+TensorKernelSpec surface. An unqualified global `dimension_of(axis_type)` or
+`axis(axis_type)` is deliberately absent:
+
+- one operation geometry may contain several exact `OffsetAxis` values whose
+  distinct `relative_to` roles make them valid;
+- one semantic role may occur once as a conditioning axis and once as an
+  operation target; and
+- selecting by exact concrete axis type or by target role would therefore be
+  ambiguous without an explicit conditioning-versus-operation scope.
+
+Role-set-specific lookup may be added only after a demonstrated consumer
+requires it and freezes both the role scope and whether returned dimensions
+are local to that role set or refer to the complete kernel tuple.
 
 ### TensorKernelSpec transformation
 
@@ -3342,6 +3355,8 @@ The future TensorCore replacement must prove at least:
 - rank-zero and zero-extent behavior;
 - exact shape and Python-integer element count;
 - axis lookup;
+- complete-axis `axis_at(dimension)` with no ambiguous unqualified KernelSpec
+  `dimension_of(...)` or `axis(...)` lookup;
 - conditioning and operation uniqueness rules;
 - structural equality/hash;
 - fieldful downstream Spec subclass support;
