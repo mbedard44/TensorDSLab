@@ -345,10 +345,12 @@ remain Validation-owned.
 
 ### [Maintenance 15: Spec-Composed Products And Application Boundary](maintenance_15_spec_composed_products_and_application_boundary.md)
 
-Status: **Architecture selected; corrected configurable-coefficient-kernel
-amendment exactly confirmed by TensorCore Design at
-`00d37496973870b91038f4091a02b4bacf9cc8f6`; TensorCore Stage 31 work-order
-authorship pending; TensorDSLab Implementation undispatched**.
+Status: **Architecture selected; TensorCore Stage 31 exact Design authority
+`25f48e3398c68217b060d94743f8abd810e7f7e8`, tree
+`4bd15c7db276acc6d23848bf301e493dee3d2278`, consumer-confirmed; quantity
+units selected as Spec-only state; TensorCore Implementation may resume under
+that exact authority; TensorDSLab Implementation undispatched pending exact
+dependency publication and a bounded executable work order**.
 
 This documentation-only architecture record starts from exact locally closed
 Maintenance 14 `856df702c124365c929bf993851a51fb8ff3c245`, tree
@@ -356,13 +358,24 @@ Maintenance 14 `856df702c124365c929bf993851a51fb8ff3c245`, tree
 representation vocabulary: generic `Coordinates` values compose semantic
 `TensorAxis` values; `TensorFieldSpec` and `TensorKernelSpec` own exact axes,
 device, and dtype; and `TensorField` / `TensorKernel` carry one exact Spec.
-TensorDSLab adds `QuantityAxis`, quantity Specs, and quantity Field/Kernel
-roots with unit stored once in the Spec.
+TensorDSLab adds `QuantityAxis`, `QuantityFieldSpec`, and
+`QuantityKernelSpec`. Unit is stored only in the exact Spec: Product leaves
+specialize `TensorField[QuantityFieldSpec[...]]` directly and physical
+coefficient leaves specialize
+`TensorKernel[QuantityKernelSpec[..., ...]]` directly. No initial
+`QuantityField` or `QuantityKernel` root is selected.
 
 The exact implementable Axis root is one-parameter
 `TensorAxis[CoordinateT]`; downstream semantic classes statically narrow their
-stored Coordinates field. Coordinate extents retain the signed-int64 Torch
-shape ceiling and labels remain nonempty. Changed Spec/Field/Kernel/Collection
+stored Coordinates field. `CountCoordinates(start=0, count=...)` retains the
+local-ordinal shorthand while every Coordinates representation and semantic
+Axis supports exact non-renumbering contiguous windows. FieldSpec
+`with_axis(...)` preserves the exact Spec subtype and supplied Axis identity
+without selecting or slicing payloads. Coordinate extents retain the
+signed-int64 Torch shape ceiling and labels remain nonempty. Generic
+TensorField admits gradient-bearing references and preserves ordinary Torch
+autograd through differentiable explicit movement/casting; any narrower
+Product policy remains TensorDSLab-owned. Changed Spec/Field/Kernel/Collection
 `.to(...)` values rerun their existing most-derived semantic validation
 exactly once. TensorArtifact remains field-only through an explicit static
 return narrowing, and the former `fields` / `field_types` / `field` / `tensor`
@@ -372,10 +385,12 @@ TensorKernelSpec retains unambiguous complete-tuple `axis_at(dimension)` but
 adds no global `dimension_of(...)` or `axis(...)` lookup because repeated
 OffsetAxis values and conditioning/operation role overlap are both valid.
 
-TensorCore's provisional forward boundary is
-`TensorCore/stage-31-compositional-tensor-spec-substrate`, based on its
-preserved unpublished local Stage 30 state. `0.22.0` remains a provisional
-TensorCore-owned target because that version has not been published.
+TensorCore's exact Design-complete forward boundary is
+`TensorCore/stage-31-compositional-tensor-spec-substrate` at `25f48e3`, based
+on its preserved unpublished local Stage 30 state. TensorDSLab authorizes
+TensorCore to resume its independently owned implementation under those exact
+contracts. `0.22.0` remains a provisional TensorCore-owned target because that
+version has not been published.
 
 The Product layer becomes a reusable parts bin rather than one package-owned
 readout chain. Each Product owns one independent transformation, one
@@ -405,13 +420,14 @@ one exact typed `*Kernels` collection; Config stores the output Spec, that
 collection, and only genuine structural policy.
 
 This applies the rule to the digitizer rather than merely stating it:
-`BitDepth` is an integer TensorKernel, while `InputMinimum`, `InputMaximum`,
-and linear dimensionless `AnalogGain` are QuantityKernel leaves. Rank-zero and
-conditioned forms use the same Product preparation path. `PulseResponse`
-replaces `Pulse`. Product arithmetic dtype is distinct from each kernel's
-semantic representation dtype: preparation preserves exact integer BitDepth,
-keeps Product-specific kernel collections heterogeneous, derives
-`2**bit_depth - 1` through checked integer arithmetic, and casts only
+`BitDepth` is an integer TensorKernel with an ordinary TensorKernelSpec, while
+`InputMinimum`, `InputMaximum`, and linear dimensionless `AnalogGain` are
+TensorKernel leaves whose exact QuantityKernelSpecs carry their units.
+Rank-zero and conditioned forms use the same Product preparation path.
+`PulseResponse` replaces `Pulse`. Product arithmetic dtype is distinct from
+each kernel's semantic representation dtype: preparation preserves exact
+integer BitDepth, keeps Product-specific kernel collections heterogeneous,
+derives `2**bit_depth - 1` through checked integer arithmetic, and casts only
 arithmetic-admissible members under an explicit per-member plan. The ban on
 scalar/Pint/raw-tensor coefficient shortcuts applies to caller-supplied
 configurable coefficients; prepared same-type Configs may retain immutable
@@ -444,9 +460,13 @@ TensorCore's locally closed but unpublished Stage 30 remains preserved at
 exact `de235057ee7c0bf702c40e8f331fc4e89a67b7c7`, tree
 `c31f007e38ebfa068233419703a061306a9678e4`; live TensorCore remains published
 `0.21.0` at exact `78d0891bf6c0fefbcad4abe09980867c54202a9e`.
-TensorDSLab does not adopt the unpublished `TensorConfig` contract. A future
-TensorCore replacement must advance by forward history and freeze the complete
-Coordinates/Spec/Field/Kernel/Collection substrate before publication.
+TensorDSLab does not adopt the unpublished `TensorConfig` contract. Exact
+TensorCore Stage 31 Design authority
+`25f48e3398c68217b060d94743f8abd810e7f7e8`, tree
+`4bd15c7db276acc6d23848bf301e493dee3d2278`, advances by forward history and
+freezes the complete Coordinates/Spec/Field/Kernel/Collection substrate.
+TensorDSLab has consumer-confirmed those exact bytes and authorizes TensorCore
+to resume its independently owned implementation.
 TensorDSLab remains pinned to exact published `0.21.0` until that containing
 commit is independently accepted. No production, dependency, test, science,
 CUDA, application, compatibility, merge, push, or publication action is

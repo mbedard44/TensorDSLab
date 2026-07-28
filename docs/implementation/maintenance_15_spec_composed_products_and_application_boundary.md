@@ -1,9 +1,11 @@
 # Maintenance 15 Spec-Composed Products And Application Boundary
 
-Status: **Architecture selected; corrected configurable-coefficient-kernel
-amendment exactly confirmed by TensorCore Design at
-`00d37496973870b91038f4091a02b4bacf9cc8f6`; TensorCore Stage 31 work-order
-authorship pending; TensorDSLab Implementation undispatched**.
+Status: **Architecture selected; TensorCore Stage 31 exact Design authority
+`25f48e3398c68217b060d94743f8abd810e7f7e8`, tree
+`4bd15c7db276acc6d23848bf301e493dee3d2278`, consumer-confirmed; quantity
+units selected as Spec-only state; TensorCore Implementation may resume under
+that exact authority; TensorDSLab Implementation undispatched pending exact
+dependency publication and a bounded executable work order**.
 
 Stable key:
 `TensorDSLab/maintenance-15-spec-composed-products-and-application-boundary`
@@ -18,7 +20,8 @@ parts-bin architecture built from:
 - semantic tensor axes composed with those representations;
 - immutable field and kernel specifications;
 - tensor values that carry one exact specification;
-- TensorDSLab quantity-aware specification and value roots;
+- TensorDSLab quantity-aware specifications consumed directly by Product
+  Fields and physical Kernels;
 - independent Product transforms with Product-specific Config punchcards; and
 - collaboration-owned applications that assemble Products into workflows.
 
@@ -199,6 +202,46 @@ TensorCore owns the replacement version number. No TensorCore `0.22.0` has
 been published, but TensorDSLab does not decide whether the future containing
 version remains `0.22.0` or advances again.
 
+### Exact Stage 31 Design authority
+
+TensorCore has since frozen the replacement Design at:
+
+```text
+stable key:
+    TensorCore/stage-31-compositional-tensor-spec-substrate
+exact Design authority:
+    25f48e3398c68217b060d94743f8abd810e7f7e8
+exact tree:
+    4bd15c7db276acc6d23848bf301e493dee3d2278
+exact parent / first Design candidate:
+    98ab3ee3b88ae903e1535dbe2c0df5ff9a673c02
+forward baseline:
+    de235057ee7c0bf702c40e8f331fc4e89a67b7c7
+```
+
+TensorDSLab Design reviewed and confirmed those exact replacement bytes.
+Stage 31 additionally admits gradient-bearing generic Fields, preserves
+ordinary Torch autograd connectivity across differentiable explicit
+movement/casting, and supplies representation-preserving contiguous
+Coordinates/Axis windows plus exact FieldSpec axis replacement. These are
+generic capabilities rather than a TensorDSLab workflow or batching policy.
+
+TensorCore Design also confirmed that the Stage 31 fieldful-Spec contract
+already supports the selected Spec-only unit model:
+
+- `QuantityFieldSpec` and `QuantityKernelSpec` add the sole unit state;
+- Product leaves directly specialize
+  `TensorField[QuantityFieldSpec[...]]`;
+- physical coefficient leaves directly specialize
+  `TensorKernel[QuantityKernelSpec[..., ...]]`;
+- no `QuantityField` or `QuantityKernel` intermediate root is required; and
+- exact-subtype Spec and payload transformations preserve unit state and rerun
+  the existing most-derived validation exactly once.
+
+This synchronization authorizes TensorCore to resume its independently owned
+Stage 31 implementation under exact authority `25f48e3`. It does not adopt an
+unpublished dependency or dispatch TensorDSLab Implementation.
+
 ## Architecture Principles
 
 ### Specifications describe representations
@@ -374,15 +417,21 @@ TensorArtifact
 `tensor_core/tensor/field.py`. `TensorKernelSpec` lives with `TensorKernel` in
 `tensor_core/tensor/kernel.py`. Separate `spec.py` modules are not selected.
 
-The selected TensorDSLab quantity names are:
+The selected TensorDSLab quantity representation names are:
 
 ```text
 QuantityAxis
 QuantityFieldSpec
 QuantityKernelSpec
-QuantityField
-QuantityKernel
 ```
+
+There is no initial `QuantityField` or `QuantityKernel` root. Unit is
+representation metadata beside axes, device, and dtype, so it lives only in
+the exact quantity Spec. Product leaves specialize
+`TensorField[QuantityFieldSpec[...]]` directly, and physical coefficient
+leaves specialize `TensorKernel[QuantityKernelSpec[..., ...]]` directly.
+Quantity-disabled Fields and Kernels use ordinary TensorCore Specs without
+creating a parallel tensor-value hierarchy.
 
 The selected Product and computational-kernel names include:
 
@@ -432,8 +481,8 @@ Product-owned category.
 ## TensorCore Ownership
 
 TensorCore owns the following generic representation substrate. This section
-is a consumer requirement for a future TensorCore Design stage, not authority
-to edit TensorCore.
+is the TensorDSLab consumer contract synchronized with exact TensorCore Stage
+31 Design authority `25f48e3`; it is not authority to edit TensorCore.
 
 ## Coordinates
 
@@ -460,6 +509,15 @@ class Coordinates[CoordinateT](ABC):
     @abstractmethod
     def index_of(self, coordinate: CoordinateT) -> int:
         ...
+
+    @final
+    def window(
+        self,
+        *,
+        start_index: int,
+        count: int,
+    ) -> Self:
+        ...
 ```
 
 The exact TensorCore implementation may choose a different internal method
@@ -471,6 +529,8 @@ layout, but the public semantics are frozen:
 - deterministic ordered coordinate identity;
 - strict index admission;
 - strict coordinate admission;
+- strict contained contiguous-window admission;
+- exact representation-subtype preservation across a changed window;
 - exact extent admission in `[0, 2**63 - 1]`, matching realizable Torch
   dimension bounds;
 - no units;
@@ -485,12 +545,24 @@ layout, but the public semantics are frozen:
 Coordinate representation classes may use compact state. They need not
 materialize a tuple containing every coordinate.
 
-### `CountCoordinates`
-
-`CountCoordinates` represents:
+`window()` requires exact non-boolean built-in integer arguments and:
 
 ```text
-0, 1, ..., count - 1
+0 <= start_index <= size
+0 <= count <= size - start_index
+```
+
+A complete no-op returns the same object. A changed window reconstructs the
+same exact Coordinates subtype in the same represented order and reruns its
+ordinary validation. A zero-length window is valid at any admitted start,
+including the exclusive end.
+
+### `CountCoordinates`
+
+`CountCoordinates` compactly represents:
+
+```text
+start, start + 1, ..., start + count - 1
 ```
 
 Its selected state is:
@@ -500,16 +572,22 @@ Its selected state is:
 @dataclass(frozen=True, slots=True, kw_only=True)
 class CountCoordinates(Coordinates[int]):
     count: int
+    start: int = 0
 ```
 
 Its contract is:
 
-- `count` is an exact non-boolean built-in integer;
+- `count` and `start` are exact non-boolean built-in integers;
 - `0 <= count <= 2**63 - 1`;
+- `start` uses exact unbounded Python-integer coordinate arithmetic;
 - `size == count`;
 - coordinates are exact built-in integers;
-- `coordinate_at(i) == i`;
-- `index_of(c) == c` when `0 <= c < count`;
+- `coordinate_at(i) == start + i`;
+- `index_of(c) == c - start` when
+  `start <= c < start + count`;
+- `CountCoordinates(count=n)` retains the shorthand `range(n)`;
+- a changed window adjusts `start` and `count` without dense materialization
+  or coordinate renumbering;
 - rank-zero consumers remain possible because a coordinate representation is
   not itself a tensor rank;
 - zero extent is valid; and
@@ -551,7 +629,9 @@ Its generic contract is:
 - downstream semantic leaves may narrow the generic contract, such as
   requiring a positive step.
 
-The representation remains compact for large coordinate counts.
+The representation remains compact for large coordinate counts. Its changed
+window adjusts `start` by exact arithmetic, retains `step`, and changes only
+`count`.
 
 ### `LabelCoordinates`
 
@@ -574,6 +654,8 @@ Its contract is:
 - `size == len(labels)`;
 - `coordinate_at()` returns the exact stored label;
 - `index_of()` uses exact string equality;
+- a changed window retains the exact ordered label tuple slice and string
+  identities;
 - duplicates are rejected rather than silently disambiguated; and
 - TensorCore assigns no channel, sensor, detector, or collaboration meaning.
 
@@ -595,6 +677,7 @@ Its contract is:
 - offsets are ordered and unique;
 - negative, zero, and positive values are all admitted;
 - empty support is generically valid;
+- a changed window retains the exact ordered offset tuple slice;
 - no sorting, symmetry, regularity, contiguity, causality, unit, anchor,
   padding, convolution, or boundary policy is implied;
 - `coordinate_at()` and `index_of()` use exact ordered values; and
@@ -657,6 +740,7 @@ TensorCore owns:
 - `size` forwarding;
 - `coordinate_at()` forwarding;
 - `index_of()` forwarding;
+- representation-preserving `window(start_index=..., count=...) -> Self`;
 - exact semantic axis class identity;
 - structural equality and hashing over exact semantic class, exact coordinate
   representation, and complete downstream immutable representation fields;
@@ -664,6 +748,12 @@ TensorCore owns:
 - downstream abstract intermediate roots that may add immutable, tensor-free,
   structurally comparable fields; and
 - zero-size axes.
+
+An Axis no-op window returns the same object. A changed window delegates to
+its Coordinates exactly once, reconstructs the exact semantic Axis subtype,
+retains every downstream immutable field, and reruns universal plus
+most-derived Axis validation exactly once. It performs no tensor slicing or
+batch-selection policy.
 
 TensorCore does not own:
 
@@ -797,6 +887,26 @@ The root owns no:
 - workflow;
 - source relationship; or
 - preparation state.
+
+### TensorFieldSpec axis replacement
+
+Stage 31 supplies:
+
+```python
+target_spec = source_spec.with_axis(
+    dimension=dimension,
+    axis=window_axis,
+)
+```
+
+The replacement Axis must have the same exact semantic type as the current
+Axis at that dimension. A no-op returns `self`; a change retains the supplied
+Axis by identity, reconstructs the exact concrete FieldSpec subtype, preserves
+all other axes/device/dtype/downstream state, and reruns universal plus
+most-derived validation exactly once. TensorCore performs no payload slicing,
+batch-axis selection, coordinate-alignment policy, or workflow scheduling.
+TensorDSLab or an application may pair the transformed Spec with its own
+tensor view when a Product contract admits that window.
 
 ### TensorFieldSpec transformation
 
@@ -1013,7 +1123,6 @@ Generic construction requires:
 
 - ordinary exact `torch.Tensor` admission;
 - strided tensor layout;
-- `requires_grad is False`;
 - exact `tensor.shape == spec.shape`;
 - exact `tensor.device == spec.device`;
 - exact `tensor.dtype is spec.dtype`;
@@ -1029,7 +1138,17 @@ Generic construction requires:
   mutability contract.
 
 TensorField does not duplicate axes, device, dtype, or unit fields. Its
-properties forward to `spec`.
+generic structural properties forward from `spec`; a quantity-bearing
+downstream value accesses unit explicitly through its statically narrowed
+`spec.unit`.
+
+Generic TensorField admits both gradient-bearing and non-gradient tensors,
+preserves the exact tensor reference, does not detach it, and does not suppress
+ordinary Torch autograd recording. Autograd admission remains
+operation-owned downstream policy. A TensorDSLab Product may reject
+gradient-sensitive sources or results when its exact stochastic or
+nondifferentiable contract requires that restriction; it must not claim that
+TensorCore imposed the Product policy.
 
 ### TensorField movement and casting
 
@@ -1045,7 +1164,10 @@ properties forward to `spec`.
 - adds no new TensorCore scientific policy, but normal exact-subtype
   reconstruction reruns the subtype's already-defined semantic validation
   exactly once because dtype conversion can change represented values; and
-- does not change semantic class identity.
+- does not change semantic class identity;
+- does not detach the source or alter ambient grad mode; and
+- preserves ordinary Torch autograd connectivity whenever the explicit
+  conversion is differentiable under Torch's own contract.
 
 Generic exact-subtype reconstruction requires supported TensorField semantic
 leaves to add no stored dataclass fields beyond `tensor` and `spec`.
@@ -1371,7 +1493,13 @@ specialization of `TensorFieldSpec`:
 
 ```python
 @final
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(
+    frozen=True,
+    slots=True,
+    eq=False,
+    repr=False,
+    kw_only=True,
+)
 class QuantityFieldSpec[
     AxesT: tuple[TensorAxis[Any], ...],
 ](TensorFieldSpec[AxesT]):
@@ -1385,7 +1513,8 @@ It owns:
 - target dtype;
 - normalized Pint Unit;
 - complete structural equality and hashing including unit;
-- same-exact-subtype `.to(device=..., dtype=...)`; and
+- same-exact-subtype `.with_axis(...)` and
+  `.to(device=..., dtype=...)`, each preserving the exact unit; and
 - no tensor payload.
 
 The Product class supplies semantic result identity, so TensorDSLab does not
@@ -1406,7 +1535,13 @@ value. It adds unit state once and requires no `ProductFieldSpec`,
 
 ```python
 @final
-@dataclass(frozen=True, slots=True, kw_only=True)
+@dataclass(
+    frozen=True,
+    slots=True,
+    eq=False,
+    repr=False,
+    kw_only=True,
+)
 class QuantityKernelSpec[
     ConditioningAxesT: tuple[TensorAxis[Any], ...],
     OperationAxesT: tuple[TensorAxis[Any], ...],
@@ -1423,65 +1558,50 @@ QuantityKernelSpec object.
 
 TensorDSLab does not create one empty Spec subclass per physical kernel.
 
-## QuantityField
+## Direct quantity-Spec specialization
 
-`QuantityField` is a TensorDSLab abstract TensorField leaf root:
-
-```python
-@dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
-class QuantityField[
-    SpecT: QuantityFieldSpec[Any],
-](TensorField[SpecT], ABC):
-    pass
-```
-
-The tensor stores magnitudes in `spec.unit`.
-
-QuantityField:
-
-- adds no duplicate unit field;
-- forwards `unit` from `spec`;
-- adds no generic scientific validation;
-- performs no implicit unit conversion;
-- preserves the exact unit under `.to(device=..., dtype=...)`;
-- remains fieldless beyond `tensor` and `spec`;
-- is independently usable outside any Product chain; and
-- is the generic accepted source family for Product-specific source
-  relationships.
-
-## QuantityKernel
-
-`QuantityKernel` is the corresponding TensorKernel root:
+There is no selected `QuantityField` or `QuantityKernel` class. The tensor
+value roots remain exactly TensorCore's `TensorField` and `TensorKernel`.
+Quantity-aware versus quantity-free representation is determined by the exact
+Spec subtype:
 
 ```python
-@dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
-class QuantityKernel[
-    SpecT: QuantityKernelSpec[Any, Any],
-](TensorKernel[SpecT], ABC):
-    pass
+@final
+class Charge(TensorField[QuantityFieldSpec[Any]]):
+    __slots__ = ()
+
+
+@final
+class DarkCountRate(TensorKernel[QuantityKernelSpec[Any, Any]]):
+    __slots__ = ()
 ```
 
-It:
+The exact implementation follows TensorCore's supported fieldless semantic
+leaf convention rather than duplicating dataclass fields in these sketches.
+The important contract is:
 
-- stores no `canonical_unit`;
-- stores no duplicate unit;
-- infers no unit from its semantic class;
-- carries magnitudes in `spec.unit`;
-- preserves the exact unit under `.to(...)`;
-- leaves physical dimension, sign, range, normalization, and geometry
-  requirements to the concrete kernel leaf and consuming Product; and
-- remains a physical coefficient representation, not an executable effect,
-  Distribution factory, callback, or workflow node.
+- the tensor stores magnitudes in `spec.unit`;
+- unit exists only on `QuantityFieldSpec` or `QuantityKernelSpec`;
+- a Product or physical-kernel leaf adds no duplicate unit,
+  `canonical_unit`, or implied-unit state;
+- `.to(...)` reconstructs the exact quantity Spec and payload subtype and
+  preserves the exact unit;
+- physical dimension, sign, range, normalization, geometry, and Product
+  equations remain leaf/Product validation;
+- a physical kernel is not an executable effect, Distribution factory,
+  callback, or workflow node; and
+- a quantity-free Field or Kernel uses an ordinary TensorCore Spec without
+  participating in a parallel quantity-value class hierarchy.
 
 This retires the current `canonical_unit` pattern. Unit conversion belongs to
 Product preparation, where source, kernel, and output equations are known.
 
-Not every computational kernel is a QuantityKernel. A coefficient with
-physical or dimensionless quantity meaning uses QuantityKernel and stores its
-literal unit in QuantityKernelSpec. A discrete coefficient that participates
-elementwise in an otherwise unchanged numerical equation may derive directly
-from TensorKernel with an ordinary TensorKernelSpec. The first selected
-example is integer `BitDepth`.
+Not every computational kernel has quantity meaning. A coefficient with
+physical or dimensionless quantity meaning directly specializes TensorKernel
+with `QuantityKernelSpec` carrying its literal unit. A discrete coefficient
+that participates elementwise in an otherwise unchanged numerical equation
+directly specializes TensorKernel with an ordinary TensorKernelSpec. The first
+selected example is integer `BitDepth`.
 
 TensorDSLab does not add a generic `ParameterKernel`, `CoefficientKernel`, or
 Config-kernel framework. Exact semantic leaves and Product-specific typed
@@ -1491,8 +1611,8 @@ collections make the supported meaning visible.
 
 ### Units are explicit representation state
 
-Every quantity Field and Kernel carries a quantity Spec. The Spec's unit is
-the literal unit in which tensor magnitudes are represented.
+Every quantity-bearing Field and Kernel carries a quantity Spec. The Spec's
+unit is the literal unit in which tensor magnitudes are represented.
 
 No Product class implies one mandatory unit convention. A user may choose any
 unit compatible with the Product's equation:
@@ -1512,25 +1632,25 @@ class historically used one convention.
 For convolution:
 
 ```text
-source.unit * pulse_response.unit -> pure_waveform.unit
+source.spec.unit * pulse_response.spec.unit -> config.spec.unit
 ```
 
 For direct summation:
 
 ```text
-each source.unit -> output.unit
+each source.spec.unit -> config.spec.unit
 ```
 
 For dark-count generation:
 
 ```text
-dark_count_rate.unit * temporal_coordinate_step.unit -> expected count
+dark_count_rate.spec.unit * temporal_coordinate_step.unit -> expected count
 ```
 
 For charge smearing:
 
 ```text
-smearing_width.unit -> charge.unit
+smearing_width.spec.unit -> config.spec.unit
 ```
 
 The executable work order must freeze the precise equations for every Product.
@@ -1587,7 +1707,8 @@ Replacing either source with a voltage waveform must fail during
 
 A Product whose source operation is not addition must freeze its own complete
 unit equation with the same fail-before-effects rule. The generic source-tuple
-surface never means that arbitrary QuantityFields can be numerically combined.
+surface never means that arbitrary quantity-Spec TensorFields can be
+numerically combined.
 
 ### Source device identity
 
@@ -1764,8 +1885,8 @@ overflow contracts.
 
 ### Product identity
 
-A Product is a final QuantityField semantic class with Product-owned class
-methods:
+A Product is a final semantic class that directly specializes
+`TensorField[QuantityFieldSpec[...]]` and owns these class methods:
 
 ```text
 create
@@ -1774,7 +1895,8 @@ produce
 validate
 ```
 
-There is no separate universal Product ABC beyond `QuantityField`.
+There is no separate universal Product ABC or intermediate `QuantityField`
+root beyond TensorCore's generic `TensorField`.
 
 The common vocabulary improves navigability, but signatures remain
 Product-specific. TensorDSLab does not add a registry, reflection loop,
@@ -1866,7 +1988,7 @@ Product-specific validation.
 Product entry points accept:
 
 ```python
-sources: tuple[QuantityField[Any], ...]
+sources: tuple[TensorField[QuantityFieldSpec[Any]], ...]
 ```
 
 The tuple is ordered and exact. TensorDSLab does not globally require every
@@ -1891,7 +2013,7 @@ This deliberately does not try to prevent every scientifically foolish user
 combination at a generic framework layer. It ensures that each Product's own
 mathematical contract is validated and statically visible. In particular, it
 does not permit a Product to add dimensionally incompatible sources merely
-because both are QuantityField values.
+because both are TensorField values with QuantityFieldSpecs.
 
 ### Lifecycle
 
@@ -1899,12 +2021,14 @@ A representative deterministic Product shape is:
 
 ```python
 @final
-class PureWaveform(QuantityField[Any]):
+class PureWaveform(TensorField[QuantityFieldSpec[Any]]):
+    __slots__ = ()
+
     @classmethod
     def create(
         cls,
         *,
-        sources: tuple[QuantityField[Any], ...],
+        sources: tuple[TensorField[QuantityFieldSpec[Any]], ...],
         config: PureWaveformConfig,
     ) -> Self:
         prepared = cls.prepare(
@@ -1935,7 +2059,7 @@ class PureWaveform(QuantityField[Any]):
     def produce(
         cls,
         *,
-        sources: tuple[QuantityField[Any], ...],
+        sources: tuple[TensorField[QuantityFieldSpec[Any]], ...],
         config: PureWaveformConfig,
     ) -> Self:
         ...
@@ -1945,7 +2069,7 @@ class PureWaveform(QuantityField[Any]):
         cls,
         *,
         product: Self,
-        sources: tuple[QuantityField[Any], ...],
+        sources: tuple[TensorField[QuantityFieldSpec[Any]], ...],
         config: PureWaveformConfig,
     ) -> None:
         ...
@@ -2019,7 +2143,7 @@ For example:
 def produce(
     cls,
     *,
-    sources: tuple[QuantityField[Any], ...],
+    sources: tuple[TensorField[QuantityFieldSpec[Any]], ...],
     config: PureWaveformConfig,
 ) -> Self:
     tensor = produce_pure_waveform(
@@ -2208,11 +2332,12 @@ Validation is not a silent repair path. It does not:
 
 Every configurable coefficient is a final, directly constructible, fieldless
 TensorKernel semantic leaf. Dimensional and dimensionless physical
-coefficients specialize QuantityKernel; discrete coefficient values such as
-BitDepth may specialize TensorKernel directly. Generic TensorKernel
-construction proves exact tensor/Spec agreement and defensive ownership. The
-semantic leaf and consuming Product prove the coefficient's value, dtype,
-unit, conditioning, and operation-geometry contract.
+coefficients directly specialize TensorKernel with QuantityKernelSpec;
+discrete coefficient values such as BitDepth directly specialize TensorKernel
+with an ordinary TensorKernelSpec. Generic TensorKernel construction proves
+exact tensor/Spec agreement and defensive ownership. The semantic leaf and
+consuming Product prove the coefficient's value, dtype, unit, conditioning,
+and operation-geometry contract.
 
 All computational kernels require:
 
@@ -2314,8 +2439,8 @@ Each collection:
 - exposes typed Product-meaningful properties;
 - performs no reflection-driven execution;
 - owns no output Spec, source, RNG, or workflow;
-- may contain QuantityKernel and ordinary TensorKernel members where the
-  Product requires both; and
+- may contain TensorKernel members with QuantityKernelSpec and ordinary
+  TensorKernelSpec representations where the Product requires both; and
 - may be explicitly moved as one value during same-type Config preparation.
 
 The common suffix is vocabulary, not a generic TensorDSLab collection base.
@@ -2330,7 +2455,9 @@ of each exact supported physical kernel:
 
 ```python
 @final
-class ChargeKernels(TensorCollection[QuantityKernel[Any]]):
+class ChargeKernels(
+    TensorCollection[TensorKernel[QuantityKernelSpec[Any, Any]]]
+):
     @property
     def timing_jitter(self) -> TimingJitter | None:
         ...
@@ -2395,11 +2522,12 @@ Distribution class, callback, factory, role key, or Runtime.
 
 ### Source relationship
 
-`Charge` accepts one nonempty ordered tuple of QuantityField sources.
+`Charge` accepts one nonempty ordered tuple of TensorField sources whose exact
+Specs are QuantityFieldSpecs.
 
 Preparation requires:
 
-- every source is a QuantityField;
+- every source is a TensorField with an exact QuantityFieldSpec;
 - every source has the same complete set of exact semantic axis roles as the
   output;
 - source axis tuple order may differ;
@@ -2538,8 +2666,8 @@ This uses exact Poisson splitting and superposition. It does not:
 
 ### Timing-jitter law
 
-TimingJitter is a literal physical QuantityKernel. It does not contain a
-Distribution.
+TimingJitter is a literal physical TensorKernel whose QuantityKernelSpec
+carries its unit. It does not contain a Distribution.
 
 After preparation selects the exact applicable probability slab, Charge
 constructs:
@@ -2559,7 +2687,7 @@ allocations = distribution.draw(
 
 TensorCore owns generic Multinomial validation and execution. TensorDSLab owns:
 
-- interpreting the QuantityKernel as timing probabilities;
+- interpreting the quantity-Spec TensorKernel as timing probabilities;
 - requiring the abstract complete timing law selected by Config;
 - mapping operation cells to destinations;
 - finite-window discard;
@@ -2624,8 +2752,8 @@ placement. Production does not expand application policy implicitly.
 
 ### `PulseResponse`
 
-`PulseResponse` is a QuantityKernel containing the literal deterministic
-response coefficients and operation geometry.
+`PulseResponse` is a TensorKernel with QuantityKernelSpec containing the
+literal deterministic response coefficients and operation geometry.
 
 It:
 
@@ -2643,7 +2771,9 @@ It:
 
 ```python
 @final
-class PureWaveformKernels(TensorCollection[QuantityKernel[Any]]):
+class PureWaveformKernels(
+    TensorCollection[TensorKernel[QuantityKernelSpec[Any, Any]]]
+):
     @property
     def pulse_response(self) -> PulseResponse:
         ...
@@ -2665,8 +2795,8 @@ class PureWaveformConfig:
 
 ### Source and output law
 
-PureWaveform accepts one nonempty ordered tuple of compatible QuantityField
-sources.
+PureWaveform accepts one nonempty ordered tuple of compatible TensorField
+sources whose exact Specs are QuantityFieldSpecs.
 
 Preparation:
 
@@ -2679,7 +2809,7 @@ Preparation:
 - validates:
 
   ```text
-  combined_source.unit * pulse_response.unit -> output.unit
+  combined_source_unit * pulse_response.spec.unit -> config.spec.unit
   ```
 
 - selects working dtype;
@@ -2712,7 +2842,8 @@ WhiteNoiseRms
 PowerSpectralDensity
 ```
 
-Both are QuantityKernel leaves.
+Both are TensorKernel leaves whose exact QuantityKernelSpecs carry their
+units.
 
 `PowerSpectralDensity` contains an already prepared PSD tensor compatible with
 the intended output sampling representation. This maintenance deliberately
@@ -2722,7 +2853,9 @@ does not design the upstream PSD preparation operation.
 
 ```python
 @final
-class NoiseWaveformKernels(TensorCollection[QuantityKernel[Any]]):
+class NoiseWaveformKernels(
+    TensorCollection[TensorKernel[QuantityKernelSpec[Any, Any]]]
+):
     @property
     def white_noise_rms(self) -> WhiteNoiseRms | None:
         ...
@@ -2776,7 +2909,7 @@ parity record explicitly rebaselines them.
 
 ### Saturation kernels
 
-Selected optional QuantityKernel leaves are:
+Selected optional TensorKernel leaves with QuantityKernelSpecs are:
 
 ```text
 AnalogMinimum
@@ -2790,7 +2923,9 @@ Specs carry literal axes, device, dtype, and unit.
 
 ```python
 @final
-class AnalogWaveformKernels(TensorCollection[QuantityKernel[Any]]):
+class AnalogWaveformKernels(
+    TensorCollection[TensorKernel[QuantityKernelSpec[Any, Any]]]
+):
     @property
     def minimum(self) -> AnalogMinimum | None:
         ...
@@ -2814,9 +2949,10 @@ class AnalogWaveformConfig:
     __hash__ = None
 ```
 
-AnalogWaveform accepts one nonempty ordered tuple of compatible QuantityField
-sources. An application may pass PureWaveform and NoiseWaveform, but the
-Product does not import or require those exact semantic classes.
+AnalogWaveform accepts one nonempty ordered tuple of compatible TensorField
+sources whose exact Specs are QuantityFieldSpecs. An application may pass
+PureWaveform and NoiseWaveform, but the Product does not import or require
+those exact semantic classes.
 
 Preparation:
 
@@ -2848,10 +2984,11 @@ InputMaximum
 AnalogGain
 ```
 
-BitDepth is an ordinary integer TensorKernel leaf. The other three are
-QuantityKernel leaves; AnalogGain uses a literal dimensionless linear
-multiplier. Every leaf has empty operation geometry and may condition on an
-accepted subset of the output semantic roles.
+BitDepth is an ordinary integer TensorKernel leaf with TensorKernelSpec. The
+other three are TensorKernel leaves whose exact QuantityKernelSpecs carry
+their units; AnalogGain uses a literal dimensionless linear multiplier. Every
+leaf has empty operation geometry and may condition on an accepted subset of
+the output semantic roles.
 
 ### `DigitizedWaveformKernels`
 
@@ -2895,7 +3032,7 @@ class DigitizedWaveformConfig:
 
 DigitizedWaveform:
 
-- requires exactly one compatible QuantityField source;
+- requires exactly one compatible TensorField source with QuantityFieldSpec;
 - requires an integer output dtype;
 - requires a dimensionless code-like output unit;
 - aligns all four coefficient kernels to the output domain;
@@ -2941,17 +3078,18 @@ coefficients.
 
 ## Photoelectrons And Other Sources
 
-`Photoelectrons` remains a reusable QuantityField semantic Product/value that
-may enter another Product as a source. It need not own a Config or producer in
-TensorDSLab if it is constructed upstream.
+`Photoelectrons` remains a reusable TensorField semantic Product/value whose
+exact QuantityFieldSpec carries its unit and which may enter another Product
+as a source. It need not own a Config or producer in TensorDSLab if it is
+constructed upstream.
 
 `Axioelectrons` is not added to TensorDSLab core through this maintenance. A
 Silex application may own:
 
 ```python
 @final
-class Axioelectrons(QuantityField[Any]):
-    pass
+class Axioelectrons(TensorField[QuantityFieldSpec[Any]]):
+    __slots__ = ()
 ```
 
 and pass it with Photoelectrons to Charge.
@@ -3001,10 +3139,10 @@ without requiring construction of a whole-readout object.
 
 The selected reusable TensorDSLab package owns:
 
-- quantity representation roots;
+- quantity Axis and Spec representations;
 - reusable Product semantic classes;
 - Product-specific Configs;
-- physical QuantityKernel leaves;
+- physical TensorKernel leaves with QuantityKernelSpecs;
 - preparation, production, and validation actions;
 - generic TensorDSLab kernel alignment;
 - Product scientific equations;
@@ -3149,8 +3287,8 @@ The package boundary is fail-closed:
 | Coordinate representation | Owns generic `Coordinates` values | Uses them | Chooses concrete coordinate values |
 | Semantic Axis mechanics | Owns `TensorAxis` and exact class identity | Owns `QuantityAxis` | Owns detector semantic Axis leaves |
 | Offset identity | Owns `OffsetAxis.relative_to` and ordered offsets | Interprets displacement per Product | Supplies target semantic Axis classes |
-| Field representation | Owns `TensorFieldSpec` and `TensorField` | Owns quantity specialization and Product leaves | Instantiates and consumes Products |
-| Kernel representation | Owns `TensorKernelSpec` and `TensorKernel` | Owns quantity specialization and exact computational-coefficient leaves | Instantiates global or conditioned kernel values |
+| Field representation | Owns `TensorFieldSpec` and `TensorField` | Owns `QuantityFieldSpec` and direct Product leaves | Instantiates and consumes Products |
+| Kernel representation | Owns `TensorKernelSpec` and `TensorKernel` | Owns `QuantityKernelSpec` and direct computational-coefficient leaves | Instantiates global or conditioned kernel values |
 | Device/dtype | Owns explicit generic representation and `.to` mechanics | Owns Product promotion, floors, and readiness | Chooses requested placement and precision |
 | Units | Excludes Pint | Owns Pint registry, quantity Specs, equations, and conversions | Chooses physically valid units and values |
 | Kernel alignment | Owns exact generic role resolution | Owns coordinate reorder, permutation, broadcast placement, and materialization | Supplies domains and conditioning values |
@@ -3284,11 +3422,9 @@ common/axis.py
 
 common/field.py
     QuantityFieldSpec
-    QuantityField
 
 common/kernel.py
     QuantityKernelSpec
-    QuantityKernel
 
 common/units.py
     one package Pint registry and scalar quantity admission/conversion
@@ -3332,8 +3468,6 @@ The selected supported surface includes:
 QuantityAxis
 QuantityFieldSpec
 QuantityKernelSpec
-QuantityField
-QuantityKernel
 
 Photoelectrons
 Charge
@@ -3394,7 +3528,7 @@ the tensor_dslab.readout workflow package
 Pulse
 canonical_unit fields/properties
 parallel scalar numerical Config values superseded by semantic TensorKernel
-and QuantityKernel leaves
+leaves with ordinary or quantity Specs
 Config-to-Runtime reflection
 whole-request prerequisite planning
 requested-product workflow closure
@@ -3563,7 +3697,7 @@ package authority.
 
 ## Cross-Package Sequencing
 
-### Phase 0: this Design record
+### Phase 0: TensorDSLab architecture selection
 
 TensorDSLab:
 
@@ -3572,27 +3706,28 @@ TensorDSLab:
 3. sends the exact immutable document to TensorCore Design; and
 4. makes no production edit.
 
+This phase is complete through the synchronized amendments recorded above.
+
 ### Phase 1: TensorCore replacement Design
 
 TensorCore Design:
 
-1. starts from exact preserved local main `de235057...`;
-2. creates an ordinary forward child, provisionally
-   `TensorCore/stage-31-compositional-tensor-spec-substrate`;
+1. started from exact preserved local main `de235057...`;
+2. created ordinary forward Stage 31 Design authority
+   `25f48e3398c68217b060d94743f8abd810e7f7e8`;
 3. freezes exact Coordinates, Axis, Spec, Field, Kernel, Collection, movement,
    typing, diagnostics, topology, exports, tests, and artifact contracts;
 4. retires unpublished TensorConfig, published old Axis representations, and
    the field-named Collection/validation vocabulary without aliases;
-5. consults exact TensorDSLab and any other affected consumer;
-6. resolves every exact consumer finding;
+5. consulted exact TensorDSLab and every other affected consumer;
+6. resolved every exact consumer finding;
 7. leaves TensorDSLab physics and application policy downstream; and
 8. does not publish until the complete same-byte package loop clears.
 
-The provisional package version remains `0.22.0` because no TensorCore
-`0.22.0` bytes have been published. TensorCore Design owns the final stable
-key, version, exact work order, and publication decision. This TensorDSLab
-record does not bind them before exact corrected consumer confirmation and
-TensorCore's own package gates.
+This phase is complete. The provisional package version remains `0.22.0`
+because no TensorCore `0.22.0` bytes have been published. TensorCore Design
+owns the final version and publication decision. Exact consumer confirmation
+does not replace TensorCore's package gates.
 
 ### Phase 2: TensorCore implementation and publication
 
@@ -3619,7 +3754,8 @@ TensorDSLab Design then freezes one bounded work order for:
 - compositional Coordinates consumption;
 - QuantityAxis;
 - Quantity Specs;
-- Quantity Field/Kernel roots;
+- direct Product/physical-leaf specialization of TensorField/TensorKernel with
+  exact quantity Specs;
 - explicit movement;
 - common alignment;
 - facade and typing migration;
@@ -3692,6 +3828,10 @@ The future TensorCore replacement must prove at least:
 - zero extents and empty supports;
 - negative Regular step generic behavior;
 - strict coordinate and index lookup;
+- exact contained contiguous windows for every Coordinates representation;
+- nonzero Count windows preserving compact start state without renumbering;
+- exact Coordinates subtype, semantic Axis subtype, and downstream-field
+  preservation through windows;
 - exact semantic Axis identity;
 - downstream fieldful immutable Axis subclass behavior;
 - OffsetAxis `relative_to` class identity;
@@ -3710,6 +3850,8 @@ The future TensorCore replacement must prove at least:
 - conditioning and operation uniqueness rules;
 - structural equality/hash;
 - fieldful downstream Spec subclass support;
+- exact FieldSpec `.with_axis(...)` subtype/downstream-field reconstruction and
+  supplied Axis identity retention;
 - exact same-subclass `.to`;
 - no-op identity;
 - changed `.to` reconstruction rerunning the existing most-derived semantic
@@ -3725,6 +3867,9 @@ The future TensorCore replacement must prove at least:
 - exact tensor/Spec agreement;
 - fail-closed mismatch diagnostics;
 - semantic subtype preservation;
+- gradient-bearing Field reference admission without detachment;
+- ordinary autograd connectivity across differentiable changed Field `.to`;
+- consumer-owned zero-copy tensor views paired with exact window Specs;
 - Field no-op `.to` identity;
 - changed Field `.to` rerunning existing most-derived semantic validation
   exactly once, including a narrowing cast that creates a nonfinite semantic
@@ -3796,8 +3941,9 @@ Future TensorDSLab implementation must prove:
 - exact conditioning-coordinate permutation and absent-role rejection;
 - ordinary pointwise coefficients reject operation axes;
 - support-bearing kernels retain exact operation geometry;
-- quantity coefficients use QuantityKernel while exact discrete coefficients
-  such as BitDepth use TensorKernel directly;
+- quantity coefficients use TensorKernel with QuantityKernelSpec while exact
+  discrete coefficients such as BitDepth use TensorKernel with ordinary
+  TensorKernelSpec;
 - the five Product-specific `*Kernels` collections enforce exact required,
   optional, duplicate, and alien-member contracts;
 - collection movement preserves exact semantic member types and Config
@@ -3816,7 +3962,13 @@ Future TensorDSLab implementation must prove:
 - exact Pint registry ownership;
 - QuantityAxis magnitude/quantity boundary;
 - Quantity Spec structural equality/hash;
-- Field/Kernel unit forwarding;
+- direct Product specialization of `TensorField[QuantityFieldSpec[...]]`;
+- direct physical-leaf specialization of
+  `TensorKernel[QuantityKernelSpec[..., ...]]`;
+- complete absence of `QuantityField` and `QuantityKernel` classes, exports,
+  aliases, and compatibility imports;
+- exact Field/Kernel Spec typing and unit access through `value.spec.unit`;
+- QuantityFieldSpec and QuantityKernelSpec as the sole stored unit owners;
 - no duplicate unit state;
 - no canonical_unit;
 - unit-preserving `.to`;
@@ -3988,8 +4140,9 @@ permanent compatibility surfaces:
 
 - TensorCore 0.21 Axis/Field/Kernel/Collection adoption becomes exact
   published Stage 31/0.22 adoption evidence;
-- current `QuantityKernel` geometry tests become composed
-  Coordinates/Axis/Spec/Kernel and coefficient-leaf tests;
+- current physical-kernel geometry tests become composed
+  Coordinates/Axis/Spec/Kernel and coefficient-leaf tests, including absence
+  of `QuantityKernel`;
 - Runtime preparation/alignment/action-ownership tests become same-type
   Config preparation and Product classmethod tests;
 - `ReadoutConfig`, `ReadoutCollection`, `simulate_readout()`, and DS20k
@@ -4014,7 +4167,7 @@ old production filetree mechanically. Its first-order ownership is:
 
 ```text
 generic TensorCore adoption and composed representations
-TensorDSLab quantity Specs, Fields, Kernels, and movement
+TensorDSLab quantity Specs and direct Product/kernel specialization
 Product-specific Config and typed kernel collections
 Product prepare / produce / validate / create equivalence
 independent Product scientific laws
@@ -4129,7 +4282,8 @@ Examples include:
 - treating a conditioned coefficient as one global scalar;
 - accepting a coefficient conditioned on an absent semantic role;
 - admitting operation geometry on an ordinary pointwise coefficient;
-- replacing integer BitDepth with a floating QuantityKernel;
+- replacing integer BitDepth with a TensorKernel whose QuantityKernelSpec
+  supplies a floating representation;
 - interpreting linear AnalogGain values as decibels on the Product hot path;
 - silently moving a source during production;
 - inferring a canonical unit from kernel class;
@@ -4267,6 +4421,8 @@ Before TensorDSLab production dispatch, Design must freeze:
 - exact computational-kernel decorators, Specs, dtype/unit/value domains, and
   conditioning/operation geometry;
 - exact QuantityFieldSpec and QuantityKernelSpec decorators and signatures;
+- exact direct Product/physical-kernel TensorField/TensorKernel bases and
+  absence of QuantityField/QuantityKernel roots;
 - exact Product classmethod signatures;
 - exact preparation fields and readiness diagnostics;
 - exact per-Product working-dtype floors;
@@ -4331,14 +4487,11 @@ It does not authorize:
 - release claims;
 - or deployment.
 
-The next required external action is a read-only TensorCore Design
-consultation against the exact committed bytes of this record. TensorCore must
-return either:
-
-- exact-byte confirmation with a proposed package-owned replacement-stage
-  boundary; or
-- concrete findings identifying any generic ownership, typing,
-  reconstruction, synchronization, or topology contradiction.
+The next external action is TensorCore's independently owned Stage 31
+Implementation under exact Design authority `25f48e3`, followed by its
+package-owned Validation, Review, local closeout, and separate publication
+decision. TensorDSLab will review the exact published handoff before freezing
+or dispatching its executable Maintenance 15 adoption work order.
 
 TensorDSLab remains on exact published TensorCore `0.21.0` and the current
 Maintenance 14 production package until that coordinated sequence completes.
