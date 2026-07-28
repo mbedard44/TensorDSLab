@@ -1,8 +1,9 @@
 # Maintenance 15 Spec-Composed Products And Application Boundary
 
-Status: **Architecture selected; TensorCore direction accepted in principle;
-bounded package-design corrections integrated; exact corrected consumer
-confirmation pending; TensorDSLab Implementation undispatched**.
+Status: **Architecture selected; exact TensorCore package-feasibility
+confirmation complete on substantive commit `f5edfbd0319afac2b5b201ad8eb6f3db2b3b4c16`;
+TensorCore Stage 31 work-order authorship pending; TensorDSLab Implementation
+undispatched**.
 
 Stable key:
 `TensorDSLab/maintenance-15-spec-composed-products-and-application-boundary`

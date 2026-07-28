@@ -345,9 +345,10 @@ remain Validation-owned.
 
 ### [Maintenance 15: Spec-Composed Products And Application Boundary](maintenance_15_spec_composed_products_and_application_boundary.md)
 
-Status: **Architecture selected; TensorCore direction accepted in principle;
-bounded package-design corrections integrated; exact corrected consumer
-confirmation pending; TensorDSLab Implementation undispatched**.
+Status: **Architecture selected; exact TensorCore package-feasibility
+confirmation complete on substantive commit `f5edfbd0319afac2b5b201ad8eb6f3db2b3b4c16`;
+TensorCore Stage 31 work-order authorship pending; TensorDSLab Implementation
+undispatched**.
 
 This documentation-only architecture record starts from exact locally closed
 Maintenance 14 `856df702c124365c929bf993851a51fb8ff3c245`, tree
