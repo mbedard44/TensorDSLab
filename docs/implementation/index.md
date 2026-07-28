@@ -345,8 +345,9 @@ remain Validation-owned.
 
 ### [Maintenance 15: Spec-Composed Products And Application Boundary](maintenance_15_spec_composed_products_and_application_boundary.md)
 
-Status: **Architecture selected; coordinated TensorCore replacement
-consultation pending; TensorDSLab Implementation undispatched**.
+Status: **Architecture selected; TensorCore direction accepted in principle;
+bounded package-design corrections integrated; exact corrected consumer
+confirmation pending; TensorDSLab Implementation undispatched**.
 
 This documentation-only architecture record starts from exact locally closed
 Maintenance 14 `856df702c124365c929bf993851a51fb8ff3c245`, tree
@@ -356,6 +357,21 @@ representation vocabulary: generic `Coordinates` values compose semantic
 device, and dtype; and `TensorField` / `TensorKernel` carry one exact Spec.
 TensorDSLab adds `QuantityAxis`, quantity Specs, and quantity Field/Kernel
 roots with unit stored once in the Spec.
+
+The exact implementable Axis root is one-parameter
+`TensorAxis[CoordinateT]`; downstream semantic classes statically narrow their
+stored Coordinates field. Coordinate extents retain the signed-int64 Torch
+shape ceiling and labels remain nonempty. Changed Spec/Field/Kernel/Collection
+`.to(...)` values rerun their existing most-derived semantic validation
+exactly once. TensorArtifact remains field-only through an explicit static
+return narrowing, and the former `fields` / `field_types` / `field` / `tensor`
+Collection vocabulary and `require_field_types` are retired without aliases
+in favor of `members` / `member_types` / `member`.
+
+TensorCore's provisional forward boundary is
+`TensorCore/stage-31-compositional-tensor-spec-substrate`, based on its
+preserved unpublished local Stage 30 state. `0.22.0` remains a provisional
+TensorCore-owned target because that version has not been published.
 
 The Product layer becomes a reusable parts bin rather than one package-owned
 readout chain. Each Product owns one independent transformation, one

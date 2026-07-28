@@ -1,7 +1,8 @@
 # Maintenance 15 Spec-Composed Products And Application Boundary
 
-Status: **Architecture selected; coordinated TensorCore replacement
-consultation pending; TensorDSLab Implementation undispatched**.
+Status: **Architecture selected; TensorCore direction accepted in principle;
+bounded package-design corrections integrated; exact corrected consumer
+confirmation pending; TensorDSLab Implementation undispatched**.
 
 Stable key:
 `TensorDSLab/maintenance-15-spec-composed-products-and-application-boundary`
@@ -402,6 +403,8 @@ layout, but the public semantics are frozen:
 - deterministic ordered coordinate identity;
 - strict index admission;
 - strict coordinate admission;
+- exact extent admission in `[0, 2**63 - 1]`, matching realizable Torch
+  dimension bounds;
 - no units;
 - no device or dtype;
 - no tensor materialization;
@@ -434,7 +437,7 @@ class CountCoordinates(Coordinates[int]):
 Its contract is:
 
 - `count` is an exact non-boolean built-in integer;
-- `count >= 0`;
+- `0 <= count <= 2**63 - 1`;
 - `size == count`;
 - coordinates are exact built-in integers;
 - `coordinate_at(i) == i`;
@@ -466,11 +469,13 @@ class RegularCoordinates(Coordinates[int]):
 Its generic contract is:
 
 - `start`, `step`, and `count` are exact non-boolean built-in integers;
-- `count >= 0`;
+- `0 <= count <= 2**63 - 1`;
 - `step != 0`;
 - positive and negative steps are both generic representation values;
 - `size == count`;
-- coordinate calculation uses exact Python-integer arithmetic;
+- coordinate calculation uses exact unbounded Python-integer arithmetic, so
+  represented coordinate magnitudes are not narrowed merely because the
+  realizable extent is signed-int64 bounded;
 - `index_of()` admits only exact represented coordinates;
 - lookup performs no floating comparison or tolerance;
 - no physical period, sampling frequency, origin convention, or time unit
@@ -495,6 +500,7 @@ Its contract is:
 
 - `labels` is exactly a tuple;
 - every label is an exact built-in `str`;
+- every label is nonempty;
 - labels are ordered and unique;
 - supplied label identity and spelling are preserved;
 - `size == len(labels)`;
@@ -534,12 +540,14 @@ Its contract is:
 
 ```python
 @dataclass(frozen=True, slots=True, kw_only=True)
-class TensorAxis[
-    CoordinateT,
-    CoordinatesT: Coordinates[CoordinateT],
-](ABC):
-    coordinates: CoordinatesT
+class TensorAxis[CoordinateT](ABC):
+    coordinates: Coordinates[CoordinateT]
 ```
+
+The root intentionally has one type parameter. Python and Pyright cannot
+express a second TypeVar whose bound is parameterized by the first TypeVar.
+Downstream semantic classes narrow the stored `coordinates` annotation
+instead.
 
 The previous representation subclasses:
 
@@ -558,18 +566,19 @@ Coordinates representation:
 ```python
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
-class ExampleAxis(TensorAxis[int, CountCoordinates]):
-    pass
+class ExampleAxis(TensorAxis[int]):
+    coordinates: CountCoordinates
 
 
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
-class ChannelAxis(TensorAxis[str, LabelCoordinates]):
-    pass
+class ChannelAxis(TensorAxis[str]):
+    coordinates: LabelCoordinates
 ```
 
 The sketches illustrate downstream leaves only. TensorCore must not own these
-collaboration names.
+collaboration names. Static typing must reject constructing either leaf with
+the wrong Coordinates representation.
 
 ### Generic axis contract
 
@@ -612,8 +621,9 @@ state:
 ```python
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
-class OffsetAxis(TensorAxis[int, OffsetCoordinates]):
-    relative_to: type[TensorAxis[Any, Any]]
+class OffsetAxis(TensorAxis[int]):
+    coordinates: OffsetCoordinates
+    relative_to: type[TensorAxis[Any]]
 ```
 
 The selected contract is:
@@ -668,7 +678,7 @@ A conceptual root is:
 ```python
 @dataclass(frozen=True, slots=True, kw_only=True)
 class TensorFieldSpec[
-    AxesT: tuple[TensorAxis[Any, Any], ...],
+    AxesT: tuple[TensorAxis[Any], ...],
 ]:
     axes: AxesT
     device: torch.device
@@ -740,6 +750,8 @@ Its contract is:
 - downstream immutable fields are retained;
 - the returned object has the same exact concrete Spec type;
 - an exact no-op target returns `self`;
+- every changed reconstruction reruns universal validation and the existing
+  most-derived semantic requirement exactly once after all fields exist;
 - availability is not checked;
 - no dtype promotion is inferred;
 - no units are converted; and
@@ -761,8 +773,8 @@ A conceptual root is:
 ```python
 @dataclass(frozen=True, slots=True, kw_only=True)
 class TensorKernelSpec[
-    ConditioningAxesT: tuple[TensorAxis[Any, Any], ...],
-    OperationAxesT: tuple[TensorAxis[Any, Any], ...],
+    ConditioningAxesT: tuple[TensorAxis[Any], ...],
+    OperationAxesT: tuple[TensorAxis[Any], ...],
 ]:
     conditioning_axes: ConditioningAxesT
     operation_axes: OperationAxesT
@@ -880,6 +892,9 @@ the replacement must satisfy these consumer requirements:
   fieldless;
 - a downstream package can validate its added Spec fields without replacing or
   bypassing universal TensorCore validation;
+- same-subtype Spec, Field, Kernel, and Collection reconstruction reruns the
+  existing most-derived semantic requirement exactly once after all fields
+  exist;
 - cooperative intermediate validation, if required, is explicit and
   statically testable;
 - no public subclass token, reflection registry, runtime finality scan, or
@@ -946,8 +961,9 @@ properties forward to `spec`.
 - returns `self` for an exact no-op target;
 - performs no unit conversion;
 - performs no dtype promotion policy;
-- performs no scientific validation beyond the generic representation
-  contract; and
+- adds no new TensorCore scientific policy, but normal exact-subtype
+  reconstruction reruns the subtype's already-defined semantic validation
+  exactly once because dtype conversion can change represented values; and
 - does not change semantic class identity.
 
 Generic exact-subtype reconstruction requires supported TensorField semantic
@@ -994,7 +1010,9 @@ state belongs in the exact concrete KernelSpec subtype.
 
 `TensorKernel.to(device=..., dtype=...)` follows the same semantic-subtype and
 Spec-preservation rules as TensorField, while retaining the defensive
-ownership contract.
+ownership contract. Its newly allocated result reruns universal
+tensor/Spec agreement and the existing most-derived semantic requirement
+exactly once.
 
 TensorCore must implement movement without exposing:
 
@@ -1003,10 +1021,13 @@ TensorCore must implement movement without exposing:
 - an unsafe alias of caller-owned tensor state;
 - a base-class result;
 - duplicate defensive snapshots beyond the exact accepted contract; or
+- bypassed semantic validation; or
 - lost downstream Spec fields.
 
 The exact private reconstruction mechanism is TensorCore-owned and must be
-frozen in its work order.
+frozen in its work order. A package-private trusted adoption path for the
+freshly allocated movement result is acceptable only when it avoids a
+duplicate snapshot while still running universal and most-derived validation.
 
 ## TensorCollection
 
@@ -1065,6 +1086,24 @@ collection.member_types
 collection.member(ProductType)
 ```
 
+The replacement is deliberately complete. The published field-named
+collection vocabulary is retired without aliases:
+
+```text
+fields
+field_types
+field(...)
+tensor(...)
+require_field_types(...)
+```
+
+`member(...)` returns the exact semantic member object; callers access that
+Field or Kernel's `.tensor` directly. The first replacement stage does not add
+`require_member_types(...)` merely to preserve a renamed generic validator.
+Concrete collection leaves enforce their exact allowed member types through
+their semantic requirement. A future generic member validator requires a
+demonstrated second consumer and a separately frozen contract.
+
 ### Explicit collection movement
 
 The generic collection operation is device-only:
@@ -1079,6 +1118,8 @@ It:
 - preserves exact collection subtype;
 - preserves stable member order;
 - returns `self` when every member already targets that exact device;
+- reconstructs a changed exact collection subtype and reruns its existing
+  most-derived semantic requirement exactly once;
 - performs no generic dtype cast because a heterogeneous collection may
   deliberately contain float, integer, and complex representations;
 - performs no unit conversion;
@@ -1092,10 +1133,22 @@ smuggling policy into the base.
 
 ## TensorArtifact
 
-TensorArtifact is explicitly deferred.
+TensorArtifact generalization is explicitly deferred.
 
-The current field-oriented artifact contract remains unchanged through this
-architecture selection. This record does not:
+The current field-oriented artifact behavior remains unchanged, but the
+generic Collection replacement requires one narrow static correction:
+
+```text
+TensorArtifact.materialize(...)
+    -> TensorCollection[TensorField[Any]]
+```
+
+The exact existing artifact method spelling and parameters remain
+TensorCore-owned. Its return annotation and evidence must prove that artifact
+materialization remains field-only rather than accidentally admitting Kernels
+or mixed members.
+
+This record does not:
 
 - generalize artifacts to kernels;
 - persist TensorKernelSpec;
@@ -1119,6 +1172,11 @@ TensorConfig
 CountAxis
 RegularAxis
 LabelAxis
+TensorCollection.fields
+TensorCollection.field_types
+TensorCollection.field(...)
+TensorCollection.tensor(...)
+require_field_types(...)
 ```
 
 `TensorConfig` is unpublished local Stage 30 state. It must be removed by
@@ -1138,6 +1196,17 @@ deliberate breaking pre-deployment change. TensorCore must not retain:
 TensorCore keeps `OffsetAxis` but revises it to compose
 `OffsetCoordinates`.
 
+The selected Collection member vocabulary is the sole replacement:
+
+```text
+members
+member_types
+member(...)
+```
+
+No field-named alias, forwarding requirement, or parallel validation facade
+survives.
+
 ## TensorDSLab Ownership
 
 TensorDSLab consumes the generic TensorCore substrate and owns quantities,
@@ -1154,7 +1223,8 @@ and addresses, and Product validation.
 @dataclass(frozen=True, slots=True, kw_only=True)
 class QuantityAxis[
     CoordinatesT: Coordinates[int],
-](TensorAxis[int, CoordinatesT], ABC):
+](TensorAxis[int], ABC):
+    coordinates: CoordinatesT
     unit: pint.Unit
 ```
 
@@ -1222,7 +1292,7 @@ specialization of `TensorFieldSpec`:
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class QuantityFieldSpec[
-    AxesT: tuple[TensorAxis[Any, Any], ...],
+    AxesT: tuple[TensorAxis[Any], ...],
 ](TensorFieldSpec[AxesT]):
     unit: pint.Unit
 ```
@@ -1257,8 +1327,8 @@ value. It adds unit state once and requires no `ProductFieldSpec`,
 @final
 @dataclass(frozen=True, slots=True, kw_only=True)
 class QuantityKernelSpec[
-    ConditioningAxesT: tuple[TensorAxis[Any, Any], ...],
-    OperationAxesT: tuple[TensorAxis[Any, Any], ...],
+    ConditioningAxesT: tuple[TensorAxis[Any], ...],
+    OperationAxesT: tuple[TensorAxis[Any], ...],
 ](TensorKernelSpec[ConditioningAxesT, OperationAxesT]):
     unit: pint.Unit
 ```
@@ -2089,7 +2159,7 @@ class ChargeConfig:
     spec: QuantityFieldSpec[Any]
     kernels: ChargeKernels
     correlated_avalanche_generations: NonnegativeInteger
-    temporal_axis: type[TensorAxis[Any, Any]] | None
+    temporal_axis: type[TensorAxis[Any]] | None
 
     __hash__ = None
 ```
@@ -3151,15 +3221,22 @@ TensorDSLab:
 TensorCore Design:
 
 1. starts from exact preserved local main `de235057...`;
-2. creates an ordinary forward child stage;
+2. creates an ordinary forward child, provisionally
+   `TensorCore/stage-31-compositional-tensor-spec-substrate`;
 3. freezes exact Coordinates, Axis, Spec, Field, Kernel, Collection, movement,
    typing, diagnostics, topology, exports, tests, and artifact contracts;
-4. retires unpublished TensorConfig and published old Axis representations
-   without aliases;
+4. retires unpublished TensorConfig, published old Axis representations, and
+   the field-named Collection/validation vocabulary without aliases;
 5. consults exact TensorDSLab and any other affected consumer;
 6. resolves every exact consumer finding;
 7. leaves TensorDSLab physics and application policy downstream; and
 8. does not publish until the complete same-byte package loop clears.
+
+The provisional package version remains `0.22.0` because no TensorCore
+`0.22.0` bytes have been published. TensorCore Design owns the final stable
+key, version, exact work order, and publication decision. This TensorDSLab
+record does not bind them before exact corrected consumer confirmation and
+TensorCore's own package gates.
 
 ### Phase 2: TensorCore implementation and publication
 
@@ -3238,8 +3315,17 @@ The future TensorCore replacement must prove at least:
 ### Coordinates and axes
 
 - exact public class/decorator/signature contracts;
+- one-parameter `TensorAxis[CoordinateT]` typing with downstream exact
+  `coordinates`-field narrowing;
+- static rejection of the wrong Coordinates representation for a semantic
+  Axis leaf;
 - structural equality/hash;
 - Count, Regular, Label, and Offset admission;
+- exact signed-int64 extent-boundary admission and rejection immediately above
+  `2**63 - 1`;
+- unbounded exact Python-integer Regular coordinate arithmetic within a valid
+  extent;
+- nonempty unique LabelCoordinates labels;
 - zero extents and empty supports;
 - negative Regular step generic behavior;
 - strict coordinate and index lookup;
@@ -3261,6 +3347,10 @@ The future TensorCore replacement must prove at least:
 - fieldful downstream Spec subclass support;
 - exact same-subclass `.to`;
 - no-op identity;
+- changed `.to` reconstruction rerunning the existing most-derived semantic
+  validation exactly once;
+- a dtype/device change that violates a downstream Spec requirement failing
+  during reconstruction;
 - no allocation or availability check;
 - no lost downstream fields; and
 - no TensorConfig.
@@ -3271,8 +3361,13 @@ The future TensorCore replacement must prove at least:
 - fail-closed mismatch diagnostics;
 - semantic subtype preservation;
 - Field no-op `.to` identity;
+- changed Field `.to` rerunning existing most-derived semantic validation
+  exactly once, including a narrowing cast that creates a nonfinite semantic
+  value;
 - Kernel defensive ownership;
 - Kernel no-op `.to` identity;
+- changed Kernel `.to` rerunning existing most-derived semantic validation
+  exactly once without a duplicate defensive snapshot;
 - safe exact-subtype movement without public trust surface;
 - unhashability/identity equality;
 - no unit or Product policy; and
@@ -3287,8 +3382,16 @@ The future TensorCore replacement must prove at least:
 - device-only `.to`;
 - no-op identity;
 - exact subtype preservation;
+- changed Collection `.to` rerunning its existing most-derived semantic
+  validation exactly once;
+- complete absence of `fields`, `field_types`, `field`, `tensor`, and
+  `require_field_types` supported surfaces;
+- sole `members`, `member_types`, and `member` vocabulary;
 - no reflection;
-- and no artifact generalization.
+- no artifact generalization; and
+- exact field-only `TensorArtifact.materialize` return typing, with strict
+  static rejection of artifact implementations that return Kernel or mixed
+  collections.
 
 ### Static and artifact
 
@@ -3439,9 +3542,15 @@ Review should use targeted mutants for plausible incorrect implementations.
 Examples include:
 
 - treating coordinate order as irrelevant;
+- accepting CountCoordinates where a semantic leaf narrows its representation
+  to LabelCoordinates;
 - resolving semantic roles by class name rather than exact class;
 - losing downstream Spec fields in `.to`;
 - reconstructing a base Field or Kernel;
+- bypassing subtype validation after a narrowing dtype cast;
+- duplicating the Kernel defensive snapshot during movement;
+- accepting Kernel or mixed members from TensorArtifact materialization;
+- retaining a field-named Collection accessor as an alias;
 - silently moving a source during production;
 - inferring a canonical unit from kernel class;
 - using output dtype below the Product floor;
@@ -3514,15 +3623,20 @@ This architecture does not select:
 Future work stops and returns to the relevant Design authority if:
 
 1. TensorCore declines or substantively changes the compositional contract.
-2. TensorCore cannot safely preserve exact Spec subclasses in `.to(...)`
-   without a public unchecked mechanism.
+2. TensorCore cannot safely preserve exact Spec/Field/Kernel/Collection
+   subclasses and rerun their existing semantic validation exactly once in
+   `.to(...)` without a public unchecked mechanism or duplicate Kernel
+   snapshot.
 3. TensorCore requires TensorDSLab units, Products, Configs, or application
    policy upstream.
-4. A second exact axis role cannot be represented without restoring parallel
-   Axis inheritance vocabulary.
+4. The one-parameter TensorAxis plus downstream narrowed `coordinates` field
+   cannot statically reject the wrong Coordinates representation, or a second
+   exact axis role requires restoring parallel Axis inheritance vocabulary.
 5. Fieldful downstream Specs cannot coexist with fieldless semantic
    Field/Kernel leaves.
-6. TensorCollection cannot preserve exact semantic subtype during movement.
+6. TensorCollection cannot preserve exact semantic subtype/validation during
+   movement, or TensorArtifact cannot retain a statically field-only
+   materialization boundary.
 7. TensorDSLab production would need Pint, coordinate search, silent movement,
    or dtype-policy discovery.
 8. A Product cannot express its source law without importing an application
