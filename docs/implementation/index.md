@@ -343,53 +343,56 @@ private support owner contains twenty unique helpers/oracles and no test case
 or `test*` callable. Complete source/archive and negative-typing clearance
 remain Validation-owned.
 
-### [Maintenance 15: Tensor-Native Config Punchcard Architecture](maintenance_15_tensor_native_config_punchcard_architecture.md)
+### [Maintenance 15: Spec-Composed Products And Application Boundary](maintenance_15_spec_composed_products_and_application_boundary.md)
 
-Status: **Architecture selected; exact TensorCore Stage 30 Design
-consumer-confirmed; TensorCore implementation/publication and TensorDSLab
-adoption pending; TensorDSLab Implementation undispatched**.
+Status: **Architecture selected; coordinated TensorCore replacement
+consultation pending; TensorDSLab Implementation undispatched**.
 
 This documentation-only architecture record starts from exact locally closed
 Maintenance 14 `856df702c124365c929bf993851a51fb8ff3c245`, tree
-`9e5ff69920699dc522980b164eaf1073116914c6`. It selects immutable tensor-native
-Configs as execution punchcards: each Product's `prepare(...)` returns a fresh
-aligned Config of the exact same concrete type, and `produce(...)` consumes
-that representation without Pint interpretation, coordinate alignment, device
-movement, dtype-policy discovery, or another model-preparation pass. Explicit
-source-to-working and working-to-output dtype conversions remain planned
-Product tensor operations.
+`9e5ff69920699dc522980b164eaf1073116914c6`. It selects a clean compositional
+representation vocabulary: generic `Coordinates` values compose semantic
+`TensorAxis` values; `TensorFieldSpec` and `TensorKernelSpec` own exact axes,
+device, and dtype; and `TensorField` / `TensorKernel` carry one exact Spec.
+TensorDSLab adds `QuantityAxis`, quantity Specs, and quantity Field/Kernel
+roots with unit stored once in the Spec.
 
-The selected end state retires every Runtime value, `QuantityFieldSpec`,
-prepared wrappers/tokens, `ReadoutCollection`, `Pulse`, and
-`simulate_readout(...)` without aliases. It selects `PulseResponse`,
-instance-owned units on `QuantityField` and `QuantityKernel`,
-`QuantityConfig` with exact axes/device/unit/dtype, Product-owned working-dtype
-promotion and numerical floors, ordered `tuple[QuantityField, ...]` source
-contracts, and Product-owned `create/prepare/produce/validate`.
+The Product layer becomes a reusable parts bin rather than one package-owned
+readout chain. Each Product owns one independent transformation, one
+Product-specific Config punchcard, and public
+`create/prepare/produce/validate` class methods. Preparation returns the same
+exact Config type with aligned kernels and meaningful derived execution facts.
+Production performs no Pint interpretation, coordinate-policy discovery,
+silent device movement, or dtype-policy selection. Ordered quantity-source
+tuples allow application-owned compositions such as
+`Axioelectrons + Photoelectrons -> Charge` without making TensorDSLab import
+every collaboration source class.
 
-`Readout` and `ReadoutConfig` become abstract structural roots. Concrete
-`DS20kVeto` / `DS20kVetoConfig` retain the waveform chain; concrete `Silex` /
-`SilexConfig` initially own only the pixelated-SiPM
-`Axioelectrons + Photoelectrons -> Charge` path. Each collaboration owns its
-exact topology and lifecycle, so Silex contains no placeholder waveform
-Products or Configs. The one-shot paths are
-`DS20kVeto.create(sources=..., config=..., rng=...)` and
-`Silex.create(sources=..., config=..., rng=...)`.
+`ChargeConfig` is the complete Charge punchcard, while `ChargeKernels` is only
+its typed physical-kernel collection. `PulseResponse` replaces `Pulse`.
+Current timing-jitter Multinomial, collapsed-Poisson
+direct/delayed/afterpulse, dark-count, smearing, convolution, noise, analog,
+and digitizer laws remain the selected scientific baseline unless a later
+exact parity record authorizes a change.
 
-TensorDSLab retains all Pint, physical-kernel, product, profile, scientific
-law, RNG-role/address, boundary, preparation, validation, and orchestration
-ownership. The user superseded the initial local-root direction. TensorCore
-Stage 30 exact Design commit
-`79bb5ae00c3dbf6a49131001030ea56175e8461e`, tree
-`44eaf757720c9dab41d5932814d70daba0e74721`, now freezes the narrow generic
-`TensorConfig` plus storage-free TensorField/TensorKernel device/dtype
-vocabulary; TensorDSLab independently confirmed those exact bytes with zero
-findings. TensorDSLab remains pinned to published TensorCore `0.21.0` and will
-not implement a temporary local root or adopt an unpublished candidate.
-Production remains undispatched pending exact TensorCore `0.22.0` publication,
-package-owned dependency synchronization, and bounded TensorDSLab work orders.
-No dependency, science, runtime, test, CUDA, compatibility, publication, or
-package byte changes through this Design record.
+Collaboration axes, profiles, workflows, whole-result collections, demos, CLI,
+and IO move to application-owned packages. TensorDSLab core therefore selects
+no universal `Readout`, `ReadoutConfig`, `ReadoutCollection`,
+`simulate_readout()`, `ds20k_veto()`, or Silex workflow. DS20k and Silex may
+assemble different Product graphs while depending only on TensorDSLab's
+supported parts.
+
+TensorCore's locally closed but unpublished Stage 30 remains preserved at
+exact `de235057ee7c0bf702c40e8f331fc4e89a67b7c7`, tree
+`c31f007e38ebfa068233419703a061306a9678e4`; live TensorCore remains published
+`0.21.0` at exact `78d0891bf6c0fefbcad4abe09980867c54202a9e`.
+TensorDSLab does not adopt the unpublished `TensorConfig` contract. A future
+TensorCore replacement must advance by forward history and freeze the complete
+Coordinates/Spec/Field/Kernel/Collection substrate before publication.
+TensorDSLab remains pinned to exact published `0.21.0` until that containing
+commit is independently accepted. No production, dependency, test, science,
+CUDA, application, compatibility, merge, push, or publication action is
+authorized by this Design record.
 
 ### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
 

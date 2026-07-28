@@ -1,0 +1,3484 @@
+# Maintenance 15 Spec-Composed Products And Application Boundary
+
+Status: **Architecture selected; coordinated TensorCore replacement
+consultation pending; TensorDSLab Implementation undispatched**.
+
+Stable key:
+`TensorDSLab/maintenance-15-spec-composed-products-and-application-boundary`
+
+## Purpose
+
+Replace TensorDSLab's current product graph, Runtime records, axis inheritance
+model, and collaboration-specific readout surface with a smaller
+parts-bin architecture built from:
+
+- generic coordinate representations;
+- semantic tensor axes composed with those representations;
+- immutable field and kernel specifications;
+- tensor values that carry one exact specification;
+- TensorDSLab quantity-aware specification and value roots;
+- independent Product transforms with Product-specific Config punchcards; and
+- collaboration-owned applications that assemble Products into workflows.
+
+The selected architecture treats each Product as a complete scientific
+transformation in its own right:
+
+```text
+sources + Product Config -> one Product
+```
+
+It does not treat a Product as a permanently assigned stage in a package-owned
+pipeline. `Charge` means the result of the Charge transformation configured by
+one `ChargeConfig`; it does not mean "the object that always comes after
+Photoelectrons and before PureWaveform." An application may choose:
+
+```text
+Photoelectrons -> Charge
+```
+
+or:
+
+```text
+Axioelectrons + Photoelectrons -> Charge
+```
+
+or another scientifically valid source assembly without requiring
+TensorDSLab's reusable Product package to own that application graph.
+
+The same rule applies to every Product. A Product owns:
+
+- the exact source relationship it accepts;
+- its Config contract;
+- its preparation;
+- its numerical transformation;
+- its result validation; and
+- its semantic result type.
+
+An application owns:
+
+- which Products are used;
+- their order and dependency graph;
+- collaboration-specific semantic axes;
+- profiles and defaults;
+- whole-workflow collections;
+- retained intermediate products;
+- user-facing commands and demonstrations; and
+- application-level IO and persistence policy.
+
+This record is intentionally detailed because it defines a breaking
+pre-deployment architecture boundary shared with TensorCore. It selects the
+architecture and cross-package ownership needed for future bounded work
+orders. It does not edit production, adopt an unpublished dependency, dispatch
+Implementation, authorize a collaboration application repository, run CUDA,
+or claim compatibility, publication, deployment, calibration, or production
+readiness.
+
+## Governing Standards
+
+This architecture follows:
+
+- [CONTRIBUTING](../../CONTRIBUTING.md) for semantic representation,
+  coordinates versus indices, public typing, unit ownership, dtype and device
+  policy, preparation, validation, relationships, artifacts, tests, and
+  cross-package changes;
+- [Overview](../overview.md) for the currently operative package boundary and
+  intended ecosystem data flow;
+- [Tensor Architecture](../architecture/tensors.md) for the current
+  TensorCore-backed field and axis baseline that the future implementation
+  will replace;
+- [Readout Architecture](../architecture/readout.md) for the currently
+  operative Maintenance 12 product graph and Maintenance 13 preparation
+  mechanics;
+- [Validation](../validation.md) for deterministic, statistical, typing,
+  artifact, device, and scientific evidence;
+- [Parity](../parity.md) for every preserved law, deliberate stochastic
+  rebaseline, or accepted divergence;
+- [Maintenance 12](maintenance_12_tensorcore_0_21_kernel_geometry_quantity_refactor.md)
+  for the current physical-kernel and stochastic-law baseline;
+- [Maintenance 13](maintenance_13_runtime_hygiene_and_environment_reproducibility.md)
+  for the current shared kernel-alignment boundary; and
+- [Maintenance 14](maintenance_14_test_suite_curation.md) for the current test
+  organization and evidence baseline.
+
+The living architecture pages describe the current package until future
+implementation work is separately cleared and merged. This Design record
+describes the selected future boundary. A future implementation must update
+the living pages atomically rather than treating this record as a substitute
+for current-reference documentation.
+
+## Exact Design Baseline
+
+The selected architecture starts from exact locally closed Maintenance 14:
+
+```text
+TensorDSLab local main:
+    856df702c124365c929bf993851a51fb8ff3c245
+TensorDSLab tree:
+    9e5ff69920699dc522980b164eaf1073116914c6
+exact parent / immutable Maintenance 14 Candidate 1:
+    60670e0bc6e54b87bd15177e36f46451abc64226
+published origin/main at Design start:
+    c8de1528d1ed57d3e86a9c37d1ad307127a23feb
+origin/main tree:
+    1d58e398428f35600e9bc582366c846c90d5f47c
+TensorDSLab package version:
+    0.1.0
+Python:
+    >=3.14
+Torch:
+    >=2.13,<2.14
+NumPy:
+    2.5.1
+Pint:
+    0.25.3
+TensorCore published dependency:
+    0.21.0
+TensorCore published commit:
+    78d0891bf6c0fefbcad4abe09980867c54202a9e
+TensorCore published tree:
+    af5c4f6d693fa25cf767f3aaae31a47d86cf3a8d
+```
+
+Maintenance 14 retained the complete Maintenance 13 production behavior.
+Complete source and extracted-archive evidence passed:
+
+```text
+305 tests run
+302 passed
+3 conditional unavailable-CUDA skips
+```
+
+Pyright reported zero diagnostics, and the exact TensorCore dependency
+negative fixture retained `82` intended diagnostics. Those totals identify the
+starting evidence only. They are not future module-count, file-count, or
+test-count contracts.
+
+### Exact unpublished TensorCore state
+
+TensorCore Stage 30 had already completed its local package loop before this
+replacement architecture was selected. Its exact unpublished state is:
+
+```text
+TensorCore local main / HEAD:
+    de235057ee7c0bf702c40e8f331fc4e89a67b7c7
+TensorCore local tree:
+    c31f007e38ebfa068233419703a061306a9678e4
+TensorCore local state:
+    clean, three linear commits ahead of origin/main
+TensorCore live origin/main:
+    78d0891bf6c0fefbcad4abe09980867c54202a9e
+TensorCore live origin/main tree:
+    af5c4f6d693fa25cf767f3aaae31a47d86cf3a8d
+publication state:
+    Stage 30 not pushed or published
+```
+
+The unpublished Stage 30 bytes add a narrow `TensorConfig` and derived
+Field/Kernel device and dtype vocabulary. TensorDSLab had truthfully confirmed
+that superseded contract before selecting this broader compositional
+architecture. The replacement is therefore an architecture change, not a
+finding against those exact bytes.
+
+TensorCore must preserve its accepted local history. A future TensorCore
+replacement stage must advance from the exact local state by ordinary forward
+history. It must not reset, amend, rewrite, hide, or pretend the locally closed
+Stage 30 package loop never happened.
+
+TensorDSLab does not adopt the unpublished Stage 30 bytes. Its dependency
+remains exact published TensorCore `0.21.0` until TensorCore:
+
+1. accepts a synchronized replacement Design;
+2. implements and independently clears the complete compositional contract;
+3. closes the replacement locally;
+4. publishes one exact containing commit; and
+5. supplies exact source, artifact, typing, and consumer evidence.
+
+TensorCore owns the replacement version number. No TensorCore `0.22.0` has
+been published, but TensorDSLab does not decide whether the future containing
+version remains `0.22.0` or advances again.
+
+## Architecture Principles
+
+### Specifications describe representations
+
+A specification describes what a tensor representation is:
+
+```text
+semantic axes
+device
+dtype
+```
+
+A quantity specification additionally describes:
+
+```text
+physical unit
+```
+
+Specifications contain no tensor payload and execute no scientific operation.
+They are immutable, structurally comparable values that can be created,
+checked, transformed explicitly, and shared before any payload is allocated.
+
+### Fields and kernels carry exact specifications
+
+Every TensorField and TensorKernel carries one exact Spec object. A consumer
+never has to infer the representation from a tensor, a semantic class name, a
+parallel Config field, or a Runtime record.
+
+```text
+TensorField  = tensor payload + TensorFieldSpec
+TensorKernel = tensor payload + TensorKernelSpec
+```
+
+The tensor must match its Spec exactly. Construction does not silently repair
+shape, device, dtype, axes, coordinates, or units.
+
+### Configs describe transformations
+
+A Product-specific Config describes one transformation. It contains:
+
+- the exact output Spec;
+- the exact physical kernels and scalar parameters;
+- the exact bounded scientific policy; and
+- meaningful prepared facts when the Config has been aligned.
+
+A Config is not a generic tensor representation, so there is no generic
+`TensorConfig`, `QuantityConfig`, or universal Config root in the selected end
+state.
+
+### Products are parts, not pipeline stages
+
+Every Product is independently usable. TensorDSLab does not encode one
+universal graph, registry, pipeline, reflection mechanism, or Product
+dependency hierarchy.
+
+The application chooses the graph:
+
+```text
+application inputs
+    -> Product.create(...)
+    -> optional retained Product
+    -> another Product.create(...)
+    -> application result
+```
+
+### Preparation pays policy cost before production
+
+Preparation performs:
+
+- relationship and semantic-axis admission;
+- coordinate correspondence;
+- conditioning-axis reordering;
+- kernel alignment;
+- unit conversion;
+- dtype planning;
+- device materialization;
+- allocation and count preflight; and
+- preparation of meaningful immutable execution facts.
+
+Production consumes the aligned Config and sources. It performs numerical
+tensor work but no Pint interpretation, coordinate search, semantic-axis
+permutation discovery, device movement, or dtype-policy selection.
+
+### Explicit movement is allowed; silent movement is not
+
+Specs, Fields, Kernels, and Collections may provide explicit `.to(...)`
+operations with exact contracts. Product preparation may call those operations
+deliberately. Product production must not silently move caller values.
+
+### Generic mechanics stay generic
+
+TensorCore owns package-neutral coordinate, axis, Spec, Field, Kernel, and
+Collection mechanics. TensorDSLab owns quantities, physical transformations,
+scientific laws, Configs, preparation, product validation, and stochastic role
+identity. Applications own collaboration semantics and workflows.
+
+## Selected Vocabulary
+
+The selected generic names are:
+
+```text
+Coordinates
+CountCoordinates
+RegularCoordinates
+LabelCoordinates
+OffsetCoordinates
+TensorAxis
+OffsetAxis
+TensorFieldSpec
+TensorKernelSpec
+TensorField
+TensorKernel
+TensorCollection
+TensorArtifact
+```
+
+`TensorFieldSpec` lives with `TensorField` in
+`tensor_core/tensor/field.py`. `TensorKernelSpec` lives with `TensorKernel` in
+`tensor_core/tensor/kernel.py`. Separate `spec.py` modules are not selected.
+
+The selected TensorDSLab quantity names are:
+
+```text
+QuantityAxis
+QuantityFieldSpec
+QuantityKernelSpec
+QuantityField
+QuantityKernel
+```
+
+The selected Product and physical-kernel names include:
+
+```text
+Photoelectrons
+Charge
+PureWaveform
+NoiseWaveform
+AnalogWaveform
+DigitizedWaveform
+
+ChargeConfig
+ChargeKernels
+PureWaveformConfig
+NoiseWaveformConfig
+AnalogWaveformConfig
+DigitizedWaveformConfig
+
+TimingJitter
+DirectCrosstalk
+DelayedCrosstalk
+Afterpulse
+DarkCountRate
+SmearingWidth
+PulseResponse
+WhiteNoiseRms
+PowerSpectralDensity
+AnalogMinimum
+AnalogMaximum
+```
+
+`PulseResponse` replaces `Pulse`. `ChargeConfig` is the complete Product
+punchcard; `ChargeKernels` is only its typed kernel collection.
+
+## TensorCore Ownership
+
+TensorCore owns the following generic representation substrate. This section
+is a consumer requirement for a future TensorCore Design stage, not authority
+to edit TensorCore.
+
+## Coordinates
+
+### Root purpose
+
+`Coordinates` represents one complete ordered coordinate set. The plural name
+is deliberate: an instance owns the entire coordinate representation for an
+axis, not one coordinate value.
+
+A conceptual root is:
+
+```python
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Coordinates[CoordinateT](ABC):
+    @property
+    @abstractmethod
+    def size(self) -> int:
+        ...
+
+    @abstractmethod
+    def coordinate_at(self, index: int) -> CoordinateT:
+        ...
+
+    @abstractmethod
+    def index_of(self, coordinate: CoordinateT) -> int:
+        ...
+```
+
+The exact TensorCore implementation may choose a different internal method
+layout, but the public semantics are frozen:
+
+- immutable, slotted, tensor-free state;
+- structural equality and hashing over exact semantic class and complete
+  representation state;
+- deterministic ordered coordinate identity;
+- strict index admission;
+- strict coordinate admission;
+- no units;
+- no device or dtype;
+- no tensor materialization;
+- no scientific axis role;
+- no movement;
+- no interpolation;
+- no tolerance-based lookup; and
+- no normalization or repair.
+
+Coordinate representation classes may use compact state. They need not
+materialize a tuple containing every coordinate.
+
+### `CountCoordinates`
+
+`CountCoordinates` represents:
+
+```text
+0, 1, ..., count - 1
+```
+
+Its selected state is:
+
+```python
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CountCoordinates(Coordinates[int]):
+    count: int
+```
+
+Its contract is:
+
+- `count` is an exact non-boolean built-in integer;
+- `count >= 0`;
+- `size == count`;
+- coordinates are exact built-in integers;
+- `coordinate_at(i) == i`;
+- `index_of(c) == c` when `0 <= c < count`;
+- rank-zero consumers remain possible because a coordinate representation is
+  not itself a tensor rank;
+- zero extent is valid; and
+- no semantic meaning such as "example" or "event" enters TensorCore.
+
+### `RegularCoordinates`
+
+`RegularCoordinates` represents:
+
+```text
+start + index * step
+```
+
+Its selected state is:
+
+```python
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class RegularCoordinates(Coordinates[int]):
+    start: int
+    step: int
+    count: int
+```
+
+Its generic contract is:
+
+- `start`, `step`, and `count` are exact non-boolean built-in integers;
+- `count >= 0`;
+- `step != 0`;
+- positive and negative steps are both generic representation values;
+- `size == count`;
+- coordinate calculation uses exact Python-integer arithmetic;
+- `index_of()` admits only exact represented coordinates;
+- lookup performs no floating comparison or tolerance;
+- no physical period, sampling frequency, origin convention, or time unit
+  enters TensorCore; and
+- downstream semantic leaves may narrow the generic contract, such as
+  requiring a positive step.
+
+The representation remains compact for large coordinate counts.
+
+### `LabelCoordinates`
+
+Its selected state is:
+
+```python
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class LabelCoordinates(Coordinates[str]):
+    labels: tuple[str, ...]
+```
+
+Its contract is:
+
+- `labels` is exactly a tuple;
+- every label is an exact built-in `str`;
+- labels are ordered and unique;
+- supplied label identity and spelling are preserved;
+- `size == len(labels)`;
+- `coordinate_at()` returns the exact stored label;
+- `index_of()` uses exact string equality;
+- duplicates are rejected rather than silently disambiguated; and
+- TensorCore assigns no channel, sensor, detector, or collaboration meaning.
+
+### `OffsetCoordinates`
+
+Its selected state is:
+
+```python
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class OffsetCoordinates(Coordinates[int]):
+    offsets: tuple[int, ...]
+```
+
+Its contract is:
+
+- `offsets` is exactly a tuple;
+- each offset is an exact non-boolean built-in integer;
+- offsets are ordered and unique;
+- negative, zero, and positive values are all admitted;
+- empty support is generically valid;
+- no sorting, symmetry, regularity, contiguity, causality, unit, anchor,
+  padding, convolution, or boundary policy is implied;
+- `coordinate_at()` and `index_of()` use exact ordered values; and
+- structural equality includes the complete ordered offset tuple.
+
+## TensorAxis
+
+### Composition replaces representation inheritance
+
+`TensorAxis` composes a Coordinates value:
+
+```python
+@dataclass(frozen=True, slots=True, kw_only=True)
+class TensorAxis[
+    CoordinateT,
+    CoordinatesT: Coordinates[CoordinateT],
+](ABC):
+    coordinates: CoordinatesT
+```
+
+The previous representation subclasses:
+
+```text
+CountAxis
+RegularAxis
+LabelAxis
+```
+
+are retired without aliases, wrappers, forwarding imports, or parallel
+vocabulary.
+
+Semantic axes specialize `TensorAxis` and select the exact accepted
+Coordinates representation:
+
+```python
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ExampleAxis(TensorAxis[int, CountCoordinates]):
+    pass
+
+
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ChannelAxis(TensorAxis[str, LabelCoordinates]):
+    pass
+```
+
+The sketches illustrate downstream leaves only. TensorCore must not own these
+collaboration names.
+
+### Generic axis contract
+
+TensorCore owns:
+
+- exact Coordinates instance admission;
+- preservation of the supplied Coordinates object;
+- `size` forwarding;
+- `coordinate_at()` forwarding;
+- `index_of()` forwarding;
+- exact semantic axis class identity;
+- structural equality and hashing over exact semantic class, exact coordinate
+  representation, and complete downstream immutable representation fields;
+- frozen and slotted value semantics;
+- downstream abstract intermediate roots that may add immutable, tensor-free,
+  structurally comparable fields; and
+- zero-size axes.
+
+TensorCore does not own:
+
+- Pint;
+- physical dimensions;
+- collaboration role names;
+- interpretation of coordinate magnitudes;
+- a requirement that every semantic leaf be fieldless;
+- device or dtype;
+- axis alignment policy;
+- target-product legality;
+- coordinate conversion between different representations; or
+- semantic equivalence between different exact axis classes.
+
+An exact semantic axis class remains the role identity used by Fields,
+Kernels, Specs, and Products.
+
+## OffsetAxis
+
+`OffsetAxis` is the one generic semantic axis with additional relationship
+state:
+
+```python
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class OffsetAxis(TensorAxis[int, OffsetCoordinates]):
+    relative_to: type[TensorAxis[Any, Any]]
+```
+
+The selected contract is:
+
+- `OffsetAxis` is concrete, final, and non-generic with respect to its target
+  role;
+- `coordinates` is exact `OffsetCoordinates`;
+- `relative_to` is one exact TensorAxis class role, not an axis instance;
+- the target class is preserved by identity;
+- equality and hashing include exact `relative_to` class identity;
+- multiple OffsetAxis values may coexist in one kernel when they target
+  different semantic roles;
+- no `SampleOffsetAxis`, `MicrocellXOffsetAxis`, or similar subclass family is
+  introduced;
+- no PEP 695 target-role parameter is introduced;
+- TensorCore owns no signed-displacement application, anchor, causality,
+  geometry, finite-boundary behavior, or units; and
+- downstream kernel validation may require `relative_to` to be a particular
+  semantic role.
+
+For example, a future pixelated detector may use:
+
+```python
+operation_axes = (
+    OffsetAxis(
+        relative_to=MicrocellXAxis,
+        coordinates=OffsetCoordinates(offsets=(-1, 0, 1)),
+    ),
+    OffsetAxis(
+        relative_to=MicrocellYAxis,
+        coordinates=OffsetCoordinates(offsets=(-1, 0, 1)),
+    ),
+    OffsetAxis(
+        relative_to=SampleAxis,
+        coordinates=OffsetCoordinates(offsets=(0, 1, 2, 3)),
+    ),
+)
+```
+
+The ordinary row-major tensor index of each operation cell remains its generic
+cell identity. Signed displacement meaning is downstream-owned.
+
+## TensorFieldSpec
+
+### TensorFieldSpec location and representation
+
+`TensorFieldSpec` belongs in `tensor_core/tensor/field.py` beside
+`TensorField`.
+
+A conceptual root is:
+
+```python
+@dataclass(frozen=True, slots=True, kw_only=True)
+class TensorFieldSpec[
+    AxesT: tuple[TensorAxis[Any, Any], ...],
+]:
+    axes: AxesT
+    device: torch.device
+    dtype: torch.dtype
+```
+
+It is a tensor-free structural value. It describes the complete expected
+representation of one TensorField.
+
+### Exact contract
+
+TensorCore owns:
+
+- `axes` admitted as exactly one tuple of constructed TensorAxis values;
+- exact axis types unique within the completed field domain;
+- exact supplied axis objects and tuple preserved;
+- `device` admitted as exact `torch.device`;
+- exact supplied device preserved without availability checks or
+  normalization;
+- `dtype` admitted as exact `torch.dtype`;
+- no supported/unsupported dtype policy beyond structural admission at the
+  generic root;
+- rank-zero domains;
+- zero-extent axes;
+- derived `rank`;
+- derived exact `shape`;
+- Python-integer `element_count`, equal to `1` at rank zero and `0` when any
+  extent is zero;
+- strict `axis_at(index)`;
+- exact-type `dimension_of(axis_type)`;
+- typed exact-type `axis(axis_type)` lookup;
+- structural equality and hashing over exact Spec class and complete immutable
+  state;
+- downstream Spec subclasses that may add immutable, tensor-free, hashable
+  dataclass fields; and
+- an explicit `.to(device=..., dtype=...)` representation transformation.
+
+The root owns no:
+
+- tensor;
+- allocation;
+- movement;
+- units;
+- layout promise;
+- gradient policy beyond what the eventual Field contract requires;
+- product;
+- scientific law;
+- workflow;
+- source relationship; or
+- preparation state.
+
+### TensorFieldSpec transformation
+
+The selected generic transformation is:
+
+```python
+target_spec = source_spec.to(
+    device=torch.device("cuda:0"),
+    dtype=torch.float32,
+)
+```
+
+Its contract is:
+
+- either keyword may be omitted;
+- omitted values remain exact;
+- no tensor is allocated or moved;
+- exact axis objects and tuple are retained;
+- downstream immutable fields are retained;
+- the returned object has the same exact concrete Spec type;
+- an exact no-op target returns `self`;
+- availability is not checked;
+- no dtype promotion is inferred;
+- no units are converted; and
+- Spec subclasses must remain reconstructible under this operation.
+
+TensorCore must freeze one exact safe reconstruction mechanism. It must not use
+an unchecked public constructor, lose downstream fields, or return the base
+Spec type.
+
+## TensorKernelSpec
+
+### TensorKernelSpec location and representation
+
+`TensorKernelSpec` belongs in `tensor_core/tensor/kernel.py` beside
+`TensorKernel`.
+
+A conceptual root is:
+
+```python
+@dataclass(frozen=True, slots=True, kw_only=True)
+class TensorKernelSpec[
+    ConditioningAxesT: tuple[TensorAxis[Any, Any], ...],
+    OperationAxesT: tuple[TensorAxis[Any, Any], ...],
+]:
+    conditioning_axes: ConditioningAxesT
+    operation_axes: OperationAxesT
+    device: torch.device
+    dtype: torch.dtype
+```
+
+The complete literal tensor axis order is:
+
+```text
+(*conditioning_axes, *operation_axes)
+```
+
+### Conditioning-axis invariants
+
+- `conditioning_axes` is exactly a tuple of constructed TensorAxis values;
+- exact conditioning-axis classes are unique within that tuple;
+- supplied axis objects and tuple are preserved;
+- no generic conditioning subset, broadcasting, selection, or source policy is
+  implied; and
+- zero conditioning rank and zero extents are admitted.
+
+### Operation-axis invariants
+
+- `operation_axes` is exactly a tuple of constructed TensorAxis values;
+- operation target roles are unique;
+- an OffsetAxis contributes `axis.relative_to` as its target role;
+- any other operation axis contributes `type(axis)` as its target role;
+- repeated exact concrete OffsetAxis types are therefore valid when their
+  `relative_to` roles differ;
+- there is no blanket exact-concrete-type uniqueness rule across the complete
+  axis tuple;
+- a conditioning role may equal an operation target role;
+- zero operation rank and empty operation support are generically admitted;
+  and
+- downstream physical leaves may require nonempty operation support.
+
+### Derived facts
+
+TensorCore owns:
+
+```text
+axes
+conditioning_rank
+operation_rank
+rank
+conditioning_shape
+operation_shape
+shape
+conditioning_element_count
+operation_element_count
+element_count
+axis_at
+dimension_of
+axis
+operation_target_roles
+```
+
+All element counts use exact Python-integer multiplication. Complete row-major
+index conversion remains structural and deterministic.
+
+### TensorKernelSpec transformation
+
+`TensorKernelSpec.to(device=..., dtype=...)` follows the same exact
+same-subclass, no-allocation, no-unit-conversion contract as
+`TensorFieldSpec.to(...)`.
+
+## Generic role resolution
+
+TensorCore owns a focused generic relationship operation equivalent to:
+
+```python
+dimensions = require_kernel_dimensions(field_spec, kernel_spec)
+```
+
+The exact accepted resolution rule is:
+
+- each conditioning axis resolves by exact `type(axis)`;
+- each OffsetAxis operation axis resolves by exact `axis.relative_to`;
+- each non-offset operation axis resolves by exact `type(axis)`;
+- returned dimensions follow complete kernel-axis order;
+- absence of any required semantic role is a generic error;
+- ambiguous exact-type resolution is impossible because of the relevant Spec
+  construction invariants; and
+- resolution performs no permutation, expansion, broadcast, movement, unit
+  conversion, coordinate comparison, or tensor allocation.
+
+TensorDSLab owns the next layer:
+
+- whether a required role is scientifically allowed;
+- exact coordinate correspondence;
+- conditioning-coordinate reordering;
+- tensor permutation;
+- insertion of broadcast dimensions;
+- storage expansion, if ever explicitly selected;
+- condition selection;
+- signed displacement application;
+- finite-window behavior; and
+- Product-specific diagnostics.
+
+## Construction And Validation Hooks
+
+TensorCore Design owns the exact decorators and protected hook spelling, but
+the replacement must satisfy these consumer requirements:
+
+- generic construction validates root representation state before
+  downstream scientific narrowing;
+- every downstream stored dataclass field is initialized before validation;
+- the most-derived semantic requirement runs exactly once;
+- direct generic Spec values remain constructible;
+- TensorAxis supports fieldful immutable downstream semantic roots;
+- TensorFieldSpec and TensorKernelSpec support fieldful immutable downstream
+  Spec subclasses;
+- TensorField, TensorKernel, and TensorCollection semantic leaves remain
+  fieldless;
+- a downstream package can validate its added Spec fields without replacing or
+  bypassing universal TensorCore validation;
+- cooperative intermediate validation, if required, is explicit and
+  statically testable;
+- no public subclass token, reflection registry, runtime finality scan, or
+  constructor bypass is introduced; and
+- diagnostics identify the exact semantic class and field relationship.
+
+One acceptable shape is a final root `__post_init__` that performs universal
+validation and then calls one protected most-derived requirement hook.
+TensorCore may select another equally strict mechanism in its exact work order.
+What is not acceptable is requiring TensorDSLab to duplicate generic
+shape/device/dtype/axis validation or to override the complete constructor.
+
+## TensorField
+
+### TensorField representation
+
+The selected generic shape is:
+
+```python
+@dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
+class TensorField[
+    SpecT: TensorFieldSpec[Any],
+](ABC):
+    tensor: torch.Tensor
+    spec: SpecT
+
+    __hash__ = None
+```
+
+TensorField owns one payload and one exact Spec.
+
+### TensorField construction
+
+Generic construction requires:
+
+- ordinary exact `torch.Tensor` admission;
+- strided tensor layout;
+- `requires_grad is False`;
+- exact `tensor.shape == spec.shape`;
+- exact `tensor.device == spec.device`;
+- exact `tensor.dtype is spec.dtype`;
+- no silent movement;
+- no silent cast;
+- no reshape;
+- no axis inference;
+- no unit inference;
+- no tensor-value equality;
+- identity equality;
+- explicit unhashability; and
+- logical read-only public tensor state under the existing TensorCore
+  mutability contract.
+
+TensorField does not duplicate axes, device, dtype, or unit fields. Its
+properties forward to `spec`.
+
+### TensorField movement and casting
+
+`TensorField.to(device=..., dtype=...)`:
+
+- returns the same exact semantic Field subtype;
+- constructs a matching exact concrete Spec subtype;
+- delegates explicit tensor movement/casting to Torch;
+- retains exact axes and downstream Spec state;
+- returns `self` for an exact no-op target;
+- performs no unit conversion;
+- performs no dtype promotion policy;
+- performs no scientific validation beyond the generic representation
+  contract; and
+- does not change semantic class identity.
+
+Generic exact-subtype reconstruction requires supported TensorField semantic
+leaves to add no stored dataclass fields beyond `tensor` and `spec`.
+TensorCore must freeze this fieldless-leaf contract for Fields even though
+Spec subclasses may add state.
+
+## TensorKernel
+
+### TensorKernel representation
+
+The selected generic shape is:
+
+```python
+@dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
+class TensorKernel[
+    SpecT: TensorKernelSpec[Any, Any],
+](ABC):
+    tensor: torch.Tensor
+    spec: SpecT
+
+    __hash__ = None
+```
+
+### TensorKernel construction
+
+TensorKernel requires:
+
+- exact `torch.Tensor`;
+- exact `TensorKernelSpec`;
+- strided, gradient-free tensor structure;
+- exact shape/device/dtype agreement;
+- one fresh same-device contiguous defensive snapshot;
+- no axis, device, or dtype inference;
+- no units;
+- no physical-law validation;
+- identity equality; and
+- explicit unhashability.
+
+TensorKernel semantic leaves add no stored dataclass fields. Their semantic
+state belongs in the exact concrete KernelSpec subtype.
+
+### TensorKernel movement and casting
+
+`TensorKernel.to(device=..., dtype=...)` follows the same semantic-subtype and
+Spec-preservation rules as TensorField, while retaining the defensive
+ownership contract.
+
+TensorCore must implement movement without exposing:
+
+- an unchecked public constructor;
+- a public trust token;
+- an unsafe alias of caller-owned tensor state;
+- a base-class result;
+- duplicate defensive snapshots beyond the exact accepted contract; or
+- lost downstream Spec fields.
+
+The exact private reconstruction mechanism is TensorCore-owned and must be
+frozen in its work order.
+
+## TensorCollection
+
+### TensorCollection purpose
+
+`TensorCollection` is a typed immutable parts collection, not a workflow, a
+common-domain assertion, or a product graph.
+
+It may contain:
+
+```text
+TensorField values
+TensorKernel values
+or an explicitly selected mixture
+```
+
+A conceptual root is:
+
+```python
+@dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
+class TensorCollection[
+    MemberT: TensorField[Any] | TensorKernel[Any],
+](ABC):
+    members: tuple[MemberT, ...]
+
+    __hash__ = None
+```
+
+The exact representation may use a private immutable mapping plus a stable
+tuple view. The public semantics are:
+
+- members are keyed by exact semantic member type;
+- at most one member of each exact type;
+- stable insertion order;
+- exact supplied member objects preserved;
+- empty collection admitted;
+- immutable membership;
+- identity equality and explicit unhashability;
+- typed exact-type lookup;
+- no string or class-name lookup;
+- no subclass matching;
+- no common axes requirement;
+- no common device requirement;
+- no common dtype requirement;
+- no common unit requirement;
+- no shape requirement;
+- no workflow edge;
+- no production order; and
+- no reflection-driven execution.
+
+Selected accessors are conceptually:
+
+```python
+collection.members
+collection.member_types
+collection.member(ProductType)
+```
+
+### Explicit collection movement
+
+The generic collection operation is device-only:
+
+```python
+moved = collection.to(device=torch.device("cuda:0"))
+```
+
+It:
+
+- delegates to each member's exact `.to(device=...)`;
+- preserves exact collection subtype;
+- preserves stable member order;
+- returns `self` when every member already targets that exact device;
+- performs no generic dtype cast because a heterogeneous collection may
+  deliberately contain float, integer, and complex representations;
+- performs no unit conversion;
+- does not require a common device before movement; and
+- does not infer a workflow.
+
+Supported semantic collection leaves initially add no stored dataclass fields
+beyond members. If a second consumer later demonstrates fieldful collection
+state, TensorCore must design an exact reconstruction contract rather than
+smuggling policy into the base.
+
+## TensorArtifact
+
+TensorArtifact is explicitly deferred.
+
+The current field-oriented artifact contract remains unchanged through this
+architecture selection. This record does not:
+
+- generalize artifacts to kernels;
+- persist TensorKernelSpec;
+- persist physical kernels;
+- add a generic collection artifact;
+- choose a durable schema for the new Specs;
+- select cache compatibility;
+- select lazy loading;
+- define cross-version migration; or
+- authorize IO implementation.
+
+Any future artifact stage must start only after the in-memory compositional
+contracts are implemented and stable.
+
+## TensorCore Retirements
+
+The synchronized future TensorCore stage retires, without alias:
+
+```text
+TensorConfig
+CountAxis
+RegularAxis
+LabelAxis
+```
+
+`TensorConfig` is unpublished local Stage 30 state. It must be removed by
+forward history in the replacement stage before any containing publication.
+
+The old Axis classes are published pre-1.0 surfaces. Their removal is a
+deliberate breaking pre-deployment change. TensorCore must not retain:
+
+- forwarding modules;
+- compatibility subclasses;
+- aliases;
+- dual constructor forms;
+- automatic conversion into Coordinates;
+- parallel old/new documentation; or
+- hidden acceptance of old axes.
+
+TensorCore keeps `OffsetAxis` but revises it to compose
+`OffsetCoordinates`.
+
+## TensorDSLab Ownership
+
+TensorDSLab consumes the generic TensorCore substrate and owns quantities,
+physical kernels, Config punchcards, Product transformations, stochastic roles
+and addresses, and Product validation.
+
+## QuantityAxis
+
+### QuantityAxis representation
+
+`QuantityAxis` is a TensorDSLab abstract intermediate semantic axis:
+
+```python
+@dataclass(frozen=True, slots=True, kw_only=True)
+class QuantityAxis[
+    CoordinatesT: Coordinates[int],
+](TensorAxis[int, CoordinatesT], ABC):
+    unit: pint.Unit
+```
+
+It owns:
+
+- exact Pint Unit recognition through the package registry;
+- registry normalization under TensorDSLab's accepted unit policy;
+- immutable unit state;
+- integer coordinate magnitudes supplied by the composed Coordinates value;
+- quantity-returning conveniences built from magnitude plus unit; and
+- downstream physical-dimension narrowing.
+
+It does not store Pint Quantity tensors.
+
+### Magnitude and quantity access
+
+The raw TensorAxis operations stay representation-oriented:
+
+```text
+coordinate_at(index) -> exact integer magnitude
+index_of(magnitude)  -> exact integer index
+```
+
+QuantityAxis additionally exposes deliberately named quantity accessors, such
+as:
+
+```python
+axis.quantity_at(index)
+axis.quantity_of(magnitude)
+```
+
+The exact names remain subject to the executable work order, but the ownership
+boundary is fixed:
+
+- TensorCore coordinate lookup remains Pint-free;
+- TensorDSLab creates scalar Pint quantities only at an explicit public or
+  preparation boundary;
+- production never iterates over Pint quantities; and
+- unit compatibility is not inferred from the semantic axis class name.
+
+### Collaboration semantic leaves
+
+TensorDSLab's reusable Product package does not own collaboration axis leaves.
+An application may define:
+
+```python
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class SampleAxis(QuantityAxis[RegularCoordinates]):
+    pass
+```
+
+and require a time-compatible unit and positive coordinate step.
+
+Another application may define its own exact `SampleAxis` class. Exact class
+identity prevents accidental cross-application substitution even when names
+and coordinate values happen to match.
+
+## QuantityFieldSpec
+
+`QuantityFieldSpec` is the directly constructible final TensorDSLab quantity
+specialization of `TensorFieldSpec`:
+
+```python
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class QuantityFieldSpec[
+    AxesT: tuple[TensorAxis[Any, Any], ...],
+](TensorFieldSpec[AxesT]):
+    unit: pint.Unit
+```
+
+It owns:
+
+- axes;
+- target device;
+- target dtype;
+- normalized Pint Unit;
+- complete structural equality and hashing including unit;
+- same-exact-subtype `.to(device=..., dtype=...)`; and
+- no tensor payload.
+
+The Product class supplies semantic result identity, so TensorDSLab does not
+create one empty FieldSpec subclass per Product:
+
+```python
+spec = QuantityFieldSpec(...)
+product = Charge(tensor=..., spec=spec)
+```
+
+`QuantityFieldSpec` is generic in its exact axis tuple but concrete as a runtime
+value. It adds unit state once and requires no `ProductFieldSpec`,
+`ChargeSpec`, or `WaveformSpec` vocabulary.
+
+## QuantityKernelSpec
+
+`QuantityKernelSpec` is the directly constructible final kernel counterpart:
+
+```python
+@final
+@dataclass(frozen=True, slots=True, kw_only=True)
+class QuantityKernelSpec[
+    ConditioningAxesT: tuple[TensorAxis[Any, Any], ...],
+    OperationAxesT: tuple[TensorAxis[Any, Any], ...],
+](TensorKernelSpec[ConditioningAxesT, OperationAxesT]):
+    unit: pint.Unit
+```
+
+It owns normalized Pint Unit alongside exact literal geometry, device, and
+dtype.
+
+Physical kernel classes remain semantic TensorKernel leaves. Their scientific
+identity is the exact kernel class; their representation is the exact
+QuantityKernelSpec object.
+
+TensorDSLab does not create one empty Spec subclass per physical kernel.
+
+## QuantityField
+
+`QuantityField` is a TensorDSLab abstract TensorField leaf root:
+
+```python
+@dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
+class QuantityField[
+    SpecT: QuantityFieldSpec[Any],
+](TensorField[SpecT], ABC):
+    pass
+```
+
+The tensor stores magnitudes in `spec.unit`.
+
+QuantityField:
+
+- adds no duplicate unit field;
+- forwards `unit` from `spec`;
+- adds no generic scientific validation;
+- performs no implicit unit conversion;
+- preserves the exact unit under `.to(device=..., dtype=...)`;
+- remains fieldless beyond `tensor` and `spec`;
+- is independently usable outside any Product chain; and
+- is the generic accepted source family for Product-specific source
+  relationships.
+
+## QuantityKernel
+
+`QuantityKernel` is the corresponding TensorKernel root:
+
+```python
+@dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
+class QuantityKernel[
+    SpecT: QuantityKernelSpec[Any, Any],
+](TensorKernel[SpecT], ABC):
+    pass
+```
+
+It:
+
+- stores no `canonical_unit`;
+- stores no duplicate unit;
+- infers no unit from its semantic class;
+- carries magnitudes in `spec.unit`;
+- preserves the exact unit under `.to(...)`;
+- leaves physical dimension, sign, range, normalization, and geometry
+  requirements to the concrete kernel leaf and consuming Product; and
+- remains a physical coefficient representation, not an executable effect,
+  Distribution factory, callback, or workflow node.
+
+This retires the current `canonical_unit` pattern. Unit conversion belongs to
+Product preparation, where source, kernel, and output equations are known.
+
+## Unit Policy
+
+### Units are explicit representation state
+
+Every quantity Field and Kernel carries a quantity Spec. The Spec's unit is
+the literal unit in which tensor magnitudes are represented.
+
+No Product class implies one mandatory unit convention. A user may choose any
+unit compatible with the Product's equation:
+
+```text
+source unit
+kernel unit
+output unit
+```
+
+The Product validates dimensional compatibility and prepares exact conversion
+scales. It does not require one permanent dimensional family merely because a
+class historically used one convention.
+
+### Equations, not class names, determine compatibility
+
+For convolution:
+
+```text
+source.unit * pulse_response.unit -> pure_waveform.unit
+```
+
+For direct summation:
+
+```text
+each source.unit -> output.unit
+```
+
+For dark-count generation:
+
+```text
+dark_count_rate.unit * temporal_coordinate_step.unit -> expected count
+```
+
+For charge smearing:
+
+```text
+smearing_width.unit -> charge.unit
+```
+
+The executable work order must freeze the precise equations for every Product.
+Unit admission is fail-closed and occurs before stochastic words or large
+allocations.
+
+### No Pint on the hot path
+
+Preparation computes immutable scalar conversion facts. Production uses:
+
+- plain Python scalar magnitudes where safe;
+- scalar tensors on the execution device where required;
+- tensor magnitudes;
+- exact prepared dtype; and
+- no Pint Quantity operations.
+
+Pint remains a public configuration and preparation boundary.
+
+## Dtype Policy
+
+### Every realized tensor representation declares dtype
+
+`TensorFieldSpec.dtype` and `TensorKernelSpec.dtype` make dtype explicit for
+sources, kernels, and outputs.
+
+`ProductConfig.spec.dtype` declares the required output dtype. A Product may
+not inspect unrelated global state or silently choose a result dtype.
+
+### Product-owned working dtype
+
+Each Product deterministically derives a working dtype during preparation from:
+
+```text
+output Spec dtype
+source Spec dtypes
+participating kernel Spec dtypes
+Product numerical floor
+```
+
+The derivation is an ordered fold using exact `torch.promote_types`, not
+Python numeric `max`, dtype enumeration order, backend defaults, or implicit
+Torch expression promotion.
+
+Conceptually:
+
+```python
+working_dtype = product_floor
+
+for dtype in (
+    config.spec.dtype,
+    *(source_spec.dtype for source_spec in source_specs),
+    *(kernel.spec.dtype for kernel in participating_kernels),
+):
+    working_dtype = torch.promote_types(working_dtype, dtype)
+```
+
+The exact Product floor is scientific/numerical policy:
+
+- discrete probability, expected-count, and stochastic parameter preparation
+  may require `torch.float64`;
+- waveform convolution may accept the promoted floating dtype selected by the
+  Product;
+- ADC code output is integer, but analog gain and scaling use a prepared
+  floating working dtype; and
+- unsupported dtype families fail during preparation.
+
+This realizes the user's precision control: increasing an output Spec or
+kernel/source dtype can raise working precision. A Product may still require a
+higher floor to preserve its accepted law.
+
+### Explicit casts
+
+Preparation freezes:
+
+- each source-to-working cast;
+- each kernel-to-working cast;
+- any scalar representation;
+- the final working-to-output cast; and
+- the exact device on which each cast occurs.
+
+Production performs those planned casts as numerical tensor operations. It
+does not rediscover promotion policy.
+
+Rounding is explicit and unavoidable when the output dtype is narrower than
+the working dtype. Validation must prove the selected output-domain error and
+overflow contracts.
+
+## Product Model
+
+### Product identity
+
+A Product is a final QuantityField semantic class with Product-owned class
+methods:
+
+```text
+create
+prepare
+produce
+validate
+```
+
+There is no separate universal Product ABC beyond `QuantityField`.
+
+The common vocabulary improves navigability, but signatures remain
+Product-specific. TensorDSLab does not add a registry, reflection loop,
+callback framework, or universal source law merely to invoke those methods
+uniformly.
+
+### Config identity
+
+Each Product has one exact Product-specific Config:
+
+```text
+ChargeConfig
+PureWaveformConfig
+NoiseWaveformConfig
+AnalogWaveformConfig
+DigitizedWaveformConfig
+```
+
+Every Config is:
+
+- frozen;
+- slotted;
+- keyword-only;
+- identity-equal;
+- explicitly unhashable;
+- directly typed;
+- free of execution methods;
+- free of TensorCore inheritance; and
+- a complete punchcard for one Product transformation.
+
+There is no:
+
+```text
+TensorConfig
+QuantityConfig
+ProductConfig
+Config registry
+Config reflection protocol
+```
+
+as a shared runtime root.
+
+### Same-type preparation
+
+Preparation returns a fresh value of the same exact Config type:
+
+```python
+prepared = PureWaveform.prepare(
+    source_specs=tuple(source.spec for source in sources),
+    config=config,
+)
+
+assert type(prepared) is PureWaveformConfig
+```
+
+The prepared Config may replace caller-oriented kernel representations with
+aligned, converted, and materialized representations and may retain meaningful
+derived execution facts. It does not become a separate `Runtime`,
+`PreparedConfig`, `Plan`, token, cache, or opaque compiled wrapper.
+
+Structural readiness is visible in ordinary Config state and enforced by
+Product-specific validation.
+
+### Ordered source tuples
+
+Product entry points accept:
+
+```python
+sources: tuple[QuantityField[Any], ...]
+```
+
+The tuple is ordered and exact. TensorDSLab does not globally require every
+Product to interpret sources the same way.
+
+Each Product owns:
+
+- accepted source count;
+- whether zero sources are meaningful;
+- whether source semantic classes matter;
+- axis and coordinate relationships;
+- unit equations;
+- combination order;
+- count and allocation ceilings;
+- dtype promotion;
+- deterministic summation order; and
+- diagnostics.
+
+This deliberately does not try to prevent every scientifically foolish user
+combination at a generic framework layer. It ensures that each Product's own
+mathematical contract is validated and statically visible.
+
+### Lifecycle
+
+A representative deterministic Product shape is:
+
+```python
+@final
+class PureWaveform(QuantityField[Any]):
+    @classmethod
+    def create(
+        cls,
+        *,
+        sources: tuple[QuantityField[Any], ...],
+        config: PureWaveformConfig,
+    ) -> Self:
+        prepared = cls.prepare(
+            source_specs=tuple(source.spec for source in sources),
+            config=config,
+        )
+        product = cls.produce(
+            sources=sources,
+            config=prepared,
+        )
+        cls.validate(
+            product=product,
+            sources=sources,
+            config=prepared,
+        )
+        return product
+
+    @classmethod
+    def prepare(
+        cls,
+        *,
+        source_specs: tuple[QuantityFieldSpec[Any], ...],
+        config: PureWaveformConfig,
+    ) -> PureWaveformConfig:
+        ...
+
+    @classmethod
+    def produce(
+        cls,
+        *,
+        sources: tuple[QuantityField[Any], ...],
+        config: PureWaveformConfig,
+    ) -> Self:
+        ...
+
+    @classmethod
+    def validate(
+        cls,
+        *,
+        product: Self,
+        sources: tuple[QuantityField[Any], ...],
+        config: PureWaveformConfig,
+    ) -> None:
+        ...
+```
+
+A stochastic Product adds the exact RNG argument it needs:
+
+```python
+charge = Charge.create(
+    sources=(photoelectrons, axioelectrons),
+    config=charge_config,
+    rng=rng,
+)
+```
+
+There is no fake RNG parameter on deterministic Products and no generic
+`**kwargs` escape hatch.
+
+### Direct and staged use
+
+The one-shot path is:
+
+```python
+product = Product.create(
+    sources=sources,
+    config=config,
+)
+```
+
+An application that wants to prepare a complete graph before execution may
+use:
+
+```python
+prepared_config = Product.prepare(
+    source_specs=source_specs,
+    config=config,
+)
+
+product = Product.produce(
+    sources=sources,
+    config=prepared_config,
+)
+
+Product.validate(
+    product=product,
+    sources=sources,
+    config=prepared_config,
+)
+```
+
+Both paths call the same Product-owned preparation, production, and validation
+actions.
+
+### Private action modules
+
+The Product class owns the public API, while focused private runtime modules
+retain readable numerical functions:
+
+```text
+product/runtime/prepare.py
+product/runtime/produce.py
+product/runtime/validate.py
+```
+
+For example:
+
+```python
+@classmethod
+def produce(
+    cls,
+    *,
+    sources: tuple[QuantityField[Any], ...],
+    config: PureWaveformConfig,
+) -> Self:
+    tensor = produce_pure_waveform(
+        sources=sources,
+        config=config,
+    )
+    return cls(
+        tensor=tensor,
+        spec=config.spec,
+    )
+```
+
+`produce_pure_waveform()` may return the raw tensor because the public Product
+class owns semantic result construction. The simple Product-specific function
+name is retained for navigability.
+
+The runtime package contains actions, not Runtime records. There is no
+`_produce_prepared()` duplicate API. `Product.produce()` is already the
+prepared execution boundary.
+
+### Output Spec identity
+
+A produced Product retains the exact configured output Spec:
+
+```python
+product.spec is config.spec
+```
+
+Production must not silently reconstruct, normalize, replace, or widen the
+output Spec. If preparation needs a different output representation, it
+returns a new same-type Config containing the new exact Spec before
+production.
+
+## Preparation Contract
+
+Every Product-specific preparation follows this generic order where
+applicable:
+
+1. admit the exact Config type;
+2. admit the exact source-Spec tuple;
+3. validate Product source count and relationship;
+4. validate output Spec semantic requirements;
+5. resolve required semantic roles;
+6. validate exact source/output coordinate relationships;
+7. validate kernel conditioning availability;
+8. determine coordinate reordering and dimension permutation;
+9. validate Product unit equations;
+10. select the deterministic working dtype;
+11. convert kernel units;
+12. align kernel conditioning coordinates and dimensions;
+13. materialize aligned kernels on the output device and selected dtype;
+14. prepare immutable scalar conversion facts;
+15. preflight element, byte, count, and address ceilings;
+16. return a fresh Config of the same exact type; and
+17. perform no random draw and consume no RNG word.
+
+The exact order matters. Invalid public meaning fails before expensive
+materialization, allocation, or stochastic execution.
+
+### Kernel alignment
+
+TensorCore role resolution supplies structural dimensions. TensorDSLab
+alignment additionally proves:
+
+- every required conditioning role is present;
+- exact coordinate values correspond one-to-one;
+- caller coordinate order may differ;
+- the stable coordinate permutation is exact;
+- conditioning dimensions are permuted into source/output order;
+- operation axes remain ordered and untouched;
+- broadcast insertion is explicit;
+- no storage expansion occurs unless the Product work order explicitly
+  selects it;
+- units are converted once;
+- the final tensor is contiguous on the target device and dtype; and
+- the returned Kernel has an exact aligned QuantityKernelSpec.
+
+The Maintenance 13 `align_quantity_kernel()` behavior is parts-bin evidence
+for this future preparation action. Its current signature and current
+Runtime-oriented ownership are not frozen future API.
+
+### Prepared-state visibility
+
+Meaningful derived Config facts may include:
+
+```text
+working dtype
+source conversion scales
+output conversion scale
+resolved temporal dimension
+prepared scalar gains
+aligned physical kernels
+preflight ceilings
+```
+
+They must be:
+
+- immutable;
+- directly typed;
+- scientifically named;
+- derivable from public Config and source-Spec state;
+- validated by the Product;
+- free of mutable caches;
+- free of callable execution;
+- free of RNG state; and
+- absent when the Product does not need them.
+
+The executable work order must decide the exact stored fields per Product. It
+must not create a parallel generic prepared framework.
+
+## Production Contract
+
+Product production:
+
+- accepts exact typed sources;
+- accepts the exact Product Config;
+- verifies fail-closed structural readiness before numerical work;
+- trusts no caller-supplied opaque token;
+- performs planned source conversion and dtype casts;
+- consumes already aligned kernel tensors;
+- performs Product mathematics;
+- constructs one fresh result tensor;
+- constructs the exact semantic Product using `config.spec`;
+- does not call Pint;
+- does not search coordinates;
+- does not permute conditioning coordinates;
+- does not move sources or kernels;
+- does not select dtype policy;
+- does not create or mutate Config state;
+- does not mutate sources;
+- does not mutate kernels;
+- does not use global RNG;
+- requests words only after complete validation and preflight; and
+- preserves exact package-owned address identity.
+
+Product production may use private tensor workspaces. Those are ordinary local
+execution values, not public Runtime objects or Config fields.
+
+## Validation Contract
+
+Product validation owns:
+
+- exact semantic Product type;
+- exact output Spec object identity;
+- exact tensor shape/device/dtype;
+- finite/value-domain requirements;
+- source/result relationship;
+- product-specific count, code, or saturation limits;
+- required freshness and no-alias relationships;
+- stochastic conservation or statistical law;
+- exact boundary behavior;
+- and any accepted scientific postcondition.
+
+Generic TensorCore construction does not replace Product validation.
+
+Validation is not a silent repair path. It does not:
+
+- cast;
+- move;
+- clip;
+- normalize;
+- renormalize;
+- reshape;
+- relabel axes;
+- replace nonfinite values;
+- or mutate Config or Product state.
+
+## Physical Kernel Contracts
+
+Every physical kernel is a final, directly constructible, fieldless
+QuantityKernel semantic leaf. Generic TensorKernel construction proves exact
+tensor/Spec agreement and defensive ownership. The physical leaf and consuming
+Product prove the scientific contract.
+
+All physical kernels require:
+
+- finite represented values;
+- exact QuantityKernelSpec;
+- exact literal geometry;
+- no arbitrary stored fields outside `tensor` and `spec`;
+- no `__dict__`;
+- no callable, Distribution, Config, Runtime, RNG, or mutable cache;
+- no inferred canonical unit; and
+- exact semantic type preservation under `.to(...)`.
+
+The selected first scientific contracts are:
+
+| Kernel | Value and unit law | Geometry law |
+|---|---|---|
+| `TimingJitter` | finite nonnegative dimensionless represented probabilities; complete operation-cell sum equals one within the frozen binary64 tolerance for every conditioning point | one or more OffsetAxis operation dimensions accepted only when Charge can map every target; current sample-only use has one nonempty temporal target |
+| `DirectCrosstalk` | finite nonnegative dimensionless unconditional expected-offspring intensity; represented total no greater than one per conditioning point in the first accepted law | nonempty OffsetAxis operation geometry; temporal displacement, when present, is nonnegative |
+| `DelayedCrosstalk` | finite nonnegative dimensionless unconditional expected-offspring intensity; represented total no greater than one per conditioning point in the first accepted law | nonempty OffsetAxis geometry with exactly one positive temporal target |
+| `Afterpulse` | finite nonnegative dimensionless unconditional expected-offspring intensity; represented total no greater than one per conditioning point in the first accepted law | one nonempty positive temporal OffsetAxis in the current law |
+| `DarkCountRate` | finite nonnegative rate compatible with inverse time | no operation axes |
+| `SmearingWidth` | finite nonnegative dimensionless relative Gaussian width under the preserved Charge law | no operation axes |
+| `PulseResponse` | finite signed response coefficients; unit participates literally in the convolution equation | nonempty OffsetAxis geometry accepted by PureWaveform; current use has one nonnegative temporal target |
+| `WhiteNoiseRms` | finite nonnegative magnitude compatible with NoiseWaveform output unit | no operation axes |
+| `PowerSpectralDensity` | finite nonnegative prepared spectral coefficients with the exact PSD dimension required by NoiseWaveform | operation representation and sampling correspondence frozen by the future Noise work order |
+| `AnalogMinimum` | finite magnitude compatible with AnalogWaveform output unit | no operation axes; conditioning allowed |
+| `AnalogMaximum` | finite magnitude compatible with AnalogWaveform output unit | no operation axes; conditioning allowed |
+
+The explicit represented-total ceiling on the three first-generation branching
+kernels encodes the currently selected physical meaning: one tensor answers
+both "how strongly does this mechanism occur?" and "where does its offspring
+land?" If a future detector requires an expected multiplicity greater than one
+per parent, that is a scientific contract change requiring a focused
+TensorDSLab Design decision. It must not be obtained by quietly removing the
+sub-unity check.
+
+TimingJitter differs deliberately: it redistributes an existing count and
+therefore represents a complete unity law before finite-window application.
+
+The future executable work order must freeze exact reduction dimensions,
+stable summation, tolerances, validation order, empty behavior, and device
+synchronization. This architecture freezes the physical distinction, not an
+unreviewed implementation shortcut.
+
+## Charge
+
+### `ChargeKernels`
+
+`ChargeKernels` is a final typed TensorCollection leaf containing zero or one
+of each exact supported physical kernel:
+
+```python
+@final
+class ChargeKernels(TensorCollection[QuantityKernel[Any]]):
+    @property
+    def timing_jitter(self) -> TimingJitter | None:
+        ...
+
+    @property
+    def direct_crosstalk(self) -> DirectCrosstalk | None:
+        ...
+
+    @property
+    def delayed_crosstalk(self) -> DelayedCrosstalk | None:
+        ...
+
+    @property
+    def afterpulse(self) -> Afterpulse | None:
+        ...
+
+    @property
+    def dark_count_rate(self) -> DarkCountRate | None:
+        ...
+
+    @property
+    def smearing_width(self) -> SmearingWidth | None:
+        ...
+```
+
+It:
+
+- admits only the six exact kernel classes;
+- admits an empty collection;
+- rejects duplicates;
+- preserves exact member order;
+- provides typed properties;
+- owns no generation count;
+- owns no output Spec;
+- owns no temporal-axis policy;
+- owns no RNG keys;
+- owns no execution;
+- owns no scientific combination law; and
+- may be explicitly moved as a collection during preparation.
+
+### `ChargeConfig`
+
+The complete Config is conceptually:
+
+```python
+@dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
+class ChargeConfig:
+    spec: QuantityFieldSpec[Any]
+    kernels: ChargeKernels
+    correlated_avalanche_generations: NonnegativeInteger
+    temporal_axis: type[TensorAxis[Any, Any]] | None
+
+    __hash__ = None
+```
+
+The exact constrained-scalar annotation follows TensorCore's accepted public
+scalar vocabulary.
+
+`ChargeConfig` may gain narrowly named immutable derived facts during the
+future executable design. It does not gain a generic Config base, arbitrary
+Distribution class, callback, factory, role key, or Runtime.
+
+### Source relationship
+
+`Charge` accepts one nonempty ordered tuple of QuantityField sources.
+
+Preparation requires:
+
+- every source is a QuantityField;
+- every source has the same complete set of exact semantic axis roles as the
+  output;
+- source axis tuple order may differ;
+- each corresponding semantic axis has exactly equivalent coordinate
+  representation and downstream axis state;
+- every source unit is compatible with the configured Charge output unit;
+- source tensors can be explicitly converted to the output device and working
+  dtype under the Product policy;
+- source element counts and checked sum stay within accepted count and Charge
+  ceilings; and
+- source tuple order is retained for deterministic accumulation.
+
+The Product does not require exact source semantic Product classes. An
+application may supply:
+
+```python
+sources=(photoelectrons, axioelectrons)
+```
+
+provided both satisfy the Charge source law.
+
+Charge combines compatible sources by exact prepared conversion and
+deterministic ordered summation before applying Charge mechanisms.
+
+### Temporal-axis role
+
+TensorDSLab reusable Products cannot import an application-specific
+`SampleAxis`. A `ChargeConfig` therefore carries an optional exact semantic
+axis class when temporal meaning is required.
+
+Preparation requires `temporal_axis` when an enabled mechanism needs time:
+
+- TimingJitter;
+- DelayedCrosstalk;
+- Afterpulse; or
+- DarkCountRate.
+
+The exact executable work order must decide whether DirectCrosstalk may be
+time-independent or may optionally target a temporal role.
+
+When required:
+
+- the role exists exactly once in `config.spec.axes`;
+- the axis is a QuantityAxis composed with RegularCoordinates;
+- the unit is time-compatible;
+- the coordinate step is positive;
+- the Product derives the exact temporal dimension;
+- dark-count expected counts use the exact represented coordinate step; and
+- operation OffsetAxis values targeting that role are interpreted in
+  coordinate-index displacement units.
+
+The Product does not guess temporal meaning from unit dimensionality alone.
+
+### Current scientific law
+
+Unless a later explicit parity decision changes it, Charge preserves the
+Maintenance 12 laws:
+
+```text
+TimingJitter
+    -> MultinomialDistribution
+
+DarkCountRate
+    -> PoissonDistribution
+
+DirectCrosstalk
+    -> deterministic kernel-to-destination-rate construction
+    -> one tensor-valued PoissonDistribution
+
+DelayedCrosstalk
+    -> deterministic kernel-to-destination-rate construction
+    -> one tensor-valued PoissonDistribution
+
+Afterpulse
+    -> deterministic kernel-to-destination-rate construction
+    -> one tensor-valued PoissonDistribution
+
+SmearingWidth
+    -> tensor-valued GaussianDistribution
+```
+
+Charge retains:
+
+- timing-jitter complete-law conservation before finite-window application;
+- deterministic row-major operation-cell identity;
+- direct Multinomial probabilities without a prepared wrapper;
+- collapsed destination-rate Poisson branching;
+- same-round direct, delayed, and afterpulse mechanisms all reading the same
+  immutable frontier;
+- pooled children forming only the next generation;
+- finite-window discard;
+- full-unit afterpulse charge;
+- no recovery weighting;
+- exact configured generation depth;
+- checked count accumulation;
+- package-owned role keys;
+- package-owned RngAddress schemas; and
+- exact Product postconditions.
+
+### Crosstalk and afterpulse rate construction
+
+For each Poisson branching mechanism, TensorDSLab deterministically constructs:
+
+```text
+lambda_destination
+    = sum_source(
+        parent_count[source]
+        * kernel_intensity[source, destination - source]
+      )
+```
+
+and then draws the complete destination tensor once.
+
+The physical kernel tensor is the unconditional expected-offspring intensity
+for each represented destination cell. It already combines the mechanism's
+occurrence strength with its destination distribution. Charge does not require
+a second `mean_offspring` scalar or a conditional-probability kernel.
+
+This uses exact Poisson splitting and superposition. It does not:
+
+- draw a total per source;
+- allocate through Multinomial;
+- materialize source-shape × kernel-shape categories;
+- draw out-of-window categories;
+- return an overflow count;
+- restore retired overflow roles;
+- narrow the domain by an unused total-source Poisson ceiling; or
+- feed same-generation children back into the current round.
+
+### Timing-jitter law
+
+TimingJitter is a literal physical QuantityKernel. It does not contain a
+Distribution.
+
+After preparation selects the exact applicable probability slab, Charge
+constructs:
+
+```python
+distribution = MultinomialDistribution(
+    counts=counts,
+    probabilities=probabilities,
+    completion_probability=completion_probability,
+)
+
+allocations = distribution.draw(
+    rng=rng,
+    address=address,
+)
+```
+
+TensorCore owns generic Multinomial validation and execution. TensorDSLab owns:
+
+- interpreting the QuantityKernel as timing probabilities;
+- requiring the abstract complete timing law selected by Config;
+- mapping operation cells to destinations;
+- finite-window discard;
+- scientific role and address construction; and
+- final Charge conservation checks.
+
+A unity abstract timing kernel conserves total allocation across the complete
+translation law. Finite-window execution may still discard charge whose mapped
+destination lies outside the configured temporal domain. These are distinct
+contracts.
+
+### Physical-kernel geometry
+
+Concrete physical kernels literally carry their operation geometry.
+
+A sample-only timing law may use:
+
+```text
+operation_axes:
+    (OffsetAxis(relative_to=<application SampleAxis>, ...),)
+```
+
+A future direct-crosstalk kernel over a pixelated detector may use:
+
+```text
+operation_axes:
+    (
+        OffsetAxis(relative_to=<application MicrocellXAxis>, ...),
+        OffsetAxis(relative_to=<application MicrocellYAxis>, ...),
+        OffsetAxis(relative_to=<application SampleAxis>, ...),
+    )
+```
+
+Each tensor element is the physical coefficient for one literal row-major
+operation cell. TensorDSLab applies the Product-specific displacement and
+boundary law.
+
+### Global and conditioned kernels
+
+An application may provide ExampleAxis or ChannelAxis to a Product Config
+without requiring every kernel to condition on those roles.
+
+For example, DarkCountRate may be global:
+
+```text
+conditioning_axes = ()
+```
+
+even when the Charge output has:
+
+```text
+(ExampleAxis, ChannelAxis, SampleAxis)
+```
+
+A kernel may condition on any validated subset of the available source/output
+roles. It cannot condition on a role absent from the Product domain.
+
+Preparation owns subset admission, coordinate alignment, and broadcast
+placement. Production does not expand application policy implicitly.
+
+## PureWaveform
+
+### `PulseResponse`
+
+`PulseResponse` is a QuantityKernel containing the literal deterministic
+response coefficients and operation geometry.
+
+It:
+
+- is not required to be a probability;
+- is not required to normalize;
+- carries exact unit through its QuantityKernelSpec;
+- may be global or conditioned;
+- uses one or more operation axes as selected by the Product;
+- owns no convolution method;
+- owns no output unit convention;
+- owns no source class requirement; and
+- contains no Config or Runtime state.
+
+### `PureWaveformConfig`
+
+```python
+@dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
+class PureWaveformConfig:
+    spec: QuantityFieldSpec[Any]
+    pulse_response: PulseResponse
+
+    __hash__ = None
+```
+
+### Source and output law
+
+PureWaveform accepts one nonempty ordered tuple of compatible QuantityField
+sources.
+
+Preparation:
+
+- validates exact source/output semantic domain correspondence;
+- aligns source dimensions and coordinates;
+- validates source unit compatibility for deterministic summation;
+- validates PulseResponse conditioning availability;
+- resolves each operation target;
+- validates the convolution/displacement support;
+- validates:
+
+  ```text
+  combined_source.unit * pulse_response.unit -> output.unit
+  ```
+
+- selects working dtype;
+- converts and aligns the PulseResponse;
+- freezes source and output conversion scales; and
+- preflights convolution allocation.
+
+Production:
+
+1. converts each source to the working representation;
+2. sums sources in exact tuple order;
+3. applies the literal PulseResponse convolution;
+4. applies the exact operation-axis displacement and finite-window policy;
+5. converts to `config.spec.dtype`;
+6. returns `PureWaveform(tensor=..., spec=config.spec)`; and
+7. performs no polarity convention beyond the literal configured
+   PulseResponse values.
+
+The current DS20k negative pulse sign becomes application Profile data in the
+PulseResponse tensor. TensorDSLab does not hard-code one detector polarity.
+
+## NoiseWaveform
+
+### Physical kernels
+
+Selected public physical representations are:
+
+```text
+WhiteNoiseRms
+PowerSpectralDensity
+```
+
+Both are QuantityKernel leaves.
+
+`PowerSpectralDensity` contains an already prepared PSD tensor compatible with
+the intended output sampling representation. This maintenance deliberately
+does not design the upstream PSD preparation operation.
+
+### `NoiseWaveformConfig`
+
+```python
+@dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
+class NoiseWaveformConfig:
+    spec: QuantityFieldSpec[Any]
+    white_noise_rms: WhiteNoiseRms | None
+    power_spectral_density: PowerSpectralDensity | None
+
+    __hash__ = None
+```
+
+The exact selected branch law is:
+
+- both `None`: exact-zero NoiseWaveform;
+- WhiteNoiseRms only: IID Gaussian white noise;
+- PowerSpectralDensity only: PSD-shaped noise;
+- both non-`None`: rejected unless a later explicit scientific contract
+  selects additive independent branches.
+
+NoiseWaveform accepts an empty source tuple. It does not pretend noise is a
+transformation of an unrelated Product merely to satisfy a generic pipeline
+shape.
+
+Preparation owns:
+
+- output floating dtype admission;
+- kernel conditioning availability;
+- kernel/output unit relationship;
+- PSD sampling compatibility;
+- exact-zero branch;
+- dtype floor;
+- device materialization;
+- allocation preflight; and
+- package-owned RNG address facts.
+
+Production preserves the current accepted white and PSD laws unless a future
+parity record explicitly rebaselines them.
+
+## AnalogWaveform
+
+### Saturation kernels
+
+Selected optional QuantityKernel leaves are:
+
+```text
+AnalogMinimum
+AnalogMaximum
+```
+
+They may be global or condition on an accepted subset of output roles. Their
+Specs carry literal axes, device, dtype, and unit.
+
+### `AnalogWaveformConfig`
+
+```python
+@dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
+class AnalogWaveformConfig:
+    spec: QuantityFieldSpec[Any]
+    minimum: AnalogMinimum | None
+    maximum: AnalogMaximum | None
+
+    __hash__ = None
+```
+
+AnalogWaveform accepts one nonempty ordered tuple of compatible QuantityField
+sources. An application may pass PureWaveform and NoiseWaveform, but the
+Product does not import or require those exact semantic classes.
+
+Preparation:
+
+- aligns all sources to the output semantic domain;
+- validates source units are convertible to the output unit;
+- selects working dtype;
+- aligns optional saturation kernels;
+- requires minimum not greater than maximum where both exist;
+- freezes exact source conversions; and
+- preflights output allocation.
+
+Production deterministically:
+
+1. converts and sums sources in tuple order;
+2. applies lower and upper saturation where configured;
+3. casts to output dtype; and
+4. returns the exact AnalogWaveform.
+
+## DigitizedWaveform
+
+### `DigitizedWaveformConfig`
+
+A conceptual Config is:
+
+```python
+@dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
+class DigitizedWaveformConfig:
+    spec: QuantityFieldSpec[Any]
+    bit_depth: PositiveInteger
+    input_minimum: pint.Quantity
+    input_maximum: pint.Quantity
+    analog_gain_db: NonnegativeFloat
+
+    __hash__ = None
+```
+
+The executable work order may replace scalar Pint fields with narrowly named
+scalar quantity values if the same punchcard semantics are retained.
+
+DigitizedWaveform:
+
+- requires exactly one compatible QuantityField source;
+- requires an integer output dtype;
+- requires a dimensionless code-like output unit;
+- validates the analog input range and gain;
+- selects a floating working dtype for gain and scaling;
+- preflights code bounds against bit depth and output dtype;
+- performs no stochastic draw;
+- maps the configured analog interval to integer codes under the frozen
+  digitizer equation;
+- returns exact output Spec identity; and
+- does not own a detector-specific digitizer Profile.
+
+The current IV-DSLab-like values remain application Profile data rather than
+generic TensorDSLab constants.
+
+## Photoelectrons And Other Sources
+
+`Photoelectrons` remains a reusable QuantityField semantic Product/value that
+may enter another Product as a source. It need not own a Config or producer in
+TensorDSLab if it is constructed upstream.
+
+`Axioelectrons` is not added to TensorDSLab core through this maintenance. A
+Silex application may own:
+
+```python
+@final
+class Axioelectrons(QuantityField[Any]):
+    pass
+```
+
+and pass it with Photoelectrons to Charge.
+
+TensorDSLab Products accept their documented structural and physical source
+relationships without importing every collaboration source class.
+
+## Product Independence
+
+The package must not encode any of the following as universal truths:
+
+```text
+Photoelectrons always precedes Charge
+Charge always precedes PureWaveform
+PureWaveform and NoiseWaveform always precede AnalogWaveform
+AnalogWaveform always precedes DigitizedWaveform
+every application produces a Readout
+every application retains every intermediate Product
+```
+
+Those are possible application graphs, not reusable Product invariants.
+
+The reusable Product surface supports direct use:
+
+```python
+charge = Charge.create(
+    sources=(photoelectrons,),
+    config=charge_config,
+    rng=rng,
+)
+```
+
+and:
+
+```python
+pure = PureWaveform.create(
+    sources=(charge,),
+    config=pure_waveform_config,
+)
+```
+
+without requiring construction of a whole-readout object.
+
+## Application Ownership
+
+### TensorDSLab core boundary
+
+The selected reusable TensorDSLab package owns:
+
+- quantity representation roots;
+- reusable Product semantic classes;
+- Product-specific Configs;
+- physical QuantityKernel leaves;
+- preparation, production, and validation actions;
+- generic TensorDSLab kernel alignment;
+- Product scientific equations;
+- Product stochastic role keys and address schemas;
+- Product boundaries and postconditions; and
+- no collaboration workflow.
+
+It does not own:
+
+- ExampleAxis;
+- ChannelAxis;
+- SampleAxis;
+- MicrocellXAxis;
+- MicrocellYAxis;
+- collaboration-specific coordinate values;
+- `ds20k_veto()`;
+- `silex()`;
+- DS20k detector defaults;
+- Silex detector defaults;
+- whole-readout orchestration;
+- a universal `Readout`;
+- `ReadoutConfig`;
+- `ReadoutCollection`;
+- `simulate_readout()`;
+- application CLI;
+- application demos;
+- collaboration IO;
+- workflow persistence; or
+- application result retention policy.
+
+### DS20k Veto application
+
+A separate collaboration-owned application may define:
+
+```text
+ExampleAxis
+ChannelAxis
+SampleAxis
+DS20kVetoSettings
+Readout
+ds20k_veto()
+```
+
+and assemble:
+
+```text
+Photoelectrons
+    -> Charge
+    -> PureWaveform
+
+NoiseWaveform
+
+PureWaveform + NoiseWaveform
+    -> AnalogWaveform
+    -> optional DigitizedWaveform
+```
+
+The application decides:
+
+- exact axis classes and coordinates;
+- output Specs;
+- units and dtypes;
+- kernel tensors;
+- requested products;
+- RNG root and application domain;
+- preparation order;
+- production order;
+- retained intermediates;
+- whole-result collection;
+- demonstrations;
+- CLI;
+- and application IO.
+
+### Silex application
+
+A separate Silex application may define:
+
+```text
+ExampleAxis
+MicrocellXAxis
+MicrocellYAxis
+SampleAxis
+Axioelectrons
+SilexSettings
+Readout
+Reconstruction
+silex()
+```
+
+Its initial graph may be only:
+
+```text
+Axioelectrons + Photoelectrons
+    -> Charge
+```
+
+It is not required to create placeholder:
+
+```text
+PureWaveform
+NoiseWaveform
+AnalogWaveform
+DigitizedWaveform
+```
+
+Future pixelated crosstalk kernels can literally use operation geometry:
+
+```text
+(MicrocellXAxis offset, MicrocellYAxis offset, SampleAxis offset)
+```
+
+without TensorCore or TensorDSLab core importing Silex semantic classes.
+
+### Application factories
+
+An application may expose a semantic factory class such as `DS20kVeto` or
+`Silex`. It need not subclass a TensorDSLab `Readout` root because no universal
+readout topology or result family has been demonstrated.
+
+Inside an application namespace, the natural result name is unqualified:
+
+```python
+@final
+class Readout(TensorCollection[TensorField[Any]]):
+    pass
+```
+
+Package qualification distinguishes `ds20k.veto.Readout` from
+`silex.Readout`. Artificial core-level names such as `DS20kReadout` and
+`SilexReadout` are not required.
+
+If two applications later prove a meaningful common application protocol,
+that abstraction belongs to a separately reviewed application-layer design.
+It must not be inferred from similar method names.
+
+## Ownership Matrix
+
+The package boundary is fail-closed:
+
+| Concern | TensorCore | TensorDSLab | Collaboration application |
+|---|---|---|---|
+| Coordinate representation | Owns generic `Coordinates` values | Uses them | Chooses concrete coordinate values |
+| Semantic Axis mechanics | Owns `TensorAxis` and exact class identity | Owns `QuantityAxis` | Owns detector semantic Axis leaves |
+| Offset identity | Owns `OffsetAxis.relative_to` and ordered offsets | Interprets displacement per Product | Supplies target semantic Axis classes |
+| Field representation | Owns `TensorFieldSpec` and `TensorField` | Owns quantity specialization and Product leaves | Instantiates and consumes Products |
+| Kernel representation | Owns `TensorKernelSpec` and `TensorKernel` | Owns quantity specialization and physical leaves | Instantiates physical kernel values |
+| Device/dtype | Owns explicit generic representation and `.to` mechanics | Owns Product promotion, floors, and readiness | Chooses requested placement and precision |
+| Units | Excludes Pint | Owns Pint registry, quantity Specs, equations, and conversions | Chooses physically valid units and values |
+| Kernel alignment | Owns exact generic role resolution | Owns coordinate reorder, permutation, broadcast placement, and materialization | Supplies domains and conditioning values |
+| Collections | Owns exact-type immutable mechanics | Owns `ChargeKernels` and reusable collections demonstrated by Products | Owns Readout/Reconstruction result collections |
+| Configs | Owns no generic Config | Owns exact Product Config punchcards | Owns application Settings and profile composition |
+| Product laws | Excludes detector science | Owns reusable Product transformations | Chooses and orders Products |
+| RNG engine and laws | Owns words, addresses, and generic Distributions | Owns Product roles, schemas, traversal, and scientific mappings | Owns root domain and workflow invocation |
+| Boundary mapping | Excludes detector geometry | Owns Product-specific operation-cell mapping and discard | Supplies semantic target geometry |
+| Profiles | Excludes | Excludes collaboration profiles | Owns `ds20k_veto()`, `silex()`, and defaults |
+| Readout/Reconstruction | Owns only generic Collection mechanics | Owns no universal workflow result | Owns collaboration result classes |
+| Demos and CLI | Excludes | May document direct reusable Product use only | Owns end-to-end application demos and commands |
+| IO and artifacts | Owns current generic field artifact only | Defers quantity/Product durable format | Owns application persistence until a focused shared stage |
+| CUDA evidence | Owns package-generic evidence | Owns exact Product package evidence | Owns end-to-end workflow evidence |
+
+No column may silently implement another column's policy merely because a
+generic mechanism could technically express it.
+
+## Application Package Placement
+
+The preferred target is a separate installable collaboration package or
+repository:
+
+```text
+ds20k_veto -> tensor_dslab -> tensor_core
+silex      -> tensor_dslab -> tensor_core
+```
+
+TensorDSLab must not import a collaboration application.
+
+If a temporary in-repository application project is ever authorized, it must
+have:
+
+- a separate distribution name;
+- separate import package;
+- separate metadata;
+- separate tests;
+- explicit dependency on tensor-dslab;
+- wheel payload isolation;
+- no import from TensorDSLab private modules; and
+- a focused extraction plan.
+
+This Maintenance does not authorize that temporary topology. A separate
+cross-repository work order must choose the actual application package.
+
+## Selected TensorDSLab Package Shape
+
+The future reusable core target is product-centered and no longer nested under
+one `readout` workflow:
+
+```text
+tensor_dslab/
+  __init__.py
+  common/
+    __init__.py
+    axis.py
+    field.py
+    kernel.py
+    units.py
+    alignment.py
+  photoelectrons/
+    __init__.py
+    field.py
+    runtime/
+      __init__.py
+      validate.py
+  charge/
+    __init__.py
+    config.py
+    field.py
+    kernel.py
+    runtime/
+      __init__.py
+      prepare.py
+      produce.py
+      validate.py
+      branching.py
+      counts.py
+  pure_waveform/
+    __init__.py
+    config.py
+    field.py
+    kernel.py
+    runtime/
+      __init__.py
+      prepare.py
+      produce.py
+      validate.py
+  noise_waveform/
+    __init__.py
+    config.py
+    field.py
+    kernel.py
+    runtime/
+      __init__.py
+      prepare.py
+      produce.py
+      validate.py
+  analog_waveform/
+    __init__.py
+    config.py
+    field.py
+    kernel.py
+    runtime/
+      __init__.py
+      prepare.py
+      produce.py
+      validate.py
+  digitized_waveform/
+    __init__.py
+    config.py
+    field.py
+    runtime/
+      __init__.py
+      prepare.py
+      produce.py
+      validate.py
+```
+
+This is an architecture target, not permission to create placeholder modules.
+The exact implementation filetree must be frozen after TensorCore publishes
+the required substrate and after every Product's retained behavior has been
+inventoried.
+
+### Common owners
+
+Selected responsibilities are:
+
+```text
+common/axis.py
+    QuantityAxis
+
+common/field.py
+    QuantityFieldSpec
+    QuantityField
+
+common/kernel.py
+    QuantityKernelSpec
+    QuantityKernel
+
+common/units.py
+    one package Pint registry and scalar quantity admission/conversion
+
+common/alignment.py
+    narrow package-owned kernel/source coordinate alignment mechanics
+```
+
+No `utils.py`, `helpers.py`, generic effects package, Config framework, Product
+registry, workflow graph, or Runtime base is selected.
+
+### Product owners
+
+Each Product package owns:
+
+- public semantic Product;
+- public exact Config;
+- public physical kernels when applicable;
+- private preparation action;
+- private production action;
+- private validation action; and
+- narrower private numerical owners demonstrated by real behavior.
+
+Runtime packages export nothing. Action names remain ordinary readable
+implementation names such as:
+
+```text
+prepare_charge
+produce_charge
+validate_charge
+```
+
+They are private by facade ownership, not by awkward spelling.
+
+## Public TensorDSLab Surface
+
+The selected supported surface includes:
+
+```text
+QuantityAxis
+QuantityFieldSpec
+QuantityKernelSpec
+QuantityField
+QuantityKernel
+
+Photoelectrons
+Charge
+PureWaveform
+NoiseWaveform
+AnalogWaveform
+DigitizedWaveform
+
+ChargeConfig
+ChargeKernels
+PureWaveformConfig
+NoiseWaveformConfig
+AnalogWaveformConfig
+DigitizedWaveformConfig
+
+TimingJitter
+DirectCrosstalk
+DelayedCrosstalk
+Afterpulse
+DarkCountRate
+SmearingWidth
+PulseResponse
+WhiteNoiseRms
+PowerSpectralDensity
+AnalogMinimum
+AnalogMaximum
+
+quantity
+unit_registry
+```
+
+The exact facade order and count are deferred until the executable filetree is
+frozen. Tests must assert exact named tuples, not only counts.
+
+## Explicit TensorDSLab Retirements
+
+The future atomic migration retires without alias:
+
+```text
+ReadoutConfig
+ReadoutRuntime
+ReadoutCollection
+simulate_readout
+prepare_readout
+SamplingRuntime
+all Product Runtime value classes
+ds20k_veto from tensor_dslab
+collaboration axes from tensor_dslab
+the tensor_dslab.readout workflow package
+Pulse
+canonical_unit fields/properties
+parallel scalar physical Config values superseded by QuantityKernel leaves
+Config-to-Runtime reflection
+whole-request prerequisite planning
+requested-product workflow closure
+```
+
+It must not leave:
+
+- compatibility imports;
+- deprecated aliases;
+- forwarding modules;
+- duplicate old/new facades;
+- wrapper factories;
+- a hidden universal pipeline;
+- a provisional TensorConfig;
+- or an application package embedded in the TensorDSLab wheel.
+
+The package is pre-deployment. The clean removal is deliberate.
+
+## RNG Ownership
+
+TensorCore continues to own:
+
+- `RngKey`;
+- `RngElements`;
+- `RngAddress`;
+- `CounterRng`;
+- Threefry word generation;
+- generic Distribution validation and execution;
+- Uniform, Gaussian, Poisson, Binomial, and Multinomial laws; and
+- exact low-level address/word invariants.
+
+TensorDSLab Product packages own:
+
+- scientific role names;
+- exact role keys;
+- application-independent Product address schemas;
+- operation/category mapping;
+- generation dependency order;
+- deterministic source traversal;
+- finite-window mapping;
+- count accumulation;
+- stochastic Product postconditions; and
+- any deliberately rebaselined Product result fixtures.
+
+Applications own:
+
+- the root application random domain;
+- mapping application sources into Product source elements;
+- Product invocation order;
+- independent application-level domains; and
+- retained result assembly.
+
+No Config stores a mutable RNG, cursor, Distribution factory, or user-selected
+role key.
+
+### Rebaseline boundary
+
+The representation and application extraction may change Product traversal or
+address construction. Future work orders must distinguish:
+
+```text
+preserved:
+    TensorCore word identity for exact complete address and ordinal
+    Product scientific equations unless explicitly changed
+    deterministic same-input replay
+    fixed generation dependency order
+
+potentially rebaselined:
+    Product address schemas when source/application domain changes
+    completed stochastic output bytes
+    application retained-result ordering
+```
+
+No address or output rebaseline is implied by this Design record. Each exact
+change requires:
+
+- old and new schema;
+- reason;
+- collision proof;
+- deterministic fixtures;
+- statistical/scientific proof;
+- parity classification; and
+- retired role disposition.
+
+Because the package is pre-deployment, retired identifiers need not remain
+permanently reserved unless an exact future work order selects continuity.
+They must never be accidentally reused within one accepted schema.
+
+## Scientific Preservation And Selected Changes
+
+### Preserved laws
+
+Unless a future bounded Product work order says otherwise, preserve:
+
+- white-noise Gaussian law;
+- PSD synthesis law;
+- dark-count Poisson law;
+- charge-smearing Gaussian law;
+- timing-jitter Multinomial law;
+- collapsed Poisson direct crosstalk;
+- collapsed Poisson delayed crosstalk;
+- collapsed Poisson full-charge afterpulse;
+- same-round frontier semantics;
+- fixed-generation recursion;
+- finite-window discard;
+- deterministic pulse convolution;
+- analog summation and saturation;
+- digitizer equation and exact code bounds; and
+- checked count and allocation ceilings.
+
+### Selected architectural changes
+
+The selected changes are:
+
+- compositional Coordinates instead of representation Axis inheritance;
+- Specs as explicit representation values;
+- quantity units in Specs;
+- direct Product APIs;
+- Config punchcards instead of Runtime records;
+- generic ordered source tuples interpreted per Product;
+- no package-owned Product graph;
+- no generic Readout;
+- collaboration axes and profiles outside TensorDSLab core;
+- explicit movement and dtype planning;
+- no canonical unit encoded by physical kernel class; and
+- reusable core package independent of DS20k and Silex workflows.
+
+These changes do not, by themselves, authorize a new scientific result.
+
+## Documentation Boundary
+
+Future implementation must rewrite living pages to describe:
+
+- compositional Coordinates;
+- Specs and exact tensor relationships;
+- quantity ownership;
+- independent Product use;
+- Product-specific Config preparation;
+- application ownership;
+- exact stochastic responsibilities;
+- explicit movement;
+- dtype planning; and
+- current no-CUDA qualification.
+
+Historical work orders remain historical evidence. Living pages must not keep
+the retired `readout/`, Runtime, old Axis, ReadoutCollection, or
+simulate_readout architecture as current package guidance.
+
+The current DS20k demo cannot remain a TensorDSLab core demo after application
+extraction. A collaboration application may adopt and rewrite it under its own
+package authority.
+
+## Cross-Package Sequencing
+
+### Phase 0: this Design record
+
+TensorDSLab:
+
+1. freezes this detailed package position;
+2. commits only this replacement architecture record and synchronized index;
+3. sends the exact immutable document to TensorCore Design; and
+4. makes no production edit.
+
+### Phase 1: TensorCore replacement Design
+
+TensorCore Design:
+
+1. starts from exact preserved local main `de235057...`;
+2. creates an ordinary forward child stage;
+3. freezes exact Coordinates, Axis, Spec, Field, Kernel, Collection, movement,
+   typing, diagnostics, topology, exports, tests, and artifact contracts;
+4. retires unpublished TensorConfig and published old Axis representations
+   without aliases;
+5. consults exact TensorDSLab and any other affected consumer;
+6. resolves every exact consumer finding;
+7. leaves TensorDSLab physics and application policy downstream; and
+8. does not publish until the complete same-byte package loop clears.
+
+### Phase 2: TensorCore implementation and publication
+
+TensorCore independently:
+
+1. implements the exact accepted replacement;
+2. validates runtime and strict typing;
+3. validates source and canonical archive;
+4. builds deterministic artifacts;
+5. obtains independent Review;
+6. closes locally by exact fast-forward;
+7. creates a narrow publication authority;
+8. performs an ordinary non-force push; and
+9. supplies exact containing commit, tree, version, wheel, archive, export,
+   suite, typing, and qualification evidence.
+
+No TensorDSLab adoption occurs merely because TensorCore publishes.
+
+### Phase 3: TensorDSLab representation adoption
+
+TensorDSLab Design then freezes one bounded work order for:
+
+- exact dependency pin;
+- compositional Coordinates consumption;
+- QuantityAxis;
+- Quantity Specs;
+- Quantity Field/Kernel roots;
+- explicit movement;
+- common alignment;
+- facade and typing migration;
+- protected scientific bytes where possible; and
+- removal of obsolete generic representation use.
+
+This may be combined with Product migration only if exact scope and evidence
+remain tractable. A representation-only first candidate is preferred if the
+Product rewrite would obscure dependency correctness.
+
+### Phase 4: independent Product migrations
+
+TensorDSLab may migrate Products in increasing risk order:
+
+1. PureWaveform as the deterministic convolution pilot;
+2. AnalogWaveform;
+3. DigitizedWaveform;
+4. NoiseWaveform;
+5. Charge;
+6. Photoelectrons source boundary.
+
+Each stage must leave the package coherent. Temporary compatibility surfaces
+are prohibited, so exact grouping may change if an intermediate state could
+not be importable or truthful.
+
+### Phase 5: application extraction
+
+One or more application package Design authorities must:
+
+- select package/repository identity;
+- define semantic axes;
+- define profiles;
+- define workflows;
+- adopt reusable TensorDSLab Products;
+- migrate the DS20k demo where appropriate;
+- define application result collection;
+- validate wheel isolation;
+- and publish, if desired, under separate authority.
+
+TensorDSLab cannot complete the removal of collaboration-owned public names
+until the chosen application migration is synchronized. If no application
+owner is authorized, the affected extraction pauses; TensorDSLab must not
+silently invent a permanent embedded application.
+
+## TensorCore Evidence Requirements
+
+The future TensorCore replacement must prove at least:
+
+### Coordinates and axes
+
+- exact public class/decorator/signature contracts;
+- structural equality/hash;
+- Count, Regular, Label, and Offset admission;
+- zero extents and empty supports;
+- negative Regular step generic behavior;
+- strict coordinate and index lookup;
+- exact semantic Axis identity;
+- downstream fieldful immutable Axis subclass behavior;
+- OffsetAxis `relative_to` class identity;
+- multiple OffsetAxis operation dimensions with different target roles;
+- retired old Axis surfaces absent; and
+- no Pint import.
+
+### Specs
+
+- exact axes/device/dtype identity;
+- rank-zero and zero-extent behavior;
+- exact shape and Python-integer element count;
+- axis lookup;
+- conditioning and operation uniqueness rules;
+- structural equality/hash;
+- fieldful downstream Spec subclass support;
+- exact same-subclass `.to`;
+- no-op identity;
+- no allocation or availability check;
+- no lost downstream fields; and
+- no TensorConfig.
+
+### Fields and kernels
+
+- exact tensor/Spec agreement;
+- fail-closed mismatch diagnostics;
+- semantic subtype preservation;
+- Field no-op `.to` identity;
+- Kernel defensive ownership;
+- Kernel no-op `.to` identity;
+- safe exact-subtype movement without public trust surface;
+- unhashability/identity equality;
+- no unit or Product policy; and
+- no silent repair.
+
+### Collections
+
+- empty, field-only, kernel-only, and explicit mixed collections;
+- exact-type uniqueness and lookup;
+- insertion order;
+- heterogeneous axes/device/dtype/unit;
+- device-only `.to`;
+- no-op identity;
+- exact subtype preservation;
+- no reflection;
+- and no artifact generalization.
+
+### Static and artifact
+
+- exact supported exports and modules;
+- strict positive typing;
+- negative fixtures for wrong Coordinates, axes, Specs, members, movement,
+  subclass state, and lookup;
+- source/archive equality;
+- deterministic wheel payload;
+- isolated install;
+- no retired path;
+- no compatibility alias;
+- docs and examples compile;
+- privacy and clean-tree gates; and
+- explicit unavailable-CUDA qualification.
+
+## TensorDSLab Evidence Requirements
+
+Future TensorDSLab implementation must prove:
+
+### Quantity representation
+
+- exact Pint registry ownership;
+- QuantityAxis magnitude/quantity boundary;
+- Quantity Spec structural equality/hash;
+- Field/Kernel unit forwarding;
+- no duplicate unit state;
+- no canonical_unit;
+- unit-preserving `.to`;
+- no implicit unit conversion;
+- and no Pint tensor state.
+
+### Preparation
+
+- same-exact-Config return type;
+- fresh Config when representation changes;
+- exact no-op behavior if selected;
+- source-Spec relationship;
+- coordinate correspondence;
+- conditioning permutation;
+- operation geometry preservation;
+- unit conversion;
+- dtype fold and numerical floor;
+- target device materialization;
+- exact preflight order;
+- no RNG words;
+- no Runtime/Plan/token;
+- and mutation-resistant failures for omitted coordinate reorder, omitted
+  dimension permutation, wrong unit scale, wrong dtype floor, and silent
+  movement.
+
+### Products
+
+- one-shot and staged path equivalence;
+- exact output Spec identity;
+- direct standalone use;
+- Product-specific source tuple law;
+- deterministic source-order accumulation;
+- no pipeline dependency;
+- no private Runtime values;
+- exact public signatures;
+- exact scientific laws;
+- exact stochastic replay;
+- Product result freshness;
+- Product validation;
+- and no production-time Pint, alignment discovery, movement, or dtype-policy
+  selection.
+
+### Charge evidence
+
+- Photoelectrons-only source;
+- Axioelectrons-like second semantic source fixture without production import;
+- source axis-order permutation;
+- source unit conversion;
+- source accumulation ceilings;
+- global and conditioned kernels;
+- absent-role rejection;
+- exact temporal-axis admission;
+- timing conservation before finite-window discard;
+- direct/delayed/afterpulse collapsed means;
+- no same-round feedback;
+- finite-window exclusion;
+- generation depth;
+- smearing;
+- stochastic address identity;
+- and high-strength independent analytic/statistical oracles.
+
+### Waveforms and digitizer
+
+- PulseResponse literal polarity and unit equation;
+- convolution geometry;
+- multiple compatible PureWaveform sources;
+- exact-zero noise;
+- white and PSD branches;
+- Analog source summation and saturation;
+- Digitized exact-one-source law;
+- gain/input/code mapping;
+- output integer dtype;
+- and configured unit freedom.
+
+### Package and application boundary
+
+- TensorDSLab core imports no collaboration package;
+- core exports no collaboration axes/profile/Readout;
+- exact reusable Product facades;
+- exact wheel isolation;
+- application imports only supported TensorDSLab surface;
+- application-specific workflow evidence remains in application package;
+- no placeholder Silex waveform chain;
+- no embedded hidden application;
+- and no retired aliases.
+
+## Risk-Based Review
+
+Independent Review must focus on the highest-risk boundaries rather than
+mechanically duplicate every complete Validation gate:
+
+- generic versus package-owned ownership;
+- Coordinates/Axis semantic identity;
+- Spec structural state and same-subclass reconstruction;
+- Field/Kernel exact Spec relationship;
+- kernel defensive ownership;
+- collection heterogeneity;
+- unit equations;
+- dtype planning;
+- Product source relationships;
+- Config readiness;
+- no hot-path policy discovery;
+- Charge stochastic laws and address identity;
+- application/core isolation;
+- public typing;
+- retired-surface absence; and
+- truthfulness of current living documentation.
+
+Review should use targeted mutants for plausible incorrect implementations.
+Examples include:
+
+- treating coordinate order as irrelevant;
+- resolving semantic roles by class name rather than exact class;
+- losing downstream Spec fields in `.to`;
+- reconstructing a base Field or Kernel;
+- silently moving a source during production;
+- inferring a canonical unit from kernel class;
+- using output dtype below the Product floor;
+- normalizing timing probabilities;
+- using same-generation children as a frontier;
+- drawing out-of-window crosstalk categories;
+- retaining an embedded DS20k import;
+- and accepting a retired Axis alias.
+
+## CUDA And Accelerator Boundary
+
+No fresh CUDA action is authorized by this Design.
+
+During pre-1.0 development:
+
+- complete CPU behavior;
+- strict typing;
+- exact address/word evidence;
+- device-contract tests;
+- source/archive/artifact evidence;
+- and explicit unavailable-CUDA qualifications
+
+remain mandatory.
+
+The complete integrated CUDA matrix remains deferred to one exact mutually
+adopted TensorCore/TensorDSLab `1.0.0` release-candidate pairing. Any
+collaboration application seeking its own accelerator claim must independently
+validate its exact package bytes and workflow. The final coordinated CUDA gate
+is functional-correctness evidence, not performance, deployment, calibration,
+or broad hardware conformance.
+
+## Frozen Non-Goals
+
+This architecture does not select:
+
+- TensorArtifact generalization;
+- durable cache schema;
+- IO;
+- lazy loading;
+- TensorML integration;
+- TensorG4DS adapter implementation;
+- native G4DS parsing;
+- detector calibration;
+- arbitrary workflow graphs in TensorDSLab;
+- a universal Product base;
+- a generic Config base;
+- a generic Readout base;
+- a Product registry;
+- reflection-driven execution;
+- Distribution factories in Config;
+- callbacks;
+- arbitrary user RNG keys;
+- mutable preparation caches;
+- per-product Runtime classes;
+- PSD construction;
+- recovery-weighted afterpulse;
+- dynamic-shape kernel geometry;
+- sparse kernel representation;
+- implicit unit conversion;
+- implicit device movement;
+- automatic mixed precision;
+- performance optimization;
+- CUDA implementation;
+- compatibility aliases;
+- a package release;
+- or a deployment claim.
+
+## Stop Conditions
+
+Future work stops and returns to the relevant Design authority if:
+
+1. TensorCore declines or substantively changes the compositional contract.
+2. TensorCore cannot safely preserve exact Spec subclasses in `.to(...)`
+   without a public unchecked mechanism.
+3. TensorCore requires TensorDSLab units, Products, Configs, or application
+   policy upstream.
+4. A second exact axis role cannot be represented without restoring parallel
+   Axis inheritance vocabulary.
+5. Fieldful downstream Specs cannot coexist with fieldless semantic
+   Field/Kernel leaves.
+6. TensorCollection cannot preserve exact semantic subtype during movement.
+7. TensorDSLab production would need Pint, coordinate search, silent movement,
+   or dtype-policy discovery.
+8. A Product cannot express its source law without importing an application
+   semantic Product class.
+9. The selected Charge source relationship changes its scientific law.
+10. A physical kernel requires a probability-only generic hierarchy.
+11. Application extraction lacks an accepted package owner or creates a
+    dependency cycle.
+12. A future work order attempts to publish the unpublished Stage 30
+    TensorConfig contract unchanged.
+13. A stochastic address or result changes without an explicit parity and
+    collision disposition.
+14. Protected scientific behavior changes inside a structural migration
+    without package-owned authority.
+15. A compatibility alias or hidden old path is introduced without explicit
+    user and Design acceptance.
+16. Production scope begins before the exact TensorCore containing commit is
+    published and independently accepted.
+17. An execution role named by a future production work order is stale,
+    missing, or discrepant.
+18. Any package source conflicts with a cross-package handoff.
+19. The implementation cannot keep application bytes out of the reusable
+    TensorDSLab wheel.
+20. The exact paired pre-1.0 CUDA deferral is misrepresented as accelerator
+    support.
+
+No implementation role may silently narrow, widen, or reinterpret the
+architecture to bypass a stop.
+
+## Required Future Work-Order Inventory
+
+Before TensorDSLab production dispatch, Design must freeze:
+
+- exact published TensorCore commit/tree/version/artifacts;
+- exact TensorDSLab parent commit/tree;
+- exact package filetree;
+- exact public facade tuples;
+- exact Config fields and constructor signatures;
+- exact QuantityFieldSpec and QuantityKernelSpec decorators and signatures;
+- exact Product classmethod signatures;
+- exact preparation fields and readiness diagnostics;
+- exact per-Product working-dtype floors;
+- exact unit equations;
+- exact source tuple relationships;
+- exact Charge temporal-axis rules;
+- exact kernel value and geometry constraints;
+- exact source and kernel movement policy;
+- exact stochastic roles, addresses, and any rebaseline;
+- exact count/allocation ceilings;
+- exact current scientific fixtures;
+- exact retirements;
+- exact application extraction boundary;
+- exact changed-path allowlist and protected bytes;
+- focused and complete test commands;
+- strict typing and negative fixtures;
+- source/archive/artifact evidence;
+- isolated wheel evidence;
+- documentation updates;
+- privacy and hygiene gates;
+- risk-based Review duties;
+- finite candidate/return route;
+- final same-byte approval and fast-forward authority; and
+- explicit no-push/no-CUDA effects unless separately authorized.
+
+## Authority And Next Action
+
+This document selects TensorDSLab's future architecture and exact consumer
+position. It authorizes only:
+
+1. committing this Design record and synchronized implementation index;
+2. sending the exact immutable record to TensorCore Design;
+3. receiving and reviewing a TensorCore replacement Design candidate;
+4. refining this record if cross-package contracts require a substantive
+   synchronized change; and
+5. preparing future bounded work orders after exact dependency publication.
+
+It does not authorize:
+
+- TensorCore edits;
+- TensorDSLab production or test edits;
+- dependency adoption;
+- application repository creation;
+- Implementation dispatch;
+- Validation or Review dispatch;
+- merge to local main;
+- push;
+- publication;
+- CUDA or cluster work;
+- compatibility claims;
+- release claims;
+- or deployment.
+
+The next required external action is a read-only TensorCore Design
+consultation against the exact committed bytes of this record. TensorCore must
+return either:
+
+- exact-byte confirmation with a proposed package-owned replacement-stage
+  boundary; or
+- concrete findings identifying any generic ownership, typing,
+  reconstruction, synchronization, or topology contradiction.
+
+TensorDSLab remains on exact published TensorCore `0.21.0` and the current
+Maintenance 14 production package until that coordinated sequence completes.
