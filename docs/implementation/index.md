@@ -345,9 +345,9 @@ remain Validation-owned.
 
 ### [Maintenance 15: Spec-Composed Products And Application Boundary](maintenance_15_spec_composed_products_and_application_boundary.md)
 
-Status: **Architecture selected; exact TensorCore package-feasibility
-confirmation complete on substantive commit `f5edfbd0319afac2b5b201ad8eb6f3db2b3b4c16`;
-TensorCore Stage 31 work-order authorship pending; TensorDSLab Implementation
+Status: **Architecture selected; configurable-coefficient-kernel amendment
+integrated; renewed exact TensorCore package-feasibility confirmation pending;
+TensorCore Stage 31 work-order authorship and TensorDSLab Implementation
 undispatched**.
 
 This documentation-only architecture record starts from exact locally closed
@@ -394,8 +394,21 @@ also be on the same exact device as every other source and the configured
 output Spec. Product entry points never move sources implicitly; callers use
 explicit `.to(...)` before preparation.
 
-`ChargeConfig` is the complete Charge punchcard, while `ChargeKernels` is only
-its typed physical-kernel collection. `PulseResponse` replaces `Pulse`.
+Every configurable coefficient that may vary over example, channel,
+microcell, sample, or another admitted semantic axis while retaining one
+unchanged Product algorithm is represented by its own semantic TensorKernel
+leaf. A global coefficient is a rank-zero kernel rather than a scalar Config
+shortcut. Output Specs, source relationships, algorithm/law selection,
+recursion depth, semantic-role selection, boundaries, RNG identity, and
+workflow remain structural state. Each configurable Product therefore owns
+one exact typed `*Kernels` collection; Config stores the output Spec, that
+collection, and only genuine structural policy.
+
+This applies the rule to the digitizer rather than merely stating it:
+`BitDepth` is an integer TensorKernel, while `InputMinimum`, `InputMaximum`,
+and linear dimensionless `AnalogGain` are QuantityKernel leaves. Rank-zero and
+conditioned forms use the same Product preparation path. `PulseResponse`
+replaces `Pulse`.
 Current timing-jitter Multinomial, collapsed-Poisson
 direct/delayed/afterpulse, dark-count, smearing, convolution, noise, analog,
 and digitizer laws remain the selected scientific baseline unless a later

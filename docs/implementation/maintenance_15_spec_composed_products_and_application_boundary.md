@@ -1,8 +1,8 @@
 # Maintenance 15 Spec-Composed Products And Application Boundary
 
-Status: **Architecture selected; exact TensorCore package-feasibility
-confirmation complete on substantive commit `f5edfbd0319afac2b5b201ad8eb6f3db2b3b4c16`;
-TensorCore Stage 31 work-order authorship pending; TensorDSLab Implementation
+Status: **Architecture selected; configurable-coefficient-kernel amendment
+integrated; renewed exact TensorCore package-feasibility confirmation pending;
+TensorCore Stage 31 work-order authorship and TensorDSLab Implementation
 undispatched**.
 
 Stable key:
@@ -240,13 +240,68 @@ shape, device, dtype, axes, coordinates, or units.
 A Product-specific Config describes one transformation. It contains:
 
 - the exact output Spec;
-- the exact physical kernels and scalar parameters;
+- one exact typed collection of computational kernels;
 - the exact bounded scientific policy; and
 - meaningful prepared facts when the Config has been aligned.
 
 A Config is not a generic tensor representation, so there is no generic
 `TensorConfig`, `QuantityConfig`, or universal Config root in the selected end
 state.
+
+### Every axis-varying coefficient is a kernel
+
+The selected Config boundary is fail-closed:
+
+> If a configurable value may vary over example, channel, microcell, sample,
+> or another semantic axis while the Product still executes the same
+> algorithm, that value is represented by its own semantic TensorKernel leaf.
+
+This rule applies to:
+
+- physical rates, widths, probabilities, intensities, and responses;
+- numerical gains, thresholds, lower and upper bounds, and digitizer depth;
+- integer, floating, complex, Boolean-mask, dimensional, and dimensionless
+  coefficient representations; and
+- future configurable values that participate elementwise in one unchanged
+  Product equation.
+
+A global coefficient is not a scalar Config shortcut. It is a rank-zero
+kernel with empty conditioning and operation axes. A coefficient that varies
+by channel has `ChannelAxis` as a conditioning axis. A coefficient that varies
+by example and channel has both roles in its exact ordered conditioning
+geometry. Translation support or another literal destination geometry uses
+operation axes instead.
+
+This is a rule for configurable coefficient state, not a claim that every
+source of output variation is a kernel. Source tensors, deterministic
+coordinate values, and random draws naturally vary Products without becoming
+Config kernels.
+
+The following remain structural Config or Product state rather than kernels:
+
+- the output Spec and its axes, device, dtype, and unit;
+- the exact typed kernel collection and optional-member presence;
+- Product source-count and source-relationship policy;
+- algorithm or stochastic-law selection;
+- bounded iteration and recursion depth;
+- semantic role selection such as the temporal-axis role;
+- boundary policy;
+- RNG role and address identity; and
+- application workflow and retention policy.
+
+The dividing line is whether a value changes coefficients inside one fixed
+algorithm or changes the algorithm/domain itself. `BitDepth` may vary by
+channel while the digitizer equation remains unchanged, so it is a kernel.
+`correlated_avalanche_generations` changes the recursion topology, so it
+remains structural ChargeConfig state. Optional kernel presence may select
+one already frozen Product branch, but the numerical member itself remains a
+kernel.
+
+Product preparation must reject a kernel whose conditioning role is absent
+from the Product domain. Supplying `ChannelAxis` to an application permits a
+channel-conditioned coefficient; omitting that role means no Product Config
+may smuggle in channel variation. Preparation aligns every admitted
+conditioning coordinate exactly and never infers a missing role.
 
 ### Products are parts, not pipeline stages
 
@@ -329,7 +384,7 @@ QuantityField
 QuantityKernel
 ```
 
-The selected Product and physical-kernel names include:
+The selected Product and computational-kernel names include:
 
 ```text
 Photoelectrons
@@ -342,9 +397,13 @@ DigitizedWaveform
 ChargeConfig
 ChargeKernels
 PureWaveformConfig
+PureWaveformKernels
 NoiseWaveformConfig
+NoiseWaveformKernels
 AnalogWaveformConfig
+AnalogWaveformKernels
 DigitizedWaveformConfig
+DigitizedWaveformKernels
 
 TimingJitter
 DirectCrosstalk
@@ -357,10 +416,16 @@ WhiteNoiseRms
 PowerSpectralDensity
 AnalogMinimum
 AnalogMaximum
+BitDepth
+InputMinimum
+InputMaximum
+AnalogGain
 ```
 
-`PulseResponse` replaces `Pulse`. `ChargeConfig` is the complete Product
-punchcard; `ChargeKernels` is only its typed kernel collection.
+`PulseResponse` replaces `Pulse`. Every Product Config is the complete
+punchcard; its corresponding `*Kernels` value is only the typed computational
+kernel collection. No numerical coefficient is stored directly as a Python
+scalar or Pint Quantity in a Config.
 
 ## TensorCore Ownership
 
@@ -1409,6 +1474,17 @@ It:
 This retires the current `canonical_unit` pattern. Unit conversion belongs to
 Product preparation, where source, kernel, and output equations are known.
 
+Not every computational kernel is a QuantityKernel. A coefficient with
+physical or dimensionless quantity meaning uses QuantityKernel and stores its
+literal unit in QuantityKernelSpec. A discrete coefficient that participates
+elementwise in an otherwise unchanged numerical equation may derive directly
+from TensorKernel with an ordinary TensorKernelSpec. The first selected
+example is integer `BitDepth`.
+
+TensorDSLab does not add a generic `ParameterKernel`, `CoefficientKernel`, or
+Config-kernel framework. Exact semantic leaves and Product-specific typed
+collections make the supported meaning visible.
+
 ## Unit Policy
 
 ### Units are explicit representation state
@@ -1703,6 +1779,17 @@ Every Config is:
 - free of TensorCore inheritance; and
 - a complete punchcard for one Product transformation.
 
+Every Config stores:
+
+- one exact output Spec;
+- one exact Product-specific typed `*Kernels` collection; and
+- only the additional structural policy genuinely required by that Product.
+
+No Config stores a numerical coefficient as a primitive scalar, Pint
+Quantity, or raw tensor. A global value is represented by a rank-zero
+semantic kernel. This makes global and conditioned configuration use the same
+public type and the same validation/alignment path.
+
 There is no:
 
 ```text
@@ -1940,17 +2027,20 @@ applicable:
 5. validate every source device equals the exact output Spec device;
 6. resolve required semantic roles;
 7. validate exact source/output coordinate relationships;
-8. validate kernel conditioning availability;
-9. determine coordinate reordering and dimension permutation;
-10. validate Product unit equations;
-11. select the deterministic working dtype;
-12. convert kernel units;
-13. align kernel conditioning coordinates and dimensions;
-14. materialize aligned kernels on the output device and selected dtype;
-15. prepare immutable scalar conversion facts;
-16. preflight element, byte, count, and address ceilings;
-17. return a fresh Config of the same exact type; and
-18. perform no random draw and consume no RNG word.
+8. admit the exact Product-specific kernel collection, required/optional
+   member set, and every semantic kernel value;
+9. validate every kernel conditioning role is available in the Product
+   domain;
+10. determine coordinate reordering and dimension permutation;
+11. validate Product unit equations;
+12. select the deterministic working dtype;
+13. convert quantity-kernel units;
+14. align every kernel's conditioning coordinates and dimensions;
+15. materialize aligned kernels on the output device and selected dtype;
+16. prepare immutable conversion and execution facts;
+17. preflight element, byte, count, and address ceilings;
+18. return a fresh Config of the same exact type; and
+19. perform no random draw and consume no RNG word.
 
 The exact order matters. Invalid public meaning fails before expensive
 materialization, allocation, or stochastic execution.
@@ -1969,9 +2059,10 @@ alignment additionally proves:
 - broadcast insertion is explicit;
 - no storage expansion occurs unless the Product work order explicitly
   selects it;
-- units are converted once;
+- quantity-kernel units are converted once;
 - the final tensor is contiguous on the target device and dtype; and
-- the returned Kernel has an exact aligned QuantityKernelSpec.
+- the returned Kernel preserves its exact semantic type and has the exact
+  aligned TensorKernelSpec or QuantityKernelSpec subtype.
 
 The Maintenance 13 `align_quantity_kernel()` behavior is parts-bin evidence
 for this future preparation action. Its current signature and current
@@ -1986,8 +2077,8 @@ working dtype
 source conversion scales
 output conversion scale
 resolved temporal dimension
-prepared scalar gains
-aligned physical kernels
+aligned computational kernels
+derived coefficient tensors
 preflight ceilings
 ```
 
@@ -2063,25 +2154,44 @@ Validation is not a silent repair path. It does not:
 - replace nonfinite values;
 - or mutate Config or Product state.
 
-## Physical Kernel Contracts
+## Computational Kernel Contracts
 
-Every physical kernel is a final, directly constructible, fieldless
-QuantityKernel semantic leaf. Generic TensorKernel construction proves exact
-tensor/Spec agreement and defensive ownership. The physical leaf and consuming
-Product prove the scientific contract.
+Every configurable coefficient is a final, directly constructible, fieldless
+TensorKernel semantic leaf. Dimensional and dimensionless physical
+coefficients specialize QuantityKernel; discrete coefficient values such as
+BitDepth may specialize TensorKernel directly. Generic TensorKernel
+construction proves exact tensor/Spec agreement and defensive ownership. The
+semantic leaf and consuming Product prove the coefficient's value, dtype,
+unit, conditioning, and operation-geometry contract.
 
-All physical kernels require:
+All computational kernels require:
 
-- finite represented values;
-- exact QuantityKernelSpec;
-- exact literal geometry;
+- exact TensorKernelSpec or QuantityKernelSpec as selected by the leaf;
+- exact literal conditioning and operation geometry;
 - no arbitrary stored fields outside `tensor` and `spec`;
 - no `__dict__`;
 - no callable, Distribution, Config, Runtime, RNG, or mutable cache;
 - no inferred canonical unit; and
 - exact semantic type preservation under `.to(...)`.
 
-The selected first scientific contracts are:
+Every floating or complex coefficient additionally requires finite represented
+values. Integer and Boolean leaves freeze their exact dtype and value domains
+instead of passing through a floating-point admission path.
+
+The universal coefficient-geometry rule is:
+
+- empty conditioning axes mean one global rank-zero coefficient when operation
+  axes are also empty;
+- nonempty conditioning axes identify exactly where the coefficient may vary;
+- every conditioning role must exist in the Product domain;
+- conditioning coordinates align exactly, including stable reordering;
+- no operation axes are admitted for an ordinary pointwise coefficient;
+- operation axes are present only when the coefficient literally carries
+  support or destination geometry; and
+- adding a conditioning axis changes represented coefficient state but never
+  selects a different algorithm.
+
+The selected first computational contracts are:
 
 | Kernel | Value and unit law | Geometry law |
 |---|---|---|
@@ -2096,6 +2206,25 @@ The selected first scientific contracts are:
 | `PowerSpectralDensity` | finite nonnegative prepared spectral coefficients with the exact PSD dimension required by NoiseWaveform | operation representation and sampling correspondence frozen by the future Noise work order |
 | `AnalogMinimum` | finite magnitude compatible with AnalogWaveform output unit | no operation axes; conditioning allowed |
 | `AnalogMaximum` | finite magnitude compatible with AnalogWaveform output unit | no operation axes; conditioning allowed |
+| `BitDepth` | exact integer values in the retained `[1, 16]` domain; ordinary TensorKernelSpec with an exact integer dtype and no Pint unit | no operation axes; conditioning allowed |
+| `InputMinimum` | finite quantity magnitude compatible with the DigitizedWaveform source unit | no operation axes; conditioning allowed |
+| `InputMaximum` | finite quantity magnitude compatible with the DigitizedWaveform source unit | no operation axes; conditioning allowed |
+| `AnalogGain` | finite strictly positive linear dimensionless multiplier | no operation axes; conditioning allowed |
+
+`InputMinimum < InputMaximum` is a Product-owned pointwise relationship after
+alignment; neither leaf can validate it in isolation. `BitDepth` remains a
+kernel because the same digitizer equation may use a different code depth by
+example, channel, microcell, sample, or another admitted semantic role.
+`AnalogGain` stores the literal linear multiplier used by the equation. A
+collaboration profile that starts from a voltage gain in decibels converts it
+explicitly while constructing the kernel:
+
+```text
+linear_gain = 10 ** (gain_db / 20)
+```
+
+TensorDSLab does not retain a scalar `analog_gain_db` Config field or perform
+that application-facing convention conversion on the Product hot path.
 
 The explicit represented-total ceiling on the three first-generation branching
 kernels encodes the currently selected physical meaning: one tensor answers
@@ -2112,6 +2241,35 @@ The future executable work order must freeze exact reduction dimensions,
 stable summation, tolerances, validation order, empty behavior, and device
 synchronization. This architecture freezes the physical distinction, not an
 unreviewed implementation shortcut.
+
+## Product Kernel Collections
+
+Every Product with configurable coefficients owns one exact final typed
+TensorCollection leaf:
+
+```text
+ChargeKernels
+PureWaveformKernels
+NoiseWaveformKernels
+AnalogWaveformKernels
+DigitizedWaveformKernels
+```
+
+Each collection:
+
+- admits only its exact supported semantic kernel types;
+- rejects duplicate exact member types;
+- freezes which members are required and which are optional;
+- preserves supplied member identity and order;
+- exposes typed Product-meaningful properties;
+- performs no reflection-driven execution;
+- owns no output Spec, source, RNG, or workflow;
+- may contain QuantityKernel and ordinary TensorKernel members where the
+  Product requires both; and
+- may be explicitly moved as one value during same-type Config preparation.
+
+The common suffix is vocabulary, not a generic TensorDSLab collection base.
+Each Product collection owns its exact member contract directly.
 
 ## Charge
 
@@ -2431,13 +2589,26 @@ It:
 - owns no source class requirement; and
 - contains no Config or Runtime state.
 
+### `PureWaveformKernels`
+
+```python
+@final
+class PureWaveformKernels(TensorCollection[QuantityKernel[Any]]):
+    @property
+    def pulse_response(self) -> PulseResponse:
+        ...
+```
+
+The collection requires exactly one PulseResponse. It admits no empty or
+additional member set.
+
 ### `PureWaveformConfig`
 
 ```python
 @dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
 class PureWaveformConfig:
     spec: QuantityFieldSpec[Any]
-    pulse_response: PulseResponse
+    kernels: PureWaveformKernels
 
     __hash__ = None
 ```
@@ -2497,25 +2668,40 @@ Both are QuantityKernel leaves.
 the intended output sampling representation. This maintenance deliberately
 does not design the upstream PSD preparation operation.
 
+### `NoiseWaveformKernels`
+
+```python
+@final
+class NoiseWaveformKernels(TensorCollection[QuantityKernel[Any]]):
+    @property
+    def white_noise_rms(self) -> WhiteNoiseRms | None:
+        ...
+
+    @property
+    def power_spectral_density(self) -> PowerSpectralDensity | None:
+        ...
+```
+
+The collection admits an empty set or exactly one of the two current noise
+kernels. The simultaneous two-member set is rejected until a later scientific
+contract explicitly defines additive independent branches.
+
 ### `NoiseWaveformConfig`
 
 ```python
 @dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
 class NoiseWaveformConfig:
     spec: QuantityFieldSpec[Any]
-    white_noise_rms: WhiteNoiseRms | None
-    power_spectral_density: PowerSpectralDensity | None
+    kernels: NoiseWaveformKernels
 
     __hash__ = None
 ```
 
 The exact selected branch law is:
 
-- both `None`: exact-zero NoiseWaveform;
-- WhiteNoiseRms only: IID Gaussian white noise;
-- PowerSpectralDensity only: PSD-shaped noise;
-- both non-`None`: rejected unless a later explicit scientific contract
-  selects additive independent branches.
+- empty kernel collection: exact-zero NoiseWaveform;
+- WhiteNoiseRms only: IID Gaussian white noise; and
+- PowerSpectralDensity only: PSD-shaped noise.
 
 NoiseWaveform accepts an empty source tuple. It does not pretend noise is a
 transformation of an unrelated Product merely to satisfy a generic pipeline
@@ -2550,14 +2736,30 @@ AnalogMaximum
 They may be global or condition on an accepted subset of output roles. Their
 Specs carry literal axes, device, dtype, and unit.
 
+### `AnalogWaveformKernels`
+
+```python
+@final
+class AnalogWaveformKernels(TensorCollection[QuantityKernel[Any]]):
+    @property
+    def minimum(self) -> AnalogMinimum | None:
+        ...
+
+    @property
+    def maximum(self) -> AnalogMaximum | None:
+        ...
+```
+
+The collection admits empty, lower-only, upper-only, or lower-plus-upper
+membership.
+
 ### `AnalogWaveformConfig`
 
 ```python
 @dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
 class AnalogWaveformConfig:
     spec: QuantityFieldSpec[Any]
-    minimum: AnalogMinimum | None
-    maximum: AnalogMaximum | None
+    kernels: AnalogWaveformKernels
 
     __hash__ = None
 ```
@@ -2585,6 +2787,49 @@ Production deterministically:
 
 ## DigitizedWaveform
 
+### Computational kernels
+
+DigitizedWaveform owns four required coefficient leaves:
+
+```text
+BitDepth
+InputMinimum
+InputMaximum
+AnalogGain
+```
+
+BitDepth is an ordinary integer TensorKernel leaf. The other three are
+QuantityKernel leaves; AnalogGain uses a literal dimensionless linear
+multiplier. Every leaf has empty operation geometry and may condition on an
+accepted subset of the output semantic roles.
+
+### `DigitizedWaveformKernels`
+
+The heterogeneous typed collection is:
+
+```python
+@final
+class DigitizedWaveformKernels(TensorCollection[TensorKernel[Any]]):
+    @property
+    def bit_depth(self) -> BitDepth:
+        ...
+
+    @property
+    def input_minimum(self) -> InputMinimum:
+        ...
+
+    @property
+    def input_maximum(self) -> InputMaximum:
+        ...
+
+    @property
+    def analog_gain(self) -> AnalogGain:
+        ...
+```
+
+It requires exactly one of every named member and rejects every additional
+member.
+
 ### `DigitizedWaveformConfig`
 
 A conceptual Config is:
@@ -2593,33 +2838,48 @@ A conceptual Config is:
 @dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
 class DigitizedWaveformConfig:
     spec: QuantityFieldSpec[Any]
-    bit_depth: PositiveInteger
-    input_minimum: pint.Quantity
-    input_maximum: pint.Quantity
-    analog_gain_db: NonnegativeFloat
+    kernels: DigitizedWaveformKernels
 
     __hash__ = None
 ```
-
-The executable work order may replace scalar Pint fields with narrowly named
-scalar quantity values if the same punchcard semantics are retained.
 
 DigitizedWaveform:
 
 - requires exactly one compatible QuantityField source;
 - requires an integer output dtype;
 - requires a dimensionless code-like output unit;
-- validates the analog input range and gain;
+- aligns all four coefficient kernels to the output domain;
+- validates `InputMinimum < InputMaximum` pointwise after alignment;
+- validates the positive linear AnalogGain;
 - selects a floating working dtype for gain and scaling;
-- preflights code bounds against bit depth and output dtype;
+- computes the pointwise maximum-code tensor as `2**bit_depth - 1`;
+- preflights every code bound against the output dtype and every intermediate
+  exactness/overflow requirement;
 - performs no stochastic draw;
-- maps the configured analog interval to integer codes under the frozen
-  digitizer equation;
+- applies the same frozen digitizer equation at every output element using the
+  aligned coefficient values;
 - returns exact output Spec identity; and
 - does not own a detector-specific digitizer Profile.
 
+The aligned elementwise equation is conceptually:
+
+```text
+amplified = source * analog_gain
+maximum_code = 2**bit_depth - 1
+code_float =
+    (amplified - input_minimum)
+    * maximum_code
+    / (input_maximum - input_minimum)
+code = integer_cast(clamp(code_float, 0, maximum_code))
+```
+
+The executable Product work order must preserve the exact accepted threshold
+branches and integer-cast behavior, not substitute a new rounding rule.
+
 The current IV-DSLab-like values remain application Profile data rather than
-generic TensorDSLab constants.
+generic TensorDSLab constants. A profile may create rank-zero kernels for the
+current globally uniform law or conditioned kernels for detector-dependent
+coefficients.
 
 ## Photoelectrons And Other Sources
 
@@ -2832,11 +3092,11 @@ The package boundary is fail-closed:
 | Semantic Axis mechanics | Owns `TensorAxis` and exact class identity | Owns `QuantityAxis` | Owns detector semantic Axis leaves |
 | Offset identity | Owns `OffsetAxis.relative_to` and ordered offsets | Interprets displacement per Product | Supplies target semantic Axis classes |
 | Field representation | Owns `TensorFieldSpec` and `TensorField` | Owns quantity specialization and Product leaves | Instantiates and consumes Products |
-| Kernel representation | Owns `TensorKernelSpec` and `TensorKernel` | Owns quantity specialization and physical leaves | Instantiates physical kernel values |
+| Kernel representation | Owns `TensorKernelSpec` and `TensorKernel` | Owns quantity specialization and exact computational-coefficient leaves | Instantiates global or conditioned kernel values |
 | Device/dtype | Owns explicit generic representation and `.to` mechanics | Owns Product promotion, floors, and readiness | Chooses requested placement and precision |
 | Units | Excludes Pint | Owns Pint registry, quantity Specs, equations, and conversions | Chooses physically valid units and values |
 | Kernel alignment | Owns exact generic role resolution | Owns coordinate reorder, permutation, broadcast placement, and materialization | Supplies domains and conditioning values |
-| Collections | Owns exact-type immutable mechanics | Owns `ChargeKernels` and reusable collections demonstrated by Products | Owns Readout/Reconstruction result collections |
+| Collections | Owns exact-type immutable mechanics | Owns one exact typed `*Kernels` collection per configurable Product | Owns Readout/Reconstruction result collections |
 | Configs | Owns no generic Config | Owns exact Product Config punchcards | Owns application Settings and profile composition |
 | Product laws | Excludes detector science | Owns reusable Product transformations | Chooses and orders Products |
 | RNG engine and laws | Owns words, addresses, and generic Distributions | Owns Product roles, schemas, traversal, and scientific mappings | Owns root domain and workflow invocation |
@@ -2988,7 +3248,8 @@ Each Product package owns:
 
 - public semantic Product;
 - public exact Config;
-- public physical kernels when applicable;
+- public exact typed kernel collection;
+- public computational kernels when applicable;
 - private preparation action;
 - private production action;
 - private validation action; and
@@ -3026,9 +3287,13 @@ DigitizedWaveform
 ChargeConfig
 ChargeKernels
 PureWaveformConfig
+PureWaveformKernels
 NoiseWaveformConfig
+NoiseWaveformKernels
 AnalogWaveformConfig
+AnalogWaveformKernels
 DigitizedWaveformConfig
+DigitizedWaveformKernels
 
 TimingJitter
 DirectCrosstalk
@@ -3041,6 +3306,10 @@ WhiteNoiseRms
 PowerSpectralDensity
 AnalogMinimum
 AnalogMaximum
+BitDepth
+InputMinimum
+InputMaximum
+AnalogGain
 
 quantity
 unit_registry
@@ -3066,7 +3335,8 @@ collaboration axes from tensor_dslab
 the tensor_dslab.readout workflow package
 Pulse
 canonical_unit fields/properties
-parallel scalar physical Config values superseded by QuantityKernel leaves
+parallel scalar numerical Config values superseded by semantic TensorKernel
+and QuantityKernel leaves
 Config-to-Runtime reflection
 whole-request prerequisite planning
 requested-product workflow closure
@@ -3186,6 +3456,9 @@ The selected changes are:
 - quantity units in Specs;
 - direct Product APIs;
 - Config punchcards instead of Runtime records;
+- semantic kernels for every configurable axis-varying coefficient;
+- rank-zero kernels instead of scalar Config coefficient shortcuts;
+- one exact typed kernel collection per configurable Product;
 - generic ordered source tuples interpreted per Product;
 - no package-owned Product graph;
 - no generic Readout;
@@ -3195,6 +3468,17 @@ The selected changes are:
 - reusable core package independent of DS20k and Silex workflows.
 
 These changes do not, by themselves, authorize a new scientific result.
+
+The current digitizer gain migration is a representation-only intentional
+divergence at the Config boundary. The DS20k application profile must evaluate
+the same accepted binary64 mapping
+`10.0 ** (3.5218 / 20.0)` exactly once while constructing a rank-zero
+AnalogGain kernel. The Product then consumes that literal linear multiplier.
+Evidence must prove output equivalence to the current `analog_gain_db=3.5218`
+path; moving the conversion out of Product preparation does not authorize a
+different gain or digitizer result. The same scalar-to-rank-zero rule preserves
+the current uniform bit depth and input bounds exactly while admitting future
+conditioned values.
 
 ## Documentation Boundary
 
@@ -3428,6 +3712,30 @@ The future TensorCore replacement must prove at least:
 
 Future TensorDSLab implementation must prove:
 
+### Computational coefficient kernels
+
+- every configurable numerical coefficient is represented by one exact
+  semantic TensorKernel leaf;
+- no Config stores a numerical coefficient as a primitive scalar, Pint
+  Quantity, or raw tensor;
+- one rank-zero global kernel and one or more conditioned representations
+  produce the expected broadcast-equivalent or deliberately varying result;
+- example-, channel-, microcell-, sample-, and combined-conditioning fixtures
+  for every Product that admits those roles;
+- exact conditioning-coordinate permutation and absent-role rejection;
+- ordinary pointwise coefficients reject operation axes;
+- support-bearing kernels retain exact operation geometry;
+- quantity coefficients use QuantityKernel while exact discrete coefficients
+  such as BitDepth use TensorKernel directly;
+- the five Product-specific `*Kernels` collections enforce exact required,
+  optional, duplicate, and alien-member contracts;
+- collection movement preserves exact semantic member types and Config
+  preparation returns aligned same-type collections;
+- structural Config state such as recursion depth and temporal-role selection
+  remains outside kernels; and
+- no generic ParameterKernel, coefficient registry, reflection dispatch, or
+  scalar compatibility spelling exists.
+
 ### Quantity representation
 
 - exact Pint registry ownership;
@@ -3461,6 +3769,8 @@ Future TensorDSLab implementation must prove:
 - coordinate correspondence;
 - conditioning permutation;
 - operation geometry preservation;
+- exact typed kernel-collection admission;
+- rank-zero and conditioned coefficient alignment through one path;
 - unit conversion;
 - dtype fold and numerical floor;
 - target device materialization;
@@ -3496,6 +3806,7 @@ Future TensorDSLab implementation must prove:
 - source unit conversion;
 - source accumulation ceilings;
 - global and conditioned kernels;
+- exact ChargeKernels member-set admission;
 - absent-role rejection;
 - exact temporal-axis admission;
 - timing conservation before finite-window discard;
@@ -3509,6 +3820,8 @@ Future TensorDSLab implementation must prove:
 
 ### Waveforms and digitizer
 
+- exact PureWaveformKernels, NoiseWaveformKernels, AnalogWaveformKernels, and
+  heterogeneous DigitizedWaveformKernels contracts;
 - PulseResponse literal polarity and unit equation;
 - convolution geometry;
 - multiple compatible PureWaveform sources;
@@ -3516,7 +3829,12 @@ Future TensorDSLab implementation must prove:
 - white and PSD branches;
 - Analog source summation and saturation;
 - Digitized exact-one-source law;
-- gain/input/code mapping;
+- rank-zero and conditioned BitDepth/InputMinimum/InputMaximum/AnalogGain
+  mapping;
+- exact linear-gain equivalence for the retained profile value converted from
+  decibels at profile construction;
+- pointwise input-range rejection;
+- pointwise maximum-code and output-dtype ceiling preflight;
 - output integer dtype;
 - and configured unit freedom.
 
@@ -3567,6 +3885,13 @@ Examples include:
 - duplicating the Kernel defensive snapshot during movement;
 - accepting Kernel or mixed members from TensorArtifact materialization;
 - retaining a field-named Collection accessor as an alias;
+- retaining a scalar or Pint numerical coefficient directly in a Product
+  Config;
+- treating a conditioned coefficient as one global scalar;
+- accepting a coefficient conditioned on an absent semantic role;
+- admitting operation geometry on an ordinary pointwise coefficient;
+- replacing integer BitDepth with a floating QuantityKernel;
+- interpreting linear AnalogGain values as decibels on the Product hot path;
 - silently moving a source during production;
 - inferring a canonical unit from kernel class;
 - using output dtype below the Product floor;
@@ -3613,6 +3938,7 @@ This architecture does not select:
 - arbitrary workflow graphs in TensorDSLab;
 - a universal Product base;
 - a generic Config base;
+- a generic ParameterKernel or CoefficientKernel base;
 - a generic Readout base;
 - a Product registry;
 - reflection-driven execution;
@@ -3625,6 +3951,8 @@ This architecture does not select:
 - recovery-weighted afterpulse;
 - dynamic-shape kernel geometry;
 - sparse kernel representation;
+- per-element algorithm or recursion-topology selection through a coefficient
+  kernel;
 - implicit unit conversion;
 - implicit device movement;
 - automatic mixed precision;
@@ -3659,24 +3987,27 @@ Future work stops and returns to the relevant Design authority if:
    semantic Product class.
 9. The selected Charge source relationship changes its scientific law.
 10. A physical kernel requires a probability-only generic hierarchy.
-11. Application extraction lacks an accepted package owner or creates a
+11. A configurable numerical coefficient cannot be represented by one exact
+    semantic kernel without changing the Product algorithm, or a future
+    implementation retains a scalar/Pint coefficient Config shortcut.
+12. Application extraction lacks an accepted package owner or creates a
     dependency cycle.
-12. A future work order attempts to publish the unpublished Stage 30
+13. A future work order attempts to publish the unpublished Stage 30
     TensorConfig contract unchanged.
-13. A stochastic address or result changes without an explicit parity and
+14. A stochastic address or result changes without an explicit parity and
     collision disposition.
-14. Protected scientific behavior changes inside a structural migration
+15. Protected scientific behavior changes inside a structural migration
     without package-owned authority.
-15. A compatibility alias or hidden old path is introduced without explicit
+16. A compatibility alias or hidden old path is introduced without explicit
     user and Design acceptance.
-16. Production scope begins before the exact TensorCore containing commit is
+17. Production scope begins before the exact TensorCore containing commit is
     published and independently accepted.
-17. An execution role named by a future production work order is stale,
+18. An execution role named by a future production work order is stale,
     missing, or discrepant.
-18. Any package source conflicts with a cross-package handoff.
-19. The implementation cannot keep application bytes out of the reusable
+19. Any package source conflicts with a cross-package handoff.
+20. The implementation cannot keep application bytes out of the reusable
     TensorDSLab wheel.
-20. The exact paired pre-1.0 CUDA deferral is misrepresented as accelerator
+21. The exact paired pre-1.0 CUDA deferral is misrepresented as accelerator
     support.
 
 No implementation role may silently narrow, widen, or reinterpret the
@@ -3691,6 +4022,10 @@ Before TensorDSLab production dispatch, Design must freeze:
 - exact package filetree;
 - exact public facade tuples;
 - exact Config fields and constructor signatures;
+- exact five Product-specific kernel-collection decorators, member contracts,
+  typed properties, and constructor signatures;
+- exact computational-kernel decorators, Specs, dtype/unit/value domains, and
+  conditioning/operation geometry;
 - exact QuantityFieldSpec and QuantityKernelSpec decorators and signatures;
 - exact Product classmethod signatures;
 - exact preparation fields and readiness diagnostics;
