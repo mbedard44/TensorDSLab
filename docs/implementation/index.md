@@ -408,7 +408,15 @@ This applies the rule to the digitizer rather than merely stating it:
 `BitDepth` is an integer TensorKernel, while `InputMinimum`, `InputMaximum`,
 and linear dimensionless `AnalogGain` are QuantityKernel leaves. Rank-zero and
 conditioned forms use the same Product preparation path. `PulseResponse`
-replaces `Pulse`.
+replaces `Pulse`. Product arithmetic dtype is distinct from each kernel's
+semantic representation dtype: preparation preserves exact integer BitDepth,
+keeps Product-specific kernel collections heterogeneous, derives
+`2**bit_depth - 1` through checked integer arithmetic, and casts only
+arithmetic-admissible members under an explicit per-member plan. The ban on
+scalar/Pint/raw-tensor coefficient shortcuts applies to caller-supplied
+configurable coefficients; prepared same-type Configs may retain immutable
+derived conversion scales, dimensions, dtypes, and checked ceilings under
+their exact Product contract.
 Current timing-jitter Multinomial, collapsed-Poisson
 direct/delayed/afterpulse, dark-count, smearing, convolution, noise, analog,
 and digitizer laws remain the selected scientific baseline unless a later

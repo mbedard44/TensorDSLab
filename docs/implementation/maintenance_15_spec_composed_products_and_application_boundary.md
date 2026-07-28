@@ -265,12 +265,12 @@ This rule applies to:
 - future configurable values that participate elementwise in one unchanged
   Product equation.
 
-A global coefficient is not a scalar Config shortcut. It is a rank-zero
-kernel with empty conditioning and operation axes. A coefficient that varies
-by channel has `ChannelAxis` as a conditioning axis. A coefficient that varies
-by example and channel has both roles in its exact ordered conditioning
-geometry. Translation support or another literal destination geometry uses
-operation axes instead.
+A caller-supplied global coefficient is not a scalar Config shortcut. It is a
+rank-zero kernel with empty conditioning and operation axes. A coefficient
+that varies by channel has `ChannelAxis` as a conditioning axis. A coefficient
+that varies by example and channel has both roles in its exact ordered
+conditioning geometry. Translation support or another literal destination
+geometry uses operation axes instead.
 
 This is a rule for configurable coefficient state, not a claim that every
 source of output variation is a kernel. Source tensors, deterministic
@@ -424,8 +424,10 @@ AnalogGain
 
 `PulseResponse` replaces `Pulse`. Every Product Config is the complete
 punchcard; its corresponding `*Kernels` value is only the typed computational
-kernel collection. No numerical coefficient is stored directly as a Python
-scalar or Pint Quantity in a Config.
+kernel collection. No caller-supplied configurable algorithm coefficient is
+stored directly as a Python scalar, Pint Quantity, or raw tensor in a Config.
+Immutable execution facts derived by Product preparation are a separate,
+Product-owned category.
 
 ## TensorCore Ownership
 
@@ -1677,12 +1679,25 @@ not inspect unrelated global state or silently choose a result dtype.
 
 ### Product-owned working dtype
 
-Each Product deterministically derives a working dtype during preparation from:
+Each Product distinguishes two dtype concepts:
+
+- **representation dtype** is the exact dtype stored by one source, output
+  Spec, or kernel Spec and admitted by that semantic value; and
+- **working dtype** is a Product-owned arithmetic dtype used for one prepared
+  equation.
+
+Preparation never treats the working dtype as a command to reconstruct every
+source and kernel at one common dtype. TensorCollection remains
+heterogeneous, and every prepared kernel retains a representation dtype that
+its exact semantic contract admits.
+
+Each Product deterministically derives its working dtype during preparation
+from the exact numerical inputs that participate in that arithmetic:
 
 ```text
 output Spec dtype
 source Spec dtypes
-participating kernel Spec dtypes
+participating arithmetic-kernel Spec dtypes
 Product numerical floor
 ```
 
@@ -1698,10 +1713,17 @@ working_dtype = product_floor
 for dtype in (
     config.spec.dtype,
     *(source_spec.dtype for source_spec in source_specs),
-    *(kernel.spec.dtype for kernel in participating_kernels),
+    *(kernel.spec.dtype for kernel in arithmetic_kernels),
 ):
     working_dtype = torch.promote_types(working_dtype, dtype)
 ```
+
+`arithmetic_kernels` is selected by the Product's frozen equation. It contains
+only members whose semantic representation contract admits participation in
+that arithmetic promotion. Exact discrete or structural-valued kernels are
+not cast merely because their values affect the equation. The Product first
+uses such a kernel in its own exact domain and then prepares an explicitly
+checked derived value for arithmetic where needed.
 
 The exact Product floor is scientific/numerical policy:
 
@@ -1710,7 +1732,9 @@ The exact Product floor is scientific/numerical policy:
 - waveform convolution may accept the promoted floating dtype selected by the
   Product;
 - ADC code output is integer, but analog gain and scaling use a prepared
-  floating working dtype; and
+  floating working dtype;
+- integer `BitDepth` retains its exact integer representation dtype and does
+  not promote or get reconstructed at that floating dtype; and
 - unsupported dtype families fail during preparation.
 
 This realizes the user's precision control: increasing an output Spec or
@@ -1722,13 +1746,15 @@ higher floor to preserve its accepted law.
 Preparation freezes:
 
 - each source-to-working cast;
-- each kernel-to-working cast;
+- each arithmetic-admissible kernel representation-to-working cast;
+- each representation-preserved kernel use and checked derived conversion;
 - any scalar representation;
 - the final working-to-output cast; and
 - the exact device on which each cast occurs.
 
 Production performs those planned casts as numerical tensor operations. It
-does not rediscover promotion policy.
+does not rediscover promotion policy. Moving a heterogeneous kernel collection
+changes device only; it never silently homogenizes member dtypes.
 
 Rounding is explicit and unavoidable when the output dtype is narrower than
 the working dtype. Validation must prove the selected output-domain error and
@@ -1785,10 +1811,22 @@ Every Config stores:
 - one exact Product-specific typed `*Kernels` collection; and
 - only the additional structural policy genuinely required by that Product.
 
-No Config stores a numerical coefficient as a primitive scalar, Pint
-Quantity, or raw tensor. A global value is represented by a rank-zero
+No public caller-facing Config constructor accepts a caller-supplied
+configurable algorithm coefficient as a primitive scalar, Pint Quantity, or
+raw tensor. A caller-supplied global value is represented by a rank-zero
 semantic kernel. This makes global and conditioned configuration use the same
 public type and the same validation/alignment path.
+
+This prohibition does not apply to immutable execution facts derived by
+Product preparation. A prepared same-type Config may retain directly typed
+scalar conversion scales, resolved dimensions, selected dtypes, checked
+ceilings, and comparable non-configurable facts. Any derived-only stored field
+must be excluded from ordinary caller construction through the exact
+Product-owned construction contract. If a derived tensor must persist, the
+Product must either retain it through an exact semantic Kernel/Spec value or
+freeze a separate logically read-only, defensively owned private tensor
+contract in the executable Product work order. A mutable raw caller tensor is
+never an accepted coefficient shortcut.
 
 There is no:
 
@@ -2033,10 +2071,12 @@ applicable:
    domain;
 10. determine coordinate reordering and dimension permutation;
 11. validate Product unit equations;
-12. select the deterministic working dtype;
+12. select the deterministic Product working dtype and the per-member
+    representation/conversion plan;
 13. convert quantity-kernel units;
 14. align every kernel's conditioning coordinates and dimensions;
-15. materialize aligned kernels on the output device and selected dtype;
+15. materialize every aligned kernel on the output device and its exact
+    Product-selected prepared representation dtype;
 16. prepare immutable conversion and execution facts;
 17. preflight element, byte, count, and address ceilings;
 18. return a fresh Config of the same exact type; and
@@ -2060,7 +2100,10 @@ alignment additionally proves:
 - no storage expansion occurs unless the Product work order explicitly
   selects it;
 - quantity-kernel units are converted once;
-- the final tensor is contiguous on the target device and dtype; and
+- each final tensor is contiguous on the target device and its exact
+  Product-selected prepared representation dtype;
+- a representation-preserved member is never cast merely to homogenize its
+  containing collection; and
 - the returned Kernel preserves its exact semantic type and has the exact
   aligned TensorKernelSpec or QuantityKernelSpec subtype.
 
@@ -2078,7 +2121,7 @@ source conversion scales
 output conversion scale
 resolved temporal dimension
 aligned computational kernels
-derived coefficient tensors
+checked scalar values derived from coefficients
 preflight ceilings
 ```
 
@@ -2093,6 +2136,13 @@ They must be:
 - free of callable execution;
 - free of RNG state; and
 - absent when the Product does not need them.
+
+The list does not authorize an unexplained raw tensor field. A persistent
+derived tensor must use an exact semantic Kernel/Spec value or an explicit
+Product-private logical-read-only ownership contract frozen by the executable
+work order. These derived facts are not caller-configurable coefficients, and
+their storage does not create scalar, Pint, or raw-tensor shortcuts in the
+public Config constructor.
 
 The executable work order must decide the exact stored fields per Product. It
 must not create a parallel generic prepared framework.
@@ -2851,8 +2901,16 @@ DigitizedWaveform:
 - aligns all four coefficient kernels to the output domain;
 - validates `InputMinimum < InputMaximum` pointwise after alignment;
 - validates the positive linear AnalogGain;
-- selects a floating working dtype for gain and scaling;
-- computes the pointwise maximum-code tensor as `2**bit_depth - 1`;
+- keeps the prepared `BitDepth` member at its exact integer representation
+  dtype while the heterogeneous `DigitizedWaveformKernels` collection remains
+  heterogeneous;
+- selects a floating working dtype for the three quantity coefficients, source
+  gain, and scaling;
+- computes each pointwise `maximum_code = 2**bit_depth - 1` through checked
+  exact integer arithmetic before any floating conversion;
+- proves the exact integer maximum code fits the configured output dtype and
+  the selected floating arithmetic representation before converting that
+  derived value for scaling;
 - preflights every code bound against the output dtype and every intermediate
   exactness/overflow requirement;
 - performs no stochastic draw;
@@ -3716,8 +3774,14 @@ Future TensorDSLab implementation must prove:
 
 - every configurable numerical coefficient is represented by one exact
   semantic TensorKernel leaf;
-- no Config stores a numerical coefficient as a primitive scalar, Pint
-  Quantity, or raw tensor;
+- no public Config constructor accepts a caller-supplied configurable
+  coefficient as a primitive scalar, Pint Quantity, or raw tensor;
+- prepared Config scalar conversion scales, resolved dimensions, dtypes, and
+  checked ceilings are demonstrably derived immutable facts rather than
+  caller-configurable shortcuts;
+- any persistent derived tensor is either an exact semantic Kernel/Spec value
+  or follows an explicitly tested Product-private logical-read-only ownership
+  contract;
 - one rank-zero global kernel and one or more conditioned representations
   produce the expected broadcast-equivalent or deliberately varying result;
 - example-, channel-, microcell-, sample-, and combined-conditioning fixtures
@@ -3730,7 +3794,11 @@ Future TensorDSLab implementation must prove:
 - the five Product-specific `*Kernels` collections enforce exact required,
   optional, duplicate, and alien-member contracts;
 - collection movement preserves exact semantic member types and Config
-  preparation returns aligned same-type collections;
+  preparation returns aligned same-type heterogeneous collections without
+  silently homogenizing member dtypes;
+- arithmetic-admissible coefficient kernels follow the Product's explicit
+  representation-to-working conversion plan while discrete kernels retain
+  their exact semantic representation dtype;
 - structural Config state such as recursion depth and temporal-role selection
   remains outside kernels; and
 - no generic ParameterKernel, coefficient registry, reflection dispatch, or
@@ -3834,7 +3902,12 @@ Future TensorDSLab implementation must prove:
 - exact linear-gain equivalence for the retained profile value converted from
   decibels at profile construction;
 - pointwise input-range rejection;
-- pointwise maximum-code and output-dtype ceiling preflight;
+- exact-integer pointwise maximum-code derivation before a checked floating
+  conversion for scaling;
+- BitDepth integer representation preservation through preparation and
+  production;
+- pointwise maximum-code, floating-exactness, and output-dtype ceiling
+  preflight;
 - output integer dtype;
 - and configured unit freedom.
 
@@ -3887,6 +3960,12 @@ Examples include:
 - retaining a field-named Collection accessor as an alias;
 - retaining a scalar or Pint numerical coefficient directly in a Product
   Config;
+- accepting a scalar/raw-tensor shortcut for a caller-configurable coefficient
+  merely because prepared Configs may retain derived execution facts;
+- casting integer BitDepth to the Product floating working dtype or
+  homogenizing the heterogeneous digitizer collection;
+- deriving maximum code through floating exponentiation rather than checked
+  exact integer arithmetic;
 - treating a conditioned coefficient as one global scalar;
 - accepting a coefficient conditioned on an absent semantic role;
 - admitting operation geometry on an ordinary pointwise coefficient;
@@ -3989,7 +4068,8 @@ Future work stops and returns to the relevant Design authority if:
 10. A physical kernel requires a probability-only generic hierarchy.
 11. A configurable numerical coefficient cannot be represented by one exact
     semantic kernel without changing the Product algorithm, or a future
-    implementation retains a scalar/Pint coefficient Config shortcut.
+    implementation retains a caller-supplied scalar/Pint/raw-tensor
+    coefficient Config shortcut.
 12. Application extraction lacks an accepted package owner or creates a
     dependency cycle.
 13. A future work order attempts to publish the unpublished Stage 30
@@ -4030,6 +4110,10 @@ Before TensorDSLab production dispatch, Design must freeze:
 - exact Product classmethod signatures;
 - exact preparation fields and readiness diagnostics;
 - exact per-Product working-dtype floors;
+- exact per-member representation preservation and arithmetic-conversion
+  plans, including every representation-preserved discrete kernel;
+- exact ownership and construction exclusion for every stored derived Config
+  fact;
 - exact unit equations;
 - exact source tuple relationships;
 - exact Charge temporal-axis rules;
