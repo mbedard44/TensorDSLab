@@ -345,8 +345,9 @@ remain Validation-owned.
 
 ### [Maintenance 15: Tensor-Native Config Punchcard Architecture](maintenance_15_tensor_native_config_punchcard_architecture.md)
 
-Status: **Architecture selected; TensorCore consultation complete;
-TensorDSLab-local `TensorConfig` selected; Implementation undispatched**.
+Status: **Architecture selected; exact TensorCore Stage 30 Design
+consumer-confirmed; TensorCore implementation/publication and TensorDSLab
+adoption pending; TensorDSLab Implementation undispatched**.
 
 This documentation-only architecture record starts from exact locally closed
 Maintenance 14 `856df702c124365c929bf993851a51fb8ff3c245`, tree
@@ -354,28 +355,41 @@ Maintenance 14 `856df702c124365c929bf993851a51fb8ff3c245`, tree
 Configs as execution punchcards: each Product's `prepare(...)` returns a fresh
 aligned Config of the exact same concrete type, and `produce(...)` consumes
 that representation without Pint interpretation, coordinate alignment, device
-movement, dtype conversion, or another model-preparation pass.
+movement, dtype-policy discovery, or another model-preparation pass. Explicit
+source-to-working and working-to-output dtype conversions remain planned
+Product tensor operations.
 
 The selected end state retires every Runtime value, `QuantityFieldSpec`,
 prepared wrappers/tokens, `ReadoutCollection`, `Pulse`, and
-`simulate_readout(...)` without aliases. It selects `Readout`,
-`PulseResponse`, instance-owned units on `QuantityField` and `QuantityKernel`,
-`QuantityConfig` with exact axes/device/unit/dtype, Config-selected product
-closure, product-owned `create/prepare/produce/validate`, and the one-shot
-golden path `Readout.create(source=..., config=..., rng=...)`.
+`simulate_readout(...)` without aliases. It selects `PulseResponse`,
+instance-owned units on `QuantityField` and `QuantityKernel`,
+`QuantityConfig` with exact axes/device/unit/dtype, Product-owned working-dtype
+promotion and numerical floors, ordered `tuple[QuantityField, ...]` source
+contracts, and Product-owned `create/prepare/produce/validate`.
+
+`Readout` and `ReadoutConfig` become abstract structural roots. Concrete
+`DS20kVeto` / `DS20kVetoConfig` retain the waveform chain; concrete `Silex` /
+`SilexConfig` initially own only the pixelated-SiPM
+`Axioelectrons + Photoelectrons -> Charge` path. Each collaboration owns its
+exact topology and lifecycle, so Silex contains no placeholder waveform
+Products or Configs. The one-shot paths are
+`DS20kVeto.create(sources=..., config=..., rng=...)` and
+`Silex.create(sources=..., config=..., rng=...)`.
 
 TensorDSLab retains all Pint, physical-kernel, product, profile, scientific
 law, RNG-role/address, boundary, preparation, validation, and orchestration
-ownership. TensorCore Design reviewed the exact initial architecture bytes and
-declined current ownership of a generic `TensorConfig`: axes plus a target
-device describe downstream execution intent, TensorCore has no consuming
-operation, and no genuine second package currently demonstrates the same
-contract. TensorDSLab therefore owns the exact structural root locally; no
-provisional dependency, TensorCore fork, or new TensorCore publication is
-required. Production remains undispatched pending a bounded per-product
-implementation work order. No dependency, science, runtime, test, CUDA,
-compatibility, publication, or package byte changes through this Design
-record.
+ownership. The user superseded the initial local-root direction. TensorCore
+Stage 30 exact Design commit
+`79bb5ae00c3dbf6a49131001030ea56175e8461e`, tree
+`44eaf757720c9dab41d5932814d70daba0e74721`, now freezes the narrow generic
+`TensorConfig` plus storage-free TensorField/TensorKernel device/dtype
+vocabulary; TensorDSLab independently confirmed those exact bytes with zero
+findings. TensorDSLab remains pinned to published TensorCore `0.21.0` and will
+not implement a temporary local root or adopt an unpublished candidate.
+Production remains undispatched pending exact TensorCore `0.22.0` publication,
+package-owned dependency synchronization, and bounded TensorDSLab work orders.
+No dependency, science, runtime, test, CUDA, compatibility, publication, or
+package byte changes through this Design record.
 
 ### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
 
