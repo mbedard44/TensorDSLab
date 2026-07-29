@@ -345,12 +345,12 @@ remain Validation-owned.
 
 ### [Maintenance 15: Spec-Composed Products And Application Boundary](maintenance_15_spec_composed_products_and_application_boundary.md)
 
-Status: **Architecture selected; TensorCore Stage 31 exact Design authority
-`25f48e3398c68217b060d94743f8abd810e7f7e8`, tree
-`4bd15c7db276acc6d23848bf301e493dee3d2278`, consumer-confirmed; quantity
-units selected as Spec-only state; TensorCore Implementation may resume under
-that exact authority; TensorDSLab Implementation undispatched pending exact
-dependency publication and a bounded executable work order**.
+Status: **Architecture selected; exact published TensorCore `0.22.0` commit
+`19bfae35fbc773b55cac7bcd659dda57c4dee6d6`, tree
+`53aa10520a50c0714e79c685d814cbae1b6f7740`, accepted as the future
+Maintenance 15 dependency target; quantity units selected as Spec-only state;
+TensorDSLab remains pinned to `0.21.0` and Implementation remains undispatched
+pending a bounded executable work order**.
 
 This documentation-only architecture record starts from exact locally closed
 Maintenance 14 `856df702c124365c929bf993851a51fb8ff3c245`, tree
@@ -387,10 +387,12 @@ OffsetAxis values and conditioning/operation role overlap are both valid.
 
 TensorCore's exact Design-complete forward boundary is
 `TensorCore/stage-31-compositional-tensor-spec-substrate` at `25f48e3`, based
-on its preserved unpublished local Stage 30 state. TensorDSLab authorizes
-TensorCore to resume its independently owned implementation under those exact
-contracts. `0.22.0` remains a provisional TensorCore-owned target because that
-version has not been published.
+on its preserved unpublished local Stage 30 state. TensorCore completed its
+package loop and published exact `0.22.0` containing commit `19bfae3`, tree
+`53aa105`, by a normal six-commit fast-forward with zero merges. TensorDSLab
+accepts that exact containing commit as Maintenance 15's future dependency
+target; the current package pin remains `0.21.0` until its separately
+authorized implementation candidate.
 
 The Product layer becomes a reusable parts bin rather than one package-owned
 readout chain. Each Product owns one independent transformation, one
@@ -456,21 +458,20 @@ no universal `Readout`, `ReadoutConfig`, `ReadoutCollection`,
 assemble different Product graphs while depending only on TensorDSLab's
 supported parts.
 
-TensorCore's locally closed but unpublished Stage 30 remains preserved at
+TensorCore's formerly locally closed and unpublished Stage 30 remains
+preserved in the published forward history at
 exact `de235057ee7c0bf702c40e8f331fc4e89a67b7c7`, tree
-`c31f007e38ebfa068233419703a061306a9678e4`; live TensorCore remains published
-`0.21.0` at exact `78d0891bf6c0fefbcad4abe09980867c54202a9e`.
+`c31f007e38ebfa068233419703a061306a9678e4`; live TensorCore is now published
+`0.22.0` at exact `19bfae35fbc773b55cac7bcd659dda57c4dee6d6`.
 TensorDSLab does not adopt the unpublished `TensorConfig` contract. Exact
 TensorCore Stage 31 Design authority
 `25f48e3398c68217b060d94743f8abd810e7f7e8`, tree
 `4bd15c7db276acc6d23848bf301e493dee3d2278`, advances by forward history and
 freezes the complete Coordinates/Spec/Field/Kernel/Collection substrate.
-TensorDSLab has consumer-confirmed those exact bytes and authorizes TensorCore
-to resume its independently owned implementation.
-TensorDSLab remains pinned to exact published `0.21.0` until that containing
-commit is independently accepted. No production, dependency, test, science,
-CUDA, application, compatibility, merge, push, or publication action is
-authorized by this Design record.
+TensorDSLab consumer-confirmed those exact Design bytes and now accepts the
+published containing commit. No TensorDSLab production, dependency, test,
+science, CUDA, application, compatibility, merge, push, or publication action
+is authorized by this Design record.
 
 ### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
 

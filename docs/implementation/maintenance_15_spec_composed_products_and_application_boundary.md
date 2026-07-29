@@ -1,11 +1,11 @@
 # Maintenance 15 Spec-Composed Products And Application Boundary
 
-Status: **Architecture selected; TensorCore Stage 31 exact Design authority
-`25f48e3398c68217b060d94743f8abd810e7f7e8`, tree
-`4bd15c7db276acc6d23848bf301e493dee3d2278`, consumer-confirmed; quantity
-units selected as Spec-only state; TensorCore Implementation may resume under
-that exact authority; TensorDSLab Implementation undispatched pending exact
-dependency publication and a bounded executable work order**.
+Status: **Architecture selected; exact published TensorCore `0.22.0` commit
+`19bfae35fbc773b55cac7bcd659dda57c4dee6d6`, tree
+`53aa10520a50c0714e79c685d814cbae1b6f7740`, accepted as the future
+Maintenance 15 dependency target; quantity units selected as Spec-only state;
+TensorDSLab remains pinned to `0.21.0` and Implementation remains undispatched
+pending a bounded executable work order**.
 
 Stable key:
 `TensorDSLab/maintenance-15-spec-composed-products-and-application-boundary`
@@ -158,7 +158,7 @@ negative fixture retained `82` intended diagnostics. Those totals identify the
 starting evidence only. They are not future module-count, file-count, or
 test-count contracts.
 
-### Exact unpublished TensorCore state
+### Historical unpublished TensorCore state at Design selection
 
 TensorCore Stage 30 had already completed its local package loop before this
 replacement architecture was selected. Its exact unpublished state is:
@@ -189,8 +189,8 @@ replacement stage must advance from the exact local state by ordinary forward
 history. It must not reset, amend, rewrite, hide, or pretend the locally closed
 Stage 30 package loop never happened.
 
-TensorDSLab does not adopt the unpublished Stage 30 bytes. Its dependency
-remains exact published TensorCore `0.21.0` until TensorCore:
+TensorDSLab did not adopt the unpublished Stage 30 bytes. Its dependency was
+required to remain exact published TensorCore `0.21.0` until TensorCore:
 
 1. accepts a synchronized replacement Design;
 2. implements and independently clears the complete compositional contract;
@@ -198,9 +198,11 @@ remains exact published TensorCore `0.21.0` until TensorCore:
 4. publishes one exact containing commit; and
 5. supplies exact source, artifact, typing, and consumer evidence.
 
-TensorCore owns the replacement version number. No TensorCore `0.22.0` has
-been published, but TensorDSLab does not decide whether the future containing
-version remains `0.22.0` or advances again.
+TensorCore has now satisfied all five conditions through exact published
+`0.22.0` commit `19bfae35fbc773b55cac7bcd659dda57c4dee6d6`.
+That publication makes the exact commit eligible for a future package-owned
+TensorDSLab adoption candidate; it does not itself change TensorDSLab's
+dependency bytes.
 
 ### Exact Stage 31 Design authority
 
@@ -238,9 +240,52 @@ already supports the selected Spec-only unit model:
 - exact-subtype Spec and payload transformations preserve unit state and rerun
   the existing most-derived validation exactly once.
 
-This synchronization authorizes TensorCore to resume its independently owned
-Stage 31 implementation under exact authority `25f48e3`. It does not adopt an
+That synchronization authorized TensorCore to resume its independently owned
+Stage 31 implementation under exact authority `25f48e3`. It did not adopt an
 unpublished dependency or dispatch TensorDSLab Implementation.
+
+### Exact published Stage 31 package
+
+TensorCore completed its complete package loop and published:
+
+```text
+repository:
+    https://github.com/mbedard44/TensorCore.git
+published local/live origin main:
+    19bfae35fbc773b55cac7bcd659dda57c4dee6d6
+exact tree:
+    53aa10520a50c0714e79c685d814cbae1b6f7740
+version:
+    0.22.0
+prior published main:
+    78d0891bf6c0fefbcad4abe09980867c54202a9e
+wheel:
+    54,052 bytes
+wheel SHA-256:
+    6ac2f29c562504d7e87e1caf404b10019b08d60252fc496ad55b090e6b8b154f
+commit-bound source archive:
+    1,095,680 bytes
+archive SHA-256:
+    deb09f72595a44f3b8551f01971986aa265a28a3f4475ee2afe59fb2b63f0c84
+```
+
+Independent TensorDSLab read-only verification found local main, tracking
+`origin/main`, and live GitHub `refs/heads/main` exact at `19bfae3`; tree
+`53aa105`; metadata version `0.22.0`; dependencies Python `>=3.14` and Torch
+`>=2.13,<2.14`; exact export counts `34 / 13 / 15`; `41` package files / `40`
+Python modules; a six-commit linear fast-forward from `78d0891`; zero merges;
+and a clean synchronized TensorCore checkout.
+
+Accepted TensorCore evidence is `85` tests with exactly two unavailable-CUDA
+skips, Pyright zero positive diagnostics and exactly `97` intentional negative
+diagnostics, deterministic artifacts at the hashes above, and complete
+package/typing/documentation/privacy gates. No tag, GitHub Release,
+package-index publication, fresh CUDA evidence, or compatibility claim
+follows.
+
+TensorDSLab Design accepts exact `19bfae3` as Maintenance 15's future
+dependency target. Actual adoption remains a TensorDSLab production change
+that requires the separately frozen executable work order and package loop.
 
 ## Architecture Principles
 
@@ -3715,19 +3760,18 @@ TensorCore Design:
 1. started from exact preserved local main `de235057...`;
 2. created ordinary forward Stage 31 Design authority
    `25f48e3398c68217b060d94743f8abd810e7f7e8`;
-3. freezes exact Coordinates, Axis, Spec, Field, Kernel, Collection, movement,
+3. froze exact Coordinates, Axis, Spec, Field, Kernel, Collection, movement,
    typing, diagnostics, topology, exports, tests, and artifact contracts;
-4. retires unpublished TensorConfig, published old Axis representations, and
+4. retired unpublished TensorConfig, published old Axis representations, and
    the field-named Collection/validation vocabulary without aliases;
 5. consulted exact TensorDSLab and every other affected consumer;
 6. resolved every exact consumer finding;
-7. leaves TensorDSLab physics and application policy downstream; and
-8. does not publish until the complete same-byte package loop clears.
+7. left TensorDSLab physics and application policy downstream; and
+8. prohibited publication until the complete same-byte package loop cleared.
 
-This phase is complete. The provisional package version remains `0.22.0`
-because no TensorCore `0.22.0` bytes have been published. TensorCore Design
-owns the final version and publication decision. Exact consumer confirmation
-does not replace TensorCore's package gates.
+This phase is complete. TensorCore subsequently selected and published exact
+`0.22.0` only after its package gates cleared. Exact consumer confirmation did
+not replace those package gates.
 
 ### Phase 2: TensorCore implementation and publication
 
@@ -3745,6 +3789,12 @@ TensorCore independently:
    suite, typing, and qualification evidence.
 
 No TensorDSLab adoption occurs merely because TensorCore publishes.
+
+This phase is complete at exact published containing commit
+`19bfae35fbc773b55cac7bcd659dda57c4dee6d6`, tree
+`53aa10520a50c0714e79c685d814cbae1b6f7740`. TensorDSLab independently
+verified and accepted that immutable publication as its future Maintenance 15
+dependency target.
 
 ### Phase 3: TensorDSLab representation adoption
 
@@ -4469,7 +4519,8 @@ position. It authorizes only:
 3. receiving and reviewing a TensorCore replacement Design candidate;
 4. refining this record if cross-package contracts require a substantive
    synchronized change; and
-5. preparing future bounded work orders after exact dependency publication.
+5. recording exact dependency publication; and
+6. preparing the bounded executable Maintenance 15 work order.
 
 It does not authorize:
 
@@ -4487,11 +4538,13 @@ It does not authorize:
 - release claims;
 - or deployment.
 
-The next external action is TensorCore's independently owned Stage 31
-Implementation under exact Design authority `25f48e3`, followed by its
-package-owned Validation, Review, local closeout, and separate publication
-decision. TensorDSLab will review the exact published handoff before freezing
-or dispatching its executable Maintenance 15 adoption work order.
+TensorCore's required Stage 31 sequence is complete. The next package-owned
+action is for TensorDSLab Design to freeze a bounded executable Maintenance 15
+work order against exact published `19bfae3`, verify every required
+Implementation/Validation/Review route, and obtain explicit dispatch
+authority. This architecture record alone does not dispatch any execution
+role.
 
 TensorDSLab remains on exact published TensorCore `0.21.0` and the current
-Maintenance 14 production package until that coordinated sequence completes.
+Maintenance 14 production package until an exact future Maintenance 15
+candidate adopts and independently clears `0.22.0`.
