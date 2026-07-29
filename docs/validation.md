@@ -3,7 +3,8 @@
 Maintenance 16 validation is fixed-candidate and Product-centered. It proves
 the private declarative-requirement ownership refactor preserves supported
 public contracts and scientific behavior without retaining tests for the
-retired application workflow.
+retired application workflow. Maintenance 17 adds one source-only,
+application-neutral notebook demonstration without restoring that workflow.
 
 ## Required Boundaries
 
@@ -100,3 +101,19 @@ Implementation runs focused and complete local source-form evidence. Validation
 owns the complete source/archive/artifact/isolated-environment gate and
 independent mutant reproduction. Review independently audits exact fixed bytes.
 CUDA and cluster work are excluded; no accelerator claim follows.
+
+## Notebook Demonstration
+
+The Maintenance 17 notebook is validated as ordinary public-API user code.
+Committed proof checks its exact source-only cell inventory, plain-language
+Markdown before every code cell, public imports, literal three-channel source
+and PSD construction, six separate Product calls, light shared-shape
+assertions, and six-panel plot structure. Two immediate executions must agree
+on Product values and plot structure while leaving the source unchanged.
+
+Complete Validation also executes the notebook from both exact dependency
+forms and from an isolated installed artifact outside the checkout, visually
+inspects the rendered figure, and exercises one fresh environment created by
+`create_environment.sh`. Demo dependencies remain optional, notebook
+execution remains CPU-only, and no result establishes a package workflow,
+calibration, CUDA, compatibility, release, or deployment claim.

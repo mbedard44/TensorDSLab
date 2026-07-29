@@ -10,10 +10,10 @@ This is data flow, not an import graph. Native G4DS parsing and TensorG4DS
 clustering remain upstream. TensorML training remains downstream. Applications
 own workflow composition, IO, and persistence.
 
-## Current Candidate
+## Current Package
 
-Maintenance 16 retains TensorCore `0.22.0` and the direct reusable Products
-introduced by Maintenance 15:
+Maintenance 16 is locally closed. It retains TensorCore `0.22.0` and the
+direct reusable Products introduced by Maintenance 15:
 
 ```text
 Coordinates -> semantic Axis -> exact Spec -> Tensor Product/Kernel
@@ -56,6 +56,14 @@ Config modules own Config records only. The generic `readout/` namespace is
 absent. Runtime modules are private by export and contain actions, not Runtime
 records.
 
+## Newcomer Quickstart
+
+The [application-neutral readout notebook](../demos/readout.ipynb) constructs
+one small three-sensor example directly from the public Product APIs. It is a
+teaching composition, not a package-owned workflow, profile, orchestration
+surface, or calibration. Applications remain responsible for choosing and
+retaining Products in their real workflows.
+
 ## Documentation Map
 
 - [Public API](api.md)
@@ -66,7 +74,9 @@ records.
 - [Maintenance 15 architecture](implementation/maintenance_15_spec_composed_products_and_application_boundary.md)
 - [Maintenance 15 work order](implementation/maintenance_15_execution_work_order.md)
 - [Maintenance 16 requirements ownership](implementation/maintenance_16_declarative_requirements_and_kernel_ownership.md)
+- [Maintenance 17 readout quickstart](implementation/maintenance_17_application_neutral_readout_quickstart.md)
 
 Earlier work orders remain immutable historical evidence. When an older living
-claim conflicts with the Maintenance 15 architecture or Maintenance 16
-requirements ownership, those exact current records govern.
+claim conflicts with the Maintenance 15 architecture, Maintenance 16
+requirements ownership, or the narrow Maintenance 17 demonstration boundary,
+those exact current records govern.

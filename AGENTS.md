@@ -1,5 +1,16 @@
 # Agent Workflow
 
+## Maintenance 17 Current Demonstration Boundary
+
+Maintenance 16 is locally closed. Maintenance 17 adds exactly one supported
+newcomer demonstration at `demos/readout.ipynb`. It hand-builds a small
+three-sensor example from public Product APIs and explains every code cell in
+plain language. It is application-neutral user code, not a package-owned
+workflow, profile, calibration, orchestration surface, compatibility promise,
+or authorization for another demo by analogy. Production package bytes and
+public facades remain unchanged, and applications continue to own workflow
+composition, retention, IO, integration, and collaboration profiles.
+
 ## Maintenance 15 Current Package Contract
 
 Maintenance 15 replaces the embedded readout workflow with reusable
@@ -21,7 +32,7 @@ Current implementation and review must treat these rules as governing:
   positional source-Spec provenance; production owns tensor math/RNG only;
 - no Runtime or Plan record, generic Product/Config, generic readout package,
   `ReadoutConfig`, `ReadoutCollection`, `simulate_readout`, DS20k profile, or
-  bundled readout demo remains;
+  embedded application demo remains;
 - application packages own workflow composition, retention, IO, and
   collaboration profiles; and
 - no compatibility alias or forwarding module is permitted.

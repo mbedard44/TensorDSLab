@@ -38,8 +38,15 @@ equal to that provenance. It performs no Pint interpretation, coordinate
 discovery, source movement, or dtype-policy selection.
 
 There is intentionally no generic readout package, `ReadoutConfig`,
-`ReadoutCollection`, `simulate_readout`, embedded DS20k profile, or bundled
-readout demo. Applications compose the direct Products they need.
+`ReadoutCollection`, `simulate_readout`, or embedded detector profile.
+Applications compose the direct Products they need.
+
+## Readout Quickstart
+
+The [application-neutral readout notebook](demos/readout.ipynb) builds a small
+three-sensor example by hand from the public Product APIs. It is an
+illustrative newcomer guide, not a package-owned workflow, detector profile,
+or calibration.
 
 ```python
 import torch

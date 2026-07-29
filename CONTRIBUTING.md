@@ -30,10 +30,13 @@ in `common/units.py` and is distinct from pure Unit requirements.
 
 Do not add a Runtime/Plan record, generic Product/Config framework,
 `tensor_dslab.readout`, orchestration, result collection, application profile,
-demo, alias, or forwarding shim. Applications own workflow composition. The
-Maintenance 15 architecture and executable work order supersede any later
-historical discussion in this file that presents the old embedded readout
-surface as current.
+alias, or forwarding shim. Applications own workflow composition. A narrowly
+authorized package-neutral demonstration may compose public Product calls as
+ordinary user code, but it must not create a package workflow contract,
+profile, hidden factory, or production import of demo tooling. The Maintenance
+15 architecture and executable work order supersede any later historical
+discussion in this file that presents the old embedded readout surface as
+current.
 
 ## Governance And Delivery Maturity
 
@@ -50,8 +53,8 @@ Project/display name: TensorDSLab
 Python import: tensor_dslab (accepted on main through Maintenance 5)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
-Package maturity: Maintenance 15 locally closed
-Active production gate: Maintenance 16 candidate implementation
+Package maturity: Maintenance 16 locally closed
+Active production gate: Maintenance 17 application-neutral readout quickstart
 Stage 8: separately stopped; any restart requires a new Design authority after
 Maintenance 6
 ```

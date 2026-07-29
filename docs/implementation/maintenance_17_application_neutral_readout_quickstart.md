@@ -1080,6 +1080,21 @@ Implementation reports on one fixed commit:
 Implementation does not build the final artifacts, create the normative fresh
 Conda environment, contact Review, merge, or push.
 
+The fixed implementation bytes containing this record were exercised with
+CPython `3.14.6`, PyTorch `2.13.0`, NumPy `2.5.1`, Pint `0.25.3`, and exact
+TensorCore `0.22.0` source. Focused notebook evidence passes `3/3`; the
+complete source-form suite passes `60/60`; positive Pyright reports zero
+diagnostics; and the unchanged negative fixture reports exactly `12` intended
+errors. The source-only notebook has `20` cells (`10` Markdown and `10` code),
+two immediate CPU executions agree, and visual inspection confirms one
+readable six-panel figure with stable sensor colors, visible pulses and noise,
+non-railed ADC codes, and no title/legend overlap. The environment script
+passes syntax and exact demo-extra/dependency checks. Scope, public-facade,
+production-byte, link/fence, privacy, diff, and artifact-hygiene evidence is
+reported with the fixed commit handoff. These facts are Implementation
+evidence only; they do not claim independent Validation, Review, merge,
+artifact, fresh-environment, or CUDA clearance.
+
 ## Validation Gate
 
 Validation independently checks the exact immutable candidate in both exact

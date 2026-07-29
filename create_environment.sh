@@ -51,7 +51,7 @@ fi
     python -m pip install \
     --disable-pip-version-check \
     --no-input \
-    "${repository_root}"
+    "${repository_root}[demos]"
 
 smoke_directory="$(mktemp -d "/tmp/tensor-dslab-smoke.XXXXXX")"
 cleanup_smoke_directory() {

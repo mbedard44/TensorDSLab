@@ -47,10 +47,14 @@ only same-type Config punchcards and compose those collections.
 DS20k/Silex profiles, detector-window construction, photoelectron binning,
 product orchestration, request retention, TensorG4DS/TensorML adapters, cache,
 IO, and campaign execution belong to focused application or later package
-authorities. Maintenance 15 provides no application demo and no compatibility
-facade for the retired embedded readout workflow.
+authorities. This application ownership does not prohibit a narrowly
+authorized package-neutral demonstration that composes public Product calls as
+ordinary user code. Such a notebook does not define a universal chain,
+profile, calibration, retention policy, or compatibility facade for the
+retired embedded readout workflow.
 
 See the [Maintenance 15 architecture record](implementation/maintenance_15_spec_composed_products_and_application_boundary.md),
 its [execution work order](implementation/maintenance_15_execution_work_order.md),
-and the [Maintenance 16 requirements-ownership work order](implementation/maintenance_16_declarative_requirements_and_kernel_ownership.md)
+the [Maintenance 16 requirements-ownership work order](implementation/maintenance_16_declarative_requirements_and_kernel_ownership.md),
+and the [Maintenance 17 quickstart work order](implementation/maintenance_17_application_neutral_readout_quickstart.md)
 for the exact API, science, tests, and evidence boundary.

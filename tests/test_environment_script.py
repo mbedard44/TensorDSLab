@@ -8,5 +8,5 @@ class EnvironmentScriptTests(unittest.TestCase):
         self.assertIn("0.2.0", text)
         self.assertIn("0.22.0", text)
         self.assertIn("19bfae35fbc773b55cac7bcd659dda57c4dee6d6", text)
-        self.assertNotIn("[demos]", text)
+        self.assertIn('"${repository_root}[demos]"', text)
         self.assertNotIn("SampleAxis", text)

@@ -620,6 +620,15 @@ documentation-only amended authority adds only
 the new exact install contract while every other environment/dependency check
 remains. No candidate or loop slot was consumed.
 
+The fixed implementation bytes containing this record pass the focused
+notebook proof at `3/3`, the complete source-form suite at `60/60`, positive
+Pyright with zero diagnostics, and the unchanged negative fixture with exactly
+`12` intended errors. Two immediate CPU executions agree, the source-only
+notebook remains exactly `20` alternating cells with one readable six-panel
+display, and the environment script passes its syntax, mode, exact demo-extra,
+dependency, and retired-surface checks. This is Implementation evidence under
+the self-effecting route, not Validation or closure.
+
 Complete Validation owns source/archive notebook execution, deterministic
 replay, the exact 20-mutant proof matrix, visual inspection, full
 source/archive/typing gates, deterministic artifacts, isolated installed
