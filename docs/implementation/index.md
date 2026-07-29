@@ -564,6 +564,18 @@ This intentionally makes invalid metadata fail at Spec construction without
 changing any valid object, completed Product value, scientific equation, RNG
 address, public facade, dependency, package version, or device policy.
 
+Immutable Candidate 1
+`a897fcdc0e5066113688f4b0fd0879833ab1f802`, tree
+`5b2d9300ca2eb17b2ebb2bd95fa92b436fc51bd2`, was stopped before clearance
+after the user required intentional docstrings on every newly introduced
+module-level definition and Validation independently found six unintended
+positive Pyright diagnostics in two test proofs. The direct-child amended
+authority freezes a three-path Candidate 2 correction: add the two missing
+private Protocol docstrings, add one static definition-docstring proof, and
+retain the same runtime cases through statically precise calls without `Any`,
+broad casts, new ignores, or weaker coverage. Candidate 1 remains immutable
+and ineligible for Review or merge.
+
 Implementation runs focused and complete source evidence. Independent
 Validation owns one complete source/archive/typing/mutation/artifact gate, and
 Review owns focused risk-based recheck plus the final approved ff-only merge.

@@ -154,6 +154,54 @@ These figures are baseline evidence. Maintenance 16 deliberately adds private
 package modules and may reconcile test methods, so candidate topology, method
 totals, and artifact identities must be reported rather than assumed equal.
 
+## Candidate 1 Stop And Replacement Amendment
+
+Immutable Candidate 1 is:
+
+```text
+commit:
+    a897fcdc0e5066113688f4b0fd0879833ab1f802
+tree:
+    5b2d9300ca2eb17b2ebb2bd95fa92b436fc51bd2
+exact parent / original Design authority:
+    35aba9b480cef04f3dec28dbc8eee504327496a1
+```
+
+Design stopped its complete fixed-commit Validation at the next safe boundary
+after the user added one readability requirement: every module and every
+module-level function, class, or Protocol introduced or moved by Maintenance
+16 must carry an intentional docstring.
+
+Validation also independently found six unintended positive Pyright
+diagnostics:
+
+- five diagnostics at `tests/test_product_configs.py` from erasing five
+  Product-specific `prepare()` overload pairs into one heterogeneous loop; and
+- one diagnostic at `tests/test_requirements.py` from erasing the generic
+  coordinate representation into one heterogeneous union.
+
+Candidate 1 remains immutable, is **not clear**, and is ineligible for Review
+or merge. Its completed source/archive and topology evidence remains
+read-only stopped evidence, not clearance.
+
+This amended authority is the direct child of Candidate 1. It authorizes
+exactly one ordinary Candidate 2 direct child changing only:
+
+```text
+tensor_dslab/common/requirements/tensor.py
+tests/test_product_configs.py
+tests/test_requirements.py
+```
+
+Candidate 2 must add the missing intentional Protocol docstrings, add the
+committed definition-docstring proof, and express the two tests through
+statically precise calls without `Any`, a broad cast, a new ignore, or weaker
+runtime coverage. Every other Candidate 1 byte is protected and must remain
+identical.
+
+This consumes ordinary candidate slot `2 / 3` and Validation-return slot
+`1 / 3`. Review-return consumption remains `0 / 2`.
+
 ## Exact Dependency Boundary
 
 The dependency contract remains exact:
@@ -278,6 +326,38 @@ No `admission.py`, `common.py`, `quantity.py`, `device.py`, `preflight.py`,
 
 The eight substantive modules must each own real accepted behavior; no empty
 or placeholder module is permitted.
+
+## Definition Docstrings
+
+Readability is a frozen executable requirement:
+
+- each of the exact nine added `common/requirements/` modules has one short
+  module context docstring;
+- every module-level function, class, and Protocol introduced by Maintenance
+  16 has one short intentional docstring;
+- each of the five moved `*Kernels` classes retains an intentional class
+  docstring in its new defining module;
+- private structural definitions are not exempt merely because their names
+  begin with an underscore; and
+- docstrings explain semantic purpose or ownership rather than restating the
+  identifier.
+
+Candidate 1 already satisfies this contract except that `_DtypeBearing` and
+`_TensorBearing` in `common/requirements/tensor.py` have no class docstrings.
+Candidate 2 adds meaningful docstrings to those two Protocols.
+
+Imports, aliases, `__all__`, and module constants are not Python
+module/class/function definitions and do not receive filler string literals.
+This requirement does not retroactively add docstrings to unchanged
+pre-Maintenance-16 implementation definitions.
+
+`tests/test_requirements.py` must contain one static proof that parses the
+exact nine requirement modules and rejects any module-level function/class
+definition without a docstring. It also proves nonempty module docstrings and
+the five moved `*Kernels` class docstrings. A temporary removal of either
+Protocol docstring must fail that named proof. This static adversarial check is
+separate from, and does not renumber, the thirty runtime/architecture mutants
+below.
 
 ## Axis Requirements
 
@@ -1153,6 +1233,18 @@ Semantic class tests prove wiring, validation timing, moved collection
 ownership, unchanged facades, requirement privacy, and valid representative
 Product continuity. Unique scientific proofs remain Product-focused.
 
+The bounded replacement additionally proves:
+
+- all newly added requirement modules and their module-level definitions carry
+  intentional docstrings;
+- all five moved `*Kernels` classes carry intentional docstrings;
+- the positive Product-preparation proof retains all five exact
+  Product/Config/Spec cases without collapsing their overloads into one union;
+- the supported-coordinate proof retains Count, Label, Regular, and Offset
+  coverage without collapsing the generic argument into one union; and
+- Pyright reports zero positive diagnostics without a new ignore, `Any`, or
+  broad cast.
+
 ## Required Mutation Matrix
 
 Validation kills at least these exact high-risk mutants:
@@ -1307,13 +1399,15 @@ Implementation must:
 8. preserve unique local scientific laws visibly;
 9. keep alignment, normalization, preparation, and validation in truthful
    owners;
-10. reconcile tests under the frozen ceilings;
-11. run focused and complete local source evidence;
-12. run strict positive and negative typing;
-13. run diff, import, facade, privacy, docs, and hygiene checks;
-14. produce one immutable direct-child candidate;
-15. leave the candidate clean; and
-16. return exact commit/tree/parent/scope/evidence to Design.
+10. add intentional docstrings to every newly introduced module-level
+    definition and prove that contract statically;
+11. reconcile tests under the frozen ceilings;
+12. run focused and complete local source evidence;
+13. run strict positive and negative typing;
+14. run diff, import, facade, privacy, docs, and hygiene checks;
+15. produce one immutable direct-child candidate;
+16. leave the candidate clean; and
+17. return exact commit/tree/parent/scope/evidence to Design.
 
 Implementation stops rather than widening policy, changing valid results or
 RNG, adding a public export, changing a dependency, editing a non-allowlisted
@@ -1346,6 +1440,8 @@ Validation independently verifies:
 
 - exact identity, topology, parentage, scope, and cleanliness;
 - exact package and absence of speculative modules;
+- complete module/function/class/Protocol docstring coverage for newly
+  introduced definitions;
 - pure fail-closed requirement effects;
 - Spec-versus-value ownership;
 - moved collection ownership and unchanged facades;
@@ -1377,6 +1473,7 @@ Review independently audits:
 - whether requirements simplify rather than obscure semantic classes;
 - absence of a validator framework, registry, reflection, or callback list;
 - requirement names, signatures, effects, diagnostics, and imports;
+- intentional definition docstrings without filler or retroactive churn;
 - Unit normalization versus Unit requirement separation;
 - Spec metadata/geometry and Field/Kernel value ownership;
 - generic row-total independence from time semantics;
@@ -1459,6 +1556,8 @@ Stop and return to Design if:
 - a registry, callback list, reflection, annotation processor, or generic
   validation object appears necessary;
 - extracting a one-class law makes its semantic class less clear;
+- a newly introduced definition lacks an intentional docstring or requires
+  filler prose to satisfy the static proof;
 - ownership cannot follow the Spec/Field/Kernel split;
 - moving a check changes a valid object or completed Product;
 - row-total validation cannot remain independent of time;
@@ -1469,6 +1568,7 @@ Stop and return to Design if:
 - TensorCore, dependencies, version, or requirements topology must change;
 - a compatibility path or non-allowlisted edit appears necessary;
 - source/archive/typing/artifact evidence diverges;
+- positive typing requires `Any`, a broad cast, or a new ignore to pass;
 - CUDA appears necessary;
 - a role route is stale, dirty, missing, or discrepant; or
 - the candidate cannot remain a clean linear descendant.
@@ -1501,6 +1601,8 @@ Maintenance 16 is complete only when:
 
 - exact Maintenance 15 main is the authority ancestor;
 - the exact nine-file requirements package exists;
+- every Maintenance-16-added module and module-level function/class/Protocol
+  has an intentional docstring;
 - every reusable TensorDSLab cross-module `require_*()` lives there;
 - no speculative or empty requirement module exists;
 - `requirements/__init__.py` exports nothing;
@@ -1516,6 +1618,8 @@ Maintenance 16 is complete only when:
 - generic row-total validation contains no temporal semantics;
 - unique scientific laws remain visible and exact;
 - valid Product results and RNG traces remain exact;
+- positive Pyright is clean without suppressing either stopped Candidate 1
+  diagnostic family;
 - source/archive/typing/mutation/artifact/import/docs/privacy/hygiene pass;
 - unavailable CUDA remains explicit and unclaimed;
 - Review returns no unresolved finding;
