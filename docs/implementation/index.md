@@ -355,8 +355,10 @@ exact-byte route**.
 
 Initial executable authority `dbffa9e2cc838e16c0efcc01ebb02a1ed86c95ca`
 was paused before production editing when the semantic-axis/semantic-Spec
-refinement was accepted. Its direct documentation child, once exact-byte
-consumer-confirmed, is the sole replacement execution authority.
+refinement was accepted. The latest exact documentation-only descendant on
+the named Maintenance 15 branch becomes the sole replacement execution
+authority only after exact-byte consumer confirmation and explicit Design
+dispatch.
 
 This documentation-only architecture record starts from exact locally closed
 Maintenance 14 `856df702c124365c929bf993851a51fb8ff3c245`, tree
@@ -425,7 +427,12 @@ summation, allocation, or RNG use; a source combination such as
 `[avalanche] + [mV]` is rejected during Product preparation. Every source must
 also be on the same exact device as every other source and the configured
 output Spec. Product entry points never move sources implicitly; callers use
-explicit `.to(...)` before preparation.
+explicit `.to(...)` before preparation. A prepared Config retains the exact
+source-Spec tuple from which its dimensions, scales, and dtype plan were
+derived. Staged production and validation require positional exact structural
+Spec equality, including source order, before effects; prepared facts cannot
+be rebound to changed units, axes/coordinates, devices, dtypes, semantic Spec
+types, or tuple order.
 
 Every configurable coefficient that may vary over example, channel,
 microcell, sample, or another admitted semantic axis while retaining one

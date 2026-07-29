@@ -2263,8 +2263,10 @@ assert type(prepared) is PureWaveformConfig
 
 The prepared Config may replace caller-oriented kernel representations with
 aligned, converted, and materialized representations and may retain meaningful
-derived execution facts. It does not become a separate `Runtime`,
-`PreparedConfig`, `Plan`, token, cache, or opaque compiled wrapper.
+derived execution facts. It also retains the exact admitted source-Spec tuple
+as the immutable binding for every source-derived dimension, scale, and dtype
+fact. It does not become a separate `Runtime`, `PreparedConfig`, `Plan`, token,
+cache, or opaque compiled wrapper.
 
 Structural readiness is visible in ordinary Config state and enforced by
 Product-specific validation.
@@ -2416,9 +2418,17 @@ Product.validate(
 ```
 
 Both paths call the same Product-owned preparation, production, and validation
-actions. Neither path moves a source. An application that chooses another
-device explicitly moves its source Products and constructs or transforms the
-output Spec before preparation.
+actions. In staged use, the sources supplied to `produce()` and `validate()`
+must match the source Specs used by `prepare()` positionally under exact
+structural Spec equality. This includes exact semantic Spec type, axes and
+coordinates, device, dtype, unit, downstream state, source count, and tuple
+order. Object identity is not required. A mismatch fails before production
+effects, and production does not rediscover Pint conversion, alignment, or
+dtype policy.
+
+Neither path moves a source. An application that chooses another device
+explicitly moves its source Products and constructs or transforms the output
+Spec before preparation.
 
 ### Private action modules
 
@@ -2535,6 +2545,7 @@ Runtime-oriented ownership are not frozen future API.
 Meaningful derived Config facts may include:
 
 ```text
+exact retained source-Spec binding
 working dtype
 source conversion scales
 output conversion scale
@@ -2574,6 +2585,8 @@ Product production:
 - accepts exact typed sources;
 - accepts the exact Product Config;
 - verifies fail-closed structural readiness before numerical work;
+- requires each supplied source Spec to match the prepared Config's retained
+  source-Spec tuple positionally under exact structural equality;
 - trusts no caller-supplied opaque token;
 - performs planned source conversion and dtype casts;
 - consumes already aligned kernel tensors;
@@ -2601,6 +2614,8 @@ Product validation owns:
 
 - exact semantic Product type;
 - exact output Spec object identity;
+- positional exact structural equality between supplied source Specs and the
+  prepared Config's retained source-Spec binding;
 - exact tensor shape/device/dtype;
 - finite/value-domain requirements;
 - source/result relationship;
@@ -4355,6 +4370,13 @@ Future TensorDSLab implementation must prove:
 
 - same-exact-Config return type;
 - fresh Config when representation changes;
+- exact retention of the admitted source-Spec tuple and every contained Spec
+  object by identity as the immutable origin of source-derived prepared facts;
+- positional exact structural source-Spec equality at staged `produce()` and
+  `validate()`, including semantic Spec type, axes/coordinates, unit, device,
+  dtype, downstream state, source count, and tuple order;
+- staged failure before effects when a source unit, axis/coordinate order,
+  dtype, semantic Spec, or tuple order differs from preparation;
 - complete all-source dimensional compatibility before any source conversion,
   cast, movement, summation, allocation, or RNG request;
 - accept differently scaled but dimensionally compatible source units and
@@ -4396,6 +4418,8 @@ Future TensorDSLab implementation must prove:
 ### Products
 
 - one-shot and staged path equivalence;
+- staged prepared-Config rejection of changed or reordered source Specs before
+  tensor arithmetic, allocation, or RNG words;
 - exact output Spec identity;
 - direct standalone use;
 - Product-specific source tuple law;
@@ -4601,6 +4625,8 @@ The executable work order names an exact bounded mutation set for the
 highest-risk replacement boundaries. It kills:
 
 - skipping source-unit compatibility or same-device admission;
+- skipping the exact positional binding between prepared source Specs and
+  staged production/validation sources;
 - resolving roles by name rather than exact semantic type;
 - omitting conditioning-coordinate reordering or dimension permutation;
 - accepting a caller scalar/Pint/raw-tensor coefficient shortcut;

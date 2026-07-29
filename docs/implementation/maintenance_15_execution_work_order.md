@@ -893,6 +893,7 @@ facts:
 
 ```python
 _is_prepared: bool
+_source_specs: tuple[QuantityFieldSpec[Any], ...]
 _source_dimensions: tuple[tuple[int, ...], ...]
 _source_scales: tuple[float, ...]
 _working_dtype: torch.dtype | None
@@ -933,9 +934,10 @@ Static shape/count/byte ceilings are checked during preparation but not stored
 unless a later correction demonstrates that one named immutable scalar is
 required. Such a correction returns to Design.
 
-An ordinary public constructor produces `_is_prepared is False`, empty source
-facts, absent working dtype, absent temporal facts, and an exact
-property-ordered kernel-dimension tuple:
+An ordinary public constructor produces `_is_prepared is False`, an empty
+`_source_specs` tuple, empty source dimensions and scales, absent working
+dtype, absent temporal facts, and an exact property-ordered kernel-dimension
+tuple:
 
 ```text
 ChargeConfig:
@@ -953,11 +955,12 @@ DigitizedWaveformConfig:
 The positions follow the typed property order stated in the architecture
 record. A missing optional member remains `None` after preparation; every
 present member has one complete Product-specific alignment tuple under the
-ordinary or PSD-exception rule above. Product-owned preparation returns a
-fresh same-exact-type Config with `_is_prepared is True` and complete facts. A
-private module-level same-type reconstruction helper may populate
-`init=False` state; no public trusted constructor, token, alternate Config
-class, Runtime, Plan, or cache is added.
+ordinary or PSD-exception rule above. Product-owned preparation retains the
+exact admitted `source_specs` tuple and every contained Spec object by
+identity in `_source_specs`, then returns a fresh same-exact-type Config with
+`_is_prepared is True` and complete facts. A private module-level same-type
+reconstruction helper may populate `init=False` state; no public trusted
+constructor, token, alternate Config class, Runtime, Plan, or cache is added.
 
 ## Exact Product Classmethods
 
@@ -1012,6 +1015,22 @@ source-taking method therefore validate at runtime that each source's exact
 `.spec` is a QuantityFieldSpec before applying the Product-specific semantic,
 unit, device, dtype, and numerical source law. The broader static value
 annotation does not admit a nonquantity source at runtime.
+
+Every public `produce()` additionally requires `_is_prepared is True`, the
+exact source count, and positional exact structural equality between each
+supplied `source.spec` and the corresponding retained
+`config._source_specs[i]`. Exact structural equality means the ordinary
+TensorCore Spec contract: the exact concrete Spec type and every structural
+field, including axes, coordinates, device, dtype, unit, and downstream Spec
+state, are equal. Object identity is not required, so a prepared Config may be
+reused with another source Field carrying a structurally equal Spec. Source
+tuple order is part of the binding.
+
+This binding check occurs after generic QuantityFieldSpec admission but before
+source tensor conversion, casting, summation, allocation, or RNG use.
+`validate()` requires the same positional structural binding. Neither method
+recomputes Pint conversion, coordinate alignment, dimension order, or dtype
+policy from the supplied source Fields.
 
 `Photoelectrons` has no Config, preparation, production, or creation method.
 It exposes only:
@@ -1132,8 +1151,10 @@ Preparation follows the exact order in the architecture record. It must:
 9. move only Config-owned kernels to the output device;
 10. preserve exact integer BitDepth representation;
 11. preflight shape, allocation, count, dtype, and address ceilings;
-12. construct one fresh same-type prepared Config; and
-13. consume no RNG words.
+12. retain the exact admitted source-Spec tuple as the immutable staged
+    execution binding;
+13. construct one fresh same-type prepared Config; and
+14. consume no RNG words.
 
 Every source device must equal every other source device and exact
 `config.spec.device`. No Product method moves a source implicitly.
@@ -1143,6 +1164,13 @@ needed to permute source `i`. Source axes must have equivalent complete
 semantic state after role matching; source coordinate reordering is not
 performed. Kernel conditioning coordinates may be reordered during
 preparation because the owned kernel is reconstructed explicitly.
+
+`_source_specs[i]` is the exact immutable structural contract from which
+`_source_dimensions[i]`, `_source_scales[i]`, and the shared working dtype
+were derived. Production and validation compare each supplied source Spec to
+that retained Spec positionally under exact structural equality. A mismatch
+fails before effects; prepared facts may never be rebound to another unit,
+axis/coordinate order, device, dtype, semantic Spec type, or source order.
 
 `_source_scales[i]` converts source `i` magnitudes into the Product's selected
 working unit equation. `_kernel_dimensions` records each aligned member's
@@ -1539,7 +1567,7 @@ intentional diagnostics.
 
 ## Required Mutation Evidence
 
-Validation must independently kill at least these `24` process-local or
+Validation must independently kill at least these `25` process-local or
 checkout-local mutants:
 
 1. skip source-unit compatibility;
@@ -1553,26 +1581,35 @@ checkout-local mutants:
    semantic type;
 8. accept a generic or wrong semantic Product/coefficient Spec, including a
    nonquantity source Spec;
-9. omit conditioning-coordinate reorder;
-10. omit conditioning-dimension permutation;
-11. accept a caller scalar/Pint/raw-tensor coefficient shortcut;
-12. homogenize a heterogeneous kernel collection;
-13. cast BitDepth to the floating working dtype;
-14. bypass most-derived validation during Spec movement;
-15. bypass most-derived validation during Field/Kernel/Collection movement;
-16. detach a deterministic Product source or sever its autograd graph;
-17. duplicate the TensorKernel defensive snapshot;
-18. skip the PSD RFFT-count or reciprocal-spacing relationship;
-19. multiply afterpulse mean by `0.5`;
-20. feed branching children back within the same round;
-21. normalize timing probabilities silently;
-22. include out-of-window branching destinations;
-23. flip PulseResponse polarity a second time; and
-24. restore a collaboration profile or generic readout orchestration import.
+9. skip the positional exact structural binding between a staged prepared
+   Config and the source Specs supplied to `produce()` / `validate()`;
+10. omit conditioning-coordinate reorder;
+11. omit conditioning-dimension permutation;
+12. accept a caller scalar/Pint/raw-tensor coefficient shortcut;
+13. homogenize a heterogeneous kernel collection;
+14. cast BitDepth to the floating working dtype;
+15. bypass most-derived validation during Spec movement;
+16. bypass most-derived validation during Field/Kernel/Collection movement;
+17. detach a deterministic Product source or sever its autograd graph;
+18. duplicate the TensorKernel defensive snapshot;
+19. skip the PSD RFFT-count or reciprocal-spacing relationship;
+20. multiply afterpulse mean by `0.5`;
+21. feed branching children back within the same round;
+22. normalize timing probabilities silently;
+23. include out-of-window branching destinations;
+24. flip PulseResponse polarity a second time; and
+25. restore a collaboration profile or generic readout orchestration import.
 
 Each mutant must fail at one named committed proof for the intended reason.
 Mutation evidence may be implemented through temporary process-local source
 replacement; mutated bytes must never be committed.
+
+The committed staged-path proof prepares from one source-Spec tuple and then
+attempts `produce()` and `validate()` with structurally changed source Specs.
+It covers at least changed unit, axis/coordinate order, dtype, and swapped
+source order, and proves `produce()` fails before tensor arithmetic,
+allocation, or RNG words. The binding mutant must survive none of those
+subcases.
 
 ## Complete Validation Gate
 
@@ -1587,7 +1624,7 @@ Validation owns one complete immutable-candidate gate:
 7. run Pyright positive checks in source and archive dependency forms;
 8. run the exact TensorCore `97`-diagnostic negative fixture;
 9. run the TensorDSLab exact `12`-diagnostic negative fixture;
-10. execute all `24` required mutants;
+10. execute all `25` required mutants;
 11. build two deterministic TensorDSLab wheels with
     `SOURCE_DATE_EPOCH=0` and compare them byte-for-byte;
 12. build one sdist and compare extracted package/test bytes to the candidate;
@@ -1873,12 +1910,14 @@ Maintenance 15 is complete only when:
 - all configurable coefficients are exact Kernels;
 - all five typed kernel collections enforce exact membership;
 - all five Config punchcards prepare into fresh same-type ready values;
+- every prepared Config retains and enforces its positional exact structural
+  source-Spec binding across staged production and validation;
 - every Product public lifecycle and source law passes;
 - unit/device/dtype/alignment preflights occur before effects;
 - selected scientific and stochastic laws pass independent proof;
 - the embedded application layer and demos are absent;
 - the exact `22`-file test tree and obligation ledger reconcile;
-- the `24` mutants are killed;
+- the `25` mutants are killed;
 - source/archive/typing/artifact/environment/documentation/privacy/hygiene
   gates pass;
 - unavailable CUDA is explicit and unclaimed;
