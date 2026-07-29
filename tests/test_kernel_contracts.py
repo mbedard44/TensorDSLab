@@ -9,6 +9,7 @@ from tensor_core import (
     CountCoordinates,
     LabelCoordinates,
     OffsetCoordinates,
+    RegularCoordinates,
     TensorAxis,
 )
 
@@ -26,6 +27,11 @@ from tensor_dslab import (
     InputMaximum,
     InputMinimum,
     ChargeKernels,
+    DigitizedWaveformKernels,
+    FrequencyAxis,
+    NoiseWaveformKernels,
+    PowerSpectralDensity,
+    PowerSpectralDensitySpec,
     PulseResponse,
     WhiteNoiseRms,
     TimeAxis,
@@ -36,6 +42,7 @@ from tests._product_support import (
     analog_config,
     axes,
     digitized_config,
+    noise_config,
     pure_config,
 )
 
@@ -82,6 +89,30 @@ class KernelContractTests(unittest.TestCase):
         self.assertIsInstance(digitizer.input_maximum, InputMaximum)
         with self.assertRaises(TypeError):
             ChargeKernels(members=(pure_config().kernels.pulse_response,))
+        white = noise_config(white=True).kernels.white_noise_rms
+        assert white is not None
+        frequency = FrequencyAxis(
+            coordinates=RegularCoordinates(start=0, step=1, count=2),
+            coordinate_scale=1.0,
+            unit=unit_registry.Unit("Hz"),
+        )
+        psd = PowerSpectralDensity(
+            tensor=torch.tensor([0.0, 1.0], dtype=torch.float32),
+            spec=PowerSpectralDensitySpec(
+                conditioning_axes=(),
+                operation_axes=(frequency,),
+                device=torch.device("cpu"),
+                dtype=torch.float32,
+                unit=unit_registry.Unit("mV ** 2"),
+            ),
+        )
+        with self.assertRaises(ValueError):
+            NoiseWaveformKernels(members=(white, psd))
+        digitizer = digitized_config().kernels
+        with self.assertRaises(ValueError):
+            DigitizedWaveformKernels(
+                members=tuple(digitizer.members.values())[:-1]
+            )
 
     def test_preparation_reorders_conditioning_coordinates_and_dimensions(
         self,

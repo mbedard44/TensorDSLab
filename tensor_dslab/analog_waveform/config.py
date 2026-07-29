@@ -4,31 +4,11 @@ from dataclasses import dataclass, field
 from typing import Any, ClassVar, final
 
 import torch
-from tensor_core import TensorCollection, TensorKernel
 
 from tensor_dslab.analog_waveform.field import AnalogWaveformSpec
-from tensor_dslab.analog_waveform.kernel import AnalogMaximum, AnalogMinimum
+from tensor_dslab.analog_waveform.kernel import AnalogWaveformKernels
 from tensor_dslab.common import QuantityFieldSpec
-
-
-@final
-class AnalogWaveformKernels(TensorCollection[TensorKernel[Any]]):
-    __slots__ = ()
-
-    def _require(self) -> None:
-        if any(
-            type(member) not in (AnalogMinimum, AnalogMaximum)
-            for member in self.members.values()
-        ):
-            raise TypeError("AnalogWaveformKernels contains an unsupported member")
-
-    @property
-    def minimum(self) -> AnalogMinimum | None:
-        return self.members.get(AnalogMinimum)  # type: ignore[return-value]
-
-    @property
-    def maximum(self) -> AnalogMaximum | None:
-        return self.members.get(AnalogMaximum)  # type: ignore[return-value]
+from tensor_dslab.common.requirements.config import require_config_components
 
 
 @final
@@ -56,11 +36,10 @@ class AnalogWaveformConfig:
     )
 
     def __post_init__(self) -> None:
-        if type(self.spec) is not AnalogWaveformSpec:
-            raise TypeError(
-                "AnalogWaveformConfig.spec must be exact AnalogWaveformSpec"
-            )
-        if type(self.kernels) is not AnalogWaveformKernels:
-            raise TypeError(
-                "AnalogWaveformConfig.kernels must be exact AnalogWaveformKernels"
-            )
+        require_config_components(
+            spec=self.spec,
+            kernels=self.kernels,
+            spec_type=AnalogWaveformSpec,
+            kernels_type=AnalogWaveformKernels,
+            field="AnalogWaveformConfig",
+        )

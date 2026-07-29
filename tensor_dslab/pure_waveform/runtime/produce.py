@@ -4,15 +4,22 @@ import itertools
 
 import torch
 
-from tensor_dslab.common.alignment import require_prepared_sources
+from tensor_dslab.common.requirements.config import (
+    require_prepared_config,
+    require_prepared_sources,
+)
 from tensor_dslab.pure_waveform.config import PureWaveformConfig
 
 
 def produce_pure_waveform(*, sources: tuple, config: PureWaveformConfig) -> torch.Tensor:
     """Return one fresh tensor from a prepared PureWaveform Config."""
 
-    if not config._is_prepared or config._working_dtype is None:
-        raise ValueError("PureWaveformConfig must be prepared")
+    require_prepared_config(
+        is_prepared=config._is_prepared,
+        working_dtype=config._working_dtype,
+        field="PureWaveformConfig",
+    )
+    assert config._working_dtype is not None
     require_prepared_sources(sources, source_specs=config._source_specs)
     combined = torch.zeros(config.spec.shape, dtype=config._working_dtype, device=config.spec.device)
     for source, dimensions, scale in zip(

@@ -23,6 +23,21 @@ laws. Most-derived validation must run after every Spec, Field, Kernel, and
 Collection movement. `BitDepth` remains an exact integer kernel while
 floating calculation policy is prepared separately.
 
+Maintenance 16 centralizes reusable package-owned admission in the private,
+export-empty `tensor_dslab.common.requirements` package. Specs own dtype, Unit,
+axis, and operation geometry. Fields and Kernels own exact-Spec and represented
+value laws. Product preparation retains cross-object alignment, conversion,
+capacity planning, and scientific relationships; Product validation retains
+completed-result and storage relationships. Requirement functions validate
+without normalizing, converting, aligning, mutating, or returning replacement
+objects.
+
+The five public typed Kernel collections are defined beside their vocabulary
+in each Product's singular `kernel.py`; their supported facade names and order
+are unchanged. `common/alignment.py` owns only alignment, permutation,
+conversion, and one-Kernel materialization mechanics. Tensor and RNG-address
+span preflight lives in the private capacity requirements owner.
+
 Source Fields may use any application semantic class whose exact Spec is a
 `QuantityFieldSpec` and satisfies the Product source equation. This is why
 source-taking public methods use `tuple[TensorField[Any], ...]`: TensorCore's

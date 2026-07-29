@@ -8,7 +8,12 @@ import torch
 from tensor_core import TensorField
 
 from tensor_dslab.common import QuantityFieldSpec
-from tensor_dslab.common.units import unit_registry
+from tensor_dslab.common.requirements.field import require_exact_field_spec
+from tensor_dslab.common.requirements.tensor import (
+    require_exact_dtype,
+    require_values_between,
+)
+from tensor_dslab.common.requirements.unit import require_unit_compatible
 
 
 @final
@@ -19,14 +24,12 @@ class PhotoelectronsSpec[AxesT: tuple](QuantityFieldSpec[AxesT]):
 
     @override
     def _require_quantity_field_spec(self) -> None:
-        if self.dtype is not torch.int64:
-            raise TypeError("PhotoelectronsSpec dtype must be torch.int64")
-        try:
-            unit_registry.Quantity(1.0, self.unit).to("avalanche")
-        except Exception as error:
-            raise ValueError(
-                "PhotoelectronsSpec unit must be avalanche-compatible"
-            ) from error
+        require_exact_dtype(self, torch.int64)
+        require_unit_compatible(
+            self.unit,
+            target="avalanche",
+            field="PhotoelectronsSpec.unit",
+        )
 
 
 @final
@@ -37,13 +40,12 @@ class Photoelectrons(TensorField[PhotoelectronsSpec[Any]]):
 
     @override
     def _require(self) -> None:
-        if type(self.spec) is not PhotoelectronsSpec:
-            raise TypeError("Photoelectrons requires exact PhotoelectronsSpec")
-        from tensor_dslab.photoelectrons.runtime.validate import (
-            validate_photoelectrons,
+        require_exact_field_spec(self, PhotoelectronsSpec)
+        require_values_between(
+            self,
+            minimum=0,
+            maximum=(1 << 53) - 1,
         )
-
-        validate_photoelectrons(product=self)
 
     @classmethod
     def validate(cls, *, product: Self) -> None:

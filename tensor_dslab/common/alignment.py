@@ -6,52 +6,10 @@ from typing import Any, cast
 import pint
 import torch
 from tensor_core import OffsetAxis, TensorField, TensorKernel
-from tensor_core.tensor.validation import (
-    require_shape_span,
-    require_tensor_allocation,
-)
 
 from tensor_dslab.common.field import QuantityFieldSpec
+from tensor_dslab.common.requirements.capacity import require_tensor_capacity
 from tensor_dslab.common.units import unit_registry
-
-
-_INT63_LIMIT = 1 << 63
-
-
-def require_allocation(
-    shape: tuple[int, ...],
-    *,
-    dtype: torch.dtype,
-    field: str,
-) -> None:
-    """Preflight one exact tensor element and byte span."""
-
-    require_tensor_allocation(
-        shape,
-        field,
-        element_size=dtype.itemsize,
-        upper=_INT63_LIMIT,
-    )
-
-
-def require_address_capacity(
-    element_shape: tuple[int, ...],
-    *,
-    address_shape: tuple[int, ...],
-    field: str,
-) -> None:
-    """Preflight one exact RngElements and RngAddress domain."""
-
-    require_shape_span(
-        element_shape,
-        f"{field} elements",
-        upper=_INT63_LIMIT,
-    )
-    require_shape_span(
-        (*address_shape, *element_shape),
-        field,
-        upper=_INT63_LIMIT + 1,
-    )
 
 
 def align_source(
@@ -155,45 +113,6 @@ def kernel_dimensions(
     return tuple(result)
 
 
-def require_prepared_sources(
-    sources: tuple[TensorField[Any], ...],
-    *,
-    source_specs: tuple[QuantityFieldSpec[Any], ...],
-) -> None:
-    """Bind staged execution to the exact prepared ordered source Specs."""
-
-    if type(sources) is not tuple or len(sources) != len(source_specs):
-        raise ValueError("sources do not match the prepared source count")
-    for index, (source, prepared) in enumerate(zip(sources, source_specs)):
-        if not isinstance(source, TensorField):
-            raise TypeError(f"sources[{index}] must be a TensorField")
-        if not isinstance(source.spec, QuantityFieldSpec):
-            raise TypeError(f"sources[{index}].spec must be a QuantityFieldSpec")
-        if source.spec != prepared:
-            raise ValueError(f"sources[{index}].spec differs from prepared provenance")
-
-
-def require_fresh_product(
-    product: TensorField[Any],
-    *,
-    sources: tuple[TensorField[Any], ...],
-    kernels: tuple[TensorKernel[Any], ...],
-) -> None:
-    """Require contiguous storage disjoint from every live input tensor."""
-
-    if not product.tensor.is_contiguous():
-        raise ValueError("generated Product tensor must be contiguous")
-    product_storage = product.tensor.untyped_storage()
-    input_storages = (
-        *(source.tensor.untyped_storage() for source in sources),
-        *(kernel.tensor.untyped_storage() for kernel in kernels),
-    )
-    if any(product_storage == storage for storage in input_storages):
-        raise ValueError(
-            "generated Product storage must be source- and kernel-disjoint"
-        )
-
-
 def prepare_kernel(
     kernel: TensorKernel[Any],
     *,
@@ -259,7 +178,7 @@ def prepare_kernel(
             ) from error
         spec_updates["unit"] = target_unit
     prepared_spec = replace(kernel.spec, **spec_updates)
-    require_allocation(
+    require_tensor_capacity(
         tuple(prepared_spec.shape),
         dtype=prepared_spec.dtype,
         field=f"{type(kernel).__name__} prepared kernel",

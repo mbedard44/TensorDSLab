@@ -11,8 +11,10 @@ from tensor_dslab.common import TimeAxis
 from tensor_dslab.common.alignment import (
     prepare_kernel,
     prepare_sources,
+)
+from tensor_dslab.common.requirements.capacity import (
     require_address_capacity,
-    require_allocation,
+    require_tensor_capacity,
 )
 from tensor_dslab.common.units import unit_registry
 
@@ -26,12 +28,12 @@ def prepare_charge(*, source_specs: tuple, config: ChargeConfig) -> ChargeConfig
     if any(source.dtype is not torch.int64 for source in source_specs):
         raise TypeError("Charge sources must use torch.int64")
     dtype = torch.promote_types(dtype, torch.float64)
-    require_allocation(
+    require_tensor_capacity(
         config.spec.shape,
         dtype=torch.int64,
         field="Charge count workspace",
     )
-    require_allocation(
+    require_tensor_capacity(
         config.spec.shape,
         dtype=dtype,
         field="Charge floating workspace",
@@ -62,7 +64,7 @@ def prepare_charge(*, source_specs: tuple, config: ChargeConfig) -> ChargeConfig
         prepared_members.append(prepared_kernel)
         kdims.append(aligned_dimensions)
         if kernel is config.kernels.timing_jitter:
-            require_allocation(
+            require_tensor_capacity(
                 (*config.spec.shape, *kernel.operation_shape),
                 dtype=torch.int64,
                 field="TimingJitter category workspace",

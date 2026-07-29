@@ -31,6 +31,17 @@ geometry. Source order is significant; structurally equal replacement Specs
 are reusable; changed structure is rejected before tensor arithmetic,
 allocation, or RNG.
 
+Reusable semantic admission is composed from narrowly named private
+requirements. Specs admit metadata and geometry; Fields and Kernels admit
+their exact Specs and represented values. Short scientific laws unique to one
+semantic leaf stay visible on that leaf. Product preparation retains
+relationships that require aligned objects. This is direct composition, not a
+validator framework or a public requirements API.
+
+Each typed `*Kernels` collection is owned by its Product's singular
+`kernel.py`, next to the exact Kernel vocabulary it admits. Config modules own
+only same-type Config punchcards and compose those collections.
+
 ## Deferred Application Boundary
 
 DS20k/Silex profiles, detector-window construction, photoelectron binning,
@@ -39,6 +50,7 @@ IO, and campaign execution belong to focused application or later package
 authorities. Maintenance 15 provides no application demo and no compatibility
 facade for the retired embedded readout workflow.
 
-See the [architecture record](implementation/maintenance_15_spec_composed_products_and_application_boundary.md)
-and [work order](implementation/maintenance_15_execution_work_order.md) for the
-exact API, science, tests, and evidence boundary.
+See the [Maintenance 15 architecture record](implementation/maintenance_15_spec_composed_products_and_application_boundary.md),
+its [execution work order](implementation/maintenance_15_execution_work_order.md),
+and the [Maintenance 16 requirements-ownership work order](implementation/maintenance_16_declarative_requirements_and_kernel_ownership.md)
+for the exact API, science, tests, and evidence boundary.

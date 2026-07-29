@@ -8,7 +8,12 @@ import torch
 from tensor_core import TensorField
 
 from tensor_dslab.common import QuantityFieldSpec
-from tensor_dslab.common.units import unit_registry
+from tensor_dslab.common.requirements.field import require_exact_field_spec
+from tensor_dslab.common.requirements.tensor import (
+    require_exact_dtype,
+    require_nonnegative,
+)
+from tensor_dslab.common.requirements.unit import require_unit_compatible
 
 if TYPE_CHECKING:
     from tensor_dslab.digitized_waveform.config import DigitizedWaveformConfig
@@ -20,12 +25,12 @@ class DigitizedWaveformSpec[AxesT: tuple](QuantityFieldSpec[AxesT]):
 
     @override
     def _require_quantity_field_spec(self) -> None:
-        if self.dtype is not torch.int32:
-            raise TypeError("DigitizedWaveformSpec dtype must be torch.int32")
-        try:
-            unit_registry.Quantity(1.0, self.unit).to("")
-        except Exception as error:
-            raise ValueError("DigitizedWaveformSpec unit must be dimensionless") from error
+        require_exact_dtype(self, torch.int32)
+        require_unit_compatible(
+            self.unit,
+            target="",
+            field="DigitizedWaveformSpec.unit",
+        )
 
 
 @final
@@ -36,12 +41,8 @@ class DigitizedWaveform(TensorField[DigitizedWaveformSpec[Any]]):
 
     @override
     def _require(self) -> None:
-        if type(self.spec) is not DigitizedWaveformSpec:
-            raise TypeError(
-                "DigitizedWaveform requires exact DigitizedWaveformSpec"
-            )
-        if bool((self.tensor < 0).any()):
-            raise ValueError("DigitizedWaveform values must be nonnegative")
+        require_exact_field_spec(self, DigitizedWaveformSpec)
+        require_nonnegative(self)
 
     @classmethod
     def prepare(

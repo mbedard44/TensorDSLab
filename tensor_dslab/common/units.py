@@ -11,7 +11,9 @@ unit_registry.define("avalanche = [avalanche]")
 _UNIT_TYPE = type(unit_registry.Unit(""))
 
 
-def _normalize_unit(unit: object) -> pint.Unit:
+def normalize_unit(unit: object) -> pint.Unit:
+    """Return one exact package-owned Pint Unit without conversion."""
+
     if not isinstance(unit, pint.Unit):
         raise TypeError("unit must be exactly a Pint Unit")
     if getattr(unit, "_REGISTRY", None) is not unit_registry:

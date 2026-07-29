@@ -23,7 +23,10 @@ from tensor_dslab.charge.runtime.random import (
     point_address,
     timing_address,
 )
-from tensor_dslab.common.alignment import require_prepared_sources
+from tensor_dslab.common.requirements.config import (
+    require_prepared_config,
+    require_prepared_sources,
+)
 
 
 def _broadcast(kernel, dimensions: tuple[int, ...], shape: tuple[int, ...]) -> torch.Tensor:
@@ -102,8 +105,12 @@ def _timing_jitter(
 def produce_charge(*, sources: tuple, config: ChargeConfig, rng: CounterRng) -> torch.Tensor:
     """Return one fresh Charge tensor from an exact prepared Config."""
 
-    if not config._is_prepared or config._working_dtype is None:
-        raise ValueError("ChargeConfig must be prepared")
+    require_prepared_config(
+        is_prepared=config._is_prepared,
+        working_dtype=config._working_dtype,
+        field="ChargeConfig",
+    )
+    assert config._working_dtype is not None
     require_prepared_sources(sources, source_specs=config._source_specs)
     counts = torch.zeros(config.spec.shape, dtype=torch.int64, device=config.spec.device)
     for source, dimensions, scale in zip(sources, config._source_dimensions, config._source_scales):

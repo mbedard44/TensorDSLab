@@ -1,9 +1,6 @@
 """Public digitized-waveform product surface."""
 
-from tensor_dslab.digitized_waveform.config import (
-    DigitizedWaveformConfig,
-    DigitizedWaveformKernels,
-)
+from tensor_dslab.digitized_waveform.config import DigitizedWaveformConfig
 from tensor_dslab.digitized_waveform.field import (
     DigitizedWaveform,
     DigitizedWaveformSpec,
@@ -13,6 +10,7 @@ from tensor_dslab.digitized_waveform.kernel import (
     AnalogGainSpec,
     BitDepth,
     BitDepthSpec,
+    DigitizedWaveformKernels,
     InputMaximum,
     InputMaximumSpec,
     InputMinimum,

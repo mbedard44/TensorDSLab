@@ -2,7 +2,10 @@
 
 import torch
 
-from tensor_dslab.common.alignment import require_prepared_sources
+from tensor_dslab.common.requirements.config import (
+    require_prepared_config,
+    require_prepared_sources,
+)
 from tensor_dslab.digitized_waveform.config import DigitizedWaveformConfig
 
 
@@ -14,8 +17,12 @@ def _aligned(kernel, dimensions: tuple[int, ...], *, shape: tuple[int, ...], dty
 
 
 def produce_digitized_waveform(*, sources: tuple, config: DigitizedWaveformConfig) -> torch.Tensor:
-    if not config._is_prepared or config._working_dtype is None:
-        raise ValueError("DigitizedWaveformConfig must be prepared")
+    require_prepared_config(
+        is_prepared=config._is_prepared,
+        working_dtype=config._working_dtype,
+        field="DigitizedWaveformConfig",
+    )
+    assert config._working_dtype is not None
     require_prepared_sources(sources, source_specs=config._source_specs)
     source = sources[0].tensor.permute(config._source_dimensions[0]).to(config._working_dtype)
     source = source * config._source_scales[0]

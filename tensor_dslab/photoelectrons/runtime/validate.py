@@ -1,8 +1,9 @@
 """Private completed-source validation."""
 
-import torch
-
+from tensor_dslab.common.requirements.field import require_exact_field_spec
+from tensor_dslab.common.requirements.tensor import require_values_between
 from tensor_dslab.photoelectrons.field import Photoelectrons
+from tensor_dslab.photoelectrons.field import PhotoelectronsSpec
 
 
 def validate_photoelectrons(*, product: Photoelectrons) -> None:
@@ -10,8 +11,9 @@ def validate_photoelectrons(*, product: Photoelectrons) -> None:
 
     if type(product) is not Photoelectrons:
         raise TypeError("product must be exact Photoelectrons")
-    tensor = product.tensor
-    if tensor.dtype is not torch.int64:
-        raise ValueError("Photoelectrons must use torch.int64")
-    if bool((tensor < 0).any()) or bool((tensor > (1 << 53) - 1).any()):
-        raise ValueError("Photoelectrons values must be in [0, 2**53 - 1]")
+    require_exact_field_spec(product, PhotoelectronsSpec)
+    require_values_between(
+        product,
+        minimum=0,
+        maximum=(1 << 53) - 1,
+    )

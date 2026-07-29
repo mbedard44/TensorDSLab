@@ -7,7 +7,7 @@ from typing import Any, final, override
 import pint
 from tensor_core import TensorAxis, TensorFieldSpec
 
-from tensor_dslab.common.units import _normalize_unit
+from tensor_dslab.common.units import normalize_unit
 
 
 @dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
@@ -21,7 +21,7 @@ class QuantityFieldSpec[
     @final
     @override
     def _require(self) -> None:
-        object.__setattr__(self, "unit", _normalize_unit(self.unit))
+        object.__setattr__(self, "unit", normalize_unit(self.unit))
         self._require_quantity_field_spec()
 
     @abstractmethod

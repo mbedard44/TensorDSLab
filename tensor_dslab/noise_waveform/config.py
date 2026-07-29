@@ -4,34 +4,11 @@ from dataclasses import dataclass, field
 from typing import Any, ClassVar, final
 
 import torch
-from tensor_core import TensorCollection, TensorKernel
 
 from tensor_dslab.common import QuantityFieldSpec
+from tensor_dslab.common.requirements.config import require_config_components
 from tensor_dslab.noise_waveform.field import NoiseWaveformSpec
-from tensor_dslab.noise_waveform.kernel import (
-    PowerSpectralDensity,
-    WhiteNoiseRms,
-)
-
-
-@final
-class NoiseWaveformKernels(TensorCollection[TensorKernel[Any]]):
-    __slots__ = ()
-
-    def _require(self) -> None:
-        admitted = {WhiteNoiseRms, PowerSpectralDensity}
-        if any(type(member) not in admitted for member in self.members.values()):
-            raise TypeError("NoiseWaveformKernels contains an unsupported member")
-        if len(self.members) > 1:
-            raise ValueError("NoiseWaveformKernels admits at most one branch")
-
-    @property
-    def white_noise_rms(self) -> WhiteNoiseRms | None:
-        return self.members.get(WhiteNoiseRms)  # type: ignore[return-value]
-
-    @property
-    def power_spectral_density(self) -> PowerSpectralDensity | None:
-        return self.members.get(PowerSpectralDensity)  # type: ignore[return-value]
+from tensor_dslab.noise_waveform.kernel import NoiseWaveformKernels
 
 
 @final
@@ -63,11 +40,10 @@ class NoiseWaveformConfig:
     )
 
     def __post_init__(self) -> None:
-        if type(self.spec) is not NoiseWaveformSpec:
-            raise TypeError(
-                "NoiseWaveformConfig.spec must be exact NoiseWaveformSpec"
-            )
-        if type(self.kernels) is not NoiseWaveformKernels:
-            raise TypeError(
-                "NoiseWaveformConfig.kernels must be exact NoiseWaveformKernels"
-            )
+        require_config_components(
+            spec=self.spec,
+            kernels=self.kernels,
+            spec_type=NoiseWaveformSpec,
+            kernels_type=NoiseWaveformKernels,
+            field="NoiseWaveformConfig",
+        )

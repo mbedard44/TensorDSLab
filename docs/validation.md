@@ -1,8 +1,9 @@
 # Validation
 
-Maintenance 15 validation is fixed-candidate and Product-centered. It proves
-supported public contracts and scientific behavior without retaining tests
-for the retired application workflow.
+Maintenance 16 validation is fixed-candidate and Product-centered. It proves
+the private declarative-requirement ownership refactor preserves supported
+public contracts and scientific behavior without retaining tests for the
+retired application workflow.
 
 ## Required Boundaries
 
@@ -13,6 +14,12 @@ for the retired application workflow.
   behavior, and most-derived movement validation;
 - exact Product/coefficient Spec admission and typed Kernel collection
   membership;
+- exact private requirements-package topology, export privacy, pure fail-closed
+  effects, and absence of reusable `require_*` definitions elsewhere;
+- Spec ownership of dtype, Unit, axis, and operation geometry, plus
+  Field/Kernel ownership of exact Specs and represented-value laws;
+- all five typed Kernel collections owned by singular Product `kernel.py`
+  modules with unchanged public facade identity and ordering;
 - Config identity/unhashability, unprepared facts, and fresh same-type
   preparation;
 - source units, roles, coordinates, device, dtype, count/order, positional
@@ -24,7 +31,7 @@ for the retired application workflow.
 - independent timing, dark-count, smearing, branching, pulse, white-noise,
   PSD, analog, and digitization oracles;
 - exact eight private role streams and public TensorCore address mechanics;
-- exact 22-file test target, positive Pyright, and the 12-category negative
+- exact 23-file test target, positive Pyright, and the 12-category negative
   fixture;
 - artifact, isolated-install, environment-script, privacy, protected-byte,
   diff, and hygiene gates.
@@ -79,15 +86,13 @@ source conversion, arithmetic, allocation, or RNG words.
 
 ## Mutation Boundary
 
-The fixed candidate must kill all 25 mutants enumerated in the executable work
-order, including omitted unit/device admission, spelling-based role matching,
-coordinate-scale omission, wrong semantic Specs, skipped staged binding,
-omitted coordinate reorder/permutation, scalar coefficient shortcuts,
-collection homogenization, BitDepth casting, bypassed most-derived movement,
-autograd detachment, duplicate kernel snapshotting, PSD geometry drift,
-half-rate afterpulse, same-round branching feedback, timing normalization,
-out-of-window retention, double pulse polarity, and restoration of the generic
-readout surface.
+The fixed candidate must kill all 30 mutants enumerated in the Maintenance 16
+work order. High-risk boundaries include exact coordinate and semantic type
+admission, Unit purity, dtype and represented-value domains, operation
+geometry and row totals, exact collection membership/cardinality, prepared
+Config/source provenance, storage freshness, tensor/address capacity,
+single-snapshot Kernel preparation, requirement privacy, moved collection
+ownership, and unchanged facades.
 
 ## Qualification
 

@@ -7,8 +7,8 @@ import torch
 from tensor_dslab.common.alignment import (
     prepare_kernel,
     prepare_sources,
-    require_allocation,
 )
+from tensor_dslab.common.requirements.capacity import require_tensor_capacity
 from tensor_dslab.pure_waveform.config import PureWaveformConfig
 
 
@@ -24,7 +24,7 @@ def prepare_pure_waveform(*, source_specs: tuple, config: PureWaveformConfig) ->
         unit_target=target_source_unit,
     )
     dtype = torch.promote_types(torch.promote_types(dtype, pulse.dtype), torch.float32)
-    require_allocation(
+    require_tensor_capacity(
         config.spec.shape,
         dtype=dtype,
         field="PureWaveform workspace",

@@ -1,11 +1,21 @@
-"""Physical saturation coefficient Specs and kernels."""
+"""Physical saturation coefficient Specs, kernels, and collection."""
 
 from typing import Any, final, override
 
-import torch
-from tensor_core import TensorKernel
+from tensor_core import TensorCollection, TensorKernel
 
 from tensor_dslab.common import QuantityKernelSpec
+from tensor_dslab.common.requirements.collection import (
+    require_admitted_member_types,
+)
+from tensor_dslab.common.requirements.kernel import (
+    require_exact_kernel_spec,
+    require_no_operation_axes,
+)
+from tensor_dslab.common.requirements.tensor import (
+    require_finite,
+    require_floating_dtype,
+)
 
 
 @final
@@ -14,8 +24,8 @@ class AnalogMinimumSpec[C: tuple, O: tuple](QuantityKernelSpec[C, O]):
 
     @override
     def _require_quantity_kernel_spec(self) -> None:
-        if self.operation_axes:
-            raise ValueError("AnalogMinimumSpec has no operation axes")
+        require_floating_dtype(self)
+        require_no_operation_axes(self)
 
 
 @final
@@ -24,23 +34,8 @@ class AnalogMaximumSpec[C: tuple, O: tuple](QuantityKernelSpec[C, O]):
 
     @override
     def _require_quantity_kernel_spec(self) -> None:
-        if self.operation_axes:
-            raise ValueError("AnalogMaximumSpec has no operation axes")
-
-
-def _require_finite(
-    kernel: TensorKernel[Any],
-    *,
-    spec_type: type,
-) -> None:
-    if type(kernel.spec) is not spec_type:
-        raise TypeError(
-            f"{type(kernel).__name__} requires exact {spec_type.__name__}"
-        )
-    if not kernel.dtype.is_floating_point:
-        raise TypeError(f"{type(kernel).__name__} dtype must be floating")
-    if not bool(torch.isfinite(kernel.tensor).all()):
-        raise ValueError(f"{type(kernel).__name__} values must be finite")
+        require_floating_dtype(self)
+        require_no_operation_axes(self)
 
 
 @final
@@ -49,7 +44,8 @@ class AnalogMinimum(TensorKernel[AnalogMinimumSpec[Any, Any]]):
 
     @override
     def _require(self) -> None:
-        _require_finite(self, spec_type=AnalogMinimumSpec)
+        require_exact_kernel_spec(self, AnalogMinimumSpec)
+        require_finite(self)
 
 
 @final
@@ -58,4 +54,26 @@ class AnalogMaximum(TensorKernel[AnalogMaximumSpec[Any, Any]]):
 
     @override
     def _require(self) -> None:
-        _require_finite(self, spec_type=AnalogMaximumSpec)
+        require_exact_kernel_spec(self, AnalogMaximumSpec)
+        require_finite(self)
+
+
+@final
+class AnalogWaveformKernels(TensorCollection[TensorKernel[Any]]):
+    """Hold the optional exact analog-saturation bounds."""
+
+    __slots__ = ()
+
+    def _require(self) -> None:
+        require_admitted_member_types(
+            self,
+            admitted=(AnalogMinimum, AnalogMaximum),
+        )
+
+    @property
+    def minimum(self) -> AnalogMinimum | None:
+        return self.members.get(AnalogMinimum)  # type: ignore[return-value]
+
+    @property
+    def maximum(self) -> AnalogMaximum | None:
+        return self.members.get(AnalogMaximum)  # type: ignore[return-value]

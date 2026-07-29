@@ -8,6 +8,11 @@ import torch
 from tensor_core import TensorField
 
 from tensor_dslab.common import QuantityFieldSpec
+from tensor_dslab.common.requirements.field import require_exact_field_spec
+from tensor_dslab.common.requirements.tensor import (
+    require_dtype_in,
+    require_finite,
+)
 
 if TYPE_CHECKING:
     from tensor_dslab.analog_waveform.config import AnalogWaveformConfig
@@ -19,8 +24,7 @@ class AnalogWaveformSpec[AxesT: tuple](QuantityFieldSpec[AxesT]):
 
     @override
     def _require_quantity_field_spec(self) -> None:
-        if self.dtype not in (torch.float32, torch.float64):
-            raise TypeError("AnalogWaveformSpec dtype must be floating")
+        require_dtype_in(self, (torch.float32, torch.float64))
 
 
 @final
@@ -31,10 +35,8 @@ class AnalogWaveform(TensorField[AnalogWaveformSpec[Any]]):
 
     @override
     def _require(self) -> None:
-        if type(self.spec) is not AnalogWaveformSpec:
-            raise TypeError("AnalogWaveform requires exact AnalogWaveformSpec")
-        if not bool(torch.isfinite(self.tensor).all()):
-            raise ValueError("AnalogWaveform values must be finite")
+        require_exact_field_spec(self, AnalogWaveformSpec)
+        require_finite(self)
 
     @classmethod
     def prepare(

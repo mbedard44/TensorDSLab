@@ -5,19 +5,28 @@ ownership boundaries, typed public APIs, deterministic behavior, focused tests,
 small coherent changes, and documentation that explains contracts rather than
 narrating code.
 
-## Maintenance 15 Engineering Boundary
+## Maintenance 16 Engineering Boundary
 
-The active candidate adopts exact TensorCore `0.22.0` and a spec-composed
-Product parts bin. New work must use semantic Axis/Coordinates composition,
-exact quantity Product/coefficient Specs, direct TensorField/TensorKernel
-leaves, typed Kernel collections, same-type Config punchcards, and exact
-Product classmethods.
+The current package retains exact TensorCore `0.22.0` and the Maintenance 15
+spec-composed Product parts bin. Maintenance 16 makes reusable semantic
+admission explicit through the private, export-empty
+`tensor_dslab.common.requirements` package. Semantic hooks call narrowly named
+requirements in a visible order; one-class scientific laws remain beside
+their classes. Do not introduce a validator registry, callback list,
+reflection layer, generic validation object, or public requirement export.
 
-Preparation owns all source/unit/device/dtype/coordinate/kernel alignment,
-capacity policy, and immutable positional source-Spec provenance. Production
-must consume prepared facts without Pint, coordinate discovery, hidden source
-movement, or dtype-policy selection. Validation must recheck the exact
-prepared source binding and completed Product/storage relationships.
+Specs own dtype, Unit, axis, and operation geometry admission. Fields and
+Kernels own exact-Spec and represented-value laws. Product preparation owns
+alignment, conversion, multi-object relationships, capacity preflight, and
+immutable positional source-Spec provenance. Production consumes prepared
+facts without Pint, coordinate discovery, hidden source movement, or
+dtype-policy selection. Product validation rechecks the exact prepared source
+binding and completed Product/storage relationships.
+
+Each public `*Kernels` collection is defined in its Product's singular
+`kernel.py`; Config modules own Config records only. Shared alignment contains
+only transformation and materialization mechanics. Unit normalization remains
+in `common/units.py` and is distinct from pure Unit requirements.
 
 Do not add a Runtime/Plan record, generic Product/Config framework,
 `tensor_dslab.readout`, orchestration, result collection, application profile,
@@ -41,8 +50,8 @@ Project/display name: TensorDSLab
 Python import: tensor_dslab (accepted on main through Maintenance 5)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
-Package maturity: Maintenance 14 Merged / Closed
-Active production gate: Maintenance 15 candidate implementation
+Package maturity: Maintenance 15 locally closed
+Active production gate: Maintenance 16 candidate implementation
 Stage 8: separately stopped; any restart requires a new Design authority after
 Maintenance 6
 ```

@@ -7,8 +7,8 @@ import torch
 from tensor_dslab.common.alignment import (
     prepare_kernel,
     prepare_sources,
-    require_allocation,
 )
+from tensor_dslab.common.requirements.capacity import require_tensor_capacity
 from tensor_dslab.common.units import unit_registry
 from tensor_dslab.digitized_waveform.config import DigitizedWaveformConfig
 
@@ -40,12 +40,12 @@ def prepare_digitized_waveform(*, source_specs: tuple, config: DigitizedWaveform
     dtype = torch.promote_types(dtype, torch.float32)
     for kernel in (minimum, maximum, gain):
         dtype = torch.promote_types(dtype, kernel.dtype)
-    require_allocation(
+    require_tensor_capacity(
         config.spec.shape,
         dtype=dtype,
         field="DigitizedWaveform floating workspace",
     )
-    require_allocation(
+    require_tensor_capacity(
         config.spec.shape,
         dtype=torch.int64,
         field="DigitizedWaveform integer workspace",

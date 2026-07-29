@@ -49,34 +49,26 @@ class CorrelatedAvalancheTests(unittest.TestCase):
         bad_axis = OffsetAxis(
             coordinates=OffsetCoordinates(offsets=(0, 1)), relative_to=TimeAxis
         )
-        bad_spec = DelayedCrosstalkSpec(
-            conditioning_axes=(),
-            operation_axes=(bad_axis,),
-            device=torch.device("cpu"),
-            dtype=torch.float64,
-            unit=unit_registry.Unit(""),
-        )
         with self.assertRaises(ValueError):
-            DelayedCrosstalk(
-                tensor=torch.tensor([0.1, 0.2], dtype=torch.float64),
-                spec=bad_spec,
+            DelayedCrosstalkSpec(
+                conditioning_axes=(),
+                operation_axes=(bad_axis,),
+                device=torch.device("cpu"),
+                dtype=torch.float64,
+                unit=unit_registry.Unit(""),
             )
-        empty_spec = DelayedCrosstalkSpec(
-            conditioning_axes=(),
-            operation_axes=(
-                OffsetAxis(
-                    coordinates=OffsetCoordinates(offsets=()),
-                    relative_to=TimeAxis,
-                ),
-            ),
-            device=torch.device("cpu"),
-            dtype=torch.float64,
-            unit=unit_registry.Unit(""),
-        )
         with self.assertRaises(ValueError):
-            DelayedCrosstalk(
-                tensor=torch.empty((0,), dtype=torch.float64),
-                spec=empty_spec,
+            DelayedCrosstalkSpec(
+                conditioning_axes=(),
+                operation_axes=(
+                    OffsetAxis(
+                        coordinates=OffsetCoordinates(offsets=()),
+                        relative_to=TimeAxis,
+                    ),
+                ),
+                device=torch.device("cpu"),
+                dtype=torch.float64,
+                unit=unit_registry.Unit(""),
             )
 
     def test_fixed_generation_afterpulse_law_and_window_discard(self) -> None:

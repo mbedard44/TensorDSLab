@@ -4,24 +4,11 @@ from dataclasses import dataclass, field
 from typing import Any, ClassVar, final
 
 import torch
-from tensor_core import TensorCollection, TensorKernel
 
 from tensor_dslab.common import QuantityFieldSpec
+from tensor_dslab.common.requirements.config import require_config_components
 from tensor_dslab.pure_waveform.field import PureWaveformSpec
-from tensor_dslab.pure_waveform.kernel import PulseResponse
-
-
-@final
-class PureWaveformKernels(TensorCollection[TensorKernel[Any]]):
-    __slots__ = ()
-
-    def _require(self) -> None:
-        if self.member_types != frozenset((PulseResponse,)):
-            raise ValueError("PureWaveformKernels requires exactly PulseResponse")
-
-    @property
-    def pulse_response(self) -> PulseResponse:
-        return self.member(PulseResponse)
+from tensor_dslab.pure_waveform.kernel import PureWaveformKernels
 
 
 @final
@@ -49,11 +36,10 @@ class PureWaveformConfig:
     )
 
     def __post_init__(self) -> None:
-        if type(self.spec) is not PureWaveformSpec:
-            raise TypeError(
-                "PureWaveformConfig.spec must be exact PureWaveformSpec"
-            )
-        if type(self.kernels) is not PureWaveformKernels:
-            raise TypeError(
-                "PureWaveformConfig.kernels must be exact PureWaveformKernels"
-            )
+        require_config_components(
+            spec=self.spec,
+            kernels=self.kernels,
+            spec_type=PureWaveformSpec,
+            kernels_type=PureWaveformKernels,
+            field="PureWaveformConfig",
+        )

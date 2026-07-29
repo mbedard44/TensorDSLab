@@ -5,7 +5,10 @@ import math
 import torch
 from tensor_core import CounterRng, GaussianDistribution, RngElements
 
-from tensor_dslab.common.alignment import require_prepared_sources
+from tensor_dslab.common.requirements.config import (
+    require_prepared_config,
+    require_prepared_sources,
+)
 from tensor_dslab.noise_waveform.config import NoiseWaveformConfig
 from tensor_dslab.noise_waveform.runtime.random import (
     psd_noise_address,
@@ -21,8 +24,12 @@ def _broadcast_kernel(kernel, dimensions: tuple[int, ...], *, config: NoiseWavef
 
 
 def produce_noise_waveform(*, sources: tuple, config: NoiseWaveformConfig, rng: CounterRng) -> torch.Tensor:
-    if not config._is_prepared or config._working_dtype is None:
-        raise ValueError("NoiseWaveformConfig must be prepared")
+    require_prepared_config(
+        is_prepared=config._is_prepared,
+        working_dtype=config._working_dtype,
+        field="NoiseWaveformConfig",
+    )
+    assert config._working_dtype is not None
     require_prepared_sources(sources, source_specs=config._source_specs)
     shape = config.spec.shape
     device = config.spec.device

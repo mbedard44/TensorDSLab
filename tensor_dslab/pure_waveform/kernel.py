@@ -1,11 +1,23 @@
-"""Physical pulse-response specification and kernel."""
+"""Physical pulse-response Spec, kernel, and collection."""
 
 from typing import Any, final, override
 
-import torch
-from tensor_core import OffsetAxis, TensorKernel
+from tensor_core import OffsetAxis, TensorCollection, TensorKernel
 
 from tensor_dslab.common import QuantityKernelSpec
+from tensor_dslab.common.requirements.collection import (
+    require_exact_member_types,
+)
+from tensor_dslab.common.requirements.kernel import (
+    require_exact_kernel_spec,
+    require_nonempty_operation_extents,
+    require_operation_axes_type,
+    require_operation_axis_count,
+)
+from tensor_dslab.common.requirements.tensor import (
+    require_finite,
+    require_floating_dtype,
+)
 
 
 @final
@@ -16,12 +28,10 @@ class PulseResponseSpec[C: tuple, O: tuple](QuantityKernelSpec[C, O]):
 
     @override
     def _require_quantity_kernel_spec(self) -> None:
-        if not self.operation_axes or any(
-            type(axis) is not OffsetAxis for axis in self.operation_axes
-        ):
-            raise ValueError("PulseResponseSpec requires OffsetAxis operations")
-        if any(axis.size == 0 for axis in self.operation_axes):
-            raise ValueError("PulseResponseSpec operation axes must be nonempty")
+        require_floating_dtype(self)
+        require_operation_axis_count(self, minimum=1)
+        require_operation_axes_type(self, OffsetAxis)
+        require_nonempty_operation_extents(self)
 
 
 @final
@@ -32,9 +42,19 @@ class PulseResponse(TensorKernel[PulseResponseSpec[Any, Any]]):
 
     @override
     def _require(self) -> None:
-        if type(self.spec) is not PulseResponseSpec:
-            raise TypeError("PulseResponse requires exact PulseResponseSpec")
-        if not self.dtype.is_floating_point:
-            raise TypeError("PulseResponse dtype must be floating")
-        if not bool(torch.isfinite(self.tensor).all()):
-            raise ValueError("PulseResponse values must be finite")
+        require_exact_kernel_spec(self, PulseResponseSpec)
+        require_finite(self)
+
+
+@final
+class PureWaveformKernels(TensorCollection[TensorKernel[Any]]):
+    """Hold the exact pulse-response coefficient set."""
+
+    __slots__ = ()
+
+    def _require(self) -> None:
+        require_exact_member_types(self, required=(PulseResponse,))
+
+    @property
+    def pulse_response(self) -> PulseResponse:
+        return self.member(PulseResponse)

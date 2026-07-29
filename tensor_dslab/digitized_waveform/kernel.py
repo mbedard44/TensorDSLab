@@ -1,11 +1,25 @@
-"""Digitizer coefficient Specs and kernels."""
+"""Digitizer coefficient Specs, kernels, and collection."""
 
 from typing import Any, final, override
 
-import torch
-from tensor_core import TensorKernel, TensorKernelSpec
+from tensor_core import TensorCollection, TensorKernel, TensorKernelSpec
 
 from tensor_dslab.common import QuantityKernelSpec
+from tensor_dslab.common.requirements.collection import (
+    require_exact_member_types,
+)
+from tensor_dslab.common.requirements.kernel import (
+    require_exact_kernel_spec,
+    require_no_operation_axes,
+)
+from tensor_dslab.common.requirements.tensor import (
+    require_finite,
+    require_floating_dtype,
+    require_positive,
+    require_signed_integer_dtype,
+    require_values_between,
+)
+from tensor_dslab.common.requirements.unit import require_unit_compatible
 
 
 @final
@@ -14,8 +28,8 @@ class InputMinimumSpec[C: tuple, O: tuple](QuantityKernelSpec[C, O]):
 
     @override
     def _require_quantity_kernel_spec(self) -> None:
-        if self.operation_axes:
-            raise ValueError("InputMinimumSpec has no operation axes")
+        require_floating_dtype(self)
+        require_no_operation_axes(self)
 
 
 @final
@@ -24,8 +38,8 @@ class InputMaximumSpec[C: tuple, O: tuple](QuantityKernelSpec[C, O]):
 
     @override
     def _require_quantity_kernel_spec(self) -> None:
-        if self.operation_axes:
-            raise ValueError("InputMaximumSpec has no operation axes")
+        require_floating_dtype(self)
+        require_no_operation_axes(self)
 
 
 @final
@@ -34,8 +48,13 @@ class AnalogGainSpec[C: tuple, O: tuple](QuantityKernelSpec[C, O]):
 
     @override
     def _require_quantity_kernel_spec(self) -> None:
-        if self.operation_axes:
-            raise ValueError("AnalogGainSpec has no operation axes")
+        require_floating_dtype(self)
+        require_unit_compatible(
+            self.unit,
+            target="",
+            field="AnalogGainSpec.unit",
+        )
+        require_no_operation_axes(self)
 
 
 @final
@@ -44,28 +63,8 @@ class BitDepthSpec[C: tuple, O: tuple](TensorKernelSpec[C, O]):
 
     @override
     def _require(self) -> None:
-        if self.operation_axes:
-            raise ValueError("BitDepthSpec has no operation axes")
-        if self.dtype not in (torch.int8, torch.int16, torch.int32, torch.int64):
-            raise TypeError("BitDepthSpec requires a signed integer dtype")
-
-
-def _require_finite(
-    kernel: TensorKernel[Any],
-    *,
-    spec_type: type,
-    positive: bool = False,
-) -> None:
-    if type(kernel.spec) is not spec_type:
-        raise TypeError(
-            f"{type(kernel).__name__} requires exact {spec_type.__name__}"
-        )
-    if not kernel.dtype.is_floating_point:
-        raise TypeError(f"{type(kernel).__name__} dtype must be floating")
-    if not bool(torch.isfinite(kernel.tensor).all()):
-        raise ValueError(f"{type(kernel).__name__} values must be finite")
-    if positive and bool((kernel.tensor <= 0).any()):
-        raise ValueError(f"{type(kernel).__name__} values must be positive")
+        require_signed_integer_dtype(self)
+        require_no_operation_axes(self)
 
 
 @final
@@ -74,10 +73,8 @@ class BitDepth(TensorKernel[BitDepthSpec[Any, Any]]):
 
     @override
     def _require(self) -> None:
-        if type(self.spec) is not BitDepthSpec:
-            raise TypeError("BitDepth requires exact BitDepthSpec")
-        if bool((self.tensor < 1).any()) or bool((self.tensor > 16).any()):
-            raise ValueError("BitDepth values must be in [1, 16]")
+        require_exact_kernel_spec(self, BitDepthSpec)
+        require_values_between(self, minimum=1, maximum=16)
 
 
 @final
@@ -86,7 +83,8 @@ class InputMinimum(TensorKernel[InputMinimumSpec[Any, Any]]):
 
     @override
     def _require(self) -> None:
-        _require_finite(self, spec_type=InputMinimumSpec)
+        require_exact_kernel_spec(self, InputMinimumSpec)
+        require_finite(self)
 
 
 @final
@@ -95,7 +93,8 @@ class InputMaximum(TensorKernel[InputMaximumSpec[Any, Any]]):
 
     @override
     def _require(self) -> None:
-        _require_finite(self, spec_type=InputMaximumSpec)
+        require_exact_kernel_spec(self, InputMaximumSpec)
+        require_finite(self)
 
 
 @final
@@ -104,8 +103,35 @@ class AnalogGain(TensorKernel[AnalogGainSpec[Any, Any]]):
 
     @override
     def _require(self) -> None:
-        _require_finite(
+        require_exact_kernel_spec(self, AnalogGainSpec)
+        require_finite(self)
+        require_positive(self)
+
+
+@final
+class DigitizedWaveformKernels(TensorCollection[TensorKernel[Any]]):
+    """Hold the exact digitizer coefficient set."""
+
+    __slots__ = ()
+
+    def _require(self) -> None:
+        require_exact_member_types(
             self,
-            spec_type=AnalogGainSpec,
-            positive=True,
+            required=(BitDepth, InputMinimum, InputMaximum, AnalogGain),
         )
+
+    @property
+    def bit_depth(self) -> BitDepth:
+        return self.member(BitDepth)
+
+    @property
+    def input_minimum(self) -> InputMinimum:
+        return self.member(InputMinimum)
+
+    @property
+    def input_maximum(self) -> InputMaximum:
+        return self.member(InputMaximum)
+
+    @property
+    def analog_gain(self) -> AnalogGain:
+        return self.member(AnalogGain)

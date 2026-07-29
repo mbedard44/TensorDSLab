@@ -4,64 +4,12 @@ from dataclasses import dataclass, field as dataclass_field
 from typing import Any, ClassVar, final
 
 import torch
-from tensor_core import NonnegativeInteger, TensorCollection, TensorKernel
+from tensor_core import NonnegativeInteger
 
 from tensor_dslab.charge.field import ChargeSpec
-from tensor_dslab.charge.kernel import (
-    Afterpulse,
-    DarkCountRate,
-    DelayedCrosstalk,
-    DirectCrosstalk,
-    SmearingWidth,
-    TimingJitter,
-)
+from tensor_dslab.charge.kernel import ChargeKernels
 from tensor_dslab.common import QuantityFieldSpec
-
-
-@final
-class ChargeKernels(TensorCollection[TensorKernel[Any]]):
-    """Hold the optional physical coefficient set for Charge."""
-
-    __slots__ = ()
-
-    def _require(self) -> None:
-        admitted = {
-            TimingJitter,
-            DirectCrosstalk,
-            DelayedCrosstalk,
-            Afterpulse,
-            DarkCountRate,
-            SmearingWidth,
-        }
-        if any(type(member) not in admitted for member in self.members.values()):
-            raise TypeError("ChargeKernels contains an unsupported member")
-
-    def _optional[T](self, member_type: type[T]) -> T | None:
-        return self.members.get(member_type)  # type: ignore[return-value]
-
-    @property
-    def timing_jitter(self) -> TimingJitter | None:
-        return self._optional(TimingJitter)
-
-    @property
-    def direct_crosstalk(self) -> DirectCrosstalk | None:
-        return self._optional(DirectCrosstalk)
-
-    @property
-    def delayed_crosstalk(self) -> DelayedCrosstalk | None:
-        return self._optional(DelayedCrosstalk)
-
-    @property
-    def afterpulse(self) -> Afterpulse | None:
-        return self._optional(Afterpulse)
-
-    @property
-    def dark_count_rate(self) -> DarkCountRate | None:
-        return self._optional(DarkCountRate)
-
-    @property
-    def smearing_width(self) -> SmearingWidth | None:
-        return self._optional(SmearingWidth)
+from tensor_dslab.common.requirements.config import require_config_components
 
 
 @final
@@ -100,10 +48,13 @@ class ChargeConfig:
     )
 
     def __post_init__(self) -> None:
-        if type(self.spec) is not ChargeSpec:
-            raise TypeError("ChargeConfig.spec must be exact ChargeSpec")
-        if type(self.kernels) is not ChargeKernels:
-            raise TypeError("ChargeConfig.kernels must be exact ChargeKernels")
+        require_config_components(
+            spec=self.spec,
+            kernels=self.kernels,
+            spec_type=ChargeSpec,
+            kernels_type=ChargeKernels,
+            field="ChargeConfig",
+        )
         if type(self.correlated_avalanche_generations) is not NonnegativeInteger:
             raise TypeError(
                 "ChargeConfig.correlated_avalanche_generations must be exact NonnegativeInteger"

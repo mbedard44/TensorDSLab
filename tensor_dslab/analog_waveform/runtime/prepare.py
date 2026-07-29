@@ -8,8 +8,8 @@ from tensor_dslab.analog_waveform.config import AnalogWaveformConfig
 from tensor_dslab.common.alignment import (
     prepare_kernel,
     prepare_sources,
-    require_allocation,
 )
+from tensor_dslab.common.requirements.capacity import require_tensor_capacity
 
 
 def _broadcast(
@@ -29,7 +29,7 @@ def prepare_analog_waveform(*, source_specs: tuple, config: AnalogWaveformConfig
         source_specs, target_spec=config.spec, minimum_count=1
     )
     dtype = torch.promote_types(dtype, torch.float32)
-    require_allocation(
+    require_tensor_capacity(
         config.spec.shape,
         dtype=dtype,
         field="AnalogWaveform workspace",

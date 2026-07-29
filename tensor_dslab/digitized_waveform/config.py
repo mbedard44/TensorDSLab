@@ -4,44 +4,11 @@ from dataclasses import dataclass, field
 from typing import Any, ClassVar, final
 
 import torch
-from tensor_core import TensorCollection, TensorKernel
 
 from tensor_dslab.common import QuantityFieldSpec
+from tensor_dslab.common.requirements.config import require_config_components
 from tensor_dslab.digitized_waveform.field import DigitizedWaveformSpec
-from tensor_dslab.digitized_waveform.kernel import (
-    AnalogGain,
-    BitDepth,
-    InputMaximum,
-    InputMinimum,
-)
-
-
-@final
-class DigitizedWaveformKernels(TensorCollection[TensorKernel[Any]]):
-    __slots__ = ()
-
-    def _require(self) -> None:
-        required = {BitDepth, InputMinimum, InputMaximum, AnalogGain}
-        if self.member_types != frozenset(required):
-            raise ValueError(
-                "DigitizedWaveformKernels requires bit depth, input bounds, and gain"
-            )
-
-    @property
-    def bit_depth(self) -> BitDepth:
-        return self.member(BitDepth)
-
-    @property
-    def input_minimum(self) -> InputMinimum:
-        return self.member(InputMinimum)
-
-    @property
-    def input_maximum(self) -> InputMaximum:
-        return self.member(InputMaximum)
-
-    @property
-    def analog_gain(self) -> AnalogGain:
-        return self.member(AnalogGain)
+from tensor_dslab.digitized_waveform.kernel import DigitizedWaveformKernels
 
 
 @final
@@ -69,11 +36,10 @@ class DigitizedWaveformConfig:
     )
 
     def __post_init__(self) -> None:
-        if type(self.spec) is not DigitizedWaveformSpec:
-            raise TypeError(
-                "DigitizedWaveformConfig.spec must be exact DigitizedWaveformSpec"
-            )
-        if type(self.kernels) is not DigitizedWaveformKernels:
-            raise TypeError(
-                "DigitizedWaveformConfig.kernels must be exact DigitizedWaveformKernels"
-            )
+        require_config_components(
+            spec=self.spec,
+            kernels=self.kernels,
+            spec_type=DigitizedWaveformSpec,
+            kernels_type=DigitizedWaveformKernels,
+            field="DigitizedWaveformConfig",
+        )

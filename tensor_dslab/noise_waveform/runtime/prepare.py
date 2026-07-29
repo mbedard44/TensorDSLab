@@ -12,8 +12,10 @@ from tensor_dslab.common import FrequencyAxis, TimeAxis
 from tensor_dslab.common.alignment import (
     prepare_kernel,
     prepare_sources,
+)
+from tensor_dslab.common.requirements.capacity import (
     require_address_capacity,
-    require_allocation,
+    require_tensor_capacity,
 )
 from tensor_dslab.common.units import unit_registry
 from tensor_dslab.noise_waveform.config import NoiseWaveformConfig
@@ -87,7 +89,7 @@ def prepare_noise_waveform(*, source_specs: tuple, config: NoiseWaveformConfig) 
         complex_dtype = (
             torch.complex64 if dtype is torch.float32 else torch.complex128
         )
-        require_allocation(
+        require_tensor_capacity(
             (*non_temporal_shape, frequency_axis.size),
             dtype=complex_dtype,
             field="PSD coefficient workspace",
@@ -98,12 +100,12 @@ def prepare_noise_waveform(*, source_specs: tuple, config: NoiseWaveformConfig) 
             address_shape=(),
             field="PSD noise address",
         )
-        require_allocation(
+        require_tensor_capacity(
             (row_count, frequency_axis.size - 1, 2),
             dtype=dtype,
             field="PSD Gaussian workspace",
         )
-    require_allocation(
+    require_tensor_capacity(
         config.spec.shape,
         dtype=dtype,
         field="NoiseWaveform workspace",

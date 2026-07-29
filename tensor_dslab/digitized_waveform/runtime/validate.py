@@ -2,10 +2,11 @@
 
 import torch
 
-from tensor_dslab.common.alignment import (
-    require_fresh_product,
+from tensor_dslab.common.requirements.config import (
+    require_prepared_config,
     require_prepared_sources,
 )
+from tensor_dslab.common.requirements.field import require_fresh_product
 from tensor_dslab.digitized_waveform.config import DigitizedWaveformConfig
 from tensor_dslab.digitized_waveform.field import DigitizedWaveform
 
@@ -13,7 +14,12 @@ from tensor_dslab.digitized_waveform.field import DigitizedWaveform
 def validate_digitized_waveform(*, product: DigitizedWaveform, sources: tuple, config: DigitizedWaveformConfig) -> None:
     if type(product) is not DigitizedWaveform:
         raise TypeError("product must be exact DigitizedWaveform")
-    if not config._is_prepared or product.spec is not config.spec:
+    require_prepared_config(
+        is_prepared=config._is_prepared,
+        working_dtype=config._working_dtype,
+        field="DigitizedWaveformConfig",
+    )
+    if product.spec is not config.spec:
         raise ValueError("DigitizedWaveform must retain the prepared output Spec")
     require_prepared_sources(sources, source_specs=config._source_specs)
     shape = [1] * len(config.spec.shape)

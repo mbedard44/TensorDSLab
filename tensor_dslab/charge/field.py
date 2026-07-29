@@ -8,7 +8,13 @@ import torch
 from tensor_core import CounterRng, TensorField
 
 from tensor_dslab.common import QuantityFieldSpec
-from tensor_dslab.common.units import unit_registry
+from tensor_dslab.common.requirements.field import require_exact_field_spec
+from tensor_dslab.common.requirements.tensor import (
+    require_dtype_in,
+    require_finite,
+    require_nonnegative,
+)
+from tensor_dslab.common.requirements.unit import require_unit_compatible
 
 if TYPE_CHECKING:
     from tensor_dslab.charge.config import ChargeConfig
@@ -20,12 +26,12 @@ class ChargeSpec[AxesT: tuple](QuantityFieldSpec[AxesT]):
 
     @override
     def _require_quantity_field_spec(self) -> None:
-        if self.dtype not in (torch.float32, torch.float64):
-            raise TypeError("ChargeSpec dtype must be torch.float32 or torch.float64")
-        try:
-            unit_registry.Quantity(1.0, self.unit).to("avalanche")
-        except Exception as error:
-            raise ValueError("ChargeSpec unit must be avalanche-compatible") from error
+        require_dtype_in(self, (torch.float32, torch.float64))
+        require_unit_compatible(
+            self.unit,
+            target="avalanche",
+            field="ChargeSpec.unit",
+        )
 
 
 @final
@@ -36,10 +42,9 @@ class Charge(TensorField[ChargeSpec[Any]]):
 
     @override
     def _require(self) -> None:
-        if type(self.spec) is not ChargeSpec:
-            raise TypeError("Charge requires exact ChargeSpec")
-        if not bool(torch.isfinite(self.tensor).all()) or bool((self.tensor < 0).any()):
-            raise ValueError("Charge values must be finite and nonnegative")
+        require_exact_field_spec(self, ChargeSpec)
+        require_finite(self)
+        require_nonnegative(self)
 
     @classmethod
     def prepare(
