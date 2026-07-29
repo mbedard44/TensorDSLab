@@ -1,135 +1,63 @@
 # Public API
 
-TensorDSLab's supported public surface is deliberately small. Ordinary product
-types, Config types, semantic axes, physical-quantity helpers, and
-`simulate_readout(...)` are exported from `tensor_dslab`. The
-`tensor_dslab.readout` facade exposes the corresponding readout-owned surface.
-Private product Runtime actions, validators, producers, requirements, and RNG
-role keys are implementation details.
+Maintenance 15 replaces the embedded readout workflow with direct reusable
+Products. The supported root facade has exactly 61 ordered names and the
+subpackage facades are deliberate precision paths.
 
-## Literal Physical Kernel API
+## Shared Representations
 
-Maintenance 12 is **Merged / Closed** through exact Review-cleared and
-fast-forwarded Candidate 2
-`ba4f3408bf6b5cbd34d6736741026297b3e05c19`, tree
-`4e3b34be19841de016f7c99a668999d2d8dadcc9`, against exact TensorCore
-`0.21.0`. It adds public `QuantityKernel`, `DarkCountRate`, `TimingJitter`,
-`DirectCrosstalk`, `DelayedCrosstalk`, `Afterpulse`, `SmearingWidth`, and
-`Pulse` leaves. `ChargeConfig` accepts those literal physical kernels directly;
-`PureWaveformConfig` accepts one `Pulse`. Kernel quantities are canonical,
-copied CPU `float64` snapshots, while prepared Runtime facts are plain Torch
-tensors.
+- `ExampleAxis`, `ChannelAxis`
+- `QuantityAxis`, `TimeAxis`, `FrequencyAxis`
+- `QuantityFieldSpec`, `QuantityKernelSpec`
+- `quantity`, `unit_registry`
 
-The provisional profile now receives its available geometry explicitly:
+`QuantityAxis` composes exact integer TensorCore Coordinates with
+`coordinate_scale: float` and one package-registry Pint Unit. Physical
+coordinate magnitude is `coordinate * coordinate_scale * unit`.
 
-```python
-config = ds20k_veto(
-    sample_axis=sample_axis,
-    channel_axis=channel_axis,
-    example_axis=example_axis,
-)
-```
+## Products
 
-Omitted optional axes remain valid only when no profile kernel is conditioned
-on that role. The profile is still illustrative, not an approved run
-calibration. The accepted package evidence is CPU-only and makes no current
-accelerator, calibration, compatibility, or release claim.
+The exact Product/Spec pairs are:
 
-## Addressed Random Execution
+| Product | Spec |
+|---|---|
+| `Photoelectrons` | `PhotoelectronsSpec` |
+| `Charge` | `ChargeSpec` |
+| `PureWaveform` | `PureWaveformSpec` |
+| `NoiseWaveform` | `NoiseWaveformSpec` |
+| `AnalogWaveform` | `AnalogWaveformSpec` |
+| `DigitizedWaveform` | `DigitizedWaveformSpec` |
 
-Maintenance 11 is **Merged / Closed** through exact Review-cleared and
-fast-forwarded Candidate 2 `a527042701ac56f368f26248381244fdfcfb7fd3`,
-tree `5c76122b25d17b9fe0b796618613d7bff0b102c1`, against exact published
-TensorCore `0.19.0` containing commit
-`ed17f4b637258f0a7f4544f235648b747f17fa44`. The public TensorDSLab API is
-unchanged: callers still provide a `CounterRng` to `simulate_readout(...)`,
-and its seed remains the realization control. At that closed historical
-baseline, stochastic products used public TensorCore `RngElements`,
-`RngAddress`, Distribution, and ProbabilityKernel objects. Maintenance 12
-removes `ProbabilityKernel` and uses direct addressed distribution laws over
-literal `TensorKernel` geometry. Role keys and address construction remain
-private package policy, not caller customization surfaces.
+`Photoelectrons` exposes `validate(product=...)`. Each generated Product
+exposes keyword-only `create`, `prepare`, `produce`, and `validate`.
+`Charge` and `NoiseWaveform` require a public TensorCore `CounterRng` for
+creation and production. Deterministic Products expose no RNG argument.
 
-## Provisional DS20k Veto Profile
+Preparation accepts ordered `QuantityFieldSpec` sources and one exact
+Product-specific Config. It returns a fresh Config of the same exact type.
+Production and validation require positional structural equality with the
+retained source-Spec tuple. Structurally equal replacement Spec objects are
+valid; changed units, axes, coordinates, device, dtype, semantic Spec type,
+count, or order are not.
 
-Maintenance 9 is **Merged / Closed** through exact Review-cleared target
-`2a04942229ab06d2cfc17ab7a5fd09afaf4e3c58` and adds one precise-module public
-factory:
+## Physical Kernels And Config Punchcards
 
-```python
-from tensor_dslab.readout.profiles import ds20k_veto
+The public coefficient leaves are `TimingJitter`, `DirectCrosstalk`,
+`DelayedCrosstalk`, `Afterpulse`, `DarkCountRate`, `SmearingWidth`,
+`PulseResponse`, `WhiteNoiseRms`, `PowerSpectralDensity`, `AnalogMinimum`,
+`AnalogMaximum`, `BitDepth`, `InputMinimum`, `InputMaximum`, and
+`AnalogGain`, each with its exact semantic Spec.
 
-config = ds20k_veto(sample_axis=sample_axis)
-```
+Five exact typed collections compose those kernels:
+`ChargeKernels`, `PureWaveformKernels`, `NoiseWaveformKernels`,
+`AnalogWaveformKernels`, and `DigitizedWaveformKernels`. The corresponding
+Configs contain only the output Spec, the typed collection, and Charge's
+generation count. Prepared execution facts are private immutable state on a
+fresh same-type Config; there is no Runtime or Plan type.
 
-`ds20k_veto(...)` requires the available `SampleAxis` and optionally accepts
-the available `ChannelAxis` and `ExampleAxis`. It returns a fresh
-`ReadoutConfig` tree with fresh copied Pint quantities and physical kernels on
-every call. The factory performs profile-construction tensor allocation but no
-simulation, RNG activity, file or network access, or device inspection. It is
-exported only from
-`tensor_dslab.readout.profiles`; it is not re-exported from `tensor_dslab` or
-`tensor_dslab.readout`.
+## Retired Surface
 
-The returned Config is a **provisional demonstration profile, not an approved
-run calibration**. Its Veto pulse magnitudes retain audited donor fixtures for
-the existing numerical-parity comparison boundary. Its dark-count, PSD,
-analog, and digitization settings are illustrative choices. The provisional
-digitizer uses `16` bits, an input interval of `[-3900, 100] mV`, and
-`3.5218 dB` analog gain; those IV-DSLab-like values are not an approved
-hardware or run calibration. Calling the factory does not select source axes,
-channel identities, a sample grid, input data, products, dtype, device, RNG
-seed, or retention policy.
-
-Use the profile explicitly with the ordinary public simulation API:
-
-```python
-import torch
-from tensor_core import Threefry4x32
-from tensor_dslab import (
-    AnalogWaveform,
-    DigitizedWaveform,
-    Photoelectrons,
-    SampleAxis,
-    simulate_readout,
-)
-from tensor_dslab.readout.profiles import ds20k_veto
-
-def run_readout(photoelectrons: Photoelectrons):
-    """Run selected products from an already-binned source field."""
-
-    sample_axis = next(
-        axis for axis in photoelectrons.axes if type(axis) is SampleAxis
-    )
-    return simulate_readout(
-        photoelectrons,
-        products=(AnalogWaveform, DigitizedWaveform),
-        config=ds20k_veto(sample_axis=sample_axis),
-        rng=Threefry4x32(seed=17),
-        floating_dtype=torch.float32,
-    )
-```
-
-The executable [readout demonstration](../demos/readout.py) and
-[notebook](../demos/readout.ipynb) construct their `Photoelectrons` input and
-sampling axes separately, load `ds20k_veto(...)`, and retain only the requested
-products. They use a `2 ns`, `5000`-sample CPU grid with explicit `1`, `2`, `3`,
-and `4` PE source deposits at `200`, `2600`, `5000`, and `7400 ns`. The seeded
-readout may add separate dark-count Charge events. The source pattern, labels,
-grid, seed, plot selection, and requested products are demonstration choices,
-not hidden profile state.
-
-Create the ordinary project/demo environment from the repository root before
-running either form:
-
-```bash
-./create_environment.sh
-conda activate tensor_dslab
-python demos/readout.py
-```
-
-The complete value-by-value comparison boundary and classification are
-recorded in [IV-DSLab Parity](parity.md#maintenance-9-provisional-ds20k-veto-profile).
-Promoting or replacing any provisional value as a production calibration is a
-scientific/API decision owned by Design; it is not an ordinary maintenance
-edit.
+The package exports no `tensor_dslab.readout` namespace, `ReadoutConfig`,
+`ReadoutCollection`, `SampleAxis`, `QuantityKernel`, `quantities`,
+`ds20k_veto`, or `simulate_readout`. No alias or forwarding shim is provided.
+Applications own workflow composition and retention.

@@ -345,20 +345,28 @@ remain Validation-owned.
 
 ### [Maintenance 15: Spec-Composed Products And Application Boundary](maintenance_15_spec_composed_products_and_application_boundary.md)
 
-Status: **Architecture selected and synchronized with the
-[executable work order](maintenance_15_execution_work_order.md); exact
-published TensorCore `0.22.0` commit
-`19bfae35fbc773b55cac7bcd659dda57c4dee6d6`, tree
-`53aa10520a50c0714e79c685d814cbae1b6f7740`, accepted as the Maintenance 15
-dependency target; execution state follows the work order's self-effecting
-exact-byte route**.
+Status: **Self-effecting under the frozen exact-byte route**. Before the
+complete same-byte gate and clean local-main fast-forward, the applicable
+state is the latest completed exact-byte handoff. If these executable bytes
+appear unchanged on local `main`, Review's fast-forward has completed and
+Maintenance 15 is **Merged / Closed**.
 
-Initial executable authority `dbffa9e2cc838e16c0efcc01ebb02a1ed86c95ca`
-was paused before production editing when the semantic-axis/semantic-Spec
-refinement was accepted. The latest exact documentation-only descendant on
-the named Maintenance 15 branch becomes the sole replacement execution
-authority only after exact-byte consumer confirmation and explicit Design
-dispatch.
+Exact replacement implementation authority is
+`1411e21eb0c27502d659f9111192b4845cc94dbf`, tree
+`cb252894162606c3060f908a554ddbaf1893f8c4`. It supersedes paused authority
+`dbffa9e2cc838e16c0efcc01ebb02a1ed86c95ca` as an execution target while
+preserving it as history. Exact published TensorCore `0.22.0` commit
+`19bfae35fbc773b55cac7bcd659dda57c4dee6d6`, tree
+`53aa10520a50c0714e79c685d814cbae1b6f7740`, is the selected dependency.
+
+The implementation candidate atomically replaces the embedded readout
+workflow with semantic Axis/Coordinates composition, exact quantity Product
+and coefficient Specs, direct Products and Kernels, typed collection Config
+punchcards, prepared same-type Config provenance, and direct Product
+classmethods. The generic readout namespace, Runtime records, profile, and
+readout demos are absent without shims. Fixed-commit identity, local evidence,
+and the candidate hash are reported in the role handoff rather than embedded
+self-referentially in candidate bytes.
 
 This documentation-only architecture record starts from exact locally closed
 Maintenance 14 `856df702c124365c929bf993851a51fb8ff3c245`, tree
@@ -405,9 +413,8 @@ TensorCore's exact Design-complete forward boundary is
 on its preserved unpublished local Stage 30 state. TensorCore completed its
 package loop and published exact `0.22.0` containing commit `19bfae3`, tree
 `53aa105`, by a normal six-commit fast-forward with zero merges. TensorDSLab
-accepts that exact containing commit as Maintenance 15's future dependency
-target; the current package pin remains `0.21.0` until its separately
-authorized implementation candidate.
+accepts that exact containing commit as Maintenance 15's selected dependency,
+and the implementation candidate pins exact `0.22.0`.
 
 The Product layer becomes a reusable parts bin rather than one package-owned
 readout chain. Each Product owns one independent transformation, one

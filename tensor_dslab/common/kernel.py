@@ -1,62 +1,33 @@
-"""Public physical tensor-kernel representation."""
+"""Quantity-aware semantic tensor-kernel specifications."""
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, ClassVar, cast
+from typing import Any, final, override
 
 import pint
-from pint import Quantity
-import torch
-from tensor_core import TensorAxis, TensorKernel
+from tensor_core import TensorAxis, TensorKernelSpec
 
-from tensor_dslab.common.units import _REGISTRY, _canonical_tensor_quantity
+from tensor_dslab.common.units import _normalize_unit
 
 
-@dataclass(
-    frozen=True,
-    slots=True,
-    eq=False,
-    repr=False,
-    init=False,
-    kw_only=True,
-)
-class QuantityKernel[
+@dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
+class QuantityKernelSpec[
     ConditioningAxesT: tuple[TensorAxis[Any], ...],
     OperationAxesT: tuple[TensorAxis[Any], ...],
 ](
-    TensorKernel[ConditioningAxesT, OperationAxesT],
+    TensorKernelSpec[ConditioningAxesT, OperationAxesT],
     ABC,
 ):
-    """Own a canonical physical quantity over literal semantic kernel axes."""
+    """Describe one literal physical tensor kernel."""
 
-    __hash__: ClassVar[None] = None  # pyright: ignore[reportIncompatibleMethodOverride]
-    canonical_unit: ClassVar[str]
-    _unit: pint.Unit
+    unit: pint.Unit
 
-    def __init__(
-        self,
-        *,
-        quantity: Quantity,
-        conditioning_axes: ConditioningAxesT,
-        operation_axes: OperationAxesT,
-    ) -> None:
-        magnitude, unit = _canonical_tensor_quantity(
-            quantity,
-            unit=self.canonical_unit,
-            field=f"{type(self).__name__}.quantity",
-        )
-        object.__setattr__(self, "_unit", unit)
-        TensorKernel.__init__(
-            self,
-            tensor=magnitude,
-            conditioning_axes=conditioning_axes,
-            operation_axes=operation_axes,
-        )
+    @final
+    @override
+    def _require(self) -> None:
+        object.__setattr__(self, "unit", _normalize_unit(self.unit))
+        self._require_quantity_kernel_spec()
 
-    @property
-    def quantity(self) -> Quantity:
-        """Return a read-only canonical Quantity view of the owned magnitude."""
-
-        magnitude = self.tensor.numpy()
-        magnitude.setflags(write=False)
-        return cast(Quantity, _REGISTRY.Quantity(magnitude, self._unit))
+    @abstractmethod
+    def _require_quantity_kernel_spec(self) -> None:
+        """Enforce the concrete physical coefficient contract."""

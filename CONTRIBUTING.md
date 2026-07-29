@@ -5,6 +5,27 @@ ownership boundaries, typed public APIs, deterministic behavior, focused tests,
 small coherent changes, and documentation that explains contracts rather than
 narrating code.
 
+## Maintenance 15 Engineering Boundary
+
+The active candidate adopts exact TensorCore `0.22.0` and a spec-composed
+Product parts bin. New work must use semantic Axis/Coordinates composition,
+exact quantity Product/coefficient Specs, direct TensorField/TensorKernel
+leaves, typed Kernel collections, same-type Config punchcards, and exact
+Product classmethods.
+
+Preparation owns all source/unit/device/dtype/coordinate/kernel alignment,
+capacity policy, and immutable positional source-Spec provenance. Production
+must consume prepared facts without Pint, coordinate discovery, hidden source
+movement, or dtype-policy selection. Validation must recheck the exact
+prepared source binding and completed Product/storage relationships.
+
+Do not add a Runtime/Plan record, generic Product/Config framework,
+`tensor_dslab.readout`, orchestration, result collection, application profile,
+demo, alias, or forwarding shim. Applications own workflow composition. The
+Maintenance 15 architecture and executable work order supersede any later
+historical discussion in this file that presents the old embedded readout
+surface as current.
+
 ## Governance And Delivery Maturity
 
 TensorDSLab adopts Governance Core `0.1.0` through `TDSLAB-GOV-D001`, bound to
@@ -20,8 +41,8 @@ Project/display name: TensorDSLab
 Python import: tensor_dslab (accepted on main through Maintenance 5)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
-Package maturity: Maintenance 12 Merged / Closed
-Active production gate: none
+Package maturity: Maintenance 14 Merged / Closed
+Active production gate: Maintenance 15 candidate implementation
 Stage 8: separately stopped; any restart requires a new Design authority after
 Maintenance 6
 ```

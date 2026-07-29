@@ -1,5 +1,35 @@
 # Agent Workflow
 
+## Maintenance 15 Current Package Contract
+
+Maintenance 15 replaces the embedded readout workflow with reusable
+spec-composed Products under exact TensorCore `0.22.0` commit
+`19bfae35fbc773b55cac7bcd659dda57c4dee6d6`. The exact current authorities
+are
+`docs/implementation/maintenance_15_spec_composed_products_and_application_boundary.md`
+and `docs/implementation/maintenance_15_execution_work_order.md`.
+
+Current implementation and review must treat these rules as governing:
+
+- semantic axes compose TensorCore Coordinates; physical time/frequency axes
+  add one finite positive binary64 scale and package-registry Unit;
+- exact quantity FieldSpec/KernelSpec leaves bind direct TensorField/
+  TensorKernel Product and coefficient leaves;
+- each generated Product owns exact `create/prepare/produce/validate`
+  classmethods and one same-type Config punchcard;
+- preparation owns unit/device/dtype/coordinate alignment and immutable
+  positional source-Spec provenance; production owns tensor math/RNG only;
+- no Runtime or Plan record, generic Product/Config, generic readout package,
+  `ReadoutConfig`, `ReadoutCollection`, `simulate_readout`, DS20k profile, or
+  bundled readout demo remains;
+- application packages own workflow composition, retention, IO, and
+  collaboration profiles; and
+- no compatibility alias or forwarding module is permitted.
+
+The historical stage/maintenance discussion retained later in this file is
+provenance. Wherever it describes the former readout tree or Runtime workflow
+as operative, this Maintenance 15 section supersedes it.
+
 This repository uses role-separated Codex ownership. Design owns architecture,
 decisions, validation expectations, and future work orders directly. Stage 2
 completed the first production Implementation/Validation/Review loop on
@@ -405,7 +435,12 @@ placeholder package trees, add DAG-facing surfaces, rename public concepts,
 fork TensorCore, or copy donor code into production modules inside an
 implementation thread.
 
-## Package Shape And Imports
+## Historical Package Shape And Imports
+
+The remainder of this section records earlier package shapes and scientific
+ownership decisions. It is non-operative where it conflicts with the
+Maintenance 15 current contract above. Historical work orders remain immutable
+evidence; they do not restore retired modules or public surfaces.
 
 Use the ecosystem naming convention:
 

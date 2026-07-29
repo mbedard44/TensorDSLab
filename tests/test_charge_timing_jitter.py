@@ -1,131 +1,123 @@
-"""Direct Multinomial timing-jitter execution evidence."""
-
 import unittest
-from unittest import mock
 
 import torch
-from tensor_core import NonnegativeInteger, OffsetAxis, Threefry4x32
+from tensor_core import (
+    CountCoordinates,
+    NonnegativeInteger,
+    OffsetAxis,
+    OffsetCoordinates,
+    RegularCoordinates,
+    Threefry4x32,
+)
 
 from tensor_dslab import (
-    ChannelAxis,
     Charge,
     ChargeConfig,
+    ChargeKernels,
+    ChargeSpec,
     ExampleAxis,
     Photoelectrons,
-    ReadoutConfig,
-    SampleAxis,
+    PhotoelectronsSpec,
+    TimeAxis,
     TimingJitter,
-    quantities,
-    simulate_readout,
+    TimingJitterSpec,
+    unit_registry,
 )
 
 
-class TimingJitterContractTest(unittest.TestCase):
-    def _run(
-        self,
-        probabilities: tuple[float, ...],
-        offsets: tuple[int, ...],
-        source: torch.Tensor,
-        *,
-        seed: int = 3,
-    ) -> torch.Tensor:
-        axes = (
-            ExampleAxis(count=source.shape[0]),
-            ChannelAxis(labels=tuple(f"c{i}" for i in range(source.shape[1]))),
-            SampleAxis(start=0, step=2, count=source.shape[2]),
+class TimingJitterTests(unittest.TestCase):
+    def test_complete_probability_law(self) -> None:
+        axis = OffsetAxis(
+            coordinates=OffsetCoordinates(offsets=(-1, 0, 1)),
+            relative_to=TimeAxis,
+        )
+        spec = TimingJitterSpec(
+            conditioning_axes=(),
+            operation_axes=(axis,),
+            device=torch.device("cpu"),
+            dtype=torch.float64,
+            unit=unit_registry.Unit(""),
+        )
+        kernel = TimingJitter(
+            tensor=torch.tensor([0.25, 0.5, 0.25], dtype=torch.float64),
+            spec=spec,
+        )
+        self.assertEqual(kernel.operation_shape, (3,))
+
+    def test_incomplete_probability_law_rejected(self) -> None:
+        axis = OffsetAxis(
+            coordinates=OffsetCoordinates(offsets=(0, 1)), relative_to=TimeAxis
+        )
+        spec = TimingJitterSpec(
+            conditioning_axes=(),
+            operation_axes=(axis,),
+            device=torch.device("cpu"),
+            dtype=torch.float64,
+            unit=unit_registry.Unit(""),
+        )
+        with self.assertRaises(ValueError):
+            TimingJitter(
+                tensor=torch.tensor([0.2, 0.2], dtype=torch.float64), spec=spec
+            )
+
+    def test_execution_matches_complete_multinomial_law_and_replays(self) -> None:
+        example = ExampleAxis(coordinates=CountCoordinates(count=4000))
+        time = TimeAxis(
+            coordinates=RegularCoordinates(start=0, step=1, count=3),
+            coordinate_scale=1.0,
+            unit=unit_registry.Unit("ns"),
+        )
+        source_spec = PhotoelectronsSpec(
+            axes=(example, time),
+            device=torch.device("cpu"),
+            dtype=torch.int64,
+            unit=unit_registry.Unit("avalanche"),
+        )
+        counts = torch.zeros(source_spec.shape, dtype=torch.int64)
+        counts[:, 1] = 100
+        source = Photoelectrons(tensor=counts, spec=source_spec)
+        offset = OffsetAxis(
+            coordinates=OffsetCoordinates(offsets=(-1, 0, 1)),
+            relative_to=TimeAxis,
         )
         jitter = TimingJitter(
-            quantity=quantities(probabilities, "dimensionless"),
-            conditioning_axes=(),
-            operation_axes=(
-                OffsetAxis(relative_to=SampleAxis, offsets=offsets),
+            tensor=torch.tensor([0.25, 0.5, 0.25], dtype=torch.float64),
+            spec=TimingJitterSpec(
+                conditioning_axes=(),
+                operation_axes=(offset,),
+                device=torch.device("cpu"),
+                dtype=torch.float64,
+                unit=unit_registry.Unit(""),
             ),
         )
-        return simulate_readout(
-            Photoelectrons(tensor=source, axes=axes),
-            products=(Charge,),
-            config=ReadoutConfig(
-                charge=ChargeConfig(
-                    correlated_avalanche_generations=NonnegativeInteger(0),
-                    timing_jitter=jitter,
-                )
+        config = ChargeConfig(
+            spec=ChargeSpec(
+                axes=(example, time),
+                device=torch.device("cpu"),
+                dtype=torch.float32,
+                unit=unit_registry.Unit("avalanche"),
             ),
-            rng=Threefry4x32(seed=seed),
-        ).field(Charge).tensor
-
-    def test_deterministic_identity_and_shift(self) -> None:
-        source = torch.tensor([[[2, 3, 0, 0]]], dtype=torch.int64)
-        identity = self._run((1.0,), (0,), source)
-        shifted = self._run((1.0,), (1,), source)
-        self.assertTrue(torch.equal(identity, source.to(torch.float32)))
-        self.assertEqual(shifted.tolist(), [[[0.0, 2.0, 3.0, 0.0]]])
-
-    def test_finite_window_discard_is_separate_from_complete_law(self) -> None:
-        source = torch.tensor([[[0, 0, 0, 10]]], dtype=torch.int64)
-        result = self._run((0.5, 0.5), (0, 1), source)
-        self.assertLessEqual(int(result.sum()), 10)
-        self.assertGreaterEqual(int(result.sum()), 0)
-
-    def test_multinomial_mean_matches_public_probability(self) -> None:
-        source = torch.zeros((10_000, 1, 3), dtype=torch.int64)
-        source[:, :, 0] = 20
-        result = self._run((0.25, 0.75), (0, 1), source)
-        self.assertLess(abs(float(result[:, :, 0].mean()) - 5.0), 0.12)
-        self.assertLess(abs(float(result[:, :, 1].mean()) - 15.0), 0.12)
-
-    def test_replay_is_exact(self) -> None:
-        source = torch.full((8, 2, 4), 3, dtype=torch.int64)
-        left = self._run((0.3, 0.7), (-1, 1), source, seed=81)
-        right = self._run((0.3, 0.7), (-1, 1), source, seed=81)
-        self.assertTrue(torch.equal(left, right))
-
-    def test_literal_probabilities_are_forwarded_without_normalization(self) -> None:
-        calls: list[tuple[torch.Tensor, float]] = []
-
-        class RecordingMultinomial:
-            def __init__(
-                self,
-                *,
-                counts: torch.Tensor,
-                probabilities: torch.Tensor,
-                completion_probability: float,
-            ) -> None:
-                calls.append((probabilities.clone(), completion_probability))
-                self._counts = counts
-                self._category_count = probabilities.numel()
-
-            def draw(self, **_: object) -> torch.Tensor:
-                return torch.zeros(
-                    (self._category_count, *self._counts.shape),
-                    dtype=torch.int64,
-                    device=self._counts.device,
-                )
-
-        source = torch.tensor([[[2, 0, 0]]], dtype=torch.int64)
-        with mock.patch(
-            "tensor_dslab.readout.charge.runtime.produce.MultinomialDistribution",
-            RecordingMultinomial,
-        ):
-            self._run((0.25, 0.750000000005), (0, 1), source)
-        self.assertEqual(len(calls), 3)
-        for probabilities, completion in calls:
-            self.assertTrue(
-                torch.equal(
-                    probabilities,
-                    torch.tensor(
-                        (0.25, 0.750000000005),
-                        dtype=torch.float64,
-                    ),
-                )
-            )
-            self.assertEqual(completion, 0.0)
-
-
-for _seed in range(8):
-    def _case(self: TimingJitterContractTest, seed: int = _seed) -> None:
-        source = torch.tensor([[[1, 2, 3, 4]]], dtype=torch.int64)
-        result = self._run((0.5, 0.5), (0, 1), source, seed=seed)
-        self.assertEqual(result.dtype, torch.float32)
-        self.assertTrue(torch.all(result >= 0))
-
-    setattr(TimingJitterContractTest, f"test_timing_seed_{_seed:02d}", _case)
+            kernels=ChargeKernels(members=(jitter,)),
+            correlated_avalanche_generations=NonnegativeInteger(value=0),
+        )
+        left = Charge.create(
+            sources=(source,),
+            config=config,
+            rng=Threefry4x32(seed=41),
+        )
+        right = Charge.create(
+            sources=(source,),
+            config=config,
+            rng=Threefry4x32(seed=41),
+        )
+        self.assertTrue(torch.equal(left.tensor, right.tensor))
+        self.assertTrue(bool((left.tensor.sum(dim=1) == 100).all()))
+        observed = left.tensor.to(torch.float64).mean(dim=0)
+        expected = torch.tensor([25.0, 50.0, 25.0], dtype=torch.float64)
+        standard_error = torch.sqrt(
+            100.0
+            * torch.tensor([0.25, 0.5, 0.25])
+            * torch.tensor([0.75, 0.5, 0.75])
+            / 4000
+        )
+        self.assertTrue(bool((torch.abs(observed - expected) < 6 * standard_error).all()))

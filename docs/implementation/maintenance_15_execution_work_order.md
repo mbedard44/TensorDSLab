@@ -1753,6 +1753,36 @@ Implementation must:
 Implementation must stop rather than infer a new architecture if the exact
 target cannot remain coherent.
 
+## Implementation Candidate Evidence
+
+The implementation candidate is one direct child of exact authority
+`1411e21eb0c27502d659f9111192b4845cc94dbf`. The exact candidate commit and
+tree are recorded in the role handoff rather than self-referentially in these
+bytes.
+
+Implementation independently reconstructed exact TensorCore `0.22.0` source
+commit `19bfae35fbc773b55cac7bcd659dda57c4dee6d6`, tree
+`53aa10520a50c0714e79c685d814cbae1b6f7740`, and the canonical
+`1,095,680`-byte commit-bound archive with SHA-256
+`deb09f72595a44f3b8551f01971986aa265a28a3f4475ee2afe59fb2b63f0c84`.
+The TensorCore source and extracted-archive suites each passed `85/83/2`; the
+two skips are the accepted unavailable-CUDA cases.
+
+On CPython `3.14.6`, PyTorch `2.13.0`, NumPy `2.5.1`, and Pint `0.25.3`,
+TensorDSLab focused source and extracted-archive evidence each passed
+`37/37/0`, and complete discovery in each dependency form passed `40/40/0`.
+Pyright `1.1.411` reported zero positive diagnostics in both forms, while the
+frozen TensorDSLab negative fixture reported exactly `12` intended errors in
+each form. The candidate contains the exact `56` package files / `55` Python
+modules and exact `22` Python test/support files, with the retired readout
+workflow and demos absent.
+
+Artifact reconstruction, isolated installation, the complete independent
+mutation matrix, and final documentation/privacy reconciliation remain
+Validation-owned under the complete gate below. CUDA is unavailable in the
+Implementation environment and no accelerator, compatibility, publication,
+release, deployment, or production-readiness claim follows.
+
 ## Validation Responsibilities
 
 Validation is independent and may not repair candidate bytes. It verifies the

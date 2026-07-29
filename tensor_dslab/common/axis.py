@@ -1,100 +1,122 @@
-"""TensorDSLab semantic axes and sampling-coordinate policy."""
+"""TensorDSLab semantic axes and physical coordinate representations."""
 
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
 import math
-from typing import final, override
+from typing import cast, final, override
 
 import pint
-from pint import Quantity
-from tensor_core import CountAxis, LabelAxis, RegularAxis
+from tensor_core import Coordinates, TensorAxis
 
-from tensor_dslab.common.units import _integer_quantity
+from tensor_dslab.common.units import _normalize_unit, unit_registry
+
+
+@dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
+class QuantityAxis[
+    CoordinatesT: Coordinates[int],
+](TensorAxis[int], ABC):
+    """Compose exact integer coordinates with one physical scale and unit."""
+
+    coordinates: CoordinatesT
+    coordinate_scale: float = 1.0
+    unit: pint.Unit
+
+    @final
+    @override
+    def _require(self) -> None:
+        if type(self.coordinate_scale) is not float:
+            raise TypeError("coordinate_scale must be exactly float")
+        if not math.isfinite(self.coordinate_scale) or self.coordinate_scale <= 0:
+            raise ValueError("coordinate_scale must be finite and positive")
+        object.__setattr__(self, "unit", _normalize_unit(self.unit))
+        self._require_quantity_axis()
+
+    @abstractmethod
+    def _require_quantity_axis(self) -> None:
+        """Enforce the concrete physical semantic-axis contract."""
+
+    def quantity_at(self, index: int) -> pint.Quantity:
+        """Return the physical quantity at one strict axis index."""
+
+        return cast(
+            pint.Quantity,
+            unit_registry.Quantity(
+                self.coordinate_at(index) * self.coordinate_scale,
+                self.unit,
+            ),
+        )
+
+    def quantity_of(self, magnitude: int) -> pint.Quantity:
+        """Return the physical quantity for one integer coordinate magnitude."""
+
+        if type(magnitude) is not int:
+            raise TypeError("magnitude must be exactly int")
+        return cast(
+            pint.Quantity,
+            unit_registry.Quantity(
+                magnitude * self.coordinate_scale,
+                self.unit,
+            ),
+        )
 
 
 @final
-class ExampleAxis(CountAxis):
-    """Identify nonempty examples by zero-based local ordinal."""
+@dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
+class ExampleAxis[
+    CoordinateT: (int, str),
+](TensorAxis[CoordinateT]):
+    """Identify examples independently of coordinate representation."""
+
+    coordinates: Coordinates[CoordinateT]
+
+    @override
+    def _require(self) -> None:
+        pass
+
+
+@final
+@dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
+class ChannelAxis[
+    CoordinateT: (int, str),
+](TensorAxis[CoordinateT]):
+    """Identify detector channels independently of representation."""
+
+    coordinates: Coordinates[CoordinateT]
+
+    @override
+    def _require(self) -> None:
+        pass
+
+
+@final
+class TimeAxis[
+    CoordinatesT: Coordinates[int],
+](QuantityAxis[CoordinatesT]):
+    """Represent one physical time coordinate role."""
 
     __slots__ = ()
 
     @override
-    def _require(self) -> None:
-        if self.count == 0:
-            raise ValueError("ExampleAxis must be nonempty")
-
-
-@final
-class ChannelAxis(LabelAxis):
-    """Identify readout channels by unique string labels."""
-
-    __slots__ = ()
-
-    @override
-    def _require(self) -> None:
-        if not self.labels:
-            raise ValueError("ChannelAxis must be nonempty")
-
-
-@final
-class SampleAxis(RegularAxis):
-    """Represent integer-picosecond sampling coordinates."""
-
-    __slots__ = ()
-
-    @classmethod
-    def from_period(cls, *, period: Quantity, count: int) -> SampleAxis:
-        """Construct a zero-start sample axis from a physical period."""
-
-        if not isinstance(period, pint.Quantity):
-            raise TypeError("period must be a Pint Quantity")
-        if type(period.magnitude) not in (int, float):
-            raise TypeError("period magnitude must be exactly int or float")
+    def _require_quantity_axis(self) -> None:
         try:
-            converted = period.to("ps")
-        except (pint.PintError, OverflowError) as error:
-            raise ValueError("period must be convertible to picoseconds") from error
-        magnitude = converted.magnitude
-        if type(magnitude) is int:
-            step = magnitude
-        elif type(magnitude) is float:
-            if not math.isfinite(magnitude) or abs(magnitude) > 2**53:
-                raise ValueError("period must be integer-representable in picoseconds")
-            step = round(magnitude)
-            if abs(magnitude - step) > math.ulp(magnitude):
-                raise ValueError("period must be within one ULP of integer picoseconds")
-        else:
-            raise TypeError("converted period magnitude must be exactly int or float")
-        return cls(start=0, step=step, count=count)
+            unit_registry.Quantity(1.0, self.unit).to("s")
+        except pint.PintError as error:
+            raise ValueError("TimeAxis unit must be time-compatible") from error
+
+
+@final
+class FrequencyAxis[
+    CoordinatesT: Coordinates[int],
+](QuantityAxis[CoordinatesT]):
+    """Represent one physical frequency coordinate role."""
+
+    __slots__ = ()
 
     @override
-    def _require(self) -> None:
-        if self.start < 0:
-            raise ValueError("SampleAxis start must be nonnegative")
-        if self.step < 0:
-            raise ValueError("SampleAxis step must be positive")
-        if self.count < 2:
-            raise ValueError("SampleAxis requires at least two samples")
-        if self.start + self.step * self.count > (1 << 63) - 1:
-            raise ValueError("SampleAxis exclusive stop exceeds int64")
-
-    @property
-    def start_time(self) -> Quantity:
-        """Return the sample-axis start as a fresh picosecond quantity."""
-
-        return _integer_quantity(self.start, unit="ps")
-
-    @property
-    def sample_period(self) -> Quantity:
-        """Return the sample period as a fresh picosecond quantity."""
-
-        return _integer_quantity(self.step, unit="ps")
-
-    def time_at(self, index: int) -> Quantity:
-        """Return one indexed sample coordinate as a picosecond quantity."""
-
-        return _integer_quantity(self.coordinate_at(index), unit="ps")
-
-    @property
-    def stop_time(self) -> Quantity:
-        """Return the exclusive sample-axis stop as a picosecond quantity."""
-
-        return _integer_quantity(self.start + self.step * self.count, unit="ps")
+    def _require_quantity_axis(self) -> None:
+        try:
+            unit_registry.Quantity(1.0, self.unit).to("Hz")
+        except pint.PintError as error:
+            raise ValueError(
+                "FrequencyAxis unit must be frequency-compatible"
+            ) from error

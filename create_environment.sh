@@ -51,7 +51,7 @@ fi
     python -m pip install \
     --disable-pip-version-check \
     --no-input \
-    "${repository_root}[demos]"
+    "${repository_root}"
 
 smoke_directory="$(mktemp -d "/tmp/tensor-dslab-smoke.XXXXXX")"
 cleanup_smoke_directory() {
@@ -63,7 +63,7 @@ trap cleanup_smoke_directory EXIT
     cd -- "${smoke_directory}"
     "${conda_executable}" run --name "${environment_name}" \
         python -c \
-        'import json, platform, site, sys; from importlib.metadata import distribution, version; from pathlib import Path; import tensor_dslab; from tensor_dslab import ReadoutConfig, SampleAxis, quantity; from tensor_dslab.readout.profiles import ds20k_veto; repository_root = Path(sys.argv[1]).resolve(); module_path = Path(tensor_dslab.__file__).resolve(); site_roots = tuple(Path(path).resolve() for path in site.getsitepackages()); direct_url_text = distribution("tensor-core").read_text("direct_url.json"); assert direct_url_text is not None; direct_url = json.loads(direct_url_text); assert platform.python_version() == "3.14.6"; assert version("tensor-dslab") == "0.1.0"; assert version("tensor-core") == "0.21.0"; assert direct_url["vcs_info"]["commit_id"] == "78d0891bf6c0fefbcad4abe09980867c54202a9e"; assert not module_path.is_relative_to(repository_root); assert any(module_path.is_relative_to(root) for root in site_roots); sample_axis = SampleAxis.from_period(period=quantity(2, "ns"), count=8); config = ds20k_veto(sample_axis=sample_axis); assert type(config) is ReadoutConfig; print("TensorDSLab", version("tensor-dslab"), "TensorCore", version("tensor-core"), "Python", platform.python_version())' \
+        'import json, platform, site, sys; from importlib.metadata import distribution, version; from pathlib import Path; import torch, tensor_dslab; from tensor_dslab import Charge, ChargeSpec, unit_registry; repository_root = Path(sys.argv[1]).resolve(); module_path = Path(tensor_dslab.__file__).resolve(); site_roots = tuple(Path(path).resolve() for path in site.getsitepackages()); direct_url_text = distribution("tensor-core").read_text("direct_url.json"); assert direct_url_text is not None; direct_url = json.loads(direct_url_text); assert platform.python_version() == "3.14.6"; assert version("tensor-dslab") == "0.2.0"; assert version("tensor-core") == "0.22.0"; assert direct_url["vcs_info"]["commit_id"] == "19bfae35fbc773b55cac7bcd659dda57c4dee6d6"; assert not module_path.is_relative_to(repository_root); assert any(module_path.is_relative_to(root) for root in site_roots); spec = ChargeSpec(axes=(), device=torch.device("cpu"), dtype=torch.float64, unit=unit_registry.Unit("avalanche")); product = Charge(tensor=torch.tensor(1.0, dtype=torch.float64), spec=spec); assert product.spec is spec; assert tuple(tensor_dslab.__all__); print("TensorDSLab", version("tensor-dslab"), "TensorCore", version("tensor-core"), "Python", platform.python_version())' \
         "${repository_root}"
 )
 
@@ -74,4 +74,4 @@ echo "Environment '${environment_name}' is ready."
 echo "Run:"
 printf '  conda activate %q\n' "${environment_name}"
 printf '  cd %q\n' "${repository_root}"
-echo "  python demos/readout.py"
+echo "  python -c 'import tensor_dslab; print(tensor_dslab.__all__)'"

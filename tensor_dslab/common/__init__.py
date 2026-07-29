@@ -1,14 +1,24 @@
-"""Public semantic axes, physical kernels, and unit construction helpers."""
+"""Public common semantic representations."""
 
-from tensor_dslab.common.axis import ChannelAxis, ExampleAxis, SampleAxis
-from tensor_dslab.common.kernel import QuantityKernel
-from tensor_dslab.common.units import quantities, quantity
+from tensor_dslab.common.axis import (
+    ChannelAxis,
+    ExampleAxis,
+    FrequencyAxis,
+    QuantityAxis,
+    TimeAxis,
+)
+from tensor_dslab.common.field import QuantityFieldSpec
+from tensor_dslab.common.kernel import QuantityKernelSpec
+from tensor_dslab.common.units import quantity, unit_registry
 
 __all__ = (
     "ChannelAxis",
     "ExampleAxis",
-    "QuantityKernel",
-    "SampleAxis",
-    "quantities",
+    "FrequencyAxis",
+    "QuantityAxis",
+    "QuantityFieldSpec",
+    "QuantityKernelSpec",
+    "TimeAxis",
     "quantity",
+    "unit_registry",
 )

@@ -1,12 +1,14 @@
 # Maintenance 15 Spec-Composed Products And Application Boundary
 
-Status: **Architecture selected and synchronized with the
-[executable work order](maintenance_15_execution_work_order.md); exact
-published TensorCore `0.22.0` commit
-`19bfae35fbc773b55cac7bcd659dda57c4dee6d6`, tree
-`53aa10520a50c0714e79c685d814cbae1b6f7740`, accepted as the Maintenance 15
-dependency target; execution state follows the work order's self-effecting
-exact-byte route**.
+Status: **Self-effecting under the frozen exact-byte route**. Exact
+replacement implementation authority is
+`1411e21eb0c27502d659f9111192b4845cc94dbf`, tree
+`cb252894162606c3060f908a554ddbaf1893f8c4`. Exact published TensorCore
+`0.22.0` commit `19bfae35fbc773b55cac7bcd659dda57c4dee6d6`, tree
+`53aa10520a50c0714e79c685d814cbae1b6f7740`, is selected. Before the
+complete same-byte gate and clean local-main fast-forward, state is the latest
+completed exact-byte handoff; unchanged presence on local main resolves this
+record to **Merged / Closed**.
 
 Stable key:
 `TensorDSLab/maintenance-15-spec-composed-products-and-application-boundary`
@@ -73,12 +75,11 @@ An application owns:
 - application-level IO and persistence policy.
 
 This record is intentionally detailed because it defines a breaking
-pre-deployment architecture boundary shared with TensorCore. It selects the
-architecture and cross-package ownership needed for future bounded work
-orders. It does not edit production, adopt an unpublished dependency, dispatch
-Implementation, authorize a collaboration application repository, run CUDA,
-or claim compatibility, publication, deployment, calibration, or production
-readiness.
+pre-deployment architecture boundary shared with TensorCore. The exact
+Maintenance 15 candidate implements this architecture under the separate
+executable work order. It does not authorize a collaboration application
+repository, CUDA, compatibility, publication, deployment, calibration, or
+production-readiness claims.
 
 ## Governing Standards
 
@@ -91,11 +92,9 @@ This architecture follows:
 - [Overview](../overview.md) for the currently operative package boundary and
   intended ecosystem data flow;
 - [Tensor Architecture](../architecture/tensors.md) for the current
-  TensorCore-backed field and axis baseline that the future implementation
-  will replace;
-- [Readout Architecture](../architecture/readout.md) for the currently
-  operative Maintenance 12 product graph and Maintenance 13 preparation
-  mechanics;
+  TensorCore-backed field, kernel, Spec, axis, and Coordinates contract;
+- [Readout Architecture](../architecture/readout.md) for the current direct
+  Product and Config-punchcard ownership boundary;
 - [Validation](../validation.md) for deterministic, statistical, typing,
   artifact, device, and scientific evidence;
 - [Parity](../parity.md) for every preserved law, deliberate stochastic
@@ -107,11 +106,9 @@ This architecture follows:
 - [Maintenance 14](maintenance_14_test_suite_curation.md) for the current test
   organization and evidence baseline.
 
-The living architecture pages describe the current package until future
-implementation work is separately cleared and merged. This Design record
-describes the selected future boundary. A future implementation must update
-the living pages atomically rather than treating this record as a substitute
-for current-reference documentation.
+The living architecture pages and this record describe the same Maintenance 15
+candidate contract. Historical Design-selection language below is baseline
+evidence; the executable work order owns fixed-candidate evidence and routing.
 
 ## Exact Design Baseline
 
@@ -202,9 +199,9 @@ required to remain exact published TensorCore `0.21.0` until TensorCore:
 
 TensorCore has now satisfied all five conditions through exact published
 `0.22.0` commit `19bfae35fbc773b55cac7bcd659dda57c4dee6d6`.
-That publication makes the exact commit eligible for a future package-owned
-TensorDSLab adoption candidate; it does not itself change TensorDSLab's
-dependency bytes.
+The exact Maintenance 15 candidate adopts that published commit through the
+package dependency bytes and verifies it in source and canonical-archive
+forms.
 
 ### Exact Stage 31 Design authority
 
@@ -4876,45 +4873,16 @@ It includes:
 - final same-byte approval and fast-forward authority; and
 - explicit no-push/no-CUDA effects unless separately authorized.
 
-## Authority And Next Action
+## Authority And Current Route
 
 This document selects TensorDSLab's architecture and exact consumer position.
 The separate
 [Maintenance 15 Executable Work Order](maintenance_15_execution_work_order.md)
-owns production scope, evidence, routing, and dispatch. This architecture
-record authorizes only:
+owns production scope, evidence, routing, and dispatch. Exact authority
+`1411e21eb0c27502d659f9111192b4845cc94dbf` dispatched the current candidate,
+which adopts published TensorCore `0.22.0` and implements this record.
 
-1. committing this Design record and synchronized implementation index;
-2. sending the exact immutable record to TensorCore Design;
-3. receiving and reviewing a TensorCore replacement Design candidate;
-4. refining this record if cross-package contracts require a substantive
-   synchronized change; and
-5. recording exact dependency publication;
-6. preparing the bounded executable Maintenance 15 work order; and
-7. synchronizing this architecture record with that exact work order.
-
-It does not authorize:
-
-- TensorCore edits;
-- TensorDSLab production or test edits;
-- dependency adoption;
-- application repository creation;
-- Implementation dispatch;
-- Validation or Review dispatch;
-- merge to local main;
-- push;
-- publication;
-- CUDA or cluster work;
-- compatibility claims;
-- release claims;
-- or deployment.
-
-TensorCore's required Stage 31 sequence is complete. TensorDSLab's executable
-work order is now frozen against exact published `19bfae3`. Design must commit
-those exact bytes, verify every required Implementation/Validation/Review
-route, and dispatch the committed authority. This architecture record alone
-does not dispatch any execution role.
-
-TensorDSLab remains on exact published TensorCore `0.21.0` and the current
-Maintenance 14 production package until an exact future Maintenance 15
-candidate adopts and independently clears `0.22.0`.
+The candidate remains subject to fixed-candidate Validation, independent
+Review, same-byte Design approval, and Review-owned clean fast-forward. It
+does not authorize application-repository creation, push, CUDA or cluster
+work, compatibility, publication, release, or deployment claims.

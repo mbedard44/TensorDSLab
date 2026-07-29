@@ -1,195 +1,235 @@
-"""Independent fixed-generation collapsed-Poisson branching evidence."""
-
 import unittest
 
 import torch
-from tensor_core import NonnegativeInteger, OffsetAxis, Threefry4x32
+from tensor_core import (
+    CountCoordinates,
+    LabelCoordinates,
+    NonnegativeInteger,
+    OffsetAxis,
+    OffsetCoordinates,
+    RegularCoordinates,
+    Threefry4x32,
+)
 
 from tensor_dslab import (
     Afterpulse,
-    ChannelAxis,
+    AfterpulseSpec,
     Charge,
     ChargeConfig,
+    ChargeKernels,
+    ChargeSpec,
+    ChannelAxis,
     DelayedCrosstalk,
+    DelayedCrosstalkSpec,
     DirectCrosstalk,
+    DirectCrosstalkSpec,
     ExampleAxis,
     Photoelectrons,
-    ReadoutConfig,
-    SampleAxis,
-    quantities,
-    simulate_readout,
+    PhotoelectronsSpec,
+    TimeAxis,
+    unit_registry,
 )
 
 
-def _run(
-    *,
-    examples: int,
-    generations: int,
-    direct_mean: float | None = None,
-    delayed_mean: float | None = None,
-    afterpulse_mean: float | None = None,
-    seed: int = 11,
-) -> torch.Tensor:
-    axes = (
-        ExampleAxis(count=examples),
-        ChannelAxis(labels=("c",)),
-        SampleAxis(start=0, step=1, count=2),
-    )
-    source = Photoelectrons(
-        tensor=torch.ones((examples, 1, 2), dtype=torch.int64),
-        axes=axes,
-    )
-    direct = (
-        None
-        if direct_mean is None
-        else DirectCrosstalk(
-            quantity=quantities((direct_mean,), "dimensionless"),
-            conditioning_axes=(),
-            operation_axes=(
-                OffsetAxis(relative_to=SampleAxis, offsets=(0,)),
-            ),
+class CorrelatedAvalancheTests(unittest.TestCase):
+    def test_delayed_offsets_are_strictly_positive(self) -> None:
+        axis = OffsetAxis(
+            coordinates=OffsetCoordinates(offsets=(1, 2)), relative_to=TimeAxis
         )
-    )
-    afterpulse = (
-        None
-        if afterpulse_mean is None
-        else Afterpulse(
-            quantity=quantities((afterpulse_mean,), "dimensionless"),
+        spec = DelayedCrosstalkSpec(
             conditioning_axes=(),
-            operation_axes=(
-                OffsetAxis(relative_to=SampleAxis, offsets=(1,)),
-            ),
+            operation_axes=(axis,),
+            device=torch.device("cpu"),
+            dtype=torch.float64,
+            unit=unit_registry.Unit(""),
         )
-    )
-    delayed = (
-        None
-        if delayed_mean is None
-        else DelayedCrosstalk(
-            quantity=quantities((delayed_mean,), "dimensionless"),
+        DelayedCrosstalk(
+            tensor=torch.tensor([0.1, 0.2], dtype=torch.float64), spec=spec
+        )
+        bad_axis = OffsetAxis(
+            coordinates=OffsetCoordinates(offsets=(0, 1)), relative_to=TimeAxis
+        )
+        bad_spec = DelayedCrosstalkSpec(
             conditioning_axes=(),
-            operation_axes=(
-                OffsetAxis(relative_to=SampleAxis, offsets=(1,)),
-            ),
+            operation_axes=(bad_axis,),
+            device=torch.device("cpu"),
+            dtype=torch.float64,
+            unit=unit_registry.Unit(""),
         )
-    )
-    return simulate_readout(
-        source,
-        products=(Charge,),
-        config=ReadoutConfig(
-            charge=ChargeConfig(
-                correlated_avalanche_generations=NonnegativeInteger(generations),
-                direct_crosstalk=direct,
-                delayed_crosstalk=delayed,
-                afterpulse=afterpulse,
+        with self.assertRaises(ValueError):
+            DelayedCrosstalk(
+                tensor=torch.tensor([0.1, 0.2], dtype=torch.float64),
+                spec=bad_spec,
             )
-        ),
-        rng=Threefry4x32(seed=seed),
-        floating_dtype=torch.float64,
-    ).field(Charge).tensor
-
-
-class CorrelatedAvalancheContractTest(unittest.TestCase):
-    def test_direct_mean_tracks_fixed_generation_analytic_law(self) -> None:
-        mean = 0.4
-        result = _run(examples=30_000, generations=2, direct_mean=mean)
-        expected = 1.0 + mean + mean**2
-        self.assertLess(abs(float(result.mean()) - expected), 0.035)
-
-    def test_half_probability_mutant_is_separated(self) -> None:
-        result = _run(examples=30_000, generations=1, direct_mean=0.8)
-        observed = float(result.mean())
-        self.assertLess(abs(observed - 1.8), 0.035)
-        self.assertGreater(abs(observed - 1.4), 0.25)
-
-    def test_children_do_not_feed_back_within_same_round(self) -> None:
-        result = _run(
-            examples=30_000,
-            generations=1,
-            direct_mean=0.5,
-            afterpulse_mean=0.5,
-        )
-        self.assertLess(abs(float(result.mean()) - 1.75), 0.04)
-
-    def test_afterpulse_is_full_charge_and_discards_outside_window(self) -> None:
-        result = _run(examples=30_000, generations=1, afterpulse_mean=0.75)
-        first = float(result[..., 0].mean())
-        second = float(result[..., 1].mean())
-        self.assertLess(abs(first - 1.0), 0.01)
-        self.assertLess(abs(second - 1.75), 0.04)
-
-    def test_delayed_and_afterpulse_have_independent_poisson_moments(self) -> None:
-        delayed = _run(
-            examples=40_000,
-            generations=1,
-            delayed_mean=0.6,
-            seed=61,
-        )[..., 1]
-        afterpulse = _run(
-            examples=40_000,
-            generations=1,
-            afterpulse_mean=0.35,
-            seed=61,
-        )[..., 1]
-        self.assertLess(abs(float(delayed.mean()) - 1.6), 0.025)
-        self.assertLess(abs(float(delayed.var()) - 0.6), 0.04)
-        self.assertLess(abs(float(afterpulse.mean()) - 1.35), 0.025)
-        self.assertLess(abs(float(afterpulse.var()) - 0.35), 0.035)
-
-    def test_negative_non_sample_offset_maps_the_exact_destination(self) -> None:
-        examples = 30_000
-        axes = (
-            ExampleAxis(count=examples),
-            ChannelAxis(labels=("left", "right")),
-            SampleAxis(start=0, step=1, count=2),
-        )
-        source = Photoelectrons(
-            tensor=torch.ones((examples, 2, 2), dtype=torch.int64),
-            axes=axes,
-        )
-        kernel = DirectCrosstalk(
-            quantity=quantities(
-                torch.tensor([[0.5]], dtype=torch.float64),
-                "dimensionless",
-            ),
+        empty_spec = DelayedCrosstalkSpec(
             conditioning_axes=(),
             operation_axes=(
-                OffsetAxis(relative_to=ChannelAxis, offsets=(-1,)),
-                OffsetAxis(relative_to=SampleAxis, offsets=(0,)),
+                OffsetAxis(
+                    coordinates=OffsetCoordinates(offsets=()),
+                    relative_to=TimeAxis,
+                ),
+            ),
+            device=torch.device("cpu"),
+            dtype=torch.float64,
+            unit=unit_registry.Unit(""),
+        )
+        with self.assertRaises(ValueError):
+            DelayedCrosstalk(
+                tensor=torch.empty((0,), dtype=torch.float64),
+                spec=empty_spec,
+            )
+
+    def test_fixed_generation_afterpulse_law_and_window_discard(self) -> None:
+        example = ExampleAxis(coordinates=CountCoordinates(count=30000))
+        time = TimeAxis(
+            coordinates=RegularCoordinates(start=0, step=1, count=4),
+            coordinate_scale=1.0,
+            unit=unit_registry.Unit("ns"),
+        )
+        axes = (example, time)
+        source_spec = PhotoelectronsSpec(
+            axes=axes,
+            device=torch.device("cpu"),
+            dtype=torch.int64,
+            unit=unit_registry.Unit("avalanche"),
+        )
+        counts = torch.zeros(source_spec.shape, dtype=torch.int64)
+        counts[:, 0] = 1
+        source = Photoelectrons(tensor=counts, spec=source_spec)
+        operation = OffsetAxis(
+            coordinates=OffsetCoordinates(offsets=(1,)),
+            relative_to=TimeAxis,
+        )
+        probability = 0.4
+        afterpulse = Afterpulse(
+            tensor=torch.tensor([probability], dtype=torch.float64),
+            spec=AfterpulseSpec(
+                conditioning_axes=(),
+                operation_axes=(operation,),
+                device=torch.device("cpu"),
+                dtype=torch.float64,
+                unit=unit_registry.Unit(""),
             ),
         )
-        result = simulate_readout(
-            source,
-            products=(Charge,),
-            config=ReadoutConfig(
-                charge=ChargeConfig(
-                    correlated_avalanche_generations=NonnegativeInteger(1),
-                    direct_crosstalk=kernel,
-                )
+        config = ChargeConfig(
+            spec=ChargeSpec(
+                axes=axes,
+                device=torch.device("cpu"),
+                dtype=torch.float32,
+                unit=unit_registry.Unit("avalanche"),
             ),
+            kernels=ChargeKernels(members=(afterpulse,)),
+            correlated_avalanche_generations=NonnegativeInteger(value=2),
+        )
+        left = Charge.create(
+            sources=(source,),
+            config=config,
             rng=Threefry4x32(seed=73),
-            floating_dtype=torch.float64,
-        ).field(Charge).tensor
-        self.assertLess(abs(float(result[:, 0].mean()) - 1.5), 0.025)
-        self.assertTrue(torch.equal(result[:, 1], torch.ones_like(result[:, 1])))
+        )
+        right = Charge.create(
+            sources=(source,),
+            config=config,
+            rng=Threefry4x32(seed=73),
+        )
+        self.assertTrue(torch.equal(left.tensor, right.tensor))
+        observed = left.tensor.to(torch.float64).mean(dim=0)
+        expected = torch.tensor(
+            [1.0, probability, probability**2, 0.0],
+            dtype=torch.float64,
+        )
+        standard_error = torch.tensor(
+            [
+                0.0,
+                (probability / 30000) ** 0.5,
+                (probability**2 * (1.0 + probability) / 30000) ** 0.5,
+                0.0,
+            ],
+            dtype=torch.float64,
+        )
+        self.assertTrue(
+            bool(
+                (
+                    torch.abs(observed - expected)
+                    <= 7 * standard_error + 1.0e-12
+                ).all()
+            )
+        )
 
-    def test_exact_replay(self) -> None:
-        left = _run(examples=128, generations=3, direct_mean=0.3, seed=47)
-        right = _run(examples=128, generations=3, direct_mean=0.3, seed=47)
-        self.assertTrue(torch.equal(left, right))
+        edge_counts = torch.zeros(source_spec.shape, dtype=torch.int64)
+        edge_counts[:, -1] = 1
+        edge = Photoelectrons(tensor=edge_counts, spec=source_spec)
+        edge_result = Charge.create(
+            sources=(edge,),
+            config=config,
+            rng=Threefry4x32(seed=73),
+        )
+        self.assertTrue(
+            torch.equal(edge_result.tensor, edge_counts.to(torch.float32))
+        )
 
-
-for _seed in range(12):
-    def _replay_case(
-        self: CorrelatedAvalancheContractTest,
-        seed: int = _seed,
-    ) -> None:
-        left = _run(examples=16, generations=2, direct_mean=0.2, seed=seed)
-        right = _run(examples=16, generations=2, direct_mean=0.2, seed=seed)
-        self.assertTrue(torch.equal(left, right))
-        self.assertTrue(torch.all(left >= 1))
-
-    setattr(
-        CorrelatedAvalancheContractTest,
-        f"test_branching_replay_seed_{_seed:02d}",
-        _replay_case,
-    )
+        channel = ChannelAxis(
+            coordinates=LabelCoordinates(labels=("left", "right"))
+        )
+        spatial_axes = (example, channel, time.window(start_index=0, count=1))
+        spatial_source_spec = PhotoelectronsSpec(
+            axes=spatial_axes,
+            device=torch.device("cpu"),
+            dtype=torch.int64,
+            unit=unit_registry.Unit("avalanche"),
+        )
+        spatial_counts = torch.zeros(
+            spatial_source_spec.shape,
+            dtype=torch.int64,
+        )
+        spatial_counts[:, 1, 0] = 1
+        spatial_source = Photoelectrons(
+            tensor=spatial_counts,
+            spec=spatial_source_spec,
+        )
+        spatial_probability = 0.3
+        direct = DirectCrosstalk(
+            tensor=torch.tensor(
+                [spatial_probability],
+                dtype=torch.float64,
+            ),
+            spec=DirectCrosstalkSpec(
+                conditioning_axes=(),
+                operation_axes=(
+                    OffsetAxis(
+                        coordinates=OffsetCoordinates(offsets=(-1,)),
+                        relative_to=ChannelAxis,
+                    ),
+                ),
+                device=torch.device("cpu"),
+                dtype=torch.float64,
+                unit=unit_registry.Unit(""),
+            ),
+        )
+        spatial_result = Charge.create(
+            sources=(spatial_source,),
+            config=ChargeConfig(
+                spec=ChargeSpec(
+                    axes=spatial_axes,
+                    device=torch.device("cpu"),
+                    dtype=torch.float32,
+                    unit=unit_registry.Unit("avalanche"),
+                ),
+                kernels=ChargeKernels(members=(direct,)),
+                correlated_avalanche_generations=NonnegativeInteger(value=1),
+            ),
+            rng=Threefry4x32(seed=91),
+        )
+        observed_spatial = spatial_result.tensor.to(torch.float64).mean(dim=0)
+        expected_spatial = torch.tensor(
+            [[spatial_probability], [1.0]],
+            dtype=torch.float64,
+        )
+        spatial_error = (spatial_probability / 30000) ** 0.5
+        self.assertTrue(
+            bool(
+                (
+                    torch.abs(observed_spatial - expected_spatial)
+                    <= 7 * spatial_error + 1.0e-12
+                ).all()
+            )
+        )

@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tensor-dslab"
-version = "0.1.0"
+version = "0.2.0"
 description = "Tensor-native detector data-lab products and transforms."
 readme = "README.md"
 requires-python = ">=3.14"
@@ -16,15 +16,7 @@ dependencies = [
     "numpy==2.5.1",
     "pint==0.25.3",
     "torch>=2.13,<2.14",
-    "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@78d0891bf6c0fefbcad4abe09980867c54202a9e",
-]
-
-[project.optional-dependencies]
-demos = [
-    "ipykernel==7.3.0",
-    "matplotlib==3.11.1",
-    "nbclient==0.11.0",
-    "nbformat==5.10.4",
+    "tensor-core @ git+https://github.com/mbedard44/TensorCore.git@19bfae35fbc773b55cac7bcd659dda57c4dee6d6",
 ]
 
 [tool.hatch.metadata]
