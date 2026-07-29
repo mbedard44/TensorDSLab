@@ -6,6 +6,7 @@ from unittest.mock import patch
 from typing import Any, override
 
 import torch
+from torch.overrides import TorchFunctionMode
 from tensor_core import (
     CountCoordinates,
     LabelCoordinates,
@@ -59,6 +60,24 @@ DONOR_IDENTITIES = (
 )
 
 
+class NoHostMaterializationMode(TorchFunctionMode):
+    """Record forbidden Tensor host/list boundaries during production."""
+
+    def __init__(self) -> None:
+        self.calls: list[str] = []
+
+    def __torch_function__(
+        self,
+        func,
+        types,
+        args: tuple[Any, ...] = (),
+        kwargs: dict[str, Any] | None = None,
+    ):
+        if func in (torch.Tensor.detach, torch.Tensor.cpu, torch.Tensor.tolist):
+            self.calls.append(func.__name__)
+        return func(*args, **({} if kwargs is None else kwargs))
+
+
 class _ImpostorDigitized(TensorField[DigitizedWaveformSpec[Any]]):
     """Carry valid digitized state without the required semantic Product role."""
 
@@ -101,16 +120,11 @@ def _source(
     """Build one exact digitized source fixture."""
     selected_axes = axes if axes is not None else _axes(
         examples=values.shape[0],
-        channels=tuple(
-            f"c{index}" for index in range(values.shape[1])
-        ),
+        channels=tuple(f"c{index}" for index in range(values.shape[1])),
         time_count=values.shape[2],
     )
     spec = DigitizedWaveformSpec(
-        axes=selected_axes,
-        device=CPU,
-        dtype=dtype,
-        unit=U.Unit(""),
+        axes=selected_axes, device=CPU, dtype=dtype, unit=U.Unit("")
     )
     return DigitizedWaveform(tensor=values.to(dtype), spec=spec)
 
@@ -125,15 +139,10 @@ def _policy(
     """Construct one literal int64 raw-ZLE policy Kernel."""
 
     spec = spec_type(
-        conditioning_axes=conditioning_axes,
-        operation_axes=(),
-        device=CPU,
-        dtype=torch.int64,
+        conditioning_axes=conditioning_axes, operation_axes=(),
+        device=CPU, dtype=torch.int64,
     )
-    return kernel_type(
-        tensor=torch.tensor(value, dtype=torch.int64),
-        spec=spec,
-    )
+    return kernel_type(tensor=torch.tensor(value, dtype=torch.int64), spec=spec)
 
 
 def _config(
@@ -150,36 +159,26 @@ def _config(
     """Construct one exact encoded-waveform punchcard."""
 
     spec = EncodedWaveformSpec(
-        axes=source.spec.axes,
-        device=source.spec.device,
-        dtype=source.spec.dtype,
-        unit=source.spec.unit,
+        axes=source.spec.axes, device=source.spec.device,
+        dtype=source.spec.dtype, unit=source.spec.unit,
         suppression_code=suppression_code,
     )
     return EncodedWaveformConfig(
         spec=spec,
         kernels=EncodedWaveformKernels(
             members=(
-                _policy(
-                    TriggerThresholdCodeSpec, TriggerThresholdCode, trigger,
-                    conditioning_axes=conditioning_axes,
-                ),
-                _policy(
-                    ReleaseThresholdCodeSpec, ReleaseThresholdCode, release,
-                    conditioning_axes=conditioning_axes,
-                ),
+                _policy(TriggerThresholdCodeSpec, TriggerThresholdCode, trigger,
+                        conditioning_axes=conditioning_axes),
+                _policy(ReleaseThresholdCodeSpec, ReleaseThresholdCode, release,
+                        conditioning_axes=conditioning_axes),
                 _policy(
                     RequiredTimeOverSamplesSpec, RequiredTimeOverSamples, required,
                     conditioning_axes=conditioning_axes,
                 ),
-                _policy(
-                    PreTriggerSamplesSpec, PreTriggerSamples, pre,
-                    conditioning_axes=conditioning_axes,
-                ),
-                _policy(
-                    PostTriggerSamplesSpec, PostTriggerSamples, post,
-                    conditioning_axes=conditioning_axes,
-                ),
+                _policy(PreTriggerSamplesSpec, PreTriggerSamples, pre,
+                        conditioning_axes=conditioning_axes),
+                _policy(PostTriggerSamplesSpec, PostTriggerSamples, post,
+                        conditioning_axes=conditioning_axes),
             )
         ),
     )
@@ -619,10 +618,10 @@ class EncodedWaveformTests(unittest.TestCase):
         source = _source(torch.tensor(values).reshape(1, 1, -1))
         source_before = source.tensor.clone()
         config = _config(source)
-        product = EncodedWaveform.create(
-            sources=(source,),
-            config=config,
-        )
+        mode = NoHostMaterializationMode()
+        with mode:
+            product = EncodedWaveform.create(sources=(source,), config=config)
+        self.assertEqual(mode.calls, [])
         self.assertEqual(tuple(int(v) for v in product.tensor.flatten()), expected)
         self.assertTrue(torch.equal(source.tensor, source_before))
         self.assertTrue(product.tensor.is_contiguous())
