@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 import unittest
-from typing import override
+from typing import Any, override
 
 import torch
+from torch.overrides import TorchFunctionMode
 from tensor_core import (
     Coordinates,
     CountCoordinates,
@@ -30,12 +31,31 @@ from tensor_dslab import (
     TimeAxis,
     unit_registry,
 )
+import tensor_dslab.common.alignment as alignment
 from tests._product_support import (
     analog_config,
     axes,
     digitized_config,
     pure_config,
 )
+
+
+class CloneCountingMode(TorchFunctionMode):
+    """Count public Tensor clone dispatches within one narrow operation."""
+
+    def __init__(self) -> None:
+        self.clone_calls = 0
+
+    def __torch_function__(
+        self,
+        func,
+        types,
+        args: tuple[Any, ...] = (),
+        kwargs: dict[str, Any] | None = None,
+    ):
+        if func is torch.Tensor.clone:
+            self.clone_calls += 1
+        return func(*args, **({} if kwargs is None else kwargs))
 
 
 @dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
@@ -124,6 +144,34 @@ class KernelContractTests(unittest.TestCase):
         )
         self.assertNotEqual(
             aligned.tensor.untyped_storage().data_ptr(),
+            original.tensor.untyped_storage().data_ptr(),
+        )
+
+    def test_preparation_takes_exactly_one_defensive_snapshot(self) -> None:
+        config = analog_config()
+        original = config.kernels.minimum
+        assert original is not None
+        mode = CloneCountingMode()
+        with mode:
+            prepared, dimensions = alignment.prepare_kernel(
+                original,
+                target_axes=config.spec.axes,
+                target_device=original.device,
+                target_unit=original.spec.unit,
+            )
+
+        self.assertEqual(mode.clone_calls, 1)
+        self.assertEqual(dimensions, ())
+        self.assertIs(type(prepared), type(original))
+        self.assertEqual(prepared.spec, original.spec)
+        torch.testing.assert_close(
+            prepared.tensor,
+            original.tensor,
+            rtol=0,
+            atol=0,
+        )
+        self.assertNotEqual(
+            prepared.tensor.untyped_storage().data_ptr(),
             original.tensor.untyped_storage().data_ptr(),
         )
 

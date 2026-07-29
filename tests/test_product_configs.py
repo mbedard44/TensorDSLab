@@ -1,5 +1,8 @@
 import unittest
+from typing import Any, override
 
+import torch
+from tensor_core import TensorAxis, TensorFieldSpec
 from tensor_dslab import (
     AnalogWaveform,
     AnalogWaveformConfig,
@@ -20,7 +23,40 @@ from tests._product_support import (
 )
 
 
+class UnitlessSourceSpec[
+    AxesT: tuple[TensorAxis[Any], ...],
+](TensorFieldSpec[AxesT]):
+    """Represent an ordinary nonquantity semantic field specification."""
+
+    __slots__ = ()
+
+    @override
+    def _require(self) -> None:
+        pass
+
+
 class ProductConfigTests(unittest.TestCase):
+    def test_preparation_rejects_nonquantity_source_spec(self) -> None:
+        config = analog_config()
+        source_spec = UnitlessSourceSpec(
+            axes=config.spec.axes,
+            device=torch.device("cpu"),
+            dtype=torch.float32,
+        )
+        self.assertEqual(source_spec.axes, config.spec.axes)
+        self.assertEqual(source_spec.device, config.spec.device)
+        self.assertIs(source_spec.dtype, config.spec.dtype)
+        self.assertFalse(hasattr(source_spec, "unit"))
+
+        with self.assertRaisesRegex(
+            TypeError,
+            "must be a QuantityFieldSpec",
+        ):
+            AnalogWaveform.prepare(
+                source_specs=(source_spec,),  # type: ignore[arg-type]
+                config=config,
+            )
+
     def test_unprepared_private_state_is_exact(self) -> None:
         for config, expected in (
             (charge_config(), 6),

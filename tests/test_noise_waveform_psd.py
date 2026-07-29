@@ -1,4 +1,5 @@
 import unittest
+from typing import override
 
 import torch
 from tensor_core import CountCoordinates, RegularCoordinates, Threefry4x32
@@ -12,12 +13,52 @@ from tensor_dslab import (
     NoiseWaveformSpec,
     PowerSpectralDensity,
     PowerSpectralDensitySpec,
+    QuantityAxis,
     TimeAxis,
     unit_registry,
 )
 
 
+class SpectralAxis(QuantityAxis[RegularCoordinates]):
+    """Represent a distinct frequency-dimensional semantic role."""
+
+    __slots__ = ()
+
+    @override
+    def _require_quantity_axis(self) -> None:
+        unit_registry.Quantity(1.0, self.unit).to("Hz")
+
+
 class NoisePsdTests(unittest.TestCase):
+    def test_psd_requires_exact_frequency_axis_semantics(self) -> None:
+        coordinates = RegularCoordinates(start=0, step=1, count=3)
+        genuine = FrequencyAxis(
+            coordinates=coordinates,
+            coordinate_scale=100.0,
+            unit=unit_registry.Unit("MHz"),
+        )
+        impostor = SpectralAxis(
+            coordinates=coordinates,
+            coordinate_scale=100.0,
+            unit=unit_registry.Unit("MHz"),
+        )
+        self.assertIsNot(type(impostor), type(genuine))
+        self.assertIs(impostor.coordinates, genuine.coordinates)
+        self.assertEqual(impostor.coordinate_scale, genuine.coordinate_scale)
+        self.assertEqual(impostor.unit, genuine.unit)
+
+        with self.assertRaisesRegex(
+            TypeError,
+            "requires regular FrequencyAxis",
+        ):
+            PowerSpectralDensitySpec(
+                conditioning_axes=(),
+                operation_axes=(impostor,),  # type: ignore[arg-type]
+                device=torch.device("cpu"),
+                dtype=torch.float32,
+                unit=unit_registry.Unit("mV ** 2"),
+            )
+
     def test_psd_requires_zero_dc_and_positive_non_dc(self) -> None:
         axis = FrequencyAxis(
             coordinates=RegularCoordinates(start=0, step=1, count=3),
