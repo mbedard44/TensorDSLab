@@ -1,11 +1,12 @@
 # Maintenance 15 Spec-Composed Products And Application Boundary
 
-Status: **Architecture selected; exact published TensorCore `0.22.0` commit
+Status: **Architecture selected and synchronized with the
+[executable work order](maintenance_15_execution_work_order.md); exact
+published TensorCore `0.22.0` commit
 `19bfae35fbc773b55cac7bcd659dda57c4dee6d6`, tree
-`53aa10520a50c0714e79c685d814cbae1b6f7740`, accepted as the future
-Maintenance 15 dependency target; quantity units selected as Spec-only state;
-TensorDSLab remains pinned to `0.21.0` and Implementation remains undispatched
-pending a bounded executable work order**.
+`53aa10520a50c0714e79c685d814cbae1b6f7740`, accepted as the Maintenance 15
+dependency target; execution state follows the work order's self-effecting
+exact-byte route**.
 
 Stable key:
 `TensorDSLab/maintenance-15-spec-composed-products-and-application-boundary`
@@ -1504,8 +1505,8 @@ axis.quantity_at(index)
 axis.quantity_of(magnitude)
 ```
 
-The exact names remain subject to the executable work order, but the ownership
-boundary is fixed:
+The executable work order freezes the exact names as `quantity_at()` and
+`quantity_of()`. The ownership boundary is:
 
 - TensorCore coordinate lookup remains Pint-free;
 - TensorDSLab creates scalar Pint quantities only at an explicit public or
@@ -1695,12 +1696,14 @@ dark_count_rate.spec.unit * temporal_coordinate_step.unit -> expected count
 For charge smearing:
 
 ```text
-smearing_width.spec.unit -> config.spec.unit
+smearing_width.spec.unit -> dimensionless relative one-avalanche width
+standard_deviation magnitude
+    = smearing_width magnitude * sqrt(nonnegative Charge-count magnitude)
 ```
 
-The executable work order must freeze the precise equations for every Product.
-Unit admission is fail-closed and occurs before stochastic words or large
-allocations.
+The executable work order freezes the precise equations and coefficient units
+for every Product. Unit admission is fail-closed and occurs before stochastic
+words or large allocations.
 
 ### Multi-source unit compatibility
 
@@ -2313,8 +2316,9 @@ work order. These derived facts are not caller-configurable coefficients, and
 their storage does not create scalar, Pint, or raw-tensor shortcuts in the
 public Config constructor.
 
-The executable work order must decide the exact stored fields per Product. It
-must not create a parallel generic prepared framework.
+The executable work order freezes the exact common and Product-specific
+private prepared Config fields. It creates no parallel generic prepared
+framework.
 
 ## Production Contract
 
@@ -2423,7 +2427,7 @@ The selected first computational contracts are:
 | `SmearingWidth` | finite nonnegative dimensionless relative Gaussian width under the preserved Charge law | no operation axes |
 | `PulseResponse` | finite signed response coefficients; unit participates literally in the convolution equation | nonempty OffsetAxis geometry accepted by PureWaveform; current use has one nonnegative temporal target |
 | `WhiteNoiseRms` | finite nonnegative magnitude compatible with NoiseWaveform output unit | no operation axes |
-| `PowerSpectralDensity` | finite nonnegative prepared spectral coefficients with the exact PSD dimension required by NoiseWaveform | operation representation and sampling correspondence frozen by the future Noise work order |
+| `PowerSpectralDensity` | finite nonnegative prepared per-bin output powers with the exact squared output unit required by NoiseWaveform | exactly one regular frequency QuantityAxis operation representation whose count and spacing agree with the configured temporal axis |
 | `AnalogMinimum` | finite magnitude compatible with AnalogWaveform output unit | no operation axes; conditioning allowed |
 | `AnalogMaximum` | finite magnitude compatible with AnalogWaveform output unit | no operation axes; conditioning allowed |
 | `BitDepth` | exact integer values in the retained `[1, 16]` domain; ordinary TensorKernelSpec with an exact integer dtype and no Pint unit | no operation axes; conditioning allowed |
@@ -2457,10 +2461,9 @@ sub-unity check.
 TimingJitter differs deliberately: it redistributes an existing count and
 therefore represents a complete unity law before finite-window application.
 
-The future executable work order must freeze exact reduction dimensions,
-stable summation, tolerances, validation order, empty behavior, and device
-synchronization. This architecture freezes the physical distinction, not an
-unreviewed implementation shortcut.
+The executable work order freezes exact reduction dimensions, stable host
+summation, tolerances, validation order, empty behavior, and device
+synchronization. The physical distinction is not an implementation shortcut.
 
 ## Product Kernel Collections
 
@@ -2553,7 +2556,7 @@ class ChargeConfig:
     spec: QuantityFieldSpec[Any]
     kernels: ChargeKernels
     correlated_avalanche_generations: NonnegativeInteger
-    temporal_axis: type[TensorAxis[Any]] | None
+    temporal_axis: type[TensorAxis[Any]] | None = None
 
     __hash__ = None
 ```
@@ -2561,9 +2564,9 @@ class ChargeConfig:
 The exact constrained-scalar annotation follows TensorCore's accepted public
 scalar vocabulary.
 
-`ChargeConfig` may gain narrowly named immutable derived facts during the
-future executable design. It does not gain a generic Config base, arbitrary
-Distribution class, callback, factory, role key, or Runtime.
+`ChargeConfig` gains only the narrowly named immutable private derived facts
+frozen in the executable work order. It does not gain a generic Config base,
+arbitrary Distribution class, callback, factory, role key, or Runtime.
 
 ### Source relationship
 
@@ -2617,8 +2620,9 @@ Preparation requires `temporal_axis` when an enabled mechanism needs time:
 - Afterpulse; or
 - DarkCountRate.
 
-The exact executable work order must decide whether DirectCrosstalk may be
-time-independent or may optionally target a temporal role.
+DirectCrosstalk may be purely spatial and time-independent, or may include the
+exact configured temporal target role. Only offsets targeting that configured
+temporal role receive temporal nonnegativity policy.
 
 When required:
 
@@ -2921,6 +2925,7 @@ contract explicitly defines additive independent branches.
 class NoiseWaveformConfig:
     spec: QuantityFieldSpec[Any]
     kernels: NoiseWaveformKernels
+    temporal_axis: type[TensorAxis[Any]] | None = None
 
     __hash__ = None
 ```
@@ -2930,6 +2935,10 @@ The exact selected branch law is:
 - empty kernel collection: exact-zero NoiseWaveform;
 - WhiteNoiseRms only: IID Gaussian white noise; and
 - PowerSpectralDensity only: PSD-shaped noise.
+
+`temporal_axis` is present exactly for the PSD branch. It identifies the exact
+time-compatible QuantityAxis role in the output Spec; zero and white branches
+require `None`.
 
 NoiseWaveform accepts an empty source tuple. It does not pretend noise is a
 transformation of an unrelated Product merely to satisfy a generic pipeline
@@ -2949,6 +2958,14 @@ Preparation owns:
 
 Production preserves the current accepted white and PSD laws unless a future
 parity record explicitly rebaselines them.
+
+PowerSpectralDensity is already prepared per-bin output power. Its exact one
+operation axis is a frequency-compatible QuantityAxis composed with
+RegularCoordinates rather than an output displacement role. NoiseWaveform
+owns this focused exception to generic role resolution: preparation verifies
+the RFFT bin count and exact frequency spacing against `temporal_axis`, and
+production consumes the represented bin order directly. TensorDSLab does not
+integrate or interpolate a caller density curve in this maintenance.
 
 ## AnalogWaveform
 
@@ -3445,6 +3462,7 @@ tensor_dslab/
     __init__.py
     config.py
     field.py
+    kernel.py
     runtime/
       __init__.py
       prepare.py
@@ -3453,9 +3471,8 @@ tensor_dslab/
 ```
 
 This is an architecture target, not permission to create placeholder modules.
-The exact implementation filetree must be frozen after TensorCore publishes
-the required substrate and after every Product's retained behavior has been
-inventoried.
+The exact implementation filetree is frozen by the executable work order
+after TensorCore publication and the complete Product inventory.
 
 ### Common owners
 
@@ -3552,8 +3569,8 @@ quantity
 unit_registry
 ```
 
-The exact facade order and count are deferred until the executable filetree is
-frozen. Tests must assert exact named tuples, not only counts.
+The executable work order freezes the exact root order at `36` names and every
+subpackage facade tuple. Tests assert the exact named tuples, not only counts.
 
 ## Explicit TensorDSLab Retirements
 
@@ -3836,26 +3853,31 @@ the test-obligation ledger: the replacement proof lands in the same candidate
 that retires the old Product/Runtime/Config surface, and stale tests are not
 deferred to a later cleanup stage.
 
-### Phase 5: application extraction
+### Phase 5: application retirement and future extraction
 
-One or more application package Design authorities must:
+Maintenance 15 explicitly retires the currently embedded DS20k profile,
+generic readout workflow, result collection, and demos from TensorDSLab core
+without inventing a replacement application package. This pre-deployment
+retirement is selected in the
+[executable work order](maintenance_15_execution_work_order.md). Reusable
+Product scientific, stochastic, unit, dtype, and numerical obligations move
+to direct Product tests before the old workflow tests are deleted.
+
+A later collaboration package Design authority may:
 
 - select package/repository identity;
 - define semantic axes;
 - define profiles;
 - define workflows;
 - adopt reusable TensorDSLab Products;
-- migrate the DS20k demo where appropriate;
-- define application result collection;
-- migrate the exact collaboration-owned profile/workflow/demo/notebook test
-  obligations before TensorDSLab removes their current proofs;
-- validate wheel isolation;
-- and publish, if desired, under separate authority.
+- create a new DS20k or Silex demo;
+- define an application result collection;
+- validate wheel isolation; and
+- publish, if desired, under separate authority.
 
-TensorDSLab cannot complete the removal of collaboration-owned public names
-until the chosen application migration is synchronized. If no application
-owner is authorized, the affected extraction pauses; TensorDSLab must not
-silently invent a permanent embedded application.
+The future application is new package-owned work. TensorDSLab neither blocks
+its reusable Product migration on a currently nonexistent application nor
+silently embeds a permanent application substitute.
 
 ## TensorCore Evidence Requirements
 
@@ -4153,8 +4175,8 @@ count. Validation reports actual discovered totals and proves obligations.
 
 ### Obligation ledger before deletion
 
-Before editing tests, the executable work order must inventory every current
-test module and map each substantive obligation to exactly one disposition:
+The executable work order inventories every current test module and maps each
+substantive obligation to exactly one disposition:
 
 ```text
 retain unchanged
@@ -4206,9 +4228,9 @@ permanent compatibility surfaces:
 - historical typing fixtures that import retired public names are replaced by
   focused current positive/negative fixtures rather than kept through aliases.
 
-The exact file deletions, renames, splits, and new paths remain executable
-work-order decisions. The package must not temporarily weaken coverage while
-waiting for a later cleanup stage.
+The executable work order freezes the exact file deletions, renames, merges,
+and new paths. The package must not temporarily weaken coverage while waiting
+for a later cleanup stage.
 
 ### Selected replacement organization
 
@@ -4262,8 +4284,8 @@ ownership, host observation, or RNG-word use.
 
 ### Mutation and evidence cadence
 
-The executable work order must name a bounded mutation set for the highest-risk
-replacement boundaries. At minimum it must kill:
+The executable work order names an exact bounded mutation set for the
+highest-risk replacement boundaries. It kills:
 
 - skipping source-unit compatibility or same-device admission;
 - resolving roles by name rather than exact semantic type;
@@ -4457,9 +4479,11 @@ Future work stops and returns to the relevant Design authority if:
 No implementation role may silently narrow, widen, or reinterpret the
 architecture to bypass a stop.
 
-## Required Future Work-Order Inventory
+## Executable Work-Order Inventory
 
-Before TensorDSLab production dispatch, Design must freeze:
+The exact executable inventory is frozen in
+[Maintenance 15 Executable Work Order](maintenance_15_execution_work_order.md).
+It includes:
 
 - exact published TensorCore commit/tree/version/artifacts;
 - exact TensorDSLab parent commit/tree;
@@ -4511,16 +4535,20 @@ Before TensorDSLab production dispatch, Design must freeze:
 
 ## Authority And Next Action
 
-This document selects TensorDSLab's future architecture and exact consumer
-position. It authorizes only:
+This document selects TensorDSLab's architecture and exact consumer position.
+The separate
+[Maintenance 15 Executable Work Order](maintenance_15_execution_work_order.md)
+owns production scope, evidence, routing, and dispatch. This architecture
+record authorizes only:
 
 1. committing this Design record and synchronized implementation index;
 2. sending the exact immutable record to TensorCore Design;
 3. receiving and reviewing a TensorCore replacement Design candidate;
 4. refining this record if cross-package contracts require a substantive
    synchronized change; and
-5. recording exact dependency publication; and
-6. preparing the bounded executable Maintenance 15 work order.
+5. recording exact dependency publication;
+6. preparing the bounded executable Maintenance 15 work order; and
+7. synchronizing this architecture record with that exact work order.
 
 It does not authorize:
 
@@ -4538,12 +4566,11 @@ It does not authorize:
 - release claims;
 - or deployment.
 
-TensorCore's required Stage 31 sequence is complete. The next package-owned
-action is for TensorDSLab Design to freeze a bounded executable Maintenance 15
-work order against exact published `19bfae3`, verify every required
-Implementation/Validation/Review route, and obtain explicit dispatch
-authority. This architecture record alone does not dispatch any execution
-role.
+TensorCore's required Stage 31 sequence is complete. TensorDSLab's executable
+work order is now frozen against exact published `19bfae3`. Design must commit
+those exact bytes, verify every required Implementation/Validation/Review
+route, and dispatch the committed authority. This architecture record alone
+does not dispatch any execution role.
 
 TensorDSLab remains on exact published TensorCore `0.21.0` and the current
 Maintenance 14 production package until an exact future Maintenance 15

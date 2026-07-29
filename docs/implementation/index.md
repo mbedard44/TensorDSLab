@@ -345,12 +345,13 @@ remain Validation-owned.
 
 ### [Maintenance 15: Spec-Composed Products And Application Boundary](maintenance_15_spec_composed_products_and_application_boundary.md)
 
-Status: **Architecture selected; exact published TensorCore `0.22.0` commit
+Status: **Architecture selected and synchronized with the
+[executable work order](maintenance_15_execution_work_order.md); exact
+published TensorCore `0.22.0` commit
 `19bfae35fbc773b55cac7bcd659dda57c4dee6d6`, tree
-`53aa10520a50c0714e79c685d814cbae1b6f7740`, accepted as the future
-Maintenance 15 dependency target; quantity units selected as Spec-only state;
-TensorDSLab remains pinned to `0.21.0` and Implementation remains undispatched
-pending a bounded executable work order**.
+`53aa10520a50c0714e79c685d814cbae1b6f7740`, accepted as the Maintenance 15
+dependency target; execution state follows the work order's self-effecting
+exact-byte route**.
 
 This documentation-only architecture record starts from exact locally closed
 Maintenance 14 `856df702c124365c929bf993851a51fb8ff3c245`, tree
