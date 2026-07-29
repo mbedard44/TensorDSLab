@@ -59,12 +59,14 @@ Implementation, Validation, and Review must read:
 
 The current package sources and this work order take precedence over
 historical notebook bytes. Historical Maintenance 9 and 10 demos may be
-consulted only for presentation lessons. Their DS20k profile,
+consulted for presentation lessons and for the exact recognizable
+pulse-template/time-grid numbers selected below. Their DS20k profile,
 `simulate_readout()`, `ReadoutCollection`, old axes, and former Config shape
 are retired and must not return.
 
-No donor behavior, parity promotion, or scientific approximation is selected.
-`docs/parity.md` remains unchanged.
+The selected pulse numbers remain illustrative package-demo inputs. Reusing
+them does not restore the former profile, claim calibration, promote donor
+behavior, or select a new parity boundary. `docs/parity.md` remains unchanged.
 
 ## Exact Baseline
 
@@ -171,6 +173,121 @@ Implementation may fast-forward its branch with those nonoverlapping changes
 preserved, add only this bounded test correction, rerun its complete assigned
 gate, and then freeze Candidate 1 as the exact direct child of this amended
 authority.
+
+## Post-Validation Recognizable-Pulse Amendment
+
+Implementation froze immutable Candidate 1 at exact:
+
+```text
+candidate:
+    95c630b6f99cc3a7a44588fea537fa4bf0e687be
+tree:
+    9737ae68ebcc3e512164364a0342e6e30fb6572d
+exact parent / first amended authority:
+    b9303f858a77104d07ad6dedb54d9624c42276f6
+```
+
+Independent Validation cleared those exact bytes, including source/archive
+`60/60`, Pyright zero, the exact `20/20` first-candidate mutation matrix,
+deterministic artifacts, isolated installed-package execution, one fresh real
+Conda workflow, and independent visual inspection. Review began its read-only
+audit, but Design placed an immediate hold before Review issued a disposition
+or performed any merge after the user requested one recognizable presentation
+refinement.
+
+Candidate 1 remains immutable, Validation-cleared, unmerged, and unpushed. It
+is superseded as the merge target because the user-owned refinement arrived
+before Review issued a disposition. Review's preserved pre-hold observations
+below are mandatory replacement corrections even though no final Candidate 1
+Review disposition was issued.
+
+Before stopping, Review preserved three independent observations that the
+replacement must close:
+
+1. the focused execution proof collected Product units but did not assert
+   them, so a process-local `PureWaveform` unit drift from `mV` to `V`
+   survived while the plot retained its hard-coded `mV` label;
+2. the notebook named three sensors but did not explicitly explain that three
+   channels were selected to demonstrate one tensor-wide operation; and
+3. strict Pyright reported an error where the test helper `_execute()` was
+   annotated as returning `object` and its caller accessed `.cells`.
+
+Candidate 2 must assert the exact units of all six Products, bind every plotted
+unit label to the matching asserted Product unit, add one plain newcomer
+sentence explaining the three-channel choice, and give `_execute()` its exact
+`nbformat.NotebookNode` return type or an equally precise supported type. It
+must add no cast, ignore, broad `Any`, or weakened typing proof.
+
+The replacement must preserve the new application-neutral, public
+spec-composed Product construction while using the exact pulse-template
+settings familiar from the former readout notebook/profile:
+
+```text
+time spacing:
+    2 ns
+time samples:
+    5,000
+time window:
+    10,000 ns
+pulse support:
+    2,020.27 ns
+pulse coefficient count:
+    ceil(2,020.27 ns / 2 ns) = 1,011
+pulse center shift:
+    232.89 ns
+Gaussian width:
+    507.72 ns
+first error-function location / width:
+    -81.92 ns / 147.28 ns
+second error-function location / width:
+    -176.50 ns / 45.69 ns
+normalized peak scale:
+    -14.5912372 mV / avalanche
+```
+
+This is a numerical presentation choice only. The replacement must express
+the values directly as a public `PulseResponse`; it must not import or restore
+the former profile, `SampleAxis`, readout package, orchestration function, or
+old Config surface.
+
+The longer Time axis implies the exact cold-path PSD grid:
+
+```text
+RFFT bins:
+    5,000 // 2 + 1 = 2,501
+frequency spacing:
+    1 / (5,000 * 2 ns) = 0.1 MHz
+```
+
+The four familiar source deposits at samples `100`, `1300`, `2500`, and
+`3700`, with respective magnitudes `1`, `2`, `3`, and `4`, should be
+distributed across the three sensor channels so every channel is active and
+the final deposit still retains the complete 1,011-coefficient pulse support
+inside the window.
+
+The replacement authority is a documentation-only direct child of immutable
+Candidate 1. Implementation must freeze Candidate 2 as the direct child of
+that replacement authority. Relative to Candidate 1, executable correction
+scope is bounded to:
+
+```text
+M  demos/readout.ipynb
+M  tests/test_readout_demo.py
+```
+
+The work-order/index lifecycle records may change only as authorized here.
+Every other Candidate 1 byte, including production, metadata, dependency,
+environment, and living-document integration bytes, must remain exact.
+
+Because the notebook's executed values and plot change, Candidate 2 requires
+renewed focused and complete source/archive execution, deterministic replay,
+the exact amended `24`-mutant matrix, typing, visual QA, deterministic artifact
+reconciliation, isolated installed-package execution, documentation/privacy
+checks, and cleanliness. Candidate 1's fresh real-Conda dependency,
+site-packages, PEP 610, and cleanup evidence may carry forward because
+`pyproject.toml`, `create_environment.sh`, exact dependency versions, and
+package bytes remain identical; the replacement notebook must still execute
+outside the checkout in an isolated installed-artifact environment.
 
 ## Selected Boundary
 
@@ -284,6 +401,8 @@ presentation dependencies.
 The imports should be grouped visibly:
 
 ```python
+import math
+
 import matplotlib.pyplot as plt
 import torch
 
@@ -360,15 +479,15 @@ channels:
 channel labels:
     sensor-0, sensor-1, sensor-2
 time samples:
-    256
+    5,000
 time spacing:
     2 ns
 window:
-    512 ns
+    10,000 ns
 RFFT frequency bins:
-    129
+    2,501
 frequency spacing:
-    1.953125 MHz
+    0.1 MHz
 ```
 
 Construct the axes explicitly and separately:
@@ -391,7 +510,7 @@ time_axis = TimeAxis(
     coordinates=RegularCoordinates(
         start=0,
         step=1,
-        count=256,
+        count=5000,
     ),
     coordinate_scale=2.0,
     unit=unit_registry.Unit("ns"),
@@ -401,9 +520,9 @@ frequency_axis = FrequencyAxis(
     coordinates=RegularCoordinates(
         start=0,
         step=1,
-        count=129,
+        count=2501,
     ),
-    coordinate_scale=1.953125,
+    coordinate_scale=0.1,
     unit=unit_registry.Unit("MHz"),
 )
 
@@ -418,6 +537,8 @@ The accompanying prose should explain:
 
 - an Example axis permits batching;
 - a Channel axis names the three sensors;
+- three channels are used so a newcomer can see that the same Product call
+  processes multiple sensors together in one tensor;
 - a Time axis gives the last tensor dimension its physical spacing;
 - all Products below use the same ordered domain; and
 - the Frequency axis describes the prepared PSD bins but is not itself a
@@ -427,8 +548,8 @@ The physical frequency relationship is exact for the displayed binary64
 values:
 
 ```text
-129 == 256 // 2 + 1
-1.953125 MHz == 1 / (256 * 2 ns)
+2501 == 5000 // 2 + 1
+0.1 MHz == 1 / (5000 * 2 ns)
 ```
 
 The notebook must not calculate or infer this grid in Product execution.
@@ -450,24 +571,22 @@ unit:
     avalanche
 ```
 
-Construct one tensor of shape `(1, 3, 256)` directly in the notebook. Use
+Construct one tensor of shape `(1, 3, 5000)` directly in the notebook. Use
 `torch.zeros(...)` followed by a small number of explicit indexed deposits so
 the source is readable. Include at least one nonzero deposit in each channel
 and use different locations and integer magnitudes across channels.
 
-The deposits should be separated far enough that the pulse shapes can be
-seen. A suitable illustrative arrangement is:
+Use the familiar four deposit indices and magnitudes from the former
+quickstart, distributed across the three sensors:
 
 ```text
 sensor-0:
-    1 avalanche near sample 32
-    2 avalanches near sample 144
+    1 avalanche at sample 100
+    4 avalanches at sample 3700
 sensor-1:
-    2 avalanches near sample 64
-    1 avalanche near sample 176
+    2 avalanches at sample 1300
 sensor-2:
-    3 avalanches near sample 96
-    1 avalanche near sample 208
+    3 avalanches at sample 2500
 ```
 
 The exact selected indices must leave the complete pulse support visible
@@ -532,21 +651,48 @@ operation axes:
 offset coordinates:
     a contiguous causal support beginning at 0
 dtype:
-    torch.float32
+    field_dtype
 unit:
     mV / avalanche
 ```
 
-Use a support long enough for the pulse shape to be visible on the
-`256 x 2 ns` grid. A support in the range 40–64 samples is appropriate.
-The coefficients must be finite, signed, nonzero, and illustrative rather
-than calibration data. A simple negative pulse with a quick leading edge and
-slower recovery is preferred.
+Use the exact recognizable pulse settings frozen by the amendment. Define the
+support and transparent tensor arithmetic directly in the notebook:
 
-The construction may use transparent Torch arithmetic to form the literal
-coefficient tensor in the notebook, for example a difference of exponentials
-over one explicitly named offset tensor. It must not hide the construction in
-a helper function or profile.
+```python
+pulse_support_ns = 2020.27
+pulse_coefficient_count = math.ceil(
+    pulse_support_ns / time_axis.coordinate_scale
+)
+pulse_offsets = torch.arange(
+    pulse_coefficient_count,
+    dtype=field_dtype,
+    device=device,
+)
+pulse_time_ns = pulse_offsets * time_axis.coordinate_scale
+pulse_x = pulse_time_ns - 232.89
+
+pulse_gaussian = torch.exp(
+    -(pulse_x**2) / (2.0 * 507.72**2)
+) / math.sqrt(2.0 * math.pi * 507.72**2)
+pulse_first = 1.0 + torch.erf(
+    (pulse_x - (-81.92)) / (math.sqrt(2.0) * 147.28)
+)
+pulse_second = 1.0 + torch.erf(
+    (pulse_x - (-176.50)) / (math.sqrt(2.0) * 45.69)
+)
+
+pulse_raw = pulse_gaussian * pulse_first * pulse_second
+pulse_values = (
+    pulse_raw / torch.max(torch.abs(pulse_raw)) * -14.5912372
+)
+```
+
+The operation `OffsetAxis` uses exact offsets `tuple(range(1011))`. The
+coefficients must be finite, signed, nonzero, and stored at `field_dtype`.
+The numerical template is illustrative and recognizable; it is not a
+calibration claim. Do not hide its construction in a helper function, profile,
+or imported application factory.
 
 Then construct:
 
@@ -573,7 +719,9 @@ pure_waveform = PureWaveform.create(
 
 The prose should explain that the PulseResponse maps avalanches into voltage
 samples and that its empty conditioning geometry makes one response shared by
-all three sensors.
+all three sensors. It should also say plainly that the selected numerical
+template is familiar from earlier TensorDSLab examples but remains
+illustrative.
 
 ## Noise Waveform
 
@@ -590,7 +738,7 @@ psd_sensor_2 = torch.tensor(...)
 
 Each row must:
 
-- have exactly 129 values;
+- have exactly 2,501 values;
 - use `field_dtype`;
 - have exactly zero at the DC bin;
 - be finite and nonnegative;
@@ -603,6 +751,20 @@ Compact literal repetition is allowed when it remains transparent, for
 example concatenating explicitly sized constant bands. A helper function,
 formula hidden behind a callback, downloaded dataset, or random PSD is not
 allowed.
+
+Expand Candidate 1's same illustrative band values to the longer grid:
+
+```text
+sensor-0:
+    1 zero DC bin + 625 bins at 0.012 + 1,875 bins at 0.004
+sensor-1:
+    1 zero DC bin + 938 bins at 0.008 + 1,562 bins at 0.016
+sensor-2:
+    1 zero DC bin + 1,250 bins at 0.020 + 1,250 bins at 0.006
+```
+
+Each row therefore has exactly `2,501` values without introducing a generator
+or hidden interpolation rule.
 
 Combine the rows explicitly:
 
@@ -628,7 +790,7 @@ psd_spec = PowerSpectralDensitySpec(
 )
 ```
 
-The `PowerSpectralDensity` tensor shape is `(3, 129)`. The Channel axis is
+The `PowerSpectralDensity` tensor shape is `(3, 2501)`. The Channel axis is
 conditioning geometry: each sensor receives its own row. The Frequency axis
 is operation geometry: each row describes the one-sided frequency bins used
 to draw the time-domain noise.
@@ -705,16 +867,17 @@ Construct four global coefficient Kernels explicitly:
 BitDepth:
     scalar exact signed-integer tensor, value 12, dtype torch.int16
 InputMinimum:
-    scalar floating tensor, unit mV
+    scalar floating tensor, value -80, unit mV
 InputMaximum:
-    scalar floating tensor, unit mV
+    scalar floating tensor, value 20, unit mV
 AnalogGain:
-    scalar positive floating tensor, dimensionless
+    scalar positive floating tensor, value 1, dimensionless
 ```
 
-Use an illustrative input interval wide enough that the plotted Analog
-waveforms are not mostly clipped. The exact values must be stated in prose as
-demo choices, not calibration. `AnalogGain` is linear, not decibels.
+The wider illustrative interval keeps the restored pulse template visible
+without rail clipping in this fixed example. The exact values must be stated
+in prose as demo choices, not calibration. `AnalogGain` is linear, not
+decibels.
 
 All four Kernel Specs use:
 
@@ -778,6 +941,24 @@ a different physical quantity or transformation.
 
 Do not add a large assertion inventory. Product construction already performs
 its semantic validation.
+
+The notebook test, rather than the newcomer assertion cell, must lock this
+exact Product-unit/plot-label mapping:
+
+```text
+Photoelectrons:
+    avalanche / "Photoelectrons"
+Charge:
+    avalanche / "Charge (avalanche)"
+PureWaveform:
+    mV / "Pure (mV)"
+NoiseWaveform:
+    mV / "Noise (mV)"
+AnalogWaveform:
+    mV / "Analog (mV)"
+DigitizedWaveform:
+    dimensionless / "ADC code"
+```
 
 ## Product Views
 
@@ -941,7 +1122,8 @@ The test module owns:
    network, installation, or path mutation;
 9. clean fresh execution;
 10. deterministic immediate replay on the accepted stack;
-11. exact Product types/shapes/devices/dtypes/units;
+11. exact Product types/shapes/devices/dtypes/units, including assertions that
+    bind all plotted unit labels to the corresponding Product Specs;
 12. source tensor immutability;
 13. three-sensor distinction;
 14. six-panel plot structure, plot styles, stable colors, one figure legend,
@@ -984,7 +1166,7 @@ Committed evidence must kill these private process-local mutants or exact
 equivalents:
 
 1. replace three channel labels with one;
-2. reduce the Time axis to 32 samples;
+2. use a Time-axis count other than `5000`;
 3. use a frequency bin count other than `N // 2 + 1`;
 4. use a frequency spacing other than `1 / (N * dt)`;
 5. make one PSD DC value nonzero;
@@ -1001,9 +1183,14 @@ equivalents:
 16. add a legend to every panel;
 17. add black Charge markers to later waveform panels;
 18. commit executed notebook outputs;
-19. add `random.ipynb`; and
+19. add `random.ipynb`;
 20. execute the notebook with checkout shadowing during the isolated artifact
-    gate.
+    gate;
+21. change any selected historical pulse constant or replace the
+    Gaussian-double-error-function equation family; and
+22. truncate the pulse support from the exact `1011` causal coefficients;
+23. change one Product unit while retaining its plotted unit label; and
+24. remove the newcomer explanation for why three channels are used.
 
 Each mutant must fail a named committed proof for the intended reason.
 Validation reports the exact kill matrix. Mutation bytes remain private and
@@ -1114,7 +1301,7 @@ The complete gate includes:
 9. source immutability;
 10. visual inspection of the rendered six-panel figure;
 11. programmatic plot-structure checks;
-12. all 20 required mutants killed;
+12. all 24 required mutants killed;
 13. complete TensorDSLab source/archive suites;
 14. Pyright `1.1.411` positive source/archive with zero diagnostics;
 15. exact unchanged negative-fixture diagnostic count in both forms;

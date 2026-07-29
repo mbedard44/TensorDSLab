@@ -599,8 +599,10 @@ TensorCore `0.22.0` commit
 
 The focused maintenance adds one application-neutral newcomer notebook at
 `demos/readout.ipynb`. It constructs one example, three sensor channels,
-`256` two-nanosecond time samples, literal Photoelectrons, a global
-PulseResponse, a channel-conditioned literal PSD, and the six separate
+`5,000` two-nanosecond time samples, literal Photoelectrons, the recognizable
+`1,011`-coefficient historical numerical pulse template expressed through a
+public global PulseResponse, a channel-conditioned literal `2,501`-bin PSD,
+and the six separate
 Photoelectrons / Charge / PureWaveform / NoiseWaveform / AnalogWaveform /
 DigitizedWaveform Products entirely through public APIs. It deliberately adds
 no profile, `Readout`, orchestration function, PSD generator, application
@@ -620,6 +622,30 @@ documentation-only amended authority adds only
 the new exact install contract while every other environment/dependency check
 remains. No candidate or loop slot was consumed.
 
+Immutable Candidate 1
+`95c630b6f99cc3a7a44588fea537fa4bf0e687be`, tree
+`9737ae68ebcc3e512164364a0342e6e30fb6572d`, cleared its complete independent
+Validation gate. Review began read-only inspection, but Design held the route
+before any Review disposition or merge after the user requested the
+recognizable pulse/time presentation refinement. Candidate 1 remains
+immutable, unmerged, and unpushed; it is superseded as the merge target by a
+documentation-only direct-child authority.
+
+The replacement retains the exact public application-neutral architecture but
+uses the former demo's familiar `2 ns` period, `5,000`-sample window,
+`2,020.27 ns` / `1,011`-coefficient normalized
+Gaussian-double-error-function pulse settings, four source deposits, and the
+derived `2,501`-bin / `0.1 MHz` PSD grid. Implementation correction is bounded
+to the notebook and its focused test; all other Candidate 1 executable,
+dependency, environment, production, and integration bytes remain exact.
+The replacement also closes Review's preserved pre-hold observations by
+asserting every Product unit against its plot label, explaining why three
+channels demonstrate tensor-wide execution, and giving the notebook execution
+helper a strict supported return type. Renewed Validation owns the amended
+`24`-mutant notebook/execution/visual and artifact gate, while Candidate 1's
+exact fresh-Conda dependency evidence may carry forward across byte-identical
+environment inputs.
+
 The fixed implementation bytes containing this record pass the focused
 notebook proof at `3/3`, the complete source-form suite at `60/60`, positive
 Pyright with zero diagnostics, and the unchanged negative fixture with exactly
@@ -630,10 +656,11 @@ dependency, and retired-surface checks. This is Implementation evidence under
 the self-effecting route, not Validation or closure.
 
 Complete Validation owns source/archive notebook execution, deterministic
-replay, the exact 20-mutant proof matrix, visual inspection, full
+replay, the exact 24-mutant replacement proof matrix, visual inspection, full
 source/archive/typing gates, deterministic artifacts, isolated installed
-execution, and one fresh real environment. Review owns a focused independent
-recheck and the final same-byte local fast-forward after Design approval.
+execution, and exact reconciliation of Candidate 1's carried fresh-environment
+evidence against unchanged dependency/environment bytes. Review owns a focused
+independent recheck and the final same-byte local fast-forward after Design approval.
 CUDA, push, publication, compatibility, calibration, application IO, and
 deployment remain unauthorized.
 
