@@ -1062,9 +1062,11 @@ Charge equation combines them. The registry recognizes no detector-specific
 channel, example, sample, microcell, or ADC profile unit.
 
 QuantityAxis and both Quantity Specs accept only exact `pint.Unit` values
-belonging to `unit_registry`. A Unit from another registry is rejected rather
-than copied implicitly. `quantity(...)` returns a scalar Quantity from the
-same exact registry.
+belonging to `unit_registry`. The runtime type must be exactly the concrete
+Unit class returned by `unit_registry.Unit(...)`; a subclass is rejected even
+when it reports this package registry. A Unit from another registry is
+rejected rather than copied implicitly. `quantity(...)` returns a scalar
+Quantity from the same exact registry.
 
 Exact first-law coefficient contracts are:
 
@@ -1567,7 +1569,7 @@ intentional diagnostics.
 
 ## Required Mutation Evidence
 
-Validation must independently kill at least these `25` process-local or
+Validation must independently kill at least these `26` process-local or
 checkout-local mutants:
 
 1. skip source-unit compatibility;
@@ -1597,8 +1599,10 @@ checkout-local mutants:
 21. feed branching children back within the same round;
 22. normalize timing probabilities silently;
 23. include out-of-window branching destinations;
-24. flip PulseResponse polarity a second time; and
-25. restore a collaboration profile or generic readout orchestration import.
+24. flip PulseResponse polarity a second time;
+25. restore a collaboration profile or generic readout orchestration import;
+    and
+26. admit a `pint.Unit` subclass at the package-registry Unit boundary.
 
 Each mutant must fail at one named committed proof for the intended reason.
 Mutation evidence may be implemented through temporary process-local source
@@ -1624,7 +1628,7 @@ Validation owns one complete immutable-candidate gate:
 7. run Pyright positive checks in source and archive dependency forms;
 8. run the exact TensorCore `97`-diagnostic negative fixture;
 9. run the TensorDSLab exact `12`-diagnostic negative fixture;
-10. execute all `25` required mutants;
+10. execute all `26` required mutants;
 11. build two deterministic TensorDSLab wheels with
     `SOURCE_DATE_EPOCH=0` and compare them byte-for-byte;
 12. build one sdist and compare extracted package/test bytes to the candidate;
@@ -1861,6 +1865,62 @@ Every correction is a direct child of the preceding immutable candidate.
 Design owns architecture dispositions and may stop or replace the route if a
 finding changes frozen contracts.
 
+### Final supplemental Review repair
+
+The ordinary Implementation budget is exhausted by this exact immutable
+lineage:
+
+```text
+Candidate 1  9be70c3e003130fc55b278873cbc83ba11b9706c
+Candidate 2  f1a3e482764d7bc6800ff2ec01fc510c1fedbb52
+Candidate 3  531ca3183abff689c5c7cb514d0763200a745d64
+```
+
+Complete Validation cleared Candidate 3. Independent Review returned those
+exact bytes for two concrete admissions that contradict already-frozen
+contracts:
+
+- final `ExampleAxis` and `ChannelAxis` accepted an unsupported concrete
+  `Coordinates` subtype rather than admitting exactly `CountCoordinates`,
+  `LabelCoordinates`, `RegularCoordinates`, and `OffsetCoordinates`; and
+- the common Unit boundary admitted a `pint.Unit` subclass rather than only
+  the exact concrete Unit class produced by `unit_registry`.
+
+Candidate 3 remains immutable Review-returned evidence. This documentation
+child is a Design-owned procedural amendment, not Candidate 4 and not an
+architecture replacement. It authorizes exactly one final supplemental
+Review-repair candidate as its direct child. Relative to Candidate 3, that
+candidate's executable delta is limited to exactly:
+
+```text
+tensor_dslab/common/axis.py
+tensor_dslab/common/units.py
+tests/test_quantity_representations.py
+```
+
+The correction must:
+
+1. make `ExampleAxis` and `ChannelAxis` admit exactly the four frozen
+   concrete Coordinates representations and reject every other Coordinates
+   subtype;
+2. make the shared Unit boundary require the exact concrete class returned by
+   `unit_registry.Unit(...)` as well as exact registry identity;
+3. prove unsupported-Coordinates rejection independently through both shared
+   semantic Axis leaves;
+4. prove Unit-subclass rejection through `QuantityAxis`,
+   `QuantityFieldSpec`, and `QuantityKernelSpec`; and
+5. preserve every other Candidate 3 production, test, documentation,
+   dependency, metadata, environment, scientific, RNG, and public-contract
+   byte.
+
+The supplemental candidate receives one complete fixed-candidate Validation
+gate, including all `26` mutants, and one renewed risk-based independent
+Review. Unchanged Candidate 3 dependency/artifact evidence may carry only when
+Validation independently proves the relevant bytes and artifact identity are
+unchanged. There is no second supplemental candidate. Any Validation or Review
+finding on the supplemental bytes stops the route and returns to Design rather
+than widening this authority.
+
 No evidence-only closeout commit is required merely to restate a successful
 same-byte fast-forward. A later ordinary push may be separately authorized
 without repeating package gates only if the pushed bytes are exact
@@ -1947,7 +2007,7 @@ Maintenance 15 is complete only when:
 - selected scientific and stochastic laws pass independent proof;
 - the embedded application layer and demos are absent;
 - the exact `22`-file test tree and obligation ledger reconcile;
-- the `25` mutants are killed;
+- the `26` mutants are killed;
 - source/archive/typing/artifact/environment/documentation/privacy/hygiene
   gates pass;
 - unavailable CUDA is explicit and unclaimed;

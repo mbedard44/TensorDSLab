@@ -368,6 +368,20 @@ readout demos are absent without shims. Fixed-commit identity, local evidence,
 and the candidate hash are reported in the role handoff rather than embedded
 self-referentially in candidate bytes.
 
+The ordinary route produced immutable Candidate 1
+`9be70c3e003130fc55b278873cbc83ba11b9706c`, Candidate 2
+`f1a3e482764d7bc6800ff2ec01fc510c1fedbb52`, and final ordinary Candidate 3
+`531ca3183abff689c5c7cb514d0763200a745d64`. Complete Validation cleared
+Candidate 3, but independent Review returned it because the shared
+`ExampleAxis` / `ChannelAxis` leaves admitted an alien Coordinates subtype and
+the common Pint boundary admitted a Unit subclass. Both are violations of
+already-selected exact admission contracts, not architecture changes.
+Candidate 3 remains immutable. With the ordinary three-candidate budget
+exhausted, the executable work order now authorizes exactly one supplemental
+Review-repair candidate, limited to the two admission corrections and their
+focused adversarial proofs, followed by complete Validation and renewed
+independent Review. No second supplemental candidate is authorized.
+
 This documentation-only architecture record starts from exact locally closed
 Maintenance 14 `856df702c124365c929bf993851a51fb8ff3c245`, tree
 `9e5ff69920699dc522980b164eaf1073116914c6`. It selects a clean compositional
