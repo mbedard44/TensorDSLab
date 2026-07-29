@@ -664,6 +664,50 @@ independent recheck and the final same-byte local fast-forward after Design appr
 CUDA, push, publication, compatibility, calibration, application IO, and
 deployment remain unauthorized.
 
+### [Maintenance 18: EncodedWaveform Raw ZLE](maintenance_18_encoded_waveform_raw_zle.md)
+
+Status: **Design authority / Implementation not dispatched**.
+
+Maintenance 18 starts from exact locally closed Maintenance 17
+`58d3030c250fca4af88696b00f0165faf7757b12`, tree
+`ef61c6b3dfce071259032e74b8dcf409dadc1633`, and retains exact published
+TensorCore `0.22.0` commit
+`19bfae35fbc773b55cac7bcd659dda57c4dee6d6`.
+
+The focused production stage adds `EncodedWaveform` as the deterministic
+terminal DAQ/readout Product after `DigitizedWaveform` and as the exclusive
+waveform ingress for future reconstruction. The simulation path implements the
+exact accepted IV-like raw negative-going threshold/time-over, release
+hysteresis, sample-count padding, and dense support-union law independently
+over every example and detector lane. Retained ADC codes are copied unchanged;
+the output Spec owns one explicit negative suppression code that distinguishes
+an unavailable code from retained literal zero.
+
+The Product remains root-level at `tensor_dslab.encoded_waveform` under the
+Maintenance 15 parts-bin architecture. It owns exact public Spec, Product,
+Config, five integer policy Kernels, and one exact Kernels collection.
+Applications continue to own workflow composition, DAQ loading/densification,
+IO, calibration, and reconstruction orchestration. No generic readout or
+reconstruction package returns.
+
+The same stage generalizes `DigitizedWaveformSpec` and
+`EncodedWaveformSpec` to the four supported signed Torch integer dtypes,
+requires simulation source/output dtype equality, and adds exact
+BitDepth-to-output-dtype capacity preflight. It records exact raw donor hashes
+and sample-support parity while deferring downsampling, filtering, fixed-point
+firmware arithmetic, temporal halo, and complete FPGA equivalence.
+
+The newcomer `demos/readout.ipynb` is updated in scope: it constructs
+`EncodedWaveform` as a seventh separate public Product using global literal
+raw-ZLE Kernels, adds the seventh shared-shape assertion, and plots three
+sensor traces with suppressed positions shown as presentation-only gaps.
+The existing application-neutral axes, recognizable pulse template, literal
+PSD, and six preceding Product calls remain.
+
+Implementation, Validation, and Review remain undispatched. CUDA, merge, push,
+publication, compatibility, calibration, application IO, reconstruction, and
+deployment remain unauthorized.
+
 ### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
 
 Status: **Architecture selected / TensorCore Stage 29 published /
