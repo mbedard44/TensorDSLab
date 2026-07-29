@@ -6,12 +6,16 @@ import torch
 
 
 class _DtypeBearing(Protocol):
+    """Expose represented dtype metadata to tensor requirements."""
+
     @property
     def dtype(self) -> torch.dtype:
         ...
 
 
 class _TensorBearing(_DtypeBearing, Protocol):
+    """Expose represented tensor storage to value-domain requirements."""
+
     @property
     def tensor(self) -> torch.Tensor:
         ...

@@ -1,4 +1,6 @@
+import ast
 from dataclasses import dataclass
+from pathlib import Path
 import unittest
 from typing import Any, override
 
@@ -154,20 +156,73 @@ class ChannelAxis(TensorAxis[int]):
 
 
 class RequirementTests(unittest.TestCase):
+    def test_introduced_and_moved_definitions_have_docstrings(self) -> None:
+        requirements_path = Path("tensor_dslab/common/requirements")
+        requirement_modules = (
+            "__init__.py",
+            "axis.py",
+            "capacity.py",
+            "collection.py",
+            "config.py",
+            "field.py",
+            "kernel.py",
+            "tensor.py",
+            "unit.py",
+        )
+        self.assertEqual(
+            tuple(path.name for path in sorted(requirements_path.glob("*.py"))),
+            requirement_modules,
+        )
+        for filename in requirement_modules:
+            with self.subTest(module=filename):
+                path = requirements_path / filename
+                tree = ast.parse(path.read_text(encoding="utf-8"))
+                self.assertTrue(ast.get_docstring(tree), path)
+                for definition in tree.body:
+                    if isinstance(
+                        definition,
+                        (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef),
+                    ):
+                        self.assertTrue(
+                            ast.get_docstring(definition),
+                            f"{path}:{definition.name}",
+                        )
+
+        moved_collections = (
+            ("analog_waveform", "AnalogWaveformKernels"),
+            ("charge", "ChargeKernels"),
+            ("digitized_waveform", "DigitizedWaveformKernels"),
+            ("noise_waveform", "NoiseWaveformKernels"),
+            ("pure_waveform", "PureWaveformKernels"),
+        )
+        for package, class_name in moved_collections:
+            with self.subTest(collection=class_name):
+                path = Path(f"tensor_dslab/{package}/kernel.py")
+                tree = ast.parse(path.read_text(encoding="utf-8"))
+                definitions = tuple(
+                    definition
+                    for definition in tree.body
+                    if isinstance(definition, ast.ClassDef)
+                    and definition.name == class_name
+                )
+                self.assertEqual(len(definitions), 1, path)
+                self.assertTrue(
+                    ast.get_docstring(definitions[0]),
+                    f"{path}:{class_name}",
+                )
+
     def test_axis_representation_scale_and_regular_requirements(self) -> None:
-        for coordinates in (
-            CountCoordinates(count=2),
-            LabelCoordinates(labels=("a", "b")),
-            RegularCoordinates(start=0, step=1, count=2),
-            OffsetCoordinates(offsets=(0, 1)),
-        ):
-            require_supported_coordinates(coordinates)
-        for coordinates in (
-            CountCoordinates(count=2),
-            RegularCoordinates(start=0, step=1, count=2),
-            OffsetCoordinates(offsets=(0, 1)),
-        ):
-            require_supported_integer_coordinates(coordinates)
+        count = CountCoordinates(count=2)
+        labels = LabelCoordinates(labels=("a", "b"))
+        regular_coordinates = RegularCoordinates(start=0, step=1, count=2)
+        offsets = OffsetCoordinates(offsets=(0, 1))
+        require_supported_coordinates(count)
+        require_supported_coordinates(labels)
+        require_supported_coordinates(regular_coordinates)
+        require_supported_coordinates(offsets)
+        require_supported_integer_coordinates(count)
+        require_supported_integer_coordinates(regular_coordinates)
+        require_supported_integer_coordinates(offsets)
         with self.assertRaises(TypeError):
             require_supported_coordinates(_AlienCoordinates(count=2))
         with self.assertRaises(TypeError):

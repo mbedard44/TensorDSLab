@@ -103,33 +103,68 @@ class ProductConfigTests(unittest.TestCase):
     def test_every_preparation_is_fresh_and_retains_source_spec_identity(
         self,
     ) -> None:
-        source_specs = (
-            source().spec,
-            charge_config().spec,
-            pure_config().spec,
-            noise_config().spec,
-            analog_config().spec,
+        photoelectrons_spec = source().spec
+        charge_spec = charge_config().spec
+        pure_spec = pure_config().spec
+        noise_spec = noise_config().spec
+        analog_spec = analog_config().spec
+
+        charge_sources = (photoelectrons_spec,)
+        charge = charge_config()
+        prepared_charge = Charge.prepare(
+            source_specs=charge_sources,
+            config=charge,
         )
-        cases = (
-            (Charge, (source_specs[0],), charge_config()),
-            (PureWaveform, (source_specs[1],), pure_config()),
-            (NoiseWaveform, (), noise_config()),
-            (
-                AnalogWaveform,
-                (source_specs[2], source_specs[3]),
-                analog_config(),
-            ),
-            (DigitizedWaveform, (source_specs[4],), digitized_config()),
+        self.assertIs(type(prepared_charge), type(charge))
+        self.assertIsNot(prepared_charge, charge)
+        self.assertTrue(prepared_charge._is_prepared)
+        self.assertIs(prepared_charge._source_specs, charge_sources)
+        self.assertIs(prepared_charge._source_specs[0], photoelectrons_spec)
+
+        pure_sources = (charge_spec,)
+        pure = pure_config()
+        prepared_pure = PureWaveform.prepare(
+            source_specs=pure_sources,
+            config=pure,
         )
-        for product_type, admitted, config in cases:
-            with self.subTest(product=product_type.__name__):
-                prepared = product_type.prepare(
-                    source_specs=admitted,
-                    config=config,
-                )
-                self.assertIs(type(prepared), type(config))
-                self.assertIsNot(prepared, config)
-                self.assertTrue(prepared._is_prepared)
-                self.assertIs(prepared._source_specs, admitted)
-                for retained, supplied in zip(prepared._source_specs, admitted):
-                    self.assertIs(retained, supplied)
+        self.assertIs(type(prepared_pure), type(pure))
+        self.assertIsNot(prepared_pure, pure)
+        self.assertTrue(prepared_pure._is_prepared)
+        self.assertIs(prepared_pure._source_specs, pure_sources)
+        self.assertIs(prepared_pure._source_specs[0], charge_spec)
+
+        noise_sources = ()
+        noise = noise_config()
+        prepared_noise = NoiseWaveform.prepare(
+            source_specs=noise_sources,
+            config=noise,
+        )
+        self.assertIs(type(prepared_noise), type(noise))
+        self.assertIsNot(prepared_noise, noise)
+        self.assertTrue(prepared_noise._is_prepared)
+        self.assertIs(prepared_noise._source_specs, noise_sources)
+
+        analog_sources = (pure_spec, noise_spec)
+        analog = analog_config()
+        prepared_analog = AnalogWaveform.prepare(
+            source_specs=analog_sources,
+            config=analog,
+        )
+        self.assertIs(type(prepared_analog), type(analog))
+        self.assertIsNot(prepared_analog, analog)
+        self.assertTrue(prepared_analog._is_prepared)
+        self.assertIs(prepared_analog._source_specs, analog_sources)
+        self.assertIs(prepared_analog._source_specs[0], pure_spec)
+        self.assertIs(prepared_analog._source_specs[1], noise_spec)
+
+        digitized_sources = (analog_spec,)
+        digitized = digitized_config()
+        prepared_digitized = DigitizedWaveform.prepare(
+            source_specs=digitized_sources,
+            config=digitized,
+        )
+        self.assertIs(type(prepared_digitized), type(digitized))
+        self.assertIsNot(prepared_digitized, digitized)
+        self.assertTrue(prepared_digitized._is_prepared)
+        self.assertIs(prepared_digitized._source_specs, digitized_sources)
+        self.assertIs(prepared_digitized._source_specs[0], analog_spec)
