@@ -382,6 +382,14 @@ Review-repair candidate, limited to the two admission corrections and their
 focused adversarial proofs, followed by complete Validation and renewed
 independent Review. No second supplemental candidate is authorized.
 
+That sole supplemental candidate is exact
+`ee7a6a27bdb407c6dbb3d987f520a7aacd98fed0`, tree
+`4edfe5b5b890fb239a5f8271d4bd28b390e3164b`. Complete Validation killed all
+`26/26` required mutants, independent Review returned zero findings, Design
+approved the same bytes, and Review fast-forwarded them unchanged to clean
+local `main`. Maintenance 15 is therefore locally Merged / Closed at those
+exact bytes. Origin remains unchanged and no push or CUDA claim follows.
+
 This documentation-only architecture record starts from exact locally closed
 Maintenance 14 `856df702c124365c929bf993851a51fb8ff3c245`, tree
 `9e5ff69920699dc522980b164eaf1073116914c6`. It selects a clean compositional
@@ -527,6 +535,40 @@ published containing commit. TensorDSLab production remains governed solely
 by the synchronized executable work order and its exact-byte route; this
 index entry independently authorizes no CUDA, application, compatibility,
 push, or publication action.
+
+### [Maintenance 16: Declarative Requirements And Kernel Ownership](maintenance_16_declarative_requirements_and_kernel_ownership.md)
+
+Status: **Self-effecting under the frozen exact-byte route**. Before the
+complete same-byte gate and clean local-main fast-forward, the applicable
+state is the latest completed exact-byte handoff. After the exact candidate
+appears unchanged on local `main` through Review's clean fast-forward,
+Maintenance 16 is **Merged / Closed**.
+
+Maintenance 16 starts from exact locally closed Maintenance 15
+`ee7a6a27bdb407c6dbb3d987f520a7aacd98fed0`, tree
+`4edfe5b5b890fb239a5f8271d4bd28b390e3164b`, and retains exact published
+TensorCore `0.22.0` commit
+`19bfae35fbc773b55cac7bcd659dda57c4dee6d6`.
+
+The focused maintenance makes semantic `_require()` hooks read as ordered
+compositions of narrowly named private requirements. It adds an exact
+nine-file `common/requirements/` package for Axis, capacity, Collection,
+Config, Field, Kernel, tensor-value, and Unit requirements; keeps Unit
+normalization, alignment, preparation, and Product validation in their
+truthful owners; and moves every public Product-specific `*Kernels`
+collection from `config.py` into singular `kernel.py`.
+
+Specs become the exact owner of dtype, Unit, axes, and operation geometry,
+while Fields and Kernels own exact Spec identity and represented-value laws.
+This intentionally makes invalid metadata fail at Spec construction without
+changing any valid object, completed Product value, scientific equation, RNG
+address, public facade, dependency, package version, or device policy.
+
+Implementation runs focused and complete source evidence. Independent
+Validation owns one complete source/archive/typing/mutation/artifact gate, and
+Review owns focused risk-based recheck plus the final approved ff-only merge.
+CUDA, push, publication, compatibility, application, IO, and deployment work
+remain unauthorized.
 
 ### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
 
