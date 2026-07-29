@@ -1,10 +1,14 @@
+from dataclasses import dataclass
 import unittest
+from typing import override
 
 import torch
 from tensor_core import (
+    Coordinates,
     CountCoordinates,
     LabelCoordinates,
     OffsetCoordinates,
+    TensorAxis,
 )
 
 from tensor_dslab import (
@@ -16,7 +20,7 @@ from tensor_dslab import (
     AnalogMaximum,
     AnalogMinimum,
     BitDepth,
-    ChannelAxis,
+    ChannelAxis as ProductChannelAxis,
     ExampleAxis,
     InputMaximum,
     InputMinimum,
@@ -32,6 +36,17 @@ from tests._product_support import (
     digitized_config,
     pure_config,
 )
+
+
+@dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
+class ChannelAxis(TensorAxis[str]):
+    """Represent a deliberately distinct same-name semantic role."""
+
+    coordinates: Coordinates[str]
+
+    @override
+    def _require(self) -> None:
+        pass
 
 
 class KernelContractTests(unittest.TestCase):
@@ -52,7 +67,7 @@ class KernelContractTests(unittest.TestCase):
         self,
     ) -> None:
         output_axes = axes()
-        channel = ChannelAxis(
+        channel = ProductChannelAxis(
             coordinates=LabelCoordinates(labels=("b", "a"))
         )
         example = ExampleAxis(
@@ -111,6 +126,38 @@ class KernelContractTests(unittest.TestCase):
             aligned.tensor.untyped_storage().data_ptr(),
             original.tensor.untyped_storage().data_ptr(),
         )
+
+    def test_preparation_matches_semantic_roles_by_exact_type(self) -> None:
+        output_config = analog_config()
+        real_channel = output_config.spec.axes[1]
+        self.assertIs(type(real_channel), ProductChannelAxis)
+        impostor = ChannelAxis(coordinates=real_channel.coordinates)
+        self.assertEqual(type(impostor).__name__, type(real_channel).__name__)
+        self.assertIsNot(type(impostor), type(real_channel))
+        self.assertEqual(impostor.coordinates, real_channel.coordinates)
+
+        kernel = AnalogMinimum(
+            tensor=torch.tensor([-2.0, -1.0], dtype=torch.float32),
+            spec=AnalogMinimumSpec(
+                conditioning_axes=(impostor,),
+                operation_axes=(),
+                device=torch.device("cpu"),
+                dtype=torch.float32,
+                unit=unit_registry.Unit("mV"),
+            ),
+        )
+        config = AnalogWaveformConfig(
+            spec=output_config.spec,
+            kernels=AnalogWaveformKernels(members=(kernel,)),
+        )
+        with self.assertRaisesRegex(
+            ValueError,
+            "conditions on a role absent from output",
+        ):
+            AnalogWaveform.prepare(
+                source_specs=(output_config.spec,),
+                config=config,
+            )
 
     def test_exact_kernel_specs_movement_and_defensive_snapshot(self) -> None:
         pulse = pure_config().kernels.pulse_response

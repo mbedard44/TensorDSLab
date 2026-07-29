@@ -5,6 +5,7 @@ import torch
 from tensor_core import (
     CountCoordinates,
     LabelCoordinates,
+    OffsetCoordinates,
     RegularCoordinates,
 )
 
@@ -79,6 +80,38 @@ class QuantityRepresentationTests(unittest.TestCase):
             )
         value = quantity(2.5, "ns")
         self.assertIs(value._REGISTRY, unit_registry)
+
+    def test_quantity_axes_require_supported_integer_coordinates(self) -> None:
+        for coordinates in (
+            CountCoordinates(count=2),
+            RegularCoordinates(start=-1, step=2, count=2),
+            OffsetCoordinates(offsets=(-2, 3)),
+        ):
+            with self.subTest(coordinates=type(coordinates).__name__):
+                time = TimeAxis(
+                    coordinates=coordinates,
+                    unit=unit_registry.Unit("ns"),
+                )
+                frequency = FrequencyAxis(
+                    coordinates=coordinates,
+                    unit=unit_registry.Unit("Hz"),
+                )
+                self.assertIs(time.coordinates, coordinates)
+                self.assertIs(frequency.coordinates, coordinates)
+
+        for axis_type, wrong_unit in (
+            (TimeAxis, "Hz"),
+            (FrequencyAxis, "ns"),
+        ):
+            with self.subTest(axis=axis_type.__name__):
+                with self.assertRaisesRegex(
+                    TypeError,
+                    "QuantityAxis.coordinates",
+                ):
+                    axis_type(
+                        coordinates=LabelCoordinates(labels=("one", "two")),
+                        unit=unit_registry.Unit(wrong_unit),
+                    )  # type: ignore[arg-type]
 
     def test_quantity_spec_movement_preserves_semantic_subtype_and_unit(
         self,

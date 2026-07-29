@@ -6,9 +6,31 @@ import math
 from typing import cast, final, override
 
 import pint
-from tensor_core import Coordinates, TensorAxis
+from tensor_core import (
+    Coordinates,
+    CountCoordinates,
+    OffsetCoordinates,
+    RegularCoordinates,
+    TensorAxis,
+)
 
 from tensor_dslab.common.units import _normalize_unit, unit_registry
+
+
+def require_supported_integer_coordinates(
+    coordinates: Coordinates[int],
+) -> None:
+    """Admit only the exact supported integer coordinate representations."""
+
+    if type(coordinates) not in (
+        CountCoordinates,
+        RegularCoordinates,
+        OffsetCoordinates,
+    ):
+        raise TypeError(
+            "QuantityAxis.coordinates must be exactly CountCoordinates, "
+            "RegularCoordinates, or OffsetCoordinates"
+        )
 
 
 @dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
@@ -24,6 +46,7 @@ class QuantityAxis[
     @final
     @override
     def _require(self) -> None:
+        require_supported_integer_coordinates(self.coordinates)
         if type(self.coordinate_scale) is not float:
             raise TypeError("coordinate_scale must be exactly float")
         if not math.isfinite(self.coordinate_scale) or self.coordinate_scale <= 0:
