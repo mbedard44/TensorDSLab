@@ -582,6 +582,44 @@ Review owns focused risk-based recheck plus the final approved ff-only merge.
 CUDA, push, publication, compatibility, application, IO, and deployment work
 remain unauthorized.
 
+### [Maintenance 17: Application-Neutral Readout Quickstart](maintenance_17_application_neutral_readout_quickstart.md)
+
+Status: **Self-effecting under the frozen exact-byte route**. Before the
+complete same-byte package gate and clean local-main fast-forward, the
+applicable state is the latest completed exact-byte handoff. After the exact
+Validation-cleared, Review-cleared, and Design-approved candidate appears
+unchanged on local `main` through Review's clean fast-forward, Maintenance 17
+is **Merged / Closed**.
+
+Maintenance 17 starts from exact locally closed Maintenance 16
+`1b3122084e296c1162e9f54a2ddb4d984e0c35eb`, tree
+`2755f122a8f1b2d5a2722db3b7df8a4e778cc26d`, and retains exact published
+TensorCore `0.22.0` commit
+`19bfae35fbc773b55cac7bcd659dda57c4dee6d6`.
+
+The focused maintenance adds one application-neutral newcomer notebook at
+`demos/readout.ipynb`. It constructs one example, three sensor channels,
+`256` two-nanosecond time samples, literal Photoelectrons, a global
+PulseResponse, a channel-conditioned literal PSD, and the six separate
+Photoelectrons / Charge / PureWaveform / NoiseWaveform / AnalogWaveform /
+DigitizedWaveform Products entirely through public APIs. It deliberately adds
+no profile, `Readout`, orchestration function, PSD generator, application
+package, public export, or production-package change.
+
+Every code cell is introduced by plain-language Markdown for a new
+collaborator. The notebook uses only a light six-Product shared-shape
+assertion, then overlays the three sensors with stable colors in six aligned
+Product panels. Optional notebook dependencies, the environment installer, one
+focused demo test module, and the minimum living documentation are updated.
+
+Complete Validation owns source/archive notebook execution, deterministic
+replay, the exact 20-mutant proof matrix, visual inspection, full
+source/archive/typing gates, deterministic artifacts, isolated installed
+execution, and one fresh real environment. Review owns a focused independent
+recheck and the final same-byte local fast-forward after Design approval.
+CUDA, push, publication, compatibility, calibration, application IO, and
+deployment remain unauthorized.
+
 ### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
 
 Status: **Architecture selected / TensorCore Stage 29 published /
