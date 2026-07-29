@@ -414,7 +414,10 @@ Product-specific Config punchcard, and public
 exact Config type with aligned kernels and meaningful derived execution facts.
 Production performs no Pint interpretation, coordinate-policy discovery,
 silent device movement, or dtype-policy selection. Ordered quantity-source
-tuples allow application-owned compositions such as
+tuples are annotated as `tuple[TensorField[Any], ...]` because TensorField's
+Spec parameter is invariant; runtime preparation first requires every exact
+source Spec to be a QuantityFieldSpec. This permits application-owned
+compositions such as
 `Axioelectrons + Photoelectrons -> Charge` without making TensorDSLab import
 every collaboration source class. Every multi-source Product must prove the
 complete dimensional unit relationship before conversion, casting, movement,

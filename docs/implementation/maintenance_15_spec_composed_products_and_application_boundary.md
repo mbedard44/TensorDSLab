@@ -2274,8 +2274,17 @@ Product-specific validation.
 Product entry points accept:
 
 ```python
-sources: tuple[TensorField[QuantityFieldSpec[Any]], ...]
+sources: tuple[TensorField[Any], ...]
 ```
+
+The broader value annotation is deliberate. TensorCore TensorField is
+invariant in its exact Spec parameter, so a direct semantic Product carrying
+`PhotoelectronsSpec` is not statically a
+`TensorField[QuantityFieldSpec[Any]]`. Every Product source-taking boundary
+therefore first requires the source's exact `.spec` to be a
+QuantityFieldSpec, then applies the Product-specific semantic, unit, device,
+dtype, and numerical source law. A nonquantity TensorField may type-check at
+this generic tuple boundary but must fail runtime admission before effects.
 
 The tuple is ordered and exact. TensorDSLab does not globally require every
 Product to interpret sources the same way.
@@ -2314,7 +2323,7 @@ class PureWaveform(TensorField[PureWaveformSpec[Any]]):
     def create(
         cls,
         *,
-        sources: tuple[TensorField[QuantityFieldSpec[Any]], ...],
+        sources: tuple[TensorField[Any], ...],
         config: PureWaveformConfig,
     ) -> Self:
         prepared = cls.prepare(
@@ -2345,7 +2354,7 @@ class PureWaveform(TensorField[PureWaveformSpec[Any]]):
     def produce(
         cls,
         *,
-        sources: tuple[TensorField[QuantityFieldSpec[Any]], ...],
+        sources: tuple[TensorField[Any], ...],
         config: PureWaveformConfig,
     ) -> Self:
         ...
@@ -2355,7 +2364,7 @@ class PureWaveform(TensorField[PureWaveformSpec[Any]]):
         cls,
         *,
         product: Self,
-        sources: tuple[TensorField[QuantityFieldSpec[Any]], ...],
+        sources: tuple[TensorField[Any], ...],
         config: PureWaveformConfig,
     ) -> None:
         ...
@@ -2429,7 +2438,7 @@ For example:
 def produce(
     cls,
     *,
-    sources: tuple[TensorField[QuantityFieldSpec[Any]], ...],
+    sources: tuple[TensorField[Any], ...],
     config: PureWaveformConfig,
 ) -> Self:
     tensor = produce_pure_waveform(

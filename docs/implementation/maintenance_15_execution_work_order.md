@@ -968,7 +968,7 @@ All generated Products expose:
 def create(
     cls,
     *,
-    sources: tuple[TensorField[QuantityFieldSpec[Any]], ...],
+    sources: tuple[TensorField[Any], ...],
     config: ProductConfig,
     # rng: CounterRng only for Charge and NoiseWaveform
 ) -> Self: ...
@@ -985,7 +985,7 @@ def prepare(
 def produce(
     cls,
     *,
-    sources: tuple[TensorField[QuantityFieldSpec[Any]], ...],
+    sources: tuple[TensorField[Any], ...],
     config: ProductConfig,
     # rng: CounterRng only for Charge and NoiseWaveform
 ) -> Self: ...
@@ -995,7 +995,7 @@ def validate(
     cls,
     *,
     product: Self,
-    sources: tuple[TensorField[QuantityFieldSpec[Any]], ...],
+    sources: tuple[TensorField[Any], ...],
     config: ProductConfig,
 ) -> None: ...
 ```
@@ -1003,6 +1003,15 @@ def validate(
 The exact concrete Config annotation replaces `ProductConfig` in every class.
 `Charge` and `NoiseWaveform` require keyword-only `rng: CounterRng` on
 `create` and `produce`. Deterministic Products expose no RNG argument.
+
+`TensorField[Any]` is deliberate at the source-value boundary. TensorCore
+`TensorField` is invariant in its Spec parameter, so
+`TensorField[ConcreteQuantitySpec]` is not a subtype of
+`TensorField[QuantityFieldSpec[Any]]`. Preparation and every public
+source-taking method therefore validate at runtime that each source's exact
+`.spec` is a QuantityFieldSpec before applying the Product-specific semantic,
+unit, device, dtype, and numerical source law. The broader static value
+annotation does not admit a nonquantity source at runtime.
 
 `Photoelectrons` has no Config, preparation, production, or creation method.
 It exposes only:
@@ -1434,7 +1443,7 @@ diagnostics and no incidental diagnostic, covering:
 - wrong Coordinates representation for a semantic Axis;
 - wrong exact Product Spec subtype;
 - wrong Config kernel collection;
-- wrong Product source tuple;
+- non-TensorField Product source tuple;
 - missing required RNG;
 - RNG on a deterministic Product;
 - wrong exact coefficient Spec subtype;
@@ -1542,7 +1551,8 @@ checkout-local mutants:
    identity;
 7. infer TimeAxis or FrequencyAxis from unit dimensionality rather than exact
    semantic type;
-8. accept a generic or wrong semantic Product/coefficient Spec;
+8. accept a generic or wrong semantic Product/coefficient Spec, including a
+   nonquantity source Spec;
 9. omit conditioning-coordinate reorder;
 10. omit conditioning-dimension permutation;
 11. accept a caller scalar/Pint/raw-tensor coefficient shortcut;
