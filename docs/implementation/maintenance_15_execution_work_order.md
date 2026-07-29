@@ -24,8 +24,10 @@ workflow into a reusable parts bin of independently callable tensor Products.
 It:
 
 - adopts exact published TensorCore `0.22.0`;
-- composes quantity meaning through `QuantityFieldSpec` and
-  `QuantityKernelSpec`;
+- composes semantic axes from exact TensorCore Coordinates;
+- gives physical axes an explicit coordinate scale and Unit;
+- composes quantity meaning through abstract `QuantityFieldSpec` and
+  `QuantityKernelSpec` intermediates plus exact semantic Specs;
 - makes Product and physical-coefficient leaves directly specialize
   TensorCore `TensorField` and `TensorKernel`;
 - represents every caller-configurable axis-varying numerical coefficient as
@@ -41,8 +43,8 @@ It:
 - preserves the selected Product scientific laws and RNG role identities;
 - deliberately reconciles the tests around supported concepts instead of
   retaining tests for retired architecture; and
-- leaves application workflow, collaboration axes, profiles, end-to-end
-  demos, IO, and CUDA integration to later package-owned work.
+- leaves application workflow, collaboration-specific axes, profiles,
+  end-to-end demos, IO, and CUDA integration to later package-owned work.
 
 This is a pre-deployment clean replacement. No deprecation window, alias,
 forwarding module, wrapper factory, or parallel old/new API is authorized.
@@ -73,9 +75,14 @@ handoffs. A conflict returns to Design.
 
 ## Exact Design Authority And Baseline
 
-This work order is committed as an ordinary descendant of:
+This substantive replacement is committed as an ordinary direct child of the
+paused initial executable authority:
 
 ```text
+superseded initial executable authority:
+    dbffa9e2cc838e16c0efcc01ebb02a1ed86c95ca
+initial executable-authority tree:
+    771575f15b609b6609c042ebfd7436ea9d3e5301
 TensorDSLab architecture publication-binding commit:
     703f95c067fc1413f155594e71f4d4a4f1f9e142
 tree:
@@ -92,10 +99,15 @@ package version before Maintenance 15:
     0.1.0
 ```
 
-The architecture branch is an ordinary linear descendant of governed local
-`main`. Implementation must use the committed form of this work order as its
-exact parent. It must not reset, rebase, squash, amend, or rewrite the accepted
-Design history.
+The initial authority was paused before production editing when the
+semantic-axis/semantic-Spec refinement was accepted. The replacement
+documentation commit supplied in the renewed Design handoff becomes the sole
+executable authority after exact TensorCore consumer confirmation.
+
+The architecture branch remains an ordinary linear descendant of governed
+local `main`. Implementation must use the final confirmed replacement commit
+as its exact parent. It must not use `dbffa9e` as executable authority, reset,
+rebase, squash, amend, or rewrite the accepted Design history.
 
 The current accepted Maintenance 14 evidence is:
 
@@ -270,44 +282,69 @@ Runtime `__init__.py` files import and export nothing.
 
 ## Exact Public Facades
 
-The package root exports exactly this ordered `36`-name tuple:
+The package root exports exactly this ordered `61`-name tuple:
 
 ```python
 (
     "Afterpulse",
+    "AfterpulseSpec",
     "AnalogGain",
+    "AnalogGainSpec",
     "AnalogMaximum",
+    "AnalogMaximumSpec",
     "AnalogMinimum",
+    "AnalogMinimumSpec",
     "AnalogWaveform",
     "AnalogWaveformConfig",
     "AnalogWaveformKernels",
+    "AnalogWaveformSpec",
     "BitDepth",
+    "BitDepthSpec",
+    "ChannelAxis",
     "Charge",
     "ChargeConfig",
     "ChargeKernels",
+    "ChargeSpec",
     "DarkCountRate",
+    "DarkCountRateSpec",
     "DelayedCrosstalk",
+    "DelayedCrosstalkSpec",
     "DigitizedWaveform",
     "DigitizedWaveformConfig",
     "DigitizedWaveformKernels",
+    "DigitizedWaveformSpec",
     "DirectCrosstalk",
+    "DirectCrosstalkSpec",
+    "ExampleAxis",
+    "FrequencyAxis",
     "InputMaximum",
+    "InputMaximumSpec",
     "InputMinimum",
+    "InputMinimumSpec",
     "NoiseWaveform",
     "NoiseWaveformConfig",
     "NoiseWaveformKernels",
+    "NoiseWaveformSpec",
     "Photoelectrons",
+    "PhotoelectronsSpec",
     "PowerSpectralDensity",
+    "PowerSpectralDensitySpec",
     "PulseResponse",
+    "PulseResponseSpec",
     "PureWaveform",
     "PureWaveformConfig",
     "PureWaveformKernels",
+    "PureWaveformSpec",
     "QuantityAxis",
     "QuantityFieldSpec",
     "QuantityKernelSpec",
     "SmearingWidth",
+    "SmearingWidthSpec",
+    "TimeAxis",
     "TimingJitter",
+    "TimingJitterSpec",
     "WhiteNoiseRms",
+    "WhiteNoiseRmsSpec",
     "quantity",
     "unit_registry",
 )
@@ -317,54 +354,79 @@ Exact subpackage facade tuples are:
 
 ```text
 tensor_dslab.common:
+    ChannelAxis
+    ExampleAxis
+    FrequencyAxis
     QuantityAxis
     QuantityFieldSpec
     QuantityKernelSpec
+    TimeAxis
     quantity
     unit_registry
 
 tensor_dslab.photoelectrons:
     Photoelectrons
+    PhotoelectronsSpec
 
 tensor_dslab.charge:
     Afterpulse
+    AfterpulseSpec
     Charge
     ChargeConfig
     ChargeKernels
+    ChargeSpec
     DarkCountRate
+    DarkCountRateSpec
     DelayedCrosstalk
+    DelayedCrosstalkSpec
     DirectCrosstalk
+    DirectCrosstalkSpec
     SmearingWidth
+    SmearingWidthSpec
     TimingJitter
+    TimingJitterSpec
 
 tensor_dslab.pure_waveform:
     PulseResponse
+    PulseResponseSpec
     PureWaveform
     PureWaveformConfig
     PureWaveformKernels
+    PureWaveformSpec
 
 tensor_dslab.noise_waveform:
     NoiseWaveform
     NoiseWaveformConfig
     NoiseWaveformKernels
+    NoiseWaveformSpec
     PowerSpectralDensity
+    PowerSpectralDensitySpec
     WhiteNoiseRms
+    WhiteNoiseRmsSpec
 
 tensor_dslab.analog_waveform:
     AnalogMaximum
+    AnalogMaximumSpec
     AnalogMinimum
+    AnalogMinimumSpec
     AnalogWaveform
     AnalogWaveformConfig
     AnalogWaveformKernels
+    AnalogWaveformSpec
 
 tensor_dslab.digitized_waveform:
     AnalogGain
+    AnalogGainSpec
     BitDepth
+    BitDepthSpec
     DigitizedWaveform
     DigitizedWaveformConfig
     DigitizedWaveformKernels
+    DigitizedWaveformSpec
     InputMaximum
+    InputMaximumSpec
     InputMinimum
+    InputMinimumSpec
 ```
 
 Root imports are the supported golden path. Subpackage facades are deliberate
@@ -380,24 +442,146 @@ keyword-only, fieldful `TensorAxis[int]` specialization with:
 
 ```text
 coordinates: CoordinatesT
+coordinate_scale: float = 1.0
 unit: pint.Unit
 ```
 
-It normalizes the exact package-registry Unit, retains TensorCore coordinate
-behavior, and provides:
+`coordinate_scale` is one exact non-Boolean built-in binary64 value and must
+be finite and strictly positive. `QuantityAxis` normalizes the exact
+package-registry Unit, retains TensorCore's exact integer coordinate
+representation, and provides:
 
 ```text
 quantity_at(index: int) -> pint.Quantity
 quantity_of(magnitude: int) -> pint.Quantity
 ```
 
-It owns no application semantic leaf. Example, channel, sample, and microcell
-axes are absent from TensorDSLab.
+The physical coordinate at index `i` is:
+
+```text
+coordinates.coordinate_at(i) * coordinate_scale * unit
+```
+
+TensorCore Coordinates remain exact and unscaled. Structural equality and
+hashing include the exact binary64 scale. Physical reciprocal relationships
+use the explicit tolerances frozen below.
+
+`QuantityAxis` is abstract and runs common coordinate/scale/Unit validation
+before exactly one most-derived semantic-axis hook.
+
+### Exact semantic axes
+
+TensorDSLab owns these supported semantic roles:
+
+```text
+ExampleAxis
+ChannelAxis
+TimeAxis
+FrequencyAxis
+```
+
+`ExampleAxis` and `ChannelAxis` are final, representation-polymorphic
+`TensorAxis` leaves. They admit exact `CountCoordinates`,
+`LabelCoordinates`, `RegularCoordinates`, and `OffsetCoordinates` values.
+Their semantic identity is the Axis class, not the Coordinates class.
+`OffsetCoordinates` in either role represents explicit ordered integer
+identifiers and has no displacement meaning.
+
+`TimeAxis[CoordinatesT: Coordinates[int]]` and
+`FrequencyAxis[CoordinatesT: Coordinates[int]]` are final QuantityAxis
+leaves. TimeAxis requires a time-compatible Unit; FrequencyAxis requires a
+frequency-compatible Unit. Canonical regular grids use:
+
+```text
+RegularCoordinates.step == 1
+physical spacing == coordinate_scale * unit
+```
+
+TimeAxis may use a nonzero or negative regular start. A PSD FrequencyAxis
+requires exact regular `start == 0` and `step == 1`.
+
+TensorDSLab owns these shared readout roles. Applications construct their
+values and may define new semantic Axis classes for genuinely new roles such
+as microcell X or Y.
+
+Exact class shapes are:
+
+```python
+@dataclass(
+    frozen=True,
+    slots=True,
+    eq=False,
+    repr=False,
+    kw_only=True,
+)
+class QuantityAxis[
+    CoordinatesT: Coordinates[int],
+](TensorAxis[int], ABC):
+    coordinates: CoordinatesT
+    coordinate_scale: float = 1.0
+    unit: pint.Unit
+
+    @final
+    @override
+    def _require(self) -> None:
+        ...
+
+    @abstractmethod
+    def _require_quantity_axis(self) -> None:
+        ...
+
+
+@final
+@dataclass(
+    frozen=True,
+    slots=True,
+    eq=False,
+    repr=False,
+    kw_only=True,
+)
+class ExampleAxis[
+    CoordinateT: (int, str),
+](TensorAxis[CoordinateT]):
+    coordinates: Coordinates[CoordinateT]
+
+
+@final
+@dataclass(
+    frozen=True,
+    slots=True,
+    eq=False,
+    repr=False,
+    kw_only=True,
+)
+class ChannelAxis[
+    CoordinateT: (int, str),
+](TensorAxis[CoordinateT]):
+    coordinates: Coordinates[CoordinateT]
+
+
+@final
+class TimeAxis[
+    CoordinatesT: Coordinates[int],
+](QuantityAxis[CoordinatesT]):
+    __slots__ = ()
+
+
+@final
+class FrequencyAxis[
+    CoordinatesT: Coordinates[int],
+](QuantityAxis[CoordinatesT]):
+    __slots__ = ()
+```
+
+The final semantic leaves implement only the inherited semantic validation
+hook. QuantityAxis `.window(...)` preserves its exact semantic subtype,
+coordinate scale, and Unit while replacing only Coordinates and rerunning the
+common and leaf validations exactly once.
 
 ### `QuantityFieldSpec`
 
-`QuantityFieldSpec` is final, directly constructible, frozen, slotted,
-keyword-only, structurally equal, and hashable. Its exact public constructor
+`QuantityFieldSpec` is an abstract, frozen, slotted, keyword-only,
+structurally equal and hashable TensorFieldSpec intermediate. Its public
 state is:
 
 ```text
@@ -408,12 +592,53 @@ unit: pint.Unit
 ```
 
 It directly specializes TensorCore `TensorFieldSpec`, normalizes one package
-Unit, and retains exact subtype and unit across `with_axis(...)` and
+Unit, runs common Unit admission before exactly one most-derived semantic
+Spec hook, and retains exact subtype and unit across `with_axis(...)` and
 `to(...)`.
+
+TensorDSLab defines these exact final, directly constructible Product Specs:
+
+```text
+PhotoelectronsSpec
+ChargeSpec
+PureWaveformSpec
+NoiseWaveformSpec
+AnalogWaveformSpec
+DigitizedWaveformSpec
+```
+
+The abstract root's exact class shape is:
+
+```python
+@dataclass(
+    frozen=True,
+    slots=True,
+    eq=False,
+    repr=False,
+    kw_only=True,
+)
+class QuantityFieldSpec[
+    AxesT: tuple[TensorAxis[Any], ...],
+](TensorFieldSpec[AxesT], ABC):
+    unit: pint.Unit
+
+    @final
+    @override
+    def _require(self) -> None:
+        ...
+
+    @abstractmethod
+    def _require_quantity_field_spec(self) -> None:
+        ...
+```
+
+Every final Product Spec is fieldless, uses `__slots__ = ()`, directly
+specializes this root, and implements only
+`_require_quantity_field_spec()`.
 
 ### `QuantityKernelSpec`
 
-`QuantityKernelSpec` is the final kernel counterpart with exact public state:
+`QuantityKernelSpec` is the abstract kernel counterpart with public state:
 
 ```text
 conditioning_axes: tuple[TensorAxis[Any], ...]
@@ -423,8 +648,93 @@ dtype: torch.dtype
 unit: pint.Unit
 ```
 
-It directly specializes `TensorKernelSpec`, retains TensorCore structural
+It directly specializes `TensorKernelSpec`, runs common Unit admission before
+exactly one most-derived semantic Spec hook, retains TensorCore structural
 contracts, and preserves exact subtype and unit across `to(...)`.
+
+TensorDSLab defines these exact final, directly constructible coefficient
+Specs:
+
+```text
+TimingJitterSpec
+DirectCrosstalkSpec
+DelayedCrosstalkSpec
+AfterpulseSpec
+DarkCountRateSpec
+SmearingWidthSpec
+PulseResponseSpec
+WhiteNoiseRmsSpec
+PowerSpectralDensitySpec
+AnalogMinimumSpec
+AnalogMaximumSpec
+BitDepthSpec
+InputMinimumSpec
+InputMaximumSpec
+AnalogGainSpec
+```
+
+`BitDepthSpec` directly specializes ordinary TensorKernelSpec. Every other
+coefficient Spec specializes QuantityKernelSpec.
+
+`PowerSpectralDensitySpec` statically and dynamically narrows its complete
+operation geometry to exactly:
+
+```text
+tuple[FrequencyAxis[RegularCoordinates]]
+```
+
+It requires regular frequency `start == 0` and `step == 1`. Conditioning axes
+remain an exact generic tuple.
+
+The abstract quantity root and PSD specialization have these exact generic
+shapes:
+
+```python
+@dataclass(
+    frozen=True,
+    slots=True,
+    eq=False,
+    repr=False,
+    kw_only=True,
+)
+class QuantityKernelSpec[
+    ConditioningAxesT: tuple[TensorAxis[Any], ...],
+    OperationAxesT: tuple[TensorAxis[Any], ...],
+](
+    TensorKernelSpec[ConditioningAxesT, OperationAxesT],
+    ABC,
+):
+    unit: pint.Unit
+
+    @final
+    @override
+    def _require(self) -> None:
+        ...
+
+    @abstractmethod
+    def _require_quantity_kernel_spec(self) -> None:
+        ...
+
+
+@final
+class PowerSpectralDensitySpec[
+    ConditioningAxesT: tuple[TensorAxis[Any], ...],
+](
+    QuantityKernelSpec[
+        ConditioningAxesT,
+        tuple[FrequencyAxis[RegularCoordinates]],
+    ],
+):
+    __slots__ = ()
+```
+
+Every other quantity coefficient Spec is a fieldless final leaf with
+`ConditioningAxesT` and `OperationAxesT` parameters, implementing only its
+inherited semantic hook. `BitDepthSpec` has the same two generic parameters
+but directly specializes TensorKernelSpec and implements `_require()`.
+Runtime semantic validation narrows each operation geometry exactly as listed
+below; PSD alone encodes its complete operation-axis form directly in the
+static base.
 
 There is no `QuantityField`, `QuantityKernel`, `TensorConfig`,
 `ParameterKernel`, or `CoefficientKernel`.
@@ -448,8 +758,18 @@ AnalogWaveform
 DigitizedWaveform
 ```
 
-Each directly specializes `TensorField[QuantityFieldSpec[Any]]`. Unit is read
-only through `product.spec.unit`.
+Each directly specializes TensorField with its exact semantic Product Spec:
+
+```text
+Photoelectrons      -> TensorField[PhotoelectronsSpec[...]]
+Charge              -> TensorField[ChargeSpec[...]]
+PureWaveform        -> TensorField[PureWaveformSpec[...]]
+NoiseWaveform       -> TensorField[NoiseWaveformSpec[...]]
+AnalogWaveform      -> TensorField[AnalogWaveformSpec[...]]
+DigitizedWaveform   -> TensorField[DigitizedWaveformSpec[...]]
+```
+
+Unit is read only through `product.spec.unit`.
 
 The fifteen coefficient leaves are final, fieldless, direct TensorKernel
 specializations with `__slots__ = ()`:
@@ -472,9 +792,9 @@ InputMaximum
 AnalogGain
 ```
 
-All except `BitDepth` specialize
-`TensorKernel[QuantityKernelSpec[Any, Any]]`. `BitDepth` specializes
-`TensorKernel[TensorKernelSpec[Any, Any]]` and admits only exact integer
+All except `BitDepth` specialize TensorKernel with their exact semantic
+QuantityKernelSpec subtype. `BitDepth` specializes
+`TensorKernel[BitDepthSpec[...]]` and admits only exact integer
 representation dtypes selected by its semantic contract.
 
 Product and coefficient leaves add no fields, unit property, canonical-unit
@@ -542,34 +862,31 @@ Exact public constructor fields are:
 
 ```text
 class ChargeConfig:
-    spec: QuantityFieldSpec[Any]
+    spec: ChargeSpec[Any]
     kernels: ChargeKernels
     correlated_avalanche_generations: NonnegativeInteger
-    temporal_axis: type[TensorAxis[Any]] | None = None
 
 class PureWaveformConfig:
-    spec: QuantityFieldSpec[Any]
+    spec: PureWaveformSpec[Any]
     kernels: PureWaveformKernels
 
 class NoiseWaveformConfig:
-    spec: QuantityFieldSpec[Any]
+    spec: NoiseWaveformSpec[Any]
     kernels: NoiseWaveformKernels
-    temporal_axis: type[TensorAxis[Any]] | None = None
 
 class AnalogWaveformConfig:
-    spec: QuantityFieldSpec[Any]
+    spec: AnalogWaveformSpec[Any]
     kernels: AnalogWaveformKernels
 
 class DigitizedWaveformConfig:
-    spec: QuantityFieldSpec[Any]
+    spec: DigitizedWaveformSpec[Any]
     kernels: DigitizedWaveformKernels
 ```
 
 Public constructors accept no prepared facts and no scalar, Pint Quantity, or
 raw-tensor shortcut for a configurable coefficient. `spec`, `kernels`, and
 `correlated_avalanche_generations` where present are required keyword-only
-arguments. The two exact `temporal_axis` fields default to `None`; no other
-public Config field has a default.
+arguments. No public Config field has a default.
 
 Each Config additionally owns these private `init=False`, non-repr prepared
 facts:
@@ -583,6 +900,12 @@ _kernel_dimensions: tuple[tuple[int, ...] | None, ...]
 ```
 
 `_kernel_dimensions` follows the exact Product collection property order.
+For ordinary pointwise or displacement kernels, each present tuple contains
+conditioning dimensions followed by operation-target dimensions in Product
+output order. For PowerSpectralDensity, the tuple contains only aligned
+conditioning dimensions: its FrequencyAxis operation dimension is spectral
+input geometry, is retained literally in the kernel, and is not mapped to an
+output TimeAxis dimension.
 Charge additionally owns:
 
 ```python
@@ -592,15 +915,17 @@ _temporal_step_seconds: float | None
 
 NoiseWaveform additionally owns the same two private temporal facts.
 
-For Charge, `temporal_axis` is required when timing jitter, dark counts,
-delayed crosstalk, or afterpulse is present. It is optional for a purely
-spatial DirectCrosstalk law and absent when no selected mechanism needs time.
+For Charge, preparation resolves the unique exact `TimeAxis` from
+`ChargeSpec.axes` when timing jitter, dark counts, delayed crosstalk, or
+afterpulse is present. A purely spatial DirectCrosstalk law need not require
+TimeAxis. An OffsetAxis in DirectCrosstalk that targets TimeAxis activates the
+temporal relationship.
 At least one of DirectCrosstalk, DelayedCrosstalk, or Afterpulse is present
 exactly when `correlated_avalanche_generations.value > 0`; all three are absent
 when it is zero.
-For NoiseWaveform, `temporal_axis` is present exactly when
-PowerSpectralDensity is present; exact-zero and white-noise Configs require
-`None`.
+For NoiseWaveform, the PowerSpectralDensity branch requires exactly one
+TimeAxis in `NoiseWaveformSpec.axes`. Exact-zero and white-noise branches do
+not need a temporal relationship beyond their own output Spec semantics.
 
 No other persistent raw tensor is stored as derived Config state. Prepared
 kernel tensors remain represented by the exact semantic Kernel members.
@@ -627,9 +952,10 @@ DigitizedWaveformConfig:
 
 The positions follow the typed property order stated in the architecture
 record. A missing optional member remains `None` after preparation; every
-present member has one complete dimension tuple. Product-owned preparation
-returns a fresh same-exact-type Config with `_is_prepared is True` and complete
-facts. A private module-level same-type reconstruction helper may populate
+present member has one complete Product-specific alignment tuple under the
+ordinary or PSD-exception rule above. Product-owned preparation returns a
+fresh same-exact-type Config with `_is_prepared is True` and complete facts. A
+private module-level same-type reconstruction helper may populate
 `init=False` state; no public trusted constructor, token, alternate Config
 class, Runtime, Plan, or cache is added.
 
@@ -716,15 +1042,15 @@ Exact first-law coefficient contracts are:
 
 | Kernel | Unit | Representation and geometry |
 |---|---|---|
-| `TimingJitter` | dimensionless | binary64, finite and nonnegative; exactly one nonempty OffsetAxis operation axis targeting `ChargeConfig.temporal_axis`; complete represented sum equals one within absolute tolerance `1.0e-11` per conditioning point |
-| `DirectCrosstalk` | dimensionless | binary64, finite and nonnegative; one or more nonempty OffsetAxis operation axes with unique target roles; represented sum no greater than one per conditioning point; offsets targeting the configured temporal role are nonnegative |
-| `DelayedCrosstalk` | dimensionless | binary64, finite and nonnegative; one or more nonempty OffsetAxis operation axes including exactly one axis targeting the configured temporal role with strictly positive offsets; represented sum no greater than one |
-| `Afterpulse` | dimensionless | binary64, finite and nonnegative; exactly one nonempty OffsetAxis operation axis targeting the configured temporal role with strictly positive offsets; represented sum no greater than one |
+| `TimingJitter` | dimensionless | binary64, finite and nonnegative; exactly one nonempty OffsetAxis operation axis targeting TimeAxis; complete represented sum equals one within absolute tolerance `1.0e-11` per conditioning point |
+| `DirectCrosstalk` | dimensionless | binary64, finite and nonnegative; one or more nonempty OffsetAxis operation axes with unique target roles; represented sum no greater than one per conditioning point; offsets targeting TimeAxis are nonnegative |
+| `DelayedCrosstalk` | dimensionless | binary64, finite and nonnegative; one or more nonempty OffsetAxis operation axes including exactly one axis targeting TimeAxis with strictly positive offsets; represented sum no greater than one |
+| `Afterpulse` | dimensionless | binary64, finite and nonnegative; exactly one nonempty OffsetAxis operation axis targeting TimeAxis with strictly positive offsets; represented sum no greater than one |
 | `DarkCountRate` | avalanche / time | binary64, finite and nonnegative; no operation axes |
 | `SmearingWidth` | dimensionless | binary64, finite and nonnegative; no operation axes |
 | `PulseResponse` | output unit / source unit | floating, finite signed coefficients; one or more nonempty OffsetAxis operation axes |
 | `WhiteNoiseRms` | NoiseWaveform output unit | floating, finite and strictly positive; no operation axes |
-| `PowerSpectralDensity` | squared NoiseWaveform output unit | floating, finite and nonnegative prepared per-bin powers; exactly one frequency QuantityAxis operation axis |
+| `PowerSpectralDensity` | squared NoiseWaveform output unit | floating, finite and nonnegative prepared per-bin powers; exact PowerSpectralDensitySpec with exactly one regular FrequencyAxis operation axis |
 | `AnalogMinimum` | AnalogWaveform output unit | floating and finite; no operation axes |
 | `AnalogMaximum` | AnalogWaveform output unit | floating and finite; no operation axes |
 | `BitDepth` | no quantity unit | exact integer dtype and values in `[1, 16]`; no operation axes |
@@ -756,11 +1082,12 @@ empty NoiseWaveformKernels collection rather than an all-zero PSD.
 
 The PowerSpectralDensity operation axis is not interpreted as an output
 displacement and is the one Product-specific exception to generic
-field-dimension role resolution. It must be a QuantityAxis composed with
-RegularCoordinates, use a frequency-compatible unit, begin at zero, have a
-strictly positive step, and contain exactly
+field-dimension role resolution. Its exact PowerSpectralDensitySpec must
+contain one FrequencyAxis composed with RegularCoordinates, use a
+frequency-compatible unit, have exact `start == 0` and `step == 1`, and
+contain exactly
 `sample_count // 2 + 1` coordinates. During preparation, its converted
-frequency step must equal:
+physical frequency spacing `coordinate_scale * unit` must equal:
 
 ```text
 1 / (sample_count * temporal_coordinate_step)
@@ -771,21 +1098,25 @@ zero. The PSD tensor already contains integrated per-bin output-power values;
 Maintenance 15 does not integrate, interpolate, or otherwise prepare a
 caller-supplied density curve.
 
-The temporal output axis must be a QuantityAxis composed with
-RegularCoordinates, use a time-compatible unit, and have a strictly positive
-step. NoiseWaveform uses the prepared PSD operation order directly and removes
-that one spectral operation dimension from the generated output.
+The temporal output axis must be exact TimeAxis composed with
+RegularCoordinates, use a time-compatible unit, and have exact `step == 1`
+with finite positive coordinate scale. NoiseWaveform uses the prepared PSD
+operation order directly and removes that one spectral operation dimension
+from the generated output.
 
 ## Preparation And Production State
 
 Preparation follows the exact order in the architecture record. It must:
 
-1. validate exact Config and source-Spec tuples;
+1. validate exact Config, exact Product Spec, exact kernel-Spec, and
+   source-Spec tuples;
 2. validate source count, units, complete semantic roles, coordinate
    equivalence, and same exact device;
 3. validate output Spec and Product kernel collection;
 4. validate conditioning-role availability and operation geometry;
-5. resolve source dimension order and TensorCore kernel dimensions;
+5. resolve source dimension order and ordinary complete kernel dimensions
+   through TensorCore role resolution, while resolving PSD conditioning
+   dimensions through its frozen spectral exception;
 6. resolve stable conditioning-coordinate reorder and dimension permutation;
 7. select working dtype and per-member representation conversion;
 8. convert quantity-kernel units;
@@ -806,8 +1137,9 @@ preparation because the owned kernel is reconstructed explicitly.
 
 `_source_scales[i]` converts source `i` magnitudes into the Product's selected
 working unit equation. `_kernel_dimensions` records each aligned member's
-conditioning dimensions followed by operation-target dimensions in Product
-output order. Production uses these facts directly and performs no Pint,
+Product-specific dimension plan. The PSD entry records only conditioning
+dimensions; production consumes the retained spectral operation order
+directly. Production uses these facts directly and performs no Pint,
 coordinate search, alignment discovery, device movement, or dtype-policy
 selection.
 
@@ -1037,8 +1369,6 @@ ReadoutCollection
 simulate_readout
 prepare_readout
 SamplingRuntime
-ExampleAxis
-ChannelAxis
 SampleAxis
 ds20k_veto
 demos/readout.py
@@ -1051,14 +1381,16 @@ explicit retirement, not an inferred migration or compatibility claim.
 Reusable Product scientific, RNG, unit, dtype, and numerical obligations move
 to the new Product tests before old workflow tests are deleted.
 
-A future collaboration-owned DS20k or Silex application may define axes,
-profiles, workflows, result collections, demos, and IO in a separately
-reviewed package. The future readout demo discussion starts from that
-application boundary rather than restoring a hidden core workflow.
+A future collaboration-owned DS20k or Silex application instantiates
+TensorDSLab's shared ExampleAxis, ChannelAxis, TimeAxis, and FrequencyAxis
+roles. It may define genuinely new semantic axes, profiles, workflows, result
+collections, demos, and IO in a separately reviewed package. The future
+readout demo discussion starts from that application boundary rather than
+restoring a hidden core workflow.
 
 `create_environment.sh` remains and is changed to install the core wheel
 without a demos extra. Its isolated smoke constructs a rank-zero
-`QuantityFieldSpec`, a `Charge`, and validates exact TensorDSLab/TensorCore
+`ChargeSpec`, a `Charge`, and validates exact TensorDSLab/TensorCore
 versions, the PEP 610 TensorCore commit, site-packages resolution, public
 facades, and absence of project-root shadowing.
 
@@ -1099,17 +1431,17 @@ The committed negative typing fixture is excluded from the zero-diagnostic
 positive command and run separately. It must yield exactly `12` intentional
 diagnostics and no incidental diagnostic, covering:
 
-- wrong Quantity Spec subtype;
+- wrong Coordinates representation for a semantic Axis;
+- wrong exact Product Spec subtype;
 - wrong Config kernel collection;
 - wrong Product source tuple;
 - missing required RNG;
 - RNG on a deterministic Product;
-- wrong coefficient Spec subtype;
+- wrong exact coefficient Spec subtype;
 - wrong collection member;
 - wrong BitDepth Spec;
-- retired import;
-- wrong Product Config;
-- incompatible exact Product return typing; and
+- wrong PowerSpectralDensity operation-axis type;
+- retired import; and
 - misuse of TensorCollection movement dtype.
 
 The suite must contain no more than `150` discovered test methods and no more
@@ -1138,7 +1470,7 @@ Every current subject maps as follows:
 | `tests/test_noise_waveform_statistics.py` | rewrite in place |
 | `tests/test_package_contracts.py` | rewrite exact target tree/facades/retirements |
 | `tests/test_pint_physical_configuration.py` | replace with quantity-representation and Product-preparation tests |
-| `tests/test_readout_axes_and_sampling.py` | retire application axes; preserve temporal QuantityAxis fixtures locally in Product tests |
+| `tests/test_readout_axes_and_sampling.py` | replace application sampling with shared semantic Axis, Coordinates-representation, coordinate-scale, and temporal/frequency fixtures in quantity/Product tests |
 | `tests/test_readout_collection.py` | retire generic workflow collection; replace kernel-collection contracts |
 | `tests/test_readout_configs.py` | replace with `test_product_configs.py` |
 | `tests/test_readout_product_types.py` | replace with `test_product_types.py` and `test_photoelectrons.py` |
@@ -1198,28 +1530,35 @@ intentional diagnostics.
 
 ## Required Mutation Evidence
 
-Validation must independently kill at least these `19` process-local or
+Validation must independently kill at least these `24` process-local or
 checkout-local mutants:
 
 1. skip source-unit compatibility;
 2. skip same-device source admission;
 3. move a source silently;
 4. resolve an axis by spelling rather than exact semantic type;
-5. omit conditioning-coordinate reorder;
-6. omit conditioning-dimension permutation;
-7. accept a caller scalar/Pint/raw-tensor coefficient shortcut;
-8. homogenize a heterogeneous kernel collection;
-9. cast BitDepth to the floating working dtype;
-10. bypass most-derived validation during Spec movement;
-11. bypass most-derived validation during Field/Kernel/Collection movement;
-12. detach a deterministic Product source or sever its autograd graph;
-13. duplicate the TensorKernel defensive snapshot;
-14. multiply afterpulse mean by `0.5`;
-15. feed branching children back within the same round;
-16. normalize timing probabilities silently;
-17. include out-of-window branching destinations;
-18. flip PulseResponse polarity a second time; and
-19. restore a collaboration profile or generic readout orchestration import.
+5. accept the wrong Coordinates representation for a semantic Axis;
+6. omit `coordinate_scale` from physical-coordinate evaluation or structural
+   identity;
+7. infer TimeAxis or FrequencyAxis from unit dimensionality rather than exact
+   semantic type;
+8. accept a generic or wrong semantic Product/coefficient Spec;
+9. omit conditioning-coordinate reorder;
+10. omit conditioning-dimension permutation;
+11. accept a caller scalar/Pint/raw-tensor coefficient shortcut;
+12. homogenize a heterogeneous kernel collection;
+13. cast BitDepth to the floating working dtype;
+14. bypass most-derived validation during Spec movement;
+15. bypass most-derived validation during Field/Kernel/Collection movement;
+16. detach a deterministic Product source or sever its autograd graph;
+17. duplicate the TensorKernel defensive snapshot;
+18. skip the PSD RFFT-count or reciprocal-spacing relationship;
+19. multiply afterpulse mean by `0.5`;
+20. feed branching children back within the same round;
+21. normalize timing probabilities silently;
+22. include out-of-window branching destinations;
+23. flip PulseResponse polarity a second time; and
+24. restore a collaboration profile or generic readout orchestration import.
 
 Each mutant must fail at one named committed proof for the intended reason.
 Mutation evidence may be implemented through temporary process-local source
@@ -1238,7 +1577,7 @@ Validation owns one complete immutable-candidate gate:
 7. run Pyright positive checks in source and archive dependency forms;
 8. run the exact TensorCore `97`-diagnostic negative fixture;
 9. run the TensorDSLab exact `12`-diagnostic negative fixture;
-10. execute all `19` required mutants;
+10. execute all `24` required mutants;
 11. build two deterministic TensorDSLab wheels with
     `SOURCE_DATE_EPOCH=0` and compare them byte-for-byte;
 12. build one sdist and compare extracted package/test bytes to the candidate;
@@ -1300,9 +1639,11 @@ docs/validation.md
 ```
 
 Historical work orders remain byte-identical. Living docs must describe
-TensorCore `0.22.0`, quantity Specs, direct Products, kernel Config punchcards,
-no Runtime records, no generic readout, and the application boundary as the
-current candidate contract without narrating obsolete stages as operative.
+TensorCore `0.22.0`, semantic Axis/Coordinates composition, quantity-axis
+scaling, exact Product/coefficient Specs, direct Products, kernel Config
+punchcards, no Runtime records, no generic readout, and the application
+boundary as the current candidate contract without narrating obsolete stages
+as operative.
 
 `docs/parity.md` preserves every selected Product scientific law, records the
 representation/workflow rebaseline, and avoids claiming old completed-value
@@ -1382,7 +1723,9 @@ evidence across a documentation-only correction.
 Review reads the complete authority and independently audits:
 
 - TensorCore versus TensorDSLab ownership;
-- exact Quantity Spec and direct semantic-leaf structure;
+- exact semantic Axis/Coordinates composition and coordinate-scale contract;
+- exact abstract Quantity Specs, concrete semantic Specs, and direct
+  semantic-leaf structure;
 - no duplicate unit state or Quantity value roots;
 - Config punchcard readiness and absence of Runtime/Plan/token state;
 - Product public signatures and exact one-shot/staged equivalence;
@@ -1452,6 +1795,10 @@ Stop and return to Design if:
 
 - TensorCore exact commit/tree/artifacts cannot be reconstructed;
 - a required TensorCore public contract differs from the frozen substrate;
+- semantic Axis/Coordinates composition cannot preserve exact role identity,
+  representation typing, coordinate scale, Unit, or window semantics;
+- an exact Product or coefficient Spec cannot remain a fieldless semantic
+  subtype over the selected abstract quantity Spec;
 - a Config requires a generic base, Runtime, Plan, token, mutable cache, or
   public trusted constructor;
 - a Product needs hidden source movement or production-time Pint/alignment
@@ -1507,7 +1854,11 @@ Maintenance 15 is complete only when:
 - exact TensorCore `0.22.0` is pinned and independently reconstructed;
 - the exact `56`-file package tree exists with no retired path;
 - exact root and subpackage facades match;
-- quantity units live only in Specs;
+- shared semantic axes compose exact Coordinates representations;
+- physical coordinate scaling lives only in QuantityAxis;
+- quantity units live only in QuantityAxis and quantity Specs;
+- all six Product Specs and fifteen coefficient Specs enforce their exact
+  semantic contracts;
 - all Product and coefficient leaves have exact direct TensorCore roots;
 - all configurable coefficients are exact Kernels;
 - all five typed kernel collections enforce exact membership;
@@ -1517,7 +1868,7 @@ Maintenance 15 is complete only when:
 - selected scientific and stochastic laws pass independent proof;
 - the embedded application layer and demos are absent;
 - the exact `22`-file test tree and obligation ledger reconcile;
-- the `19` mutants are killed;
+- the `24` mutants are killed;
 - source/archive/typing/artifact/environment/documentation/privacy/hygiene
   gates pass;
 - unavailable CUDA is explicit and unclaimed;

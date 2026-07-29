@@ -353,17 +353,29 @@ published TensorCore `0.22.0` commit
 dependency target; execution state follows the work order's self-effecting
 exact-byte route**.
 
+Initial executable authority `dbffa9e2cc838e16c0efcc01ebb02a1ed86c95ca`
+was paused before production editing when the semantic-axis/semantic-Spec
+refinement was accepted. Its direct documentation child, once exact-byte
+consumer-confirmed, is the sole replacement execution authority.
+
 This documentation-only architecture record starts from exact locally closed
 Maintenance 14 `856df702c124365c929bf993851a51fb8ff3c245`, tree
 `9e5ff69920699dc522980b164eaf1073116914c6`. It selects a clean compositional
 representation vocabulary: generic `Coordinates` values compose semantic
 `TensorAxis` values; `TensorFieldSpec` and `TensorKernelSpec` own exact axes,
 device, and dtype; and `TensorField` / `TensorKernel` carry one exact Spec.
-TensorDSLab adds `QuantityAxis`, `QuantityFieldSpec`, and
-`QuantityKernelSpec`. Unit is stored only in the exact Spec: Product leaves
-specialize `TensorField[QuantityFieldSpec[...]]` directly and physical
-coefficient leaves specialize
-`TensorKernel[QuantityKernelSpec[..., ...]]` directly. No initial
+TensorDSLab adds shared semantic `ExampleAxis`, `ChannelAxis`, `TimeAxis`, and
+`FrequencyAxis` roles. `QuantityAxis` composes exact integer Coordinates with
+one finite positive binary64 `coordinate_scale` and one package-registry Unit;
+physical coordinate magnitude is the integer lattice magnitude multiplied by
+that scale and Unit. Canonical regular time/frequency grids use integer
+`step == 1`, while physical spacing lives in the scale.
+
+`QuantityFieldSpec` and `QuantityKernelSpec` are abstract unit-owning
+intermediates. Six exact Product Specs and fifteen exact coefficient Specs
+provide the semantic representation contracts. Product leaves specialize
+TensorField with their exact Product Specs, and physical coefficient leaves
+specialize TensorKernel with their exact coefficient Specs. No initial
 `QuantityField` or `QuantityKernel` root is selected.
 
 The exact implementable Axis root is one-parameter
@@ -437,6 +449,14 @@ configurable coefficients; prepared same-type Configs may retain immutable
 derived conversion scales, dimensions, dtypes, and checked ceilings under
 their exact Product contract.
 
+`PowerSpectralDensitySpec` strongly owns exactly one regular FrequencyAxis
+operation axis. `NoiseWaveformSpec` owns the output domain and conditionally
+requires one TimeAxis when the PSD branch is selected. Product preparation
+checks the RFFT count and reciprocal physical spacing relation; applications
+construct the time/frequency grids and per-bin powers on the cold path.
+Config contains no duplicate temporal-role field, and production performs no
+Pint or Axis coordinate arithmetic.
+
 The migration also requires an explicit test-suite reconciliation rather than
 accumulating replacement tests beside obsolete architecture tests. The current
 Maintenance 14 total is baseline evidence, not a count contract. A complete
@@ -452,9 +472,11 @@ direct/delayed/afterpulse, dark-count, smearing, convolution, noise, analog,
 and digitizer laws remain the selected scientific baseline unless a later
 exact parity record authorizes a change.
 
-Collaboration axes, profiles, workflows, whole-result collections, demos, CLI,
-and IO move to application-owned packages. TensorDSLab core therefore selects
-no universal `Readout`, `ReadoutConfig`, `ReadoutCollection`,
+Collaboration-specific axes, profiles, workflows, whole-result collections,
+demos, CLI, and IO move to application-owned packages. Applications
+instantiate TensorDSLab's shared Example/Channel/Time/Frequency roles and add
+new Axis classes only for genuinely new semantics such as microcell X/Y.
+TensorDSLab core therefore selects no universal `Readout`, `ReadoutConfig`, `ReadoutCollection`,
 `simulate_readout()`, `ds20k_veto()`, or Silex workflow. DS20k and Silex may
 assemble different Product graphs while depending only on TensorDSLab's
 supported parts.
@@ -470,9 +492,10 @@ TensorCore Stage 31 Design authority
 `4bd15c7db276acc6d23848bf301e493dee3d2278`, advances by forward history and
 freezes the complete Coordinates/Spec/Field/Kernel/Collection substrate.
 TensorDSLab consumer-confirmed those exact Design bytes and now accepts the
-published containing commit. No TensorDSLab production, dependency, test,
-science, CUDA, application, compatibility, merge, push, or publication action
-is authorized by this Design record.
+published containing commit. TensorDSLab production remains governed solely
+by the synchronized executable work order and its exact-byte route; this
+index entry independently authorizes no CUDA, application, compatibility,
+push, or publication action.
 
 ### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
 
