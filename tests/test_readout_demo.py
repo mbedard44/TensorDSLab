@@ -8,6 +8,7 @@ import unittest
 
 from nbclient import NotebookClient
 import nbformat
+from nbformat.notebooknode import NotebookNode
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -49,10 +50,26 @@ summary = {{
         charge.tensor,
     )),
     "channel_labels": list(channel_axis.coordinates.labels),
+    "deposits": [
+        [
+            int(position[1]),
+            int(position[2]),
+            int(photoelectrons.tensor[tuple(position)]),
+        ]
+        for position in torch.nonzero(
+            photoelectrons.tensor,
+            as_tuple=False,
+        ).tolist()
+    ],
     "time_size": time_axis.size,
     "time_scale": time_axis.coordinate_scale,
     "frequency_size": frequency_axis.size,
     "frequency_scale": frequency_axis.coordinate_scale,
+    "pulse_support_ns": pulse_support_ns,
+    "pulse_coefficient_count": pulse_coefficient_count,
+    "pulse_offset_count": pulse_time_axis.size,
+    "pulse_minimum": float(pulse_values.min()),
+    "pulse_finite": bool(torch.isfinite(pulse_values).all()),
     "psd_shape": list(power_spectral_density.tensor.shape),
     "psd_conditioning": [
         type(axis).__name__
@@ -70,6 +87,23 @@ summary = {{
         and not torch.equal(psd_sensor_0, psd_sensor_2)
         and not torch.equal(psd_sensor_1, psd_sensor_2)
     ),
+    "psd_band_counts": [
+        [
+            int((psd_sensor_0 == 0.0).sum()),
+            int((psd_sensor_0 == 0.012).sum()),
+            int((psd_sensor_0 == 0.004).sum()),
+        ],
+        [
+            int((psd_sensor_1 == 0.0).sum()),
+            int((psd_sensor_1 == 0.008).sum()),
+            int((psd_sensor_1 == 0.016).sum()),
+        ],
+        [
+            int((psd_sensor_2 == 0.0).sum()),
+            int((psd_sensor_2 == 0.020).sum()),
+            int((psd_sensor_2 == 0.006).sum()),
+        ],
+    ],
     "sensor_products_distinct": [
         bool(
             not torch.equal(product.tensor[0, 0], product.tensor[0, 1])
@@ -96,6 +130,10 @@ summary = {{
     "ylabels": [axis.get_ylabel() for axis in plot_axes],
     "adc_min": int(digitized_waveform.tensor.min()),
     "adc_max": int(digitized_waveform.tensor.max()),
+    "input_minimum": float(input_minimum.tensor),
+    "input_maximum": float(input_maximum.tensor),
+    "bit_depth": int(bit_depth.tensor),
+    "analog_gain": float(analog_gain.tensor),
 }}
 print({SUMMARY_PREFIX!r} + json.dumps(summary, sort_keys=True))
 """
@@ -114,7 +152,7 @@ class ReadoutDemoTests(unittest.TestCase):
         cls.code_source = "\n".join(cell.source for cell in cls.code_cells)
 
     @classmethod
-    def _execute(cls) -> tuple[dict, object]:
+    def _execute(cls) -> tuple[dict, NotebookNode]:
         notebook = copy.deepcopy(cls.notebook)
         notebook.cells.append(nbformat.v4.new_code_cell(PROBE_SOURCE))
         executed = NotebookClient(
@@ -194,7 +232,7 @@ class ReadoutDemoTests(unittest.TestCase):
             if isinstance(node, ast.Import):
                 self.assertTrue(
                     all(
-                        alias.name in ("matplotlib.pyplot", "torch")
+                        alias.name in ("math", "matplotlib.pyplot", "torch")
                         for alias in node.names
                     )
                 )
@@ -220,16 +258,60 @@ class ReadoutDemoTests(unittest.TestCase):
         ):
             self.assertNotIn(forbidden, self.code_source)
         self.assertFalse((ROOT / "demos" / "random.ipynb").exists())
+        markdown_source = "\n".join(
+            cell.source for cell in self.markdown_cells
+        )
+        self.assertIn(
+            "one Product call processes several sensors together in one tensor",
+            markdown_source,
+        )
+        self.assertIn(
+            "illustrative rather than calibrated",
+            markdown_source,
+        )
 
     def test_exact_product_axis_psd_and_shape_source(self) -> None:
         self.assertIn(
             'labels=("sensor-0", "sensor-1", "sensor-2")',
             self.code_source,
         )
-        self.assertIn("count=256", self.code_source)
+        self.assertIn("count=5000", self.code_source)
         self.assertIn("coordinate_scale=2.0", self.code_source)
-        self.assertIn("count=129", self.code_source)
-        self.assertIn("coordinate_scale=1.953125", self.code_source)
+        self.assertIn("count=2501", self.code_source)
+        self.assertIn("coordinate_scale=0.1", self.code_source)
+        for source_line in (
+            "photoelectron_values[0, 0, 100] = 1",
+            "photoelectron_values[0, 0, 3700] = 4",
+            "photoelectron_values[0, 1, 1300] = 2",
+            "photoelectron_values[0, 2, 2500] = 3",
+            "pulse_support_ns = 2020.27",
+            "pulse_time_ns - 232.89",
+            "2.0 * 507.72**2",
+            "math.pi * 507.72**2",
+            "pulse_x - (-81.92)",
+            "math.sqrt(2.0) * 147.28",
+            "pulse_x - (-176.50)",
+            "math.sqrt(2.0) * 45.69",
+            "torch.max(torch.abs(pulse_raw)) * -14.5912372",
+            "OffsetCoordinates(offsets=tuple(range(1011)))",
+            "torch.full((625,), 0.012",
+            "torch.full((1875,), 0.004",
+            "torch.full((938,), 0.008",
+            "torch.full((1562,), 0.016",
+            "torch.full((1250,), 0.020",
+            "torch.full((1250,), 0.006",
+            "torch.tensor(-80.0",
+            "torch.tensor(20.0",
+            "torch.tensor(12",
+            "torch.tensor(1.0",
+        ):
+            with self.subTest(source_line=source_line):
+                self.assertIn(source_line, self.code_source)
+        self.assertEqual(self.code_source.count("torch.erf("), 2)
+        self.assertEqual(
+            self.code_source.count("pulse_gaussian = torch.exp("),
+            1,
+        )
         self.assertIn(
             "conditioning_axes=(channel_axis,)",
             self.code_source,
@@ -358,7 +440,7 @@ class ReadoutDemoTests(unittest.TestCase):
                 "DigitizedWaveform",
             ],
         )
-        self.assertEqual(first["shapes"], [[1, 3, 256]] * 6)
+        self.assertEqual(first["shapes"], [[1, 3, 5000]] * 6)
         self.assertEqual(first["devices"], ["cpu"] * 6)
         self.assertEqual(
             first["dtypes"],
@@ -371,22 +453,65 @@ class ReadoutDemoTests(unittest.TestCase):
                 "torch.int32",
             ],
         )
+        expected_units = [
+            "avalanche",
+            "avalanche",
+            "millivolt",
+            "millivolt",
+            "millivolt",
+            "dimensionless",
+        ]
+        expected_ylabels = [
+            "Photoelectrons",
+            "Charge (avalanche)",
+            "Pure (mV)",
+            "Noise (mV)",
+            "Analog (mV)",
+            "ADC code",
+        ]
+        self.assertEqual(first["units"], expected_units)
         self.assertTrue(first["source_unchanged"])
         self.assertTrue(first["photo_charge_equal"])
         self.assertEqual(
             first["channel_labels"],
             ["sensor-0", "sensor-1", "sensor-2"],
         )
-        self.assertEqual(first["time_size"], 256)
+        self.assertEqual(
+            first["deposits"],
+            [
+                [0, 100, 1],
+                [0, 3700, 4],
+                [1, 1300, 2],
+                [2, 2500, 3],
+            ],
+        )
+        self.assertEqual(first["time_size"], 5000)
         self.assertEqual(first["time_scale"], 2.0)
-        self.assertEqual(first["frequency_size"], 129)
-        self.assertEqual(first["frequency_scale"], 1.953125)
-        self.assertEqual(first["psd_shape"], [3, 129])
+        self.assertEqual(first["frequency_size"], 2501)
+        self.assertEqual(first["frequency_scale"], 0.1)
+        self.assertEqual(first["pulse_support_ns"], 2020.27)
+        self.assertEqual(first["pulse_coefficient_count"], 1011)
+        self.assertEqual(first["pulse_offset_count"], 1011)
+        self.assertAlmostEqual(first["pulse_minimum"], -14.5912372, places=5)
+        self.assertTrue(first["pulse_finite"])
+        self.assertEqual(first["psd_shape"], [3, 2501])
         self.assertEqual(first["psd_conditioning"], ["ChannelAxis"])
         self.assertEqual(first["psd_operation"], ["FrequencyAxis"])
         self.assertTrue(first["psd_dc_zero"])
         self.assertTrue(first["psd_rows_distinct"])
+        self.assertEqual(
+            first["psd_band_counts"],
+            [
+                [1, 625, 1875],
+                [1, 938, 1562],
+                [1, 1250, 1250],
+            ],
+        )
         self.assertTrue(all(first["sensor_products_distinct"]))
+        self.assertEqual(first["input_minimum"], -80.0)
+        self.assertEqual(first["input_maximum"], 20.0)
+        self.assertEqual(first["bit_depth"], 12)
+        self.assertEqual(first["analog_gain"], 1.0)
 
         self.assertEqual(first["figure_axes"], 6)
         self.assertEqual(first["line_counts"], [3] * 6)
@@ -406,6 +531,11 @@ class ReadoutDemoTests(unittest.TestCase):
         self.assertEqual(first["axis_legends"], [False] * 6)
         self.assertEqual(first["figure_legends"], 1)
         self.assertEqual(first["xlabels"], ["", "", "", "", "", "Time (ns)"])
+        self.assertEqual(first["ylabels"], expected_ylabels)
+        self.assertEqual(
+            tuple(zip(first["units"], first["ylabels"])),
+            tuple(zip(expected_units, expected_ylabels)),
+        )
         self.assertGreater(first["adc_min"], 0)
         self.assertLess(first["adc_max"], (1 << 12) - 1)
 
