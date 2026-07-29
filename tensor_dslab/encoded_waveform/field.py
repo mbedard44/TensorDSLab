@@ -18,6 +18,28 @@ if TYPE_CHECKING:
     from tensor_dslab.encoded_waveform.config import EncodedWaveformConfig
 
 
+def _require_source_specs(source_specs: object) -> None:
+    """Require the public prepared-source representation before semantics."""
+
+    if type(source_specs) is not tuple:
+        raise TypeError("source_specs must be exactly tuple")
+    for index, source_spec in enumerate(source_specs):
+        if not isinstance(source_spec, QuantityFieldSpec):
+            raise TypeError(
+                f"source_specs[{index}] must be a QuantityFieldSpec"
+            )
+
+
+def _require_sources(sources: object) -> None:
+    """Require the public source representation before lifecycle effects."""
+
+    if type(sources) is not tuple:
+        raise TypeError("sources must be exactly tuple")
+    for index, source in enumerate(sources):
+        if not isinstance(source, TensorField):
+            raise TypeError(f"sources[{index}] must be a TensorField")
+
+
 @final
 @dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
 class EncodedWaveformSpec[
@@ -56,6 +78,7 @@ class EncodedWaveform(TensorField[EncodedWaveformSpec[Any]]):
         source_specs: tuple[QuantityFieldSpec[Any], ...],
         config: EncodedWaveformConfig,
     ) -> EncodedWaveformConfig:
+        _require_source_specs(source_specs)
         from tensor_dslab.encoded_waveform.runtime.prepare import (
             prepare_encoded_waveform,
         )
@@ -72,6 +95,7 @@ class EncodedWaveform(TensorField[EncodedWaveformSpec[Any]]):
         sources: tuple[TensorField[Any], ...],
         config: EncodedWaveformConfig,
     ) -> Self:
+        _require_sources(sources)
         from tensor_dslab.encoded_waveform.runtime.produce import (
             produce_encoded_waveform,
         )
@@ -89,6 +113,7 @@ class EncodedWaveform(TensorField[EncodedWaveformSpec[Any]]):
         sources: tuple[TensorField[Any], ...],
         config: EncodedWaveformConfig,
     ) -> None:
+        _require_sources(sources)
         from tensor_dslab.encoded_waveform.runtime.validate import (
             validate_encoded_waveform,
         )
@@ -106,6 +131,7 @@ class EncodedWaveform(TensorField[EncodedWaveformSpec[Any]]):
         sources: tuple[TensorField[Any], ...],
         config: EncodedWaveformConfig,
     ) -> Self:
+        _require_sources(sources)
         prepared = cls.prepare(
             source_specs=tuple(source.spec for source in sources),
             config=config,

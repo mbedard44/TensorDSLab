@@ -2,6 +2,7 @@
 
 import itertools
 import unittest
+from unittest.mock import patch
 from typing import Any, override
 
 import torch
@@ -457,9 +458,7 @@ class EncodedWaveformTests(unittest.TestCase):
         self.assertIs(prepared.spec.dtype, torch.int8)
 
     def test_preparation_relationships_and_staged_source_binding(self) -> None:
-        source = _source(
-            torch.full((1, 1, 5), 1000, dtype=torch.int32)
-        )
+        source = _source(torch.full((1, 1, 5), 1000, dtype=torch.int32))
         config = _config(source)
         self.assertFalse(config._is_prepared)
         self.assertEqual(config._source_specs, ())
@@ -468,10 +467,7 @@ class EncodedWaveformTests(unittest.TestCase):
         self.assertEqual(config._kernel_dimensions, (None,) * 5)
         with self.assertRaises(TypeError):
             hash(config)
-        prepared = EncodedWaveform.prepare(
-            source_specs=(source.spec,),
-            config=config,
-        )
+        prepared = EncodedWaveform.prepare(source_specs=(source.spec,), config=config)
         self.assertIsNot(prepared, config)
         self.assertTrue(prepared._is_prepared)
         self.assertIs(prepared._source_specs[0], source.spec)
@@ -482,29 +478,17 @@ class EncodedWaveformTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             EncodedWaveform.prepare(source_specs=(), config=config)
         with self.assertRaises(ValueError):
-            EncodedWaveform.prepare(
-                source_specs=(source.spec, source.spec),
-                config=config,
-            )
+            EncodedWaveform.prepare(source_specs=(source.spec, source.spec), config=config)
         with self.assertRaisesRegex(TypeError, "DigitizedWaveformSpec"):
-            EncodedWaveform.prepare(
-                source_specs=(analog_config().spec,),
-                config=config,
-            )
+            EncodedWaveform.prepare(source_specs=(analog_config().spec,), config=config)
         with self.assertRaisesRegex(ValueError, "ReleaseThresholdCode"):
             EncodedWaveform.prepare(
                 source_specs=(source.spec,),
                 config=_config(source, trigger=10, release=9),
             )
-        bad_step_source = _source(
-            source.tensor,
-            axes=_axes(time_count=5, time_step=2),
-        )
+        bad_step_source = _source(source.tensor, axes=_axes(time_count=5, time_step=2))
         with self.assertRaisesRegex(ValueError, "step 1"):
-            EncodedWaveform.prepare(
-                source_specs=(bad_step_source.spec,),
-                config=_config(bad_step_source),
-            )
+            EncodedWaveform.prepare(source_specs=(bad_step_source.spec,), config=_config(bad_step_source))
         count_time_axes = (
             source.spec.axes[0],
             source.spec.axes[1],
@@ -516,10 +500,7 @@ class EncodedWaveformTests(unittest.TestCase):
         )
         count_time_source = _source(source.tensor, axes=count_time_axes)
         with self.assertRaisesRegex(TypeError, "RegularCoordinates"):
-            EncodedWaveform.prepare(
-                source_specs=(count_time_source.spec,),
-                config=_config(count_time_source),
-            )
+            EncodedWaveform.prepare(source_specs=(count_time_source.spec,), config=_config(count_time_source))
         missing_time_axes = source.spec.axes[:2]
         missing_time_source = DigitizedWaveform(
             tensor=torch.zeros((1, 1), dtype=torch.int32),
@@ -531,10 +512,28 @@ class EncodedWaveformTests(unittest.TestCase):
             ),
         )
         with self.assertRaisesRegex(ValueError, "exactly one TimeAxis"):
-            EncodedWaveform.prepare(
-                source_specs=(missing_time_source.spec,),
-                config=_config(missing_time_source),
-            )
+            EncodedWaveform.prepare(source_specs=(missing_time_source.spec,), config=_config(missing_time_source))
+
+        product = EncodedWaveform.create(sources=(source,), config=config)
+        module = "tensor_dslab.encoded_waveform"
+        malformed_calls = (
+            ("prepare", f"{module}.runtime.prepare.prepare_encoded_waveform",
+             "source_specs", source.spec, {"config": config}),
+            ("create", f"{module}.field.EncodedWaveform.prepare",
+             "sources", source, {"config": config}),
+            ("produce", f"{module}.runtime.produce.produce_encoded_waveform",
+             "sources", source, {"config": prepared}),
+            ("validate", f"{module}.runtime.validate.validate_encoded_waveform",
+             "sources", source, {"product": product, "config": prepared}),
+        )
+        for method, target, key, admitted, context in malformed_calls:
+            for malformed in ([admitted], (object(),)):
+                kwargs = {key: malformed, **context}
+                with self.subTest(method=method, malformed=malformed):
+                    with patch(target) as downstream:
+                        with self.assertRaises(TypeError):
+                            getattr(EncodedWaveform, method)(**kwargs)
+                        downstream.assert_not_called()
 
         mismatched_specs = (
             EncodedWaveformSpec(
