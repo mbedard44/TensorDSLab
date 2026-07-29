@@ -9,12 +9,30 @@ import pint
 from tensor_core import (
     Coordinates,
     CountCoordinates,
+    LabelCoordinates,
     OffsetCoordinates,
     RegularCoordinates,
     TensorAxis,
 )
 
 from tensor_dslab.common.units import _normalize_unit, unit_registry
+
+
+def require_supported_coordinates[CoordinateT: (int, str)](
+    coordinates: Coordinates[CoordinateT],
+) -> None:
+    """Admit only the exact supported coordinate representations."""
+
+    if type(coordinates) not in (
+        CountCoordinates,
+        LabelCoordinates,
+        RegularCoordinates,
+        OffsetCoordinates,
+    ):
+        raise TypeError(
+            "coordinates must be exactly CountCoordinates, LabelCoordinates, "
+            "RegularCoordinates, or OffsetCoordinates"
+        )
 
 
 def require_supported_integer_coordinates(
@@ -94,7 +112,7 @@ class ExampleAxis[
 
     @override
     def _require(self) -> None:
-        pass
+        require_supported_coordinates(self.coordinates)
 
 
 @final
@@ -108,7 +126,7 @@ class ChannelAxis[
 
     @override
     def _require(self) -> None:
-        pass
+        require_supported_coordinates(self.coordinates)
 
 
 @final

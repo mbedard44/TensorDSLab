@@ -1,8 +1,11 @@
+from dataclasses import dataclass
 import unittest
+from typing import Self, override
 
 import pint
 import torch
 from tensor_core import (
+    Coordinates,
     CountCoordinates,
     LabelCoordinates,
     OffsetCoordinates,
@@ -10,6 +13,7 @@ from tensor_core import (
 )
 
 from tensor_dslab import (
+    AnalogMinimumSpec,
     ChannelAxis,
     ExampleAxis,
     FrequencyAxis,
@@ -20,6 +24,30 @@ from tensor_dslab import (
 )
 
 
+@dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
+class AlienCoordinates(Coordinates[int]):
+    values: tuple[int, ...]
+
+    @property
+    @override
+    def size(self) -> int:
+        return len(self.values)
+
+    @override
+    def coordinate_at(self, index: int) -> int:
+        return self.values[index]
+
+    @override
+    def index_of(self, coordinate: int) -> int:
+        return self.values.index(coordinate)
+
+    @override
+    def _window(self, *, start_index: int, count: int) -> Self:
+        return type(self)(
+            values=self.values[start_index : start_index + count],
+        )
+
+
 class QuantityRepresentationTests(unittest.TestCase):
     def test_semantic_axes_compose_coordinates(self) -> None:
         example = ExampleAxis(coordinates=CountCoordinates(count=3))
@@ -28,6 +56,30 @@ class QuantityRepresentationTests(unittest.TestCase):
         )
         self.assertEqual(example.coordinate_at(2), 2)
         self.assertEqual(channel.coordinate_at(1), "y")
+
+    def test_semantic_axes_require_exact_supported_coordinates(self) -> None:
+        for coordinates in (
+            CountCoordinates(count=2),
+            LabelCoordinates(labels=("a", "b")),
+            RegularCoordinates(start=-1, step=2, count=2),
+            OffsetCoordinates(offsets=(-2, 3)),
+        ):
+            for axis_type in (ExampleAxis, ChannelAxis):
+                with self.subTest(
+                    coordinates=type(coordinates).__name__,
+                    axis=axis_type.__name__,
+                ):
+                    axis = axis_type(coordinates=coordinates)
+                    self.assertIs(axis.coordinates, coordinates)
+
+        alien = AlienCoordinates(values=(0, 1))
+        for axis_type in (ExampleAxis, ChannelAxis):
+            with self.subTest(axis=axis_type.__name__):
+                with self.assertRaisesRegex(
+                    TypeError,
+                    "coordinates must be exactly",
+                ):
+                    axis_type(coordinates=alien)
 
     def test_quantity_axis_scale_and_window(self) -> None:
         axis = TimeAxis(
@@ -80,6 +132,39 @@ class QuantityRepresentationTests(unittest.TestCase):
             )
         value = quantity(2.5, "ns")
         self.assertIs(value._REGISTRY, unit_registry)
+
+    def test_unit_subclasses_fail_every_quantity_boundary(self) -> None:
+        unit_type = type(unit_registry.Unit("ns"))
+        derived_type = type(
+            "DerivedUnit",
+            (unit_type,),
+            {"__slots__": ()},
+        )
+        derived = derived_type("ns")
+        self.assertIsInstance(derived, pint.Unit)
+        self.assertIsNot(type(derived), unit_type)
+        self.assertIs(derived._REGISTRY, unit_registry)
+
+        with self.assertRaisesRegex(TypeError, "exactly a Pint Unit"):
+            TimeAxis(
+                coordinates=CountCoordinates(count=2),
+                unit=derived,
+            )
+        with self.assertRaisesRegex(TypeError, "exactly a Pint Unit"):
+            PhotoelectronsSpec(
+                axes=(ExampleAxis(coordinates=CountCoordinates(count=2)),),
+                device=torch.device("cpu"),
+                dtype=torch.int64,
+                unit=derived,
+            )
+        with self.assertRaisesRegex(TypeError, "exactly a Pint Unit"):
+            AnalogMinimumSpec(
+                conditioning_axes=(),
+                operation_axes=(),
+                device=torch.device("cpu"),
+                dtype=torch.float32,
+                unit=derived,
+            )
 
     def test_quantity_axes_require_supported_integer_coordinates(self) -> None:
         for coordinates in (
