@@ -666,7 +666,12 @@ deployment remain unauthorized.
 
 ### [Maintenance 18: EncodedWaveform Raw ZLE](maintenance_18_encoded_waveform_raw_zle.md)
 
-Status: **Design authority / Implementation not dispatched**.
+Status: **Self-effecting under the frozen exact-byte route**. Before the
+complete same-byte package gate and clean local-main fast-forward, the
+applicable state is the latest completed exact-byte handoff. After the exact
+Validation-cleared, Review-cleared, and Design-approved candidate appears
+unchanged on local `main` through Review's clean fast-forward, Maintenance 18
+is **Merged / Closed**.
 
 Maintenance 18 starts from exact locally closed Maintenance 17
 `58d3030c250fca4af88696b00f0165faf7757b12`, tree
@@ -704,9 +709,14 @@ sensor traces with suppressed positions shown as presentation-only gaps.
 The existing application-neutral axes, recognizable pulse template, literal
 PSD, and six preceding Product calls remain.
 
-Implementation, Validation, and Review remain undispatched. CUDA, merge, push,
-publication, compatibility, calibration, application IO, reconstruction, and
-deployment remain unauthorized.
+The fixed implementation bytes are expected to prove the exact ten-method
+encoded-waveform module, `70` discovered source tests, `75/14` facades,
+`73/72` package topology, strict typing, donor support, and two immediate
+CPU-only notebook executions. This statement is Implementation evidence only
+until independent Validation and Review clear the same bytes.
+
+CUDA, push, publication, compatibility, calibration, application IO,
+reconstruction, and deployment remain unauthorized.
 
 ### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
 

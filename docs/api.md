@@ -1,7 +1,7 @@
 # Public API
 
 Maintenance 15 replaces the embedded readout workflow with direct reusable
-Products. The supported root facade has exactly 61 ordered names and the
+Products. The supported root facade has exactly 75 ordered names and the
 subpackage facades are deliberate precision paths.
 
 ## Shared Representations
@@ -27,11 +27,18 @@ The exact Product/Spec pairs are:
 | `NoiseWaveform` | `NoiseWaveformSpec` |
 | `AnalogWaveform` | `AnalogWaveformSpec` |
 | `DigitizedWaveform` | `DigitizedWaveformSpec` |
+| `EncodedWaveform` | `EncodedWaveformSpec` |
 
 `Photoelectrons` exposes `validate(product=...)`. Each generated Product
 exposes keyword-only `create`, `prepare`, `produce`, and `validate`.
 `Charge` and `NoiseWaveform` require a public TensorCore `CounterRng` for
 creation and production. Deterministic Products expose no RNG argument.
+
+`DigitizedWaveformSpec` and `EncodedWaveformSpec` admit exactly
+`torch.int8`, `torch.int16`, `torch.int32`, or `torch.int64`.
+`EncodedWaveformSpec` additionally requires an explicit negative
+`suppression_code` representable by its dtype. An `EncodedWaveform` value is
+either that exact code or a nonnegative retained ADC code.
 
 Preparation accepts ordered `QuantityFieldSpec` sources and one exact
 Product-specific Config. It returns a fresh Config of the same exact type.
@@ -48,9 +55,13 @@ The public coefficient leaves are `TimingJitter`, `DirectCrosstalk`,
 `AnalogMaximum`, `BitDepth`, `InputMinimum`, `InputMaximum`, and
 `AnalogGain`, each with its exact semantic Spec.
 
-Five exact typed collections compose those kernels:
+Six exact typed collections compose those kernels:
 `ChargeKernels`, `PureWaveformKernels`, `NoiseWaveformKernels`,
-`AnalogWaveformKernels`, and `DigitizedWaveformKernels`. The corresponding
+`AnalogWaveformKernels`, `DigitizedWaveformKernels`, and
+`EncodedWaveformKernels`. The encoded collection contains exact int64
+`TriggerThresholdCode`, `ReleaseThresholdCode`,
+`RequiredTimeOverSamples`, `PreTriggerSamples`, and `PostTriggerSamples`
+Kernels. The corresponding
 Configs contain only the output Spec, the typed collection, and Charge's
 generation count. Prepared execution facts are private immutable state on a
 fresh same-type Config; there is no Runtime or Plan type.

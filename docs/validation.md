@@ -1,6 +1,9 @@
 # Validation
 
-Maintenance 16 validation is fixed-candidate and Product-centered. It proves
+Maintenance 18 validation is fixed-candidate and Product-centered. It retains
+the Maintenance 16 requirement and Maintenance 17 notebook boundaries and
+adds exact encoded-waveform, signed-dtype, donor-parity, and seventh-panel
+evidence. It proves
 the private declarative-requirement ownership refactor preserves supported
 public contracts and scientific behavior without retaining tests for the
 retired application workflow. Maintenance 17 adds one source-only,
@@ -9,7 +12,7 @@ application-neutral notebook demonstration without restoring that workflow.
 ## Required Boundaries
 
 - exact TensorCore `0.22.0` source/archive/wheel identity;
-- exact dependency pin, package tree, 61-name root facade, subpackage facades,
+- exact dependency pin, package tree, 75-name root facade, subpackage facades,
   and retired import absence;
 - semantic Axis/Coordinates composition, QuantityAxis scale/Unit/window
   behavior, and most-derived movement validation;
@@ -19,7 +22,7 @@ application-neutral notebook demonstration without restoring that workflow.
   effects, and absence of reusable `require_*` definitions elsewhere;
 - Spec ownership of dtype, Unit, axis, and operation geometry, plus
   Field/Kernel ownership of exact Specs and represented-value laws;
-- all five typed Kernel collections owned by singular Product `kernel.py`
+- all six typed Kernel collections owned by singular Product `kernel.py`
   modules with unchanged public facade identity and ordering;
 - Config identity/unhashability, unprepared facts, and fresh same-type
   preparation;
@@ -29,11 +32,16 @@ application-neutral notebook demonstration without restoring that workflow.
   conversion, immutable source storage, and BitDepth integer preservation;
 - direct Product lifecycle equivalence, fresh storage, source immutability,
   deterministic autograd, stochastic replay, and completed domains;
+- exact DigitizedWaveform signed-dtype/BitDepth capacity and EncodedWaveform
+  sentinel, source binding, lane independence, raw threshold/time-over/release/
+  padding/union law, deterministic replay, and tensor-native execution;
+- exact IV-DSLab donor hashes, worked fixture, named parity cases, and
+  exhaustive short-state support parity;
 - independent timing, dark-count, smearing, branching, pulse, white-noise,
   PSD, analog, and digitization oracles;
 - exact eight private role streams and public TensorCore address mechanics;
-- exact 23-file test target, positive Pyright, and the 12-category negative
-  fixture;
+- exact 25-file test target, positive Pyright, and the exact 15-diagnostic
+  negative fixture;
 - artifact, isolated-install, environment-script, privacy, protected-byte,
   diff, and hygiene gates.
 
@@ -104,11 +112,14 @@ CUDA and cluster work are excluded; no accelerator claim follows.
 
 ## Notebook Demonstration
 
-The Maintenance 17 notebook is validated as ordinary public-API user code.
+The Maintenance 17 notebook, as updated by Maintenance 18, is validated as
+ordinary public-API user code.
 Committed proof checks its exact source-only cell inventory, plain-language
 Markdown before every code cell, public imports, literal three-channel source
-and PSD construction, six separate Product calls, light shared-shape
-assertions, and six-panel plot structure. Two immediate executions must agree
+and PSD construction, seven separate Product calls, light shared-shape
+assertions, and seven-panel plot structure. The final panel must show exact
+EncodedWaveform support with suppression converted to presentation-only gaps.
+Two immediate executions must agree
 on Product values and plot structure while leaving the source unchanged.
 
 Complete Validation also executes the notebook from both exact dependency

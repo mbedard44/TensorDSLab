@@ -51,6 +51,17 @@ completed Product/storage relationships.
   saturation.
 - `DigitizedWaveform` applies literal bounds, gain, integer BitDepth, truncation,
   and clipping.
+- `EncodedWaveform` applies deterministic raw negative-going trigger/time-over,
+  release-hysteresis, padding, and dense-union support to one exact
+  DigitizedWaveform. It preserves retained codes and uses its Spec-owned
+  negative suppression code elsewhere.
+
+Encoded-waveform preparation requires one exact source, identical ordered
+axes/shape/device/unit/signed dtype, one regular step-one TimeAxis, and aligned
+non-Time int64 policies. Production flattens non-Time dimensions into
+independent lanes, derives support with tensor prefix/reduction/event
+operations, and restores the original dimension order. It has no RNG, donor
+call, host-list state, record object, or reconstruction responsibility.
 
 The eight private stochastic roles retain namespace `0x54445331` and streams
 one through eight. Products use only public TensorCore `RngElements`,

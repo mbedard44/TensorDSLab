@@ -25,7 +25,7 @@ without requesting the others, or assemble a collaboration-specific graph
 outside this package. TensorDSLab requires the complete semantic/unit/device
 relationship at each Product boundary but does not encode a universal chain.
 
-The five generated Product families prepare all policy before execution.
+The six generated Product families prepare all policy before execution.
 Prepared Configs retain exact source-Spec provenance and aligned Kernel
 geometry. Source order is significant; structurally equal replacement Specs
 are reusable; changed structure is rejected before tensor arithmetic,
@@ -42,6 +42,12 @@ Each typed `*Kernels` collection is owned by its Product's singular
 `kernel.py`, next to the exact Kernel vocabulary it admits. Config modules own
 only same-type Config punchcards and compose those collections.
 
+`EncodedWaveform` is the terminal reusable DAQ/readout Product, not a workflow
+owner. It selects dense retained support from one exact DigitizedWaveform with
+literal int64 policy Kernels and preserves every retained code. Applications
+own whether and how that Product is serialized or passed to later
+reconstruction.
+
 ## Deferred Application Boundary
 
 DS20k/Silex profiles, detector-window construction, photoelectron binning,
@@ -56,5 +62,6 @@ retired embedded readout workflow.
 See the [Maintenance 15 architecture record](implementation/maintenance_15_spec_composed_products_and_application_boundary.md),
 its [execution work order](implementation/maintenance_15_execution_work_order.md),
 the [Maintenance 16 requirements-ownership work order](implementation/maintenance_16_declarative_requirements_and_kernel_ownership.md),
-and the [Maintenance 17 quickstart work order](implementation/maintenance_17_application_neutral_readout_quickstart.md)
+the [Maintenance 17 quickstart work order](implementation/maintenance_17_application_neutral_readout_quickstart.md),
+and the [Maintenance 18 raw-ZLE work order](implementation/maintenance_18_encoded_waveform_raw_zle.md)
 for the exact API, science, tests, and evidence boundary.

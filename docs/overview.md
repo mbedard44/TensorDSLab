@@ -12,17 +12,19 @@ own workflow composition, IO, and persistence.
 
 ## Current Package
 
-Maintenance 16 is locally closed. It retains TensorCore `0.22.0` and the
+Maintenance 17 is locally closed. Maintenance 18 retains TensorCore `0.22.0`
+and the
 direct reusable Products introduced by Maintenance 15:
 
 ```text
 Coordinates -> semantic Axis -> exact Spec -> Tensor Product/Kernel
 ```
 
-The public package provides four shared semantic axes, six Product/Spec pairs,
-fifteen coefficient/Spec pairs, five typed Kernel collections, five Config
+The public package provides four shared semantic axes, seven Product/Spec pairs,
+twenty coefficient/Spec pairs, six typed Kernel collections, six Config
 punchcards, one scalar `quantity` helper, and one package Pint registry.
-Its public facades are unchanged.
+Maintenance 18 deliberately expands only the root facade and adds the exact
+encoded-waveform subpackage facade; every earlier facade remains unchanged.
 
 Reusable package validation is organized in one private, export-empty
 `common/requirements/` package with exact owners for axes, capacity,
@@ -47,11 +49,12 @@ tensor_dslab/
   noise_waveform/
   analog_waveform/
   digitized_waveform/
+  encoded_waveform/
 ```
 
 Each generated Product package owns `config.py`, `field.py`, singular
 `kernel.py` where applicable, and a non-exported `runtime/` action package.
-The five typed `*Kernels` collections live in their Product `kernel.py`;
+The six typed `*Kernels` collections live in their Product `kernel.py`;
 Config modules own Config records only. The generic `readout/` namespace is
 absent. Runtime modules are private by export and contain actions, not Runtime
 records.
@@ -63,6 +66,8 @@ one small three-sensor example directly from the public Product APIs. It is a
 teaching composition, not a package-owned workflow, profile, orchestration
 surface, or calibration. Applications remain responsible for choosing and
 retaining Products in their real workflows.
+Its seventh Product demonstrates the deterministic EncodedWaveform boundary
+with suppressed samples displayed as gaps.
 
 ## Documentation Map
 
@@ -75,8 +80,10 @@ retaining Products in their real workflows.
 - [Maintenance 15 work order](implementation/maintenance_15_execution_work_order.md)
 - [Maintenance 16 requirements ownership](implementation/maintenance_16_declarative_requirements_and_kernel_ownership.md)
 - [Maintenance 17 readout quickstart](implementation/maintenance_17_application_neutral_readout_quickstart.md)
+- [Maintenance 18 EncodedWaveform raw ZLE](implementation/maintenance_18_encoded_waveform_raw_zle.md)
 
 Earlier work orders remain immutable historical evidence. When an older living
 claim conflicts with the Maintenance 15 architecture, Maintenance 16
-requirements ownership, or the narrow Maintenance 17 demonstration boundary,
+requirements ownership, the narrow Maintenance 17 demonstration boundary, or
+the Maintenance 18 encoded-waveform boundary,
 those exact current records govern.

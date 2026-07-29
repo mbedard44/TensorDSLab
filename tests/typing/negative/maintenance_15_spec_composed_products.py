@@ -19,6 +19,10 @@ from tensor_dslab import (
     ChargeKernels,
     ChargeSpec,
     ExampleAxis,
+    EncodedWaveform,
+    EncodedWaveformConfig,
+    EncodedWaveformKernels,
+    EncodedWaveformSpec,
     InputMinimumSpec,
     NoiseWaveformKernels,
     Photoelectrons,
@@ -31,10 +35,11 @@ from tensor_dslab import (
     PureWaveformKernels,
     PureWaveformSpec,
     TimeAxis,
+    TriggerThresholdCode,
+    ReleaseThresholdCodeSpec,
     WhiteNoiseRms,
     unit_registry,
 )
-from tensor_dslab import ReadoutConfig
 
 
 device = torch.device("cpu")
@@ -130,3 +135,25 @@ PowerSpectralDensitySpec(
     unit=unit_registry.Unit("mV ** 2"),
 )
 ChargeKernels(members=()).to(device=device, dtype=torch.float32)
+
+encoded_spec = EncodedWaveformSpec(
+    axes=(example, time),
+    device=device,
+    dtype=torch.int32,
+    unit=unit_registry.Unit(""),
+    suppression_code=-1,
+)
+EncodedWaveformConfig(
+    spec=encoded_spec,
+    kernels=NoiseWaveformKernels(members=()),
+)
+TriggerThresholdCode(
+    tensor=torch.tensor(1, dtype=torch.int64),
+    spec=ReleaseThresholdCodeSpec(
+        conditioning_axes=(),
+        operation_axes=(),
+        device=device,
+        dtype=torch.int64,
+    ),
+)
+EncodedWaveform.create(sources=(1,), config=object())

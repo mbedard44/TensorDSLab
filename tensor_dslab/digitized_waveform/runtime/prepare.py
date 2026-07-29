@@ -67,6 +67,16 @@ def prepare_digitized_waveform(*, source_specs: tuple, config: DigitizedWaveform
         prepared_members.append(prepared_kernel)
         prepared_dimensions.append(aligned_dimensions)
     prepared_kernels = type(config.kernels)(members=tuple(prepared_members))
+    bit_depth_values = prepared_kernels.bit_depth.tensor.to(torch.int64)
+    maximum_code = torch.bitwise_left_shift(
+        torch.ones_like(bit_depth_values),
+        bit_depth_values,
+    ) - 1
+    if bool((maximum_code > torch.iinfo(config.spec.dtype).max).any()):
+        raise ValueError(
+            "BitDepth maximum code is not representable by "
+            "DigitizedWaveformSpec.dtype"
+        )
     minimum_values = _broadcast(
         prepared_kernels.input_minimum.tensor,
         prepared_dimensions[1],

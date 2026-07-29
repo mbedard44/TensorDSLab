@@ -43,5 +43,12 @@ Source Fields may use any application semantic class whose exact Spec is a
 source-taking public methods use `tuple[TensorField[Any], ...]`: TensorCore's
 Spec parameter is invariant, and runtime semantic admission is deliberate.
 
+DigitizedWaveform and EncodedWaveform use exactly the supported signed Torch
+integer dtypes. Digitizer preparation proves the configured maximum BitDepth
+code fits the selected output dtype. EncodedWaveform requires source/output
+dtype identity and performs no cast, so every retained represented value is
+literally the source ADC code. Its suppression scalar is constructed only
+after the negative Spec integer has been proved representable.
+
 The dependency statement is exact-commit evidence, not a broad compatibility
 claim. Integrated CUDA remains deferred.

@@ -1,6 +1,11 @@
 # Maintenance 18 EncodedWaveform Raw ZLE
 
-Status: **Design authority / Implementation not dispatched**.
+Status: **Self-effecting under the frozen exact-byte route**. Before the
+complete same-byte package gate and clean local-main fast-forward, the
+applicable state is the latest completed exact-byte handoff. After the exact
+Validation-cleared, Review-cleared, and Design-approved candidate appears
+unchanged on local `main` through Review's clean fast-forward, Maintenance 18
+is **Merged / Closed**.
 
 Stable key:
 `TensorDSLab/maintenance-18-encoded-waveform-raw-zle`

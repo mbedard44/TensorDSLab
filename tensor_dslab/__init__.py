@@ -4,6 +4,7 @@ from tensor_dslab.analog_waveform import *
 from tensor_dslab.charge import *
 from tensor_dslab.common import *
 from tensor_dslab.digitized_waveform import *
+from tensor_dslab.encoded_waveform import *
 from tensor_dslab.noise_waveform import *
 from tensor_dslab.photoelectrons import *
 from tensor_dslab.pure_waveform import *
@@ -38,6 +39,10 @@ __all__ = (
     "DigitizedWaveformSpec",
     "DirectCrosstalk",
     "DirectCrosstalkSpec",
+    "EncodedWaveform",
+    "EncodedWaveformConfig",
+    "EncodedWaveformKernels",
+    "EncodedWaveformSpec",
     "ExampleAxis",
     "FrequencyAxis",
     "InputMaximum",
@@ -48,12 +53,16 @@ __all__ = (
     "NoiseWaveformConfig",
     "NoiseWaveformKernels",
     "NoiseWaveformSpec",
+    "PostTriggerSamples",
+    "PostTriggerSamplesSpec",
     "Photoelectrons",
     "PhotoelectronsSpec",
     "PowerSpectralDensity",
     "PowerSpectralDensitySpec",
     "PulseResponse",
     "PulseResponseSpec",
+    "PreTriggerSamples",
+    "PreTriggerSamplesSpec",
     "PureWaveform",
     "PureWaveformConfig",
     "PureWaveformKernels",
@@ -61,11 +70,17 @@ __all__ = (
     "QuantityAxis",
     "QuantityFieldSpec",
     "QuantityKernelSpec",
+    "ReleaseThresholdCode",
+    "ReleaseThresholdCodeSpec",
+    "RequiredTimeOverSamples",
+    "RequiredTimeOverSamplesSpec",
     "SmearingWidth",
     "SmearingWidthSpec",
     "TimeAxis",
     "TimingJitter",
     "TimingJitterSpec",
+    "TriggerThresholdCode",
+    "TriggerThresholdCodeSpec",
     "WhiteNoiseRms",
     "WhiteNoiseRmsSpec",
     "quantity",

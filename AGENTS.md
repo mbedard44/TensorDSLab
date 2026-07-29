@@ -1,5 +1,22 @@
 # Agent Workflow
 
+## Maintenance 18 Current Encoded-Waveform Boundary
+
+Maintenance 18 adds one deterministic terminal DAQ/readout Product at
+`tensor_dslab.encoded_waveform`. `EncodedWaveform` retains exact signed
+DigitizedWaveform ADC codes on raw negative-going threshold/time-over/release
+support and writes its explicit negative Spec-owned suppression code
+everywhere else. Five exact int64 non-Time-conditioned Kernels own the
+trigger, release, required-time-over, pre-trigger, and post-trigger policy.
+Preparation owns complete source binding, Kernel alignment, relationship
+checks, and scratch capacity; production is tensor-native and deterministic.
+
+This Product does not restore a generic readout workflow or introduce
+reconstruction, records, IO, calibration, filtering, profiles, or application
+orchestration. Applications own composition and durable representation. The
+Maintenance 17 notebook remains the sole package newcomer demonstration and
+now shows EncodedWaveform as its seventh separate public Product.
+
 ## Maintenance 17 Current Demonstration Boundary
 
 Maintenance 16 is locally closed. Maintenance 17 adds exactly one supported

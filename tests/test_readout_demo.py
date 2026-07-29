@@ -33,6 +33,7 @@ product_values = (
     noise_waveform,
     analog_waveform,
     digitized_waveform,
+    encoded_waveform,
 )
 summary = {{
     "types": [type(product).__name__ for product in product_values],
@@ -134,6 +135,58 @@ summary = {{
     "input_maximum": float(input_maximum.tensor),
     "bit_depth": int(bit_depth.tensor),
     "analog_gain": float(analog_gain.tensor),
+    "zle_policy": [
+        int(trigger_threshold_code.tensor),
+        int(release_threshold_code.tensor),
+        int(required_time_over_samples.tensor),
+        int(pre_trigger_samples.tensor),
+        int(post_trigger_samples.tensor),
+    ],
+    "suppression_code": encoded_waveform.spec.suppression_code,
+    "encoded_support": [
+        [
+            [start, end]
+            for start, end in zip(
+                [
+                    index
+                    for index in range(time_axis.size)
+                    if (
+                        encoded_waveform.tensor[0, channel_index, index]
+                        != encoded_waveform.spec.suppression_code
+                        and (
+                            index == 0
+                            or encoded_waveform.tensor[
+                                0, channel_index, index - 1
+                            ]
+                            == encoded_waveform.spec.suppression_code
+                        )
+                    )
+                ],
+                [
+                    index
+                    for index in range(1, time_axis.size + 1)
+                    if (
+                        encoded_waveform.tensor[
+                            0, channel_index, index - 1
+                        ]
+                        != encoded_waveform.spec.suppression_code
+                        and (
+                            index == time_axis.size
+                            or encoded_waveform.tensor[
+                                0, channel_index, index
+                            ]
+                            == encoded_waveform.spec.suppression_code
+                        )
+                    )
+                ],
+            )
+        ]
+        for channel_index in range(channel_axis.size)
+    ],
+    "encoded_plot_gaps": [
+        any(math.isnan(float(value)) for value in line.get_ydata())
+        for line in plot_axes[6].lines
+    ],
 }}
 print({SUMMARY_PREFIX!r} + json.dumps(summary, sort_keys=True))
 """
@@ -181,9 +234,9 @@ class ReadoutDemoTests(unittest.TestCase):
 
     def test_source_inventory_metadata_and_public_boundary(self) -> None:
         self.assertEqual(self.notebook.nbformat, 4)
-        self.assertEqual(len(self.notebook.cells), 20)
-        self.assertEqual(len(self.markdown_cells), 10)
-        self.assertEqual(len(self.code_cells), 10)
+        self.assertEqual(len(self.notebook.cells), 22)
+        self.assertEqual(len(self.markdown_cells), 11)
+        self.assertEqual(len(self.code_cells), 11)
         self.assertEqual(
             len({cell.id for cell in self.notebook.cells}),
             len(self.notebook.cells),
@@ -304,6 +357,13 @@ class ReadoutDemoTests(unittest.TestCase):
             "torch.tensor(20.0",
             "torch.tensor(12",
             "torch.tensor(1.0",
+            "torch.tensor(2500",
+            "torch.tensor(2800",
+            "torch.tensor(3",
+            "torch.tensor(25",
+            "torch.tensor(50",
+            "suppression_code=-1",
+            "encoded_waveform = EncodedWaveform.create(",
         ):
             with self.subTest(source_line=source_line):
                 self.assertIn(source_line, self.code_source)
@@ -324,6 +384,15 @@ class ReadoutDemoTests(unittest.TestCase):
         self.assertIn("psd_sensor_1 = torch.cat", self.code_source)
         self.assertIn("psd_sensor_2 = torch.cat", self.code_source)
         self.assertNotIn("torch.rand", self.code_source)
+        self.assertIn(
+            "The last panel leaves suppressed regions blank",
+            "\n".join(cell.source for cell in self.markdown_cells),
+        )
+        self.assertIn(
+            'if value == encoded_waveform.spec.suppression_code',
+            self.code_source,
+        )
+        self.assertIn('float("nan")', self.code_source)
 
         assignments: list[tuple[str, str]] = []
         for cell in self.code_cells:
@@ -356,6 +425,7 @@ class ReadoutDemoTests(unittest.TestCase):
                 "noise_waveform",
                 "analog_waveform",
                 "digitized_waveform",
+                "encoded_waveform",
             )
         )
         self.assertEqual(
@@ -367,6 +437,7 @@ class ReadoutDemoTests(unittest.TestCase):
                 ("noise_waveform", "NoiseWaveform.create"),
                 ("analog_waveform", "AnalogWaveform.create"),
                 ("digitized_waveform", "DigitizedWaveform.create"),
+                ("encoded_waveform", "EncodedWaveform.create"),
             ),
         )
 
@@ -379,7 +450,7 @@ class ReadoutDemoTests(unittest.TestCase):
         assertions = tuple(
             node for node in shape_tree.body if isinstance(node, ast.Assert)
         )
-        self.assertEqual(len(assertions), 6)
+        self.assertEqual(len(assertions), 7)
         products = []
         for assertion in assertions:
             self.assertIsInstance(assertion.test, ast.Compare)
@@ -411,6 +482,7 @@ class ReadoutDemoTests(unittest.TestCase):
                 "noise_waveform",
                 "analog_waveform",
                 "digitized_waveform",
+                "encoded_waveform",
             ),
         )
 
@@ -438,10 +510,11 @@ class ReadoutDemoTests(unittest.TestCase):
                 "NoiseWaveform",
                 "AnalogWaveform",
                 "DigitizedWaveform",
+                "EncodedWaveform",
             ],
         )
-        self.assertEqual(first["shapes"], [[1, 3, 5000]] * 6)
-        self.assertEqual(first["devices"], ["cpu"] * 6)
+        self.assertEqual(first["shapes"], [[1, 3, 5000]] * 7)
+        self.assertEqual(first["devices"], ["cpu"] * 7)
         self.assertEqual(
             first["dtypes"],
             [
@@ -450,6 +523,7 @@ class ReadoutDemoTests(unittest.TestCase):
                 "torch.float32",
                 "torch.float32",
                 "torch.float32",
+                "torch.int32",
                 "torch.int32",
             ],
         )
@@ -460,6 +534,7 @@ class ReadoutDemoTests(unittest.TestCase):
             "millivolt",
             "millivolt",
             "dimensionless",
+            "dimensionless",
         ]
         expected_ylabels = [
             "Photoelectrons",
@@ -468,6 +543,7 @@ class ReadoutDemoTests(unittest.TestCase):
             "Noise (mV)",
             "Analog (mV)",
             "ADC code",
+            "Retained ADC code",
         ]
         self.assertEqual(first["units"], expected_units)
         self.assertTrue(first["source_unchanged"])
@@ -512,11 +588,22 @@ class ReadoutDemoTests(unittest.TestCase):
         self.assertEqual(first["input_maximum"], 20.0)
         self.assertEqual(first["bit_depth"], 12)
         self.assertEqual(first["analog_gain"], 1.0)
+        self.assertEqual(first["zle_policy"], [2500, 2800, 3, 25, 50])
+        self.assertEqual(first["suppression_code"], -1)
+        self.assertEqual(
+            first["encoded_support"],
+            [
+                [[280, 362], [3721, 4261]],
+                [[1363, 1749]],
+                [[2541, 3085]],
+            ],
+        )
+        self.assertEqual(first["encoded_plot_gaps"], [True, True, True])
 
-        self.assertEqual(first["figure_axes"], 6)
-        self.assertEqual(first["line_counts"], [3] * 6)
+        self.assertEqual(first["figure_axes"], 7)
+        self.assertEqual(first["line_counts"], [3] * 7)
         expected_colors = ["tab:blue", "tab:orange", "tab:green"]
-        self.assertEqual(first["colors"], [expected_colors] * 6)
+        self.assertEqual(first["colors"], [expected_colors] * 7)
         self.assertEqual(
             first["drawstyles"],
             [
@@ -526,11 +613,15 @@ class ReadoutDemoTests(unittest.TestCase):
                 ["default"] * 3,
                 ["default"] * 3,
                 ["steps-post"] * 3,
+                ["steps-post"] * 3,
             ],
         )
-        self.assertEqual(first["axis_legends"], [False] * 6)
+        self.assertEqual(first["axis_legends"], [False] * 7)
         self.assertEqual(first["figure_legends"], 1)
-        self.assertEqual(first["xlabels"], ["", "", "", "", "", "Time (ns)"])
+        self.assertEqual(
+            first["xlabels"],
+            ["", "", "", "", "", "", "Time (ns)"],
+        )
         self.assertEqual(first["ylabels"], expected_ylabels)
         self.assertEqual(
             tuple(zip(first["units"], first["ylabels"])),

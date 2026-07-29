@@ -23,6 +23,8 @@ from tensor_core import (
 from tensor_dslab import (
     ChannelAxis as ProductChannelAxis,
     ChargeSpec,
+    EncodedWaveform,
+    EncodedWaveformSpec,
     Photoelectrons,
     PhotoelectronsSpec,
     PulseResponse,
@@ -54,6 +56,7 @@ from tensor_dslab.common.requirements.field import (
 )
 from tensor_dslab.common.requirements.kernel import (
     require_exact_kernel_spec,
+    require_no_conditioning_axis_type,
     require_no_operation_axes,
     require_nonempty_operation_extents,
     require_offset_bounds,
@@ -67,6 +70,8 @@ from tensor_dslab.common.requirements.tensor import (
     require_exact_dtype,
     require_finite,
     require_floating_dtype,
+    require_encoded_values,
+    require_negative_representable_suppression_code,
     require_nonnegative,
     require_positive,
     require_signed_integer_dtype,
@@ -211,6 +216,22 @@ class RequirementTests(unittest.TestCase):
                     f"{path}:{class_name}",
                 )
 
+        for path in sorted(
+            Path("tensor_dslab/encoded_waveform").rglob("*.py")
+        ):
+            with self.subTest(encoded_module=path.as_posix()):
+                tree = ast.parse(path.read_text(encoding="utf-8"))
+                self.assertTrue(ast.get_docstring(tree), path)
+                for definition in tree.body:
+                    if isinstance(
+                        definition,
+                        (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef),
+                    ):
+                        self.assertTrue(
+                            ast.get_docstring(definition),
+                            f"{path}:{definition.name}",
+                        )
+
     def test_axis_representation_scale_and_regular_requirements(self) -> None:
         count = CountCoordinates(count=2)
         labels = LabelCoordinates(labels=("a", "b"))
@@ -300,6 +321,24 @@ class RequirementTests(unittest.TestCase):
         )
         require_signed_integer_dtype(
             _TensorValue(tensor=torch.tensor([1], dtype=torch.int16))
+        )
+        encoded_spec = EncodedWaveformSpec(
+            axes=source().spec.axes,
+            device=torch.device("cpu"),
+            dtype=torch.int16,
+            unit=unit_registry.Unit(""),
+            suppression_code=-7,
+        )
+        require_negative_representable_suppression_code(encoded_spec)
+        require_encoded_values(
+            EncodedWaveform(
+                tensor=torch.full(
+                    encoded_spec.shape,
+                    -7,
+                    dtype=torch.int16,
+                ),
+                spec=encoded_spec,
+            )
         )
         with self.assertRaises(TypeError):
             require_exact_dtype(value, torch.float64)
@@ -451,6 +490,24 @@ class RequirementTests(unittest.TestCase):
             dtype=torch.float64,
         )
         require_no_operation_axes(no_operation)
+        require_no_conditioning_axis_type(
+            no_operation,
+            ProductChannelAxis,
+        )
+        with self.assertRaises(TypeError):
+            require_no_conditioning_axis_type(
+                _LiteralSpec(
+                    conditioning_axes=(
+                        ProductChannelAxis(
+                            coordinates=CountCoordinates(count=2)
+                        ),
+                    ),
+                    operation_axes=(),
+                    device=torch.device("cpu"),
+                    dtype=torch.float64,
+                ),
+                ProductChannelAxis,
+            )
         wrong_axis = _LiteralSpec(
             conditioning_axes=(),
             operation_axes=(

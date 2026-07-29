@@ -11,9 +11,9 @@ TensorCore is the shared semantic tensor substrate. TensorDSLab owns reusable
 detector products and scientific transformations; an application owns source
 selection, workflow composition, retention, IO, and orchestration.
 
-## Maintenance 15 Product Surface
+## Maintenance 18 Product Surface
 
-The current candidate targets exact TensorCore `0.22.0` commit
+The current package targets exact TensorCore `0.22.0` commit
 `19bfae35fbc773b55cac7bcd659dda57c4dee6d6`. Four semantic axes compose
 TensorCore Coordinates:
 
@@ -21,7 +21,7 @@ TensorCore Coordinates:
 - `TimeAxis` and `FrequencyAxis` add a positive binary64 coordinate scale and
   package-registry Pint Unit.
 
-Six direct tensor Products carry exact semantic quantity Specs:
+Seven direct tensor Products carry exact semantic quantity Specs:
 
 - `Photoelectrons`
 - `Charge`
@@ -29,6 +29,7 @@ Six direct tensor Products carry exact semantic quantity Specs:
 - `NoiseWaveform`
 - `AnalogWaveform`
 - `DigitizedWaveform`
+- `EncodedWaveform`
 
 Generated Products expose Product-specific `create`, `prepare`, `produce`, and
 `validate` classmethods. Preparation returns a fresh same-type Config
@@ -37,6 +38,11 @@ Production accepts only sources whose Specs remain positionally structurally
 equal to that provenance. It performs no Pint interpretation, coordinate
 discovery, source movement, or dtype-policy selection.
 
+`EncodedWaveform` is the deterministic terminal DAQ/readout Product. It keeps
+exact DigitizedWaveform codes on configured raw-ZLE support and uses one
+explicit negative Spec-owned suppression code elsewhere. It adds no record,
+IO, reconstruction, or application-workflow abstraction.
+
 There is intentionally no generic readout package, `ReadoutConfig`,
 `ReadoutCollection`, `simulate_readout`, or embedded detector profile.
 Applications compose the direct Products they need.
@@ -44,7 +50,8 @@ Applications compose the direct Products they need.
 ## Readout Quickstart
 
 The [application-neutral readout notebook](demos/readout.ipynb) builds a small
-three-sensor example by hand from the public Product APIs. It is an
+three-sensor example by hand from the public Product APIs, including
+EncodedWaveform as the seventh separate transformation. It is an
 illustrative newcomer guide, not a package-owned workflow, detector profile,
 or calibration.
 

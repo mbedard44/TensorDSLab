@@ -30,6 +30,19 @@ def require_no_operation_axes(
         )
 
 
+def require_no_conditioning_axis_type(
+    spec: TensorKernelSpec[Any, Any],
+    axis_type: type,
+) -> None:
+    """Reject one exact semantic role from Kernel conditioning geometry."""
+
+    if any(type(axis) is axis_type for axis in spec.conditioning_axes):
+        raise TypeError(
+            f"{type(spec).__name__} must not condition on "
+            f"{axis_type.__name__}"
+        )
+
+
 def require_operation_axis_count(
     spec: TensorKernelSpec[Any, Any],
     *,

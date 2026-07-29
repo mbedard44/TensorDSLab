@@ -25,6 +25,27 @@ or to old completed end-to-end bytes.
 | DS20k profile and bundled readout demonstrations | Intentionally retired to application ownership |
 | Runtime/Plan execution representation | Intentionally retired |
 
+## Maintenance 18 Raw-ZLE Comparison Boundary
+
+Maintenance 18 promotes only IV-DSLab's raw interval recurrence:
+
+| Evidence | Exact identity |
+|---|---|
+| source/symbol | `src/dselec/zle.py::_find_zle_intervals` |
+| source SHA-256 | `c06b5e9cdf35ec41e487518e3b1b0baa0c957899645bbd9ac2479c902bb1b304` |
+| tests SHA-256 | `ab85ec0f4deff32c1a3bdba81a6a7617c12f9aaf73d17b5e0dfa6eb6424ed187` |
+| configuration SHA-256 | `fd42244bb4405dc328496efb8043fff522584a1922b811246670ac0e940e1c64` |
+
+For identical resolved trigger, release, required-time-over, pre-trigger, and
+post-trigger integers, TensorDSLab's retained sample support is exactly the
+union of the donor raw intervals and retained values equal the source ADC
+codes. The parity classification is **Preserved at dense sample support**.
+
+Donor interval ordering/count/identity, ragged records, integrals, `nhits`,
+allocation, wrapper-selected downsampling, filtering, fixed-point arithmetic,
+and durable encoding are intentional representation or scope divergences.
+The donor checkout is evidence only and is neither imported nor modified.
+
 ## Scientific Details
 
 Charge sources are exact nonnegative `torch.int64` avalanche-compatible

@@ -21,6 +21,22 @@ class _TensorBearing(_DtypeBearing, Protocol):
         ...
 
 
+class _SuppressionSpec(_DtypeBearing, Protocol):
+    """Expose one encoded sentinel and represented dtype."""
+
+    @property
+    def suppression_code(self) -> int:
+        ...
+
+
+class _EncodedTensor(_TensorBearing, Protocol):
+    """Expose one encoded tensor and its sentinel-bearing Spec."""
+
+    @property
+    def spec(self) -> _SuppressionSpec:
+        ...
+
+
 def require_exact_dtype(
     value: _DtypeBearing,
     dtype: torch.dtype,
@@ -62,6 +78,35 @@ def require_signed_integer_dtype(
         value,
         dtypes=(torch.int8, torch.int16, torch.int32, torch.int64),
     )
+
+
+def require_negative_representable_suppression_code(
+    value: _SuppressionSpec,
+) -> None:
+    """Require one explicit negative sentinel representable by the Spec dtype."""
+
+    suppression_code = value.suppression_code
+    if type(suppression_code) is not int:
+        raise TypeError("suppression_code must be exactly int")
+    if suppression_code >= 0:
+        raise ValueError("suppression_code must be negative")
+    limits = torch.iinfo(value.dtype)
+    if suppression_code < limits.min or suppression_code > limits.max:
+        raise ValueError(
+            "suppression_code must be representable by the Spec dtype"
+        )
+
+
+def require_encoded_values(value: _EncodedTensor) -> None:
+    """Require every encoded value to be retained data or the exact sentinel."""
+
+    suppression_code = value.spec.suppression_code
+    invalid = (value.tensor < 0) & (value.tensor != suppression_code)
+    if bool(invalid.any()):
+        raise ValueError(
+            f"{type(value).__name__} values must be nonnegative or equal "
+            "the suppression code"
+        )
 
 
 def require_finite(value: _TensorBearing) -> None:

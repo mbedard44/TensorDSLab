@@ -23,8 +23,10 @@ TensorCore Coordinates
 `TimeAxis` and `FrequencyAxis` are `QuantityAxis` leaves whose exact integer
 Coordinates remain distinct from physical scale and Unit.
 
-Each Product and coefficient is a fieldless exact semantic leaf. Quantity
-state lives in Specs, never on tensor values. Configs compose exact output
+Each Product and coefficient is an exact semantic leaf. Product and
+coefficient objects remain fieldless; `EncodedWaveformSpec` deliberately owns
+one structural suppression-code field. Quantity state lives in Specs, never
+on tensor values. Configs compose exact output
 Specs and typed Kernel collections. A fresh prepared Config owns immutable
 alignment/source-provenance facts; Runtime, Plan, generic Product, generic
 Config, and generic readout abstractions are absent.
@@ -50,6 +52,8 @@ workflow composition and persistence.
 - Deterministic transforms preserve ordinary autograd connectivity.
 - Every generated Product is fresh, contiguous, and source-disjoint.
 - Stochastic Products use public TensorCore addressed Distributions only.
+- EncodedWaveform is deterministic, preserves retained DigitizedWaveform codes,
+  and represents suppression only with its explicit negative Spec field.
 
 Earlier stage and maintenance work orders remain immutable historical evidence
 for the contracts they closed; they do not override this current target.

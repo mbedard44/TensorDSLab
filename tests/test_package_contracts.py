@@ -8,6 +8,7 @@ import tensor_dslab.analog_waveform
 import tensor_dslab.charge
 import tensor_dslab.common
 import tensor_dslab.digitized_waveform
+import tensor_dslab.encoded_waveform
 import tensor_dslab.noise_waveform
 import tensor_dslab.photoelectrons
 import tensor_dslab.pure_waveform
@@ -25,17 +26,24 @@ class PackageContractTests(unittest.TestCase):
             "DarkCountRateSpec", "DelayedCrosstalk", "DelayedCrosstalkSpec",
             "DigitizedWaveform", "DigitizedWaveformConfig",
             "DigitizedWaveformKernels", "DigitizedWaveformSpec",
-            "DirectCrosstalk", "DirectCrosstalkSpec", "ExampleAxis",
+            "DirectCrosstalk", "DirectCrosstalkSpec", "EncodedWaveform",
+            "EncodedWaveformConfig", "EncodedWaveformKernels",
+            "EncodedWaveformSpec", "ExampleAxis",
             "FrequencyAxis", "InputMaximum", "InputMaximumSpec",
             "InputMinimum", "InputMinimumSpec", "NoiseWaveform",
             "NoiseWaveformConfig", "NoiseWaveformKernels",
-            "NoiseWaveformSpec", "Photoelectrons", "PhotoelectronsSpec",
+            "NoiseWaveformSpec", "PostTriggerSamples",
+            "PostTriggerSamplesSpec", "Photoelectrons", "PhotoelectronsSpec",
             "PowerSpectralDensity", "PowerSpectralDensitySpec",
-            "PulseResponse", "PulseResponseSpec", "PureWaveform",
+            "PulseResponse", "PulseResponseSpec", "PreTriggerSamples",
+            "PreTriggerSamplesSpec", "PureWaveform",
             "PureWaveformConfig", "PureWaveformKernels", "PureWaveformSpec",
             "QuantityAxis", "QuantityFieldSpec", "QuantityKernelSpec",
+            "ReleaseThresholdCode", "ReleaseThresholdCodeSpec",
+            "RequiredTimeOverSamples", "RequiredTimeOverSamplesSpec",
             "SmearingWidth", "SmearingWidthSpec", "TimeAxis",
-            "TimingJitter", "TimingJitterSpec", "WhiteNoiseRms",
+            "TimingJitter", "TimingJitterSpec", "TriggerThresholdCode",
+            "TriggerThresholdCodeSpec", "WhiteNoiseRms",
             "WhiteNoiseRmsSpec", "quantity", "unit_registry",
         )
         self.assertEqual(tensor_dslab.__all__, expected)
@@ -48,6 +56,7 @@ class PackageContractTests(unittest.TestCase):
                 tensor_dslab.noise_waveform.__all__,
                 tensor_dslab.analog_waveform.__all__,
                 tensor_dslab.digitized_waveform.__all__,
+                tensor_dslab.encoded_waveform.__all__,
             ),
             (
                 ("ChannelAxis", "ExampleAxis", "FrequencyAxis", "QuantityAxis",
@@ -76,6 +85,13 @@ class PackageContractTests(unittest.TestCase):
                  "DigitizedWaveformKernels", "DigitizedWaveformSpec",
                  "InputMaximum", "InputMaximumSpec", "InputMinimum",
                  "InputMinimumSpec"),
+                ("EncodedWaveform", "EncodedWaveformConfig",
+                 "EncodedWaveformKernels", "EncodedWaveformSpec",
+                 "PostTriggerSamples", "PostTriggerSamplesSpec",
+                 "PreTriggerSamples", "PreTriggerSamplesSpec",
+                 "ReleaseThresholdCode", "ReleaseThresholdCodeSpec",
+                 "RequiredTimeOverSamples", "RequiredTimeOverSamplesSpec",
+                 "TriggerThresholdCode", "TriggerThresholdCodeSpec"),
             ),
         )
         for required in (
@@ -92,6 +108,9 @@ class PackageContractTests(unittest.TestCase):
             "tensor_dslab/common/requirements/unit.py",
             "tensor_dslab/charge/runtime/random.py",
             "tensor_dslab/noise_waveform/runtime/random.py",
+            "tensor_dslab/encoded_waveform/runtime/prepare.py",
+            "tensor_dslab/encoded_waveform/runtime/produce.py",
+            "tensor_dslab/encoded_waveform/runtime/validate.py",
         ):
             self.assertTrue(Path(required).is_file(), required)
         self.assertFalse(Path("tensor_dslab/readout").exists())
@@ -101,6 +120,7 @@ class PackageContractTests(unittest.TestCase):
             "analog_waveform",
             "charge",
             "digitized_waveform",
+            "encoded_waveform",
             "noise_waveform",
             "photoelectrons",
             "pure_waveform",
@@ -119,6 +139,32 @@ class PackageContractTests(unittest.TestCase):
                     for node in runtime_tree.body
                 )
             )
+        package_files = tuple(
+            path
+            for path in Path("tensor_dslab").rglob("*")
+            if path.is_file()
+            and "__pycache__" not in path.parts
+            and path.suffix != ".pyc"
+        )
+        self.assertEqual(len(package_files), 73)
+        self.assertEqual(
+            sum(path.suffix == ".py" for path in package_files),
+            72,
+        )
+        test_paths = tuple(
+            path for path in Path("tests").rglob("*.py")
+        )
+        self.assertEqual(len(test_paths), 25)
+        test_methods = tuple(
+            node
+            for path in test_paths
+            for node in ast.walk(
+                ast.parse(path.read_text(encoding="utf-8"))
+            )
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+            and node.name.startswith("test_")
+        )
+        self.assertEqual(len(test_methods), 70)
 
     def test_private_requirement_and_kernel_collection_ownership(self) -> None:
         requirement_root = importlib.import_module(
@@ -153,6 +199,7 @@ class PackageContractTests(unittest.TestCase):
             "kernel.py": (
                 "require_exact_kernel_spec",
                 "require_no_operation_axes",
+                "require_no_conditioning_axis_type",
                 "require_operation_axis_count",
                 "require_operation_axes_type",
                 "require_nonempty_operation_extents",
@@ -165,6 +212,8 @@ class PackageContractTests(unittest.TestCase):
                 "require_dtype_in",
                 "require_floating_dtype",
                 "require_signed_integer_dtype",
+                "require_negative_representable_suppression_code",
+                "require_encoded_values",
                 "require_finite",
                 "require_nonnegative",
                 "require_positive",
@@ -214,6 +263,7 @@ class PackageContractTests(unittest.TestCase):
             (tensor_dslab.NoiseWaveformKernels, "noise_waveform"),
             (tensor_dslab.AnalogWaveformKernels, "analog_waveform"),
             (tensor_dslab.DigitizedWaveformKernels, "digitized_waveform"),
+            (tensor_dslab.EncodedWaveformKernels, "encoded_waveform"),
         )
         for collection_type, package in owners:
             with self.subTest(collection=collection_type.__name__):

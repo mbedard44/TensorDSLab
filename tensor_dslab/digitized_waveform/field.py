@@ -4,14 +4,13 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Self, final, override
 
-import torch
 from tensor_core import TensorField
 
 from tensor_dslab.common import QuantityFieldSpec
 from tensor_dslab.common.requirements.field import require_exact_field_spec
 from tensor_dslab.common.requirements.tensor import (
-    require_exact_dtype,
     require_nonnegative,
+    require_signed_integer_dtype,
 )
 from tensor_dslab.common.requirements.unit import require_unit_compatible
 
@@ -25,7 +24,7 @@ class DigitizedWaveformSpec[AxesT: tuple](QuantityFieldSpec[AxesT]):
 
     @override
     def _require_quantity_field_spec(self) -> None:
-        require_exact_dtype(self, torch.int32)
+        require_signed_integer_dtype(self)
         require_unit_compatible(
             self.unit,
             target="",

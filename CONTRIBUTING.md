@@ -5,6 +5,22 @@ ownership boundaries, typed public APIs, deterministic behavior, focused tests,
 small coherent changes, and documentation that explains contracts rather than
 narrating code.
 
+## Maintenance 18 Engineering Boundary
+
+`EncodedWaveform` is a dense, deterministic, sentinel-coded terminal
+DAQ/readout Product. Its Field Spec owns an explicit negative suppression code;
+its five policy Kernels are exact int64 scalar or non-Time-conditioned
+coefficients. Product preparation admits one exact DigitizedWaveform source,
+requires identical signed dtype/unit/axes/device, aligns policies, checks
+release greater than or equal to trigger, and preflights all scratch spans.
+Production must remain tensor-native: no donor call, host-list support, or
+Python loop over Time samples or detector lanes.
+
+Retained values are unchanged source ADC codes, including zero. Suppressed
+values are exactly the configured sentinel. The Product does not promise
+record boundaries, filtering/downsampling, physical-duration conversion,
+calibration, reconstruction, IO, or a generic encoder framework.
+
 ## Maintenance 16 Engineering Boundary
 
 The current package retains exact TensorCore `0.22.0` and the Maintenance 15
@@ -53,8 +69,9 @@ Project/display name: TensorDSLab
 Python import: tensor_dslab (accepted on main through Maintenance 5)
 Distribution name: tensor-dslab (accepted metadata; not published or released)
 Delivery maturity: active development / pre-deployment
-Package maturity: Maintenance 16 locally closed
-Active production gate: Maintenance 17 application-neutral readout quickstart
+Package maturity: active development; Maintenance 18 exact-byte state is
+  governed by its self-effecting lifecycle records
+Current production boundary: Maintenance 18 EncodedWaveform raw ZLE
 Stage 8: separately stopped; any restart requires a new Design authority after
 Maintenance 6
 ```

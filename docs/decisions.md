@@ -2,6 +2,21 @@
 
 ## Accepted Current Direction
 
+### Maintenance 18 Selects Dense Raw-ZLE Support
+
+TensorDSLab selects one deterministic root-level `EncodedWaveform` Product as
+the terminal reusable DAQ/readout value and future waveform ingress. The
+Product is dense because its current semantic contract represents sample
+support, not donor record identity. It uses an explicit negative Spec-owned
+suppression code; retained nonnegative ADC codes remain unchanged.
+
+Five exact int64 Kernels own trigger/release/time-over/pre/post policy and may
+condition only on non-Time output roles. The first law is raw negative-going
+selection with release hysteresis and padding. Downsampling, filtering,
+fixed-point firmware behavior, records, IO, calibration, and reconstruction
+remain deferred. No generic readout, encoder, or application workflow is
+selected.
+
 ### Maintenance 15 Selects Spec-Composed Products
 
 TensorDSLab selects exact TensorCore `0.22.0` and a reusable parts-bin
