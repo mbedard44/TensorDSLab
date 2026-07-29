@@ -130,6 +130,48 @@ adds one notebook, one focused test module, optional demo metadata, and living
 documentation; test totals and sdist bytes will therefore change. Production
 package bytes and the public facade must not change.
 
+## Pre-Candidate Environment-Test Amendment
+
+Implementation stopped before committing a candidate when the first complete
+source run exposed one exact protected-test contradiction:
+
+```text
+selected Maintenance 17 environment contract:
+    create_environment.sh installs ${repository_root}[demos]
+protected Maintenance 16 test:
+    tests/test_environment_script.py requires "[demos]" to be absent
+complete stopped source run:
+    60 tests run / 59 passed / 1 failed
+sole failure:
+    EnvironmentScriptTests.test_core_only_smoke_and_exact_dependency
+```
+
+The notebook, optional dependency group, and environment contract were already
+coherent in focused execution. The failure was caused only by the prior
+test freezing the superseded core-only install spelling. No implementation
+candidate, Validation return, or loop slot was consumed.
+
+This amended Design authority changes no notebook, dependency, environment, or
+application boundary. It adds exactly one existing test path to the
+Implementation allowlist:
+
+```text
+tests/test_environment_script.py
+```
+
+Implementation must rename or rewrite the one environment test so it requires
+the exact `[demos]` install spelling while retaining its existing package
+version, TensorCore version/commit, and retired-`SampleAxis` assertions. It may
+add a direct check for all four exact optional demo dependencies when useful,
+but it must not weaken the installed-site-packages, PEP 610, cleanup, or
+no-shadowing contracts owned elsewhere.
+
+Every preserved dirty implementation byte remains provisional and uncommitted.
+Implementation may fast-forward its branch with those nonoverlapping changes
+preserved, add only this bounded test correction, rerun its complete assigned
+gate, and then freeze Candidate 1 as the exact direct child of this amended
+authority.
+
 ## Selected Boundary
 
 Maintenance 17 adds exactly one package-level demonstration:
@@ -931,6 +973,11 @@ physical Python test lines:
 Do not freeze an exact repository-wide module count as a permanent
 architecture invariant.
 
+Update `tests/test_environment_script.py` only to replace its obsolete
+core-only installation assertion with the selected exact demo-extra
+installation assertion. Preserve the remaining exact dependency and retired
+surface checks.
+
 ## Required Mutants
 
 Committed evidence must kill these private process-local mutants or exact
@@ -969,6 +1016,7 @@ Implementation may change only:
 ```text
 A  demos/readout.ipynb
 A  tests/test_readout_demo.py
+M  tests/test_environment_script.py
 M  pyproject.toml
 M  create_environment.sh
 M  README.md
@@ -990,7 +1038,7 @@ Protected and byte-identical:
 
 ```text
 tensor_dslab/**
-tests/** except tests/test_readout_demo.py
+tests/** except tests/test_readout_demo.py and tests/test_environment_script.py
 docs/parity.md
 docs/architecture/**
 docs/decisions.md

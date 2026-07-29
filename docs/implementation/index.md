@@ -612,6 +612,14 @@ assertion, then overlays the three sensors with stable colors in six aligned
 Product panels. Optional notebook dependencies, the environment installer, one
 focused demo test module, and the minimum living documentation are updated.
 
+Implementation's first complete source run stopped before any candidate when
+the selected `[demos]` environment install contradicted the protected
+Maintenance 16 environment test's exact no-`[demos]` assertion. The
+documentation-only amended authority adds only
+`tests/test_environment_script.py` to the allowlist so that assertion follows
+the new exact install contract while every other environment/dependency check
+remains. No candidate or loop slot was consumed.
+
 Complete Validation owns source/archive notebook execution, deterministic
 replay, the exact 20-mutant proof matrix, visual inspection, full
 source/archive/typing gates, deterministic artifacts, isolated installed
