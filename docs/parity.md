@@ -76,3 +76,33 @@ goldens. Independent statistical/analytic oracles govern current science.
 The candidate evidence is CPU-only. It establishes no donor-wide equivalence,
 CUDA behavior, performance, calibration, release, deployment, compatibility,
 or production-readiness claim.
+
+## Reconstruction Design Comparison Boundary
+
+The [reconstruction Product architecture](architecture/reconstruction.md) is a
+Design baseline only. It promotes no IV-DSLab reconstruction algorithm and
+authorizes no production code. The comparison boundary is limited to the
+representation and responsibility split observed in IV-DSLab's ZLE, hit, and
+pulse-finding parts bin:
+
+```text
+src/dselec/zle.py
+src/dselec/hit_finder.py
+src/dsreco/bayesian_blocks.py
+src/dsreco/pulse_finder.py
+```
+
+| Donor behavior or representation | Design classification |
+|---|---|
+| ZLE acquisition preserves ADC codes only inside selected intervals | Concept preserved by `EncodedWaveform` |
+| variable-length ZLE sample records | Intentionally replaced by one dense sentinel-coded tensor on the shared TimeAxis |
+| touching ZLE records retain distinct record metadata | Intentionally discarded because no sample-level gap exists |
+| hit processing may reset at each donor ZLE record boundary | Not promoted; requires evidence of scientific necessity |
+| localized per-channel hit information precedes detector-wide pulse finding | Conceptual responsibility order preserved |
+| donor hit weight, filtering, and boundary equations | Not promoted; deferred to focused `SignalWaveform` and `Hits` design |
+| Bayesian Blocks pulse finding | Not promoted; one candidate among algorithms to evaluate |
+| variable-length pulse start/end records | Intentionally represented by dense zero-based `PulseMembership` |
+
+Any later adoption, approximation, or intentional scientific divergence must
+add the exact algorithmic comparison boundary and evidence here before its
+implementation work order is dispatched.

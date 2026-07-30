@@ -78,6 +78,7 @@ samples displayed as gaps.
 
 - [Public API](api.md)
 - [Product architecture](architecture/readout.md)
+- [Reconstruction Product architecture](architecture/reconstruction.md)
 - [TensorCore integration](architecture/tensors.md)
 - [Scientific parity](parity.md)
 - [Validation](validation.md)
