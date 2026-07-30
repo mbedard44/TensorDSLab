@@ -19,10 +19,10 @@ ROOT = Path(__file__).resolve().parents[1]
 NOTEBOOK_PATH = ROOT / "demos" / "readout.ipynb"
 SUMMARY_PREFIX = "READOUT_DEMO_SUMMARY="
 SOURCE_PROJECTION_SHA256 = (
-    "808b98af9c8d08292f0e05d7b3d81f2bcf1ca28bd4c45718098023c1dc161b00"
+    "47fe53f9153f48d6ee7b2a27aae46d24ceb2b12f01d4a437b3957c52b7501bac"
 )
 COMMITTED_NOTEBOOK_SHA256 = (
-    "6608d89c894df4f08ed4af7f9c0df404025e8d3855da59b32d75d56e32cce264"
+    "671f45cf8e21edc480478dedc6cfe60767708c69f9412cab8db0b6bebc3e39ae"
 )
 FIGURE_TEXT = "<Figure size 1300x850 with 6 Axes>"
 OUTPUT_HASHES = {
@@ -512,7 +512,7 @@ class ReadoutDemoTests(unittest.TestCase):
             hashlib.sha256(self.notebook_bytes).hexdigest(),
             COMMITTED_NOTEBOOK_SHA256,
         )
-        self.assertEqual(len(self.notebook_bytes), 852279)
+        self.assertEqual(len(self.notebook_bytes), 853014)
         self.assertEqual(
             _source_projection_hash(self.notebook),
             SOURCE_PROJECTION_SHA256,
@@ -647,6 +647,27 @@ class ReadoutDemoTests(unittest.TestCase):
             cell.source for cell in self.markdown_cells
         )
         self.assertIn(
+            "TensorDSLab is a parts bin of semantic Products",
+            markdown_source,
+        )
+        self.assertIn(
+            "Photoelectrons -> Charge -> PureWaveform -> NoiseWaveform "
+            "-> AnalogWaveform -> DigitizedWaveform -> EncodedWaveform",
+            markdown_source,
+        )
+        self.assertIn(
+            "The first stages describe silicon-sensor effects",
+            markdown_source,
+        )
+        self.assertIn(
+            "This helper is only a convenience for this demo",
+            markdown_source,
+        )
+        self.assertIn(
+            "It is not part of TensorDSLab",
+            markdown_source,
+        )
+        self.assertIn(
             "One `Photoelectrons` Product holds both independent examples "
             "and all three sensors in one tensor",
             markdown_source,
@@ -666,6 +687,9 @@ class ReadoutDemoTests(unittest.TestCase):
         self.assertEqual(
             level_two_headings,
             (
+                "## Imports",
+                "## Axes",
+                "## Plotting",
                 "## Photoelectrons",
                 "## Charge",
                 "## PureWaveform",
