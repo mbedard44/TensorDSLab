@@ -884,6 +884,13 @@ composition while continuing to forbid a package-owned workflow/profile API,
 generic orchestration, or production import of notebook code. It adds no plot
 and preserves all seven committed Product-local PNG payloads exactly.
 
+The opening also describes TensorDSLab as a parts bin of semantic Products
+chained from `Photoelectrons` through `EncodedWaveform`. The three setup cells
+are titled `Imports`, `Axes`, and `Plotting`; the last is explicitly
+demo-convenience code rather than a TensorDSLab surface. These setup headings
+narrowly replace Maintenance 23's Product-only heading rule while leaving all
+seven Product headings intact.
+
 No production, dependency, metadata, environment, public API, scientific, RNG,
 CUDA, calibration, compatibility, release, or publication change is
 authorized.

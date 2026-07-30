@@ -144,6 +144,32 @@ identity.
 
 ## Notebook Presentation
 
+The opening explains TensorDSLab as a parts bin of semantic Products that an
+application may chain to model silicon-sensor effects and DAQ stages:
+
+```text
+Photoelectrons
+    -> Charge
+    -> PureWaveform
+    -> NoiseWaveform
+    -> AnalogWaveform
+    -> DigitizedWaveform
+    -> EncodedWaveform
+```
+
+The three setup cells use simple level-two headings:
+
+```text
+## Imports
+## Axes
+## Plotting
+```
+
+`Plotting` must say directly that its helper exists only for the convenience
+of this demonstration. It is not a TensorDSLab Product, workflow, or public
+API. These three setup headings narrowly supersede Maintenance 23's
+Product-only heading rule; the seven Product headings remain unchanged.
+
 The section title is:
 
 ```text
@@ -210,6 +236,10 @@ Implementation must prove:
 
 - exact allowed-path scope and clean diff checks;
 - the notebook retains strict Markdown/code alternation and unique stable IDs;
+- the opening describes the semantic-Product parts bin and exact seven-Product
+  chain in simple language;
+- the setup headings are exactly `Imports`, `Axes`, and `Plotting`, and the
+  plotting prose states that the helper is demo-only convenience;
 - all five new code cells have immediately preceding simple Markdown;
 - `ReadoutConfig` has exactly the six selected Config fields;
 - `Readout` requires exactly the seven selected Product member types;
