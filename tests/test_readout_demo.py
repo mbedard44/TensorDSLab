@@ -12,16 +12,17 @@ from matplotlib import font_manager
 from nbclient import NotebookClient
 import nbformat
 from nbformat.notebooknode import NotebookNode
+import torch
 
 
 ROOT = Path(__file__).resolve().parents[1]
 NOTEBOOK_PATH = ROOT / "demos" / "readout.ipynb"
 SUMMARY_PREFIX = "READOUT_DEMO_SUMMARY="
 SOURCE_PROJECTION_SHA256 = (
-    "921b5f9fee0e3260867689642cb35224f2b1facd9623d42d3404a3887ee47fbf"
+    "af9290a54893abf34e06f849ae411a8edf8096148fe7fd9fda6027064b2c3468"
 )
 COMMITTED_NOTEBOOK_SHA256 = (
-    "5f423a6c90d093e10af5d2f8e7f5dcfe1070cf369d195b28b27f2d58c66be57b"
+    "f96f7bcb0d53dcbd16ac4badbeea28f9f5e199163ac40f8d6200926d2d60c6a6"
 )
 FIGURE_TEXT = "<Figure size 1300x850 with 6 Axes>"
 OUTPUT_HASHES = {
@@ -29,22 +30,22 @@ OUTPUT_HASHES = {
         "3f5814fa5c83b856ecdb5a15def832251cd0a5cff91d3dfbda21bd44bceb9139"
     ),
     "charge-view-code": (
-        "680c6231d009a9d6c590ee060bd5ddd1d4aad79950411e677a1e3da53cc2854c"
+        "fa0b3be699497ee279410261d095a67a729e25f5a1a59c3cea6af52c2116688f"
     ),
     "pure-waveform-view-code": (
-        "924a95d4c97e00d3cc6fde320e03b548cf323d24c0ddc8e7285560fa35809a1f"
+        "6df6a5ad87287b2cff09f3d0ce30d3901da1b9d026ee80dc433da3efdef34c2c"
     ),
     "noise-waveform-view-code": (
-        "69bf7451031461ad9a3baad9c70f6b53b7f733a1df3a7c5213e0849bae64e08b"
+        "150a39b12bc3ac4c36c49baa64257d2758e76458cbe7ff88848062d27f2f3a3e"
     ),
     "analog-waveform-view-code": (
-        "74f5b46839ad9ee3263caba3fac21705fb1e3606a2e25e0d688cb1c655b040c3"
+        "5101ea7c7b0a69712210f3d198a0fba220262cf30a1f386acdd9e9d841ed116a"
     ),
     "digitized-waveform-view-code": (
-        "fdd07c0a2a187aebe7b10239f297efafa96ba9ced98377278c626dc5d12479f0"
+        "acacf7d175b10409051db6792aae50d2c0e9fabf52720aaae9755dccfc8d64e5"
     ),
     "encoded-waveform-view-code": (
-        "dc7df1661bd9e5fca09a886ebae8d84f56b07c010f62066890a7a98f64e52e0d"
+        "242e6b8bf753219460a4fa8147a47a7081f907ef1dde0755cbb56acddf1fc0d3"
     ),
 }
 
@@ -133,10 +134,6 @@ summary = {{
         photoelectron_values,
         photoelectron_values_before,
     )),
-    "photo_charge_equal": bool(torch.equal(
-        photoelectrons.tensor.to(charge.tensor.dtype),
-        charge.tensor,
-    )),
     "channel_labels": list(channel_axis.coordinates.labels),
     "deposits": [
         [
@@ -154,12 +151,78 @@ summary = {{
     "time_scale": time_axis.coordinate_scale,
     "frequency_size": frequency_axis.size,
     "frequency_scale": frequency_axis.coordinate_scale,
+    "delayed_offsets": list(delayed_offsets),
+    "delayed_shape": list(delayed_crosstalk.tensor.shape),
+    "delayed_dtype": str(delayed_crosstalk.tensor.dtype),
+    "delayed_unit": str(delayed_crosstalk.spec.unit),
+    "delayed_sum": float(delayed_crosstalk.tensor.sum()),
+    "delayed_first": float(delayed_crosstalk.tensor[0]),
+    "delayed_last": float(delayed_crosstalk.tensor[-1]),
+    "delayed_digest": tensor_digest(delayed_crosstalk.tensor),
+    "delayed_conditioning": [
+        type(axis).__name__ for axis in delayed_crosstalk.conditioning_axes
+    ],
+    "delayed_operation": [
+        type(axis).__name__ for axis in delayed_crosstalk.operation_axes
+    ],
+    "delayed_relative_to": delayed_time_axis.relative_to.__name__,
+    "generations": charge_config.correlated_avalanche_generations.value,
+    "descendant_positions": [
+        [int(value) for value in position]
+        for position in torch.nonzero(
+            charge.tensor
+            > photoelectrons.tensor.to(charge.tensor.dtype),
+            as_tuple=False,
+        ).tolist()
+    ],
+    "descendant_count": int(
+        (
+            charge.tensor
+            > photoelectrons.tensor.to(charge.tensor.dtype)
+        ).sum()
+    ),
+    "descendant_total": float(
+        (
+            charge.tensor
+            - photoelectrons.tensor.to(charge.tensor.dtype)
+        ).sum()
+    ),
+    "earliest_source": {{
+        f"{{example_index}}:{{channel_index}}": int(
+            torch.nonzero(
+                photoelectrons.tensor[example_index, channel_index] > 0,
+                as_tuple=False,
+            ).min()
+        )
+        for example_index in range(example_axis.size)
+        for channel_index in range(channel_axis.size)
+    }},
+    "charge_integer": bool(torch.equal(
+        charge.tensor,
+        charge.tensor.floor(),
+    )),
     "pulse_support_ns": pulse_support_ns,
     "pulse_coefficient_count": pulse_coefficient_count,
     "pulse_offset_count": pulse_time_axis.size,
     "pulse_minimum": float(pulse_values.min()),
     "pulse_finite": bool(torch.isfinite(pulse_values).all()),
     "psd_shape": list(power_spectral_density.tensor.shape),
+    "psd_dtype": str(power_spectral_density.tensor.dtype),
+    "psd_device": power_spectral_density.tensor.device.type,
+    "psd_unit": str(power_spectral_density.spec.unit),
+    "psd_digest": tensor_digest(power_spectral_density.tensor),
+    "psd_sum": sum(
+        float(value) for value in power_spectral_density.tensor
+    ),
+    "psd_nonzero": int(torch.count_nonzero(power_spectral_density.tensor)),
+    "psd_zero": int((power_spectral_density.tensor == 0).sum()),
+    "psd_dc": float(power_spectral_density.tensor[0]),
+    "psd_positive_prefix": bool(
+        (power_spectral_density.tensor[1:626] > 0).all()
+    ),
+    "psd_zero_suffix": bool(
+        (power_spectral_density.tensor[626:] == 0).all()
+    ),
     "psd_conditioning": [
         type(axis).__name__
         for axis in power_spectral_density.conditioning_axes
@@ -168,37 +231,10 @@ summary = {{
         type(axis).__name__
         for axis in power_spectral_density.operation_axes
     ],
-    "psd_dc_zero": bool(
-        (power_spectral_density.tensor[:, 0] == 0).all()
-    ),
-    "psd_rows_distinct": bool(
-        not torch.equal(psd_sensor_0, psd_sensor_1)
-        and not torch.equal(psd_sensor_0, psd_sensor_2)
-        and not torch.equal(psd_sensor_1, psd_sensor_2)
-    ),
-    "psd_band_counts": [
-        [
-            int((psd_sensor_0 == 0.0).sum()),
-            int((psd_sensor_0 == 0.012).sum()),
-            int((psd_sensor_0 == 0.004).sum()),
-        ],
-        [
-            int((psd_sensor_1 == 0.0).sum()),
-            int((psd_sensor_1 == 0.008).sum()),
-            int((psd_sensor_1 == 0.016).sum()),
-        ],
-        [
-            int((psd_sensor_2 == 0.0).sum()),
-            int((psd_sensor_2 == 0.020).sum()),
-            int((psd_sensor_2 == 0.006).sum()),
-        ],
-    ],
-    "sensor_products_distinct": [
-        bool(
-            not torch.equal(product.tensor[0, 0], product.tensor[0, 1])
-            and not torch.equal(product.tensor[0, 0], product.tensor[0, 2])
-        )
-        for product in product_values
+    "noise_lane_digests": [
+        tensor_digest(noise_waveform.tensor[example_index, channel_index])
+        for example_index in range(example_axis.size)
+        for channel_index in range(channel_axis.size)
     ],
     "figure_count": len(product_figures),
     "figure_axes": [len(figure.axes) for figure in product_figures],
@@ -265,6 +301,13 @@ summary = {{
     "layout_bounds": layout_bounds,
     "adc_min": int(digitized_waveform.tensor.min()),
     "adc_max": int(digitized_waveform.tensor.max()),
+    "adc_example_extrema": [
+        [
+            int(digitized_waveform.tensor[index].min()),
+            int(digitized_waveform.tensor[index].max()),
+        ]
+        for index in range(example_axis.size)
+    ],
     "input_minimum": float(input_minimum.tensor),
     "input_maximum": float(input_maximum.tensor),
     "bit_depth": int(bit_depth.tensor),
@@ -404,12 +447,12 @@ class ReadoutDemoTests(unittest.TestCase):
 
     def test_source_inventory_metadata_and_public_boundary(self) -> None:
         self.assertEqual(self.notebook.nbformat, 4)
-        self.assertEqual(len(self.notebook.cells), 46)
-        self.assertEqual(len(self.markdown_cells), 23)
-        self.assertEqual(len(self.code_cells), 23)
+        self.assertEqual(len(self.notebook.cells), 48)
+        self.assertEqual(len(self.markdown_cells), 24)
+        self.assertEqual(len(self.code_cells), 24)
         self.assertEqual(
             tuple(cell.cell_type for cell in self.notebook.cells),
-            ("markdown", "code") * 23,
+            ("markdown", "code") * 24,
         )
         self.assertEqual(
             tuple(cell.id for cell in self.code_cells),
@@ -420,6 +463,7 @@ class ReadoutDemoTests(unittest.TestCase):
                 "photoelectron-values-code",
                 "photoelectrons-code",
                 "photoelectrons-view-code",
+                "delayed-crosstalk-values-code",
                 "charge-code",
                 "charge-view-code",
                 "pulse-math-code",
@@ -447,7 +491,7 @@ class ReadoutDemoTests(unittest.TestCase):
             hashlib.sha256(self.notebook_bytes).hexdigest(),
             COMMITTED_NOTEBOOK_SHA256,
         )
-        self.assertEqual(len(self.notebook_bytes), 876216)
+        self.assertEqual(len(self.notebook_bytes), 846602)
         self.assertEqual(
             _source_projection_hash(self.notebook),
             SOURCE_PROJECTION_SHA256,
@@ -475,7 +519,7 @@ class ReadoutDemoTests(unittest.TestCase):
             self.assertNotIn(forbidden, metadata_text)
         self.assertEqual(
             tuple(cell.execution_count for cell in self.code_cells),
-            tuple(range(1, 24)),
+            tuple(range(1, 25)),
         )
         observed_output_hashes = {}
         for cell in self.notebook.cells:
@@ -585,6 +629,40 @@ class ReadoutDemoTests(unittest.TestCase):
             "illustrative rather than calibrated",
             markdown_source,
         )
+        level_two_headings = tuple(
+            line
+            for cell in self.markdown_cells
+            for line in cell.source.splitlines()
+            if line.startswith("## ")
+        )
+        self.assertEqual(
+            level_two_headings,
+            (
+                "## Photoelectrons",
+                "## Charge",
+                "## PureWaveform",
+                "## NoiseWaveform",
+                "## AnalogWaveform",
+                "## DigitizedWaveform",
+                "## EncodedWaveform",
+            ),
+        )
+        all_cell_ids = tuple(cell.id for cell in self.notebook.cells)
+        charge_boundary = (
+            "charge-explanation",
+            "delayed-crosstalk-values-code",
+            "charge-semantics-explanation",
+            "charge-code",
+        )
+        charge_start = all_cell_ids.index("charge-explanation")
+        self.assertEqual(
+            all_cell_ids[charge_start : charge_start + 4],
+            charge_boundary,
+        )
+        self.assertNotIn(
+            "delayed-crosstalk-values-explanation",
+            all_cell_ids,
+        )
 
     def test_exact_product_axis_psd_and_shape_source(self) -> None:
         self.assertIn(
@@ -615,12 +693,14 @@ class ReadoutDemoTests(unittest.TestCase):
             "math.sqrt(2.0) * 45.69",
             "torch.max(torch.abs(pulse_raw)) * -14.5912372",
             "OffsetCoordinates(offsets=tuple(range(1011)))",
-            "torch.full((625,), 0.012",
-            "torch.full((1875,), 0.004",
-            "torch.full((938,), 0.008",
-            "torch.full((1562,), 0.016",
-            "torch.full((1250,), 0.020",
-            "torch.full((1250,), 0.006",
+            "delayed_offsets = tuple(range(1, 251))",
+            "torch.arange(\n        1,\n        251,",
+            "* time_axis.coordinate_scale",
+            "-delayed_times_ns / 150.0",
+            "0.15 / delayed_crosstalk_values.sum()",
+            "conditioning_axes=()",
+            "operation_axes=(delayed_time_axis,)",
+            "correlated_avalanche_generations=NonnegativeInteger(value=2)",
             "bit_depth_value = torch.tensor(12",
             "input_minimum_value = torch.tensor(\n    -80.0",
             "input_maximum_value = torch.tensor(\n    20.0",
@@ -640,17 +720,16 @@ class ReadoutDemoTests(unittest.TestCase):
             self.code_source.count("pulse_gaussian = torch.exp("),
             1,
         )
-        self.assertIn(
-            "conditioning_axes=(channel_axis,)",
-            self.code_source,
-        )
+        self.assertNotIn("conditioning_axes=(channel_axis,)", self.code_source)
         self.assertIn(
             "operation_axes=(frequency_axis,)",
             self.code_source,
         )
-        self.assertIn("psd_sensor_0 = torch.cat", self.code_source)
-        self.assertIn("psd_sensor_1 = torch.cat", self.code_source)
-        self.assertIn("psd_sensor_2 = torch.cat", self.code_source)
+        self.assertIn("conditioning_axes=()", self.code_source)
+        self.assertNotIn("psd_sensor_0", self.code_source)
+        self.assertNotIn("psd_sensor_1", self.code_source)
+        self.assertNotIn("psd_sensor_2", self.code_source)
+        self.assertNotIn("torch.stack", self.code_source)
         self.assertNotIn("torch.rand", self.code_source)
         self.assertIn(
             "leaves suppressed regions blank",
@@ -677,6 +756,65 @@ class ReadoutDemoTests(unittest.TestCase):
         self.assertIn("PhotoelectronsSpec", photoelectrons_source)
         self.assertIn("photoelectrons = Photoelectrons(", photoelectrons_source)
         self.assertNotIn("photoelectron_values[", photoelectrons_source)
+
+        delayed_values_source = next(
+            cell.source
+            for cell in self.code_cells
+            if cell.id == "delayed-crosstalk-values-code"
+        )
+        charge_source = next(
+            cell.source
+            for cell in self.code_cells
+            if cell.id == "charge-code"
+        )
+        for calculation in (
+            "delayed_offsets = tuple(range(1, 251))",
+            "delayed_times_ns = ",
+            "torch.arange(",
+            "torch.exp(",
+            "0.15 / delayed_crosstalk_values.sum()",
+        ):
+            self.assertIn(calculation, delayed_values_source)
+            self.assertNotIn(calculation, charge_source)
+        for semantic_name in (
+            "OffsetAxis",
+            "DelayedCrosstalkSpec",
+            "DelayedCrosstalk(",
+            "ChargeConfig",
+            "ChargeKernels",
+            "ChargeSpec",
+            "Charge.create",
+        ):
+            self.assertNotIn(semantic_name, delayed_values_source)
+            self.assertIn(semantic_name, charge_source)
+        reconstructed_delayed = torch.exp(
+            -torch.arange(1, 251, dtype=torch.float64) * 2.0 / 150.0
+        )
+        reconstructed_delayed *= 0.15 / reconstructed_delayed.sum()
+        self.assertEqual(reconstructed_delayed.shape, (250,))
+        self.assertEqual(reconstructed_delayed.dtype, torch.float64)
+        self.assertEqual(
+            tuple(range(1, 251)),
+            tuple(range(1, reconstructed_delayed.numel() + 1)),
+        )
+        self.assertEqual(
+            float(reconstructed_delayed.sum()),
+            0.14999999999999997,
+        )
+        self.assertEqual(
+            float(reconstructed_delayed[0]),
+            0.0020602220776112065,
+        )
+        self.assertEqual(
+            float(reconstructed_delayed[-1]),
+            7.448286214784992e-05,
+        )
+        self.assertEqual(
+            hashlib.sha256(
+                reconstructed_delayed.numpy().tobytes()
+            ).hexdigest(),
+            "a49cd5c4c14d606904a321aa48ba7a8d861f3f37ea03ecdbc0d4492d4d780b70",
+        )
 
         pulse_math_source = next(
             cell.source
@@ -735,9 +873,11 @@ class ReadoutDemoTests(unittest.TestCase):
             for cell in self.code_cells
             if cell.id == "noise-waveform-code"
         )
-        for calculation in ("torch.cat(", "torch.full(", "torch.stack("):
+        for calculation in ("torch.cat(", "torch.tensor(", "torch.zeros("):
             self.assertIn(calculation, psd_values_source)
             self.assertNotIn(calculation, noise_waveform_source)
+        self.assertNotIn("torch.full(", psd_values_source)
+        self.assertNotIn("torch.stack(", psd_values_source)
         for semantic_name in (
             "PowerSpectralDensitySpec",
             "PowerSpectralDensity(",
@@ -748,6 +888,41 @@ class ReadoutDemoTests(unittest.TestCase):
         ):
             self.assertNotIn(semantic_name, psd_values_source)
             self.assertIn(semantic_name, noise_waveform_source)
+        psd_tree = ast.parse(psd_values_source)
+        psd_tensor_calls = tuple(
+            node
+            for node in ast.walk(psd_tree)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id == "torch"
+            and node.func.attr == "tensor"
+        )
+        self.assertEqual(len(psd_tensor_calls), 1)
+        psd_prefix = ast.literal_eval(psd_tensor_calls[0].args[0])
+        self.assertIsInstance(psd_prefix, tuple)
+        assert isinstance(psd_prefix, tuple)
+        self.assertEqual(len(psd_prefix), 626)
+        reconstructed_psd = torch.cat(
+            (
+                torch.tensor(psd_prefix, dtype=torch.float32),
+                torch.zeros(1875, dtype=torch.float32),
+            )
+        )
+        self.assertEqual(reconstructed_psd.shape, (2501,))
+        self.assertEqual(reconstructed_psd.dtype, torch.float32)
+        self.assertEqual(int(torch.count_nonzero(reconstructed_psd)), 625)
+        self.assertEqual(float(reconstructed_psd[0]), 0.0)
+        self.assertTrue(bool((reconstructed_psd[1:626] > 0).all()))
+        self.assertTrue(bool((reconstructed_psd[626:] == 0).all()))
+        self.assertEqual(
+            sum(float(value) for value in reconstructed_psd),
+            11.251378314314934,
+        )
+        self.assertEqual(
+            hashlib.sha256(reconstructed_psd.numpy().tobytes()).hexdigest(),
+            "928921a257e50cbe1720358a8b929249e5bff9383cb3c63be1a67769c4c09a47",
+        )
 
         digitizer_values_source = next(
             cell.source
@@ -1185,12 +1360,12 @@ class ReadoutDemoTests(unittest.TestCase):
             first["digests"],
             [
                 "d1d3b5339e0fcb4c3c0e03253b22f8dc221aa4e97bc681afe46d5bfa5be89be7",
-                "18f7bcafed30c6aae5507efe928e899a16e7a0d5c5fe070116f1026feb74aceb",
-                "177d956b3c0a0119548a1ad47cd92904f0d53400c4536373d67b97da8896d865",
-                "1f493e35435eb2d72ff01334a6c0d0028766813d9ed8eabe6feebbd673314844",
-                "94646193ffdf7ef6dd7afd0822d9850a396e80aa0b6c9a3590da3302cb143524",
-                "c4e2a4210cef98ccfcc4e20090e5b456b05db2bd276ab3b0c75ddbaa2d9f02cf",
-                "8b25c2ac35d68db9b183d7ab0b82427167527e0ff4137a1a6d727af062c316f8",
+                "f2bdd4298c2f1d55b94bd4a348b4ebda6b2a1eb6a318113f50d79baa646aee84",
+                "ab16cea7c2b3a6b8e8845270b265e27dfa0f555ad093cabc9dfff7fffb5773b1",
+                "75a2ebfd917d1fd7ceed29119f00c11df9eb3cbda0cf2c6d64bd3b54451c5e9d",
+                "0ed3238c8138eb0ab31e0ac44866c3cd48382c9d1bb5b3e8a99508d2adb7e46b",
+                "ed05e0fe82dbfa86239a6dd08da0fbf5dfd6ef180845f81e5a3e4b1070e4f7fc",
+                "edb6703f748fa19aeebd8222c8be84a588a43ab716316a543b714b6a70a7aab0",
             ],
         )
         expected_example_digests = [
@@ -1199,28 +1374,28 @@ class ReadoutDemoTests(unittest.TestCase):
                 "df666d1bba4f9d1c0d09805352fd1936375a6ec274abd7c923dd123eac817542",
             ],
             [
-                "66113e0e8952d8e3906217ca6efee0ade16884ff2a2ec095192faf0b72dda5b4",
+                "ee009c5b1ba7033257ec762d569e97cd197482af3eb8d53ddbf9fbabea89318a",
                 "31f86a483f59402737b2264644608062f3f2a0f826afad9e5544fc793f39616b",
             ],
             [
-                "7233c98dd4237a425703855271ecd85fa4a78440ffbf34f1b6fb8b3593481f45",
+                "4bf076c249d208d705035c5cee8ea53bfafb129cb3138c8034c1a179329a3987",
                 "8819e225bea2a0d0ecdb237061b1bf3645b0dbe7a978220168f23fc9b74f29fd",
             ],
             [
-                "0f8798c98ec544dcbcfd57579d0f6ee9c1af2e24e10caf6832919f438be51208",
-                "c3feda4109ef0c6cd99dd9a62fbf5d5e793e8048c179955ac2d4c14e393ec0e0",
+                "f3cffacc384d011ea81a2237ce41bf3c1e1e595e2bb529f3a1a171fa07c0cc95",
+                "9ba350ae85a00d72cd88acdfe541377bc354fa5d61072c9927b2656daf32d269",
             ],
             [
-                "e625e37451c37424d345e470ca6426543e56a19dd2bfdf570ad5c3660bad39ad",
-                "270d00c4f683027354b06bd7174232804f317bedeeeed7a7de48c06e9805b168",
+                "914021735ec507834b73db6c26f657e319aed363aeb71ba08c43088f3415cd47",
+                "357f80bdcfe8c526ca992fd2892da2f8648c1331fae221282b1a296c4deca368",
             ],
             [
-                "4bc693b1c8870cecc1827afcf6da88883908b5bc202250ba99c9beaa0d1d4780",
-                "a7c1373e511a624054d66069ba639abd609ab30d0c9e20e4c9ca1d69bdf4f693",
+                "5f59bff515434ec03c9bc989aacf29bd67590a3369b26503660bbcc3646b858f",
+                "ac486a404b38f9bfa1b307762c403cb30d45b3c1aca4b3182159fe28d28e0062",
             ],
             [
-                "00644cce41594031fa44018ed27362c60234154e3dddafb6b6b517c87ca8335d",
-                "52256c0c105e70cb2aa2f06d7ddc332325ce5ab3d641823292bd188dcee378a4",
+                "8685ecfced88b781d855f3780aee57097411ca6883d36cd846cddb798d292089",
+                "2128bfafe3584226b715ca21bf963eb69166540b9e1724acd281baad6a83543a",
             ],
         ]
         self.assertEqual(first["example_digests"], expected_example_digests)
@@ -1231,7 +1406,6 @@ class ReadoutDemoTests(unittest.TestCase):
             )
         )
         self.assertTrue(first["source_unchanged"])
-        self.assertTrue(first["photo_charge_equal"])
         self.assertEqual(
             first["channel_labels"],
             ["sensor-0", "sensor-1", "sensor-2"],
@@ -1253,25 +1427,78 @@ class ReadoutDemoTests(unittest.TestCase):
         self.assertEqual(first["time_scale"], 2.0)
         self.assertEqual(first["frequency_size"], 2501)
         self.assertEqual(first["frequency_scale"], 0.1)
+        self.assertEqual(first["delayed_offsets"], list(range(1, 251)))
+        self.assertEqual(first["delayed_shape"], [250])
+        self.assertEqual(first["delayed_dtype"], "torch.float64")
+        self.assertEqual(first["delayed_unit"], "dimensionless")
+        self.assertEqual(first["delayed_sum"], 0.14999999999999997)
+        self.assertEqual(first["delayed_first"], 0.0020602220776112065)
+        self.assertEqual(first["delayed_last"], 7.448286214784992e-05)
+        self.assertEqual(
+            first["delayed_digest"],
+            "a49cd5c4c14d606904a321aa48ba7a8d861f3f37ea03ecdbc0d4492d4d780b70",
+        )
+        self.assertEqual(first["delayed_conditioning"], [])
+        self.assertEqual(first["delayed_operation"], ["OffsetAxis"])
+        self.assertEqual(first["delayed_relative_to"], "TimeAxis")
+        self.assertEqual(first["generations"], 2)
+        self.assertEqual(
+            first["descendant_positions"],
+            [[0, 0, 3736], [0, 2, 2548]],
+        )
+        self.assertEqual(first["descendant_count"], 2)
+        self.assertEqual(first["descendant_total"], 2.0)
+        self.assertEqual(
+            first["earliest_source"],
+            {
+                "0:0": 100,
+                "0:1": 1300,
+                "0:2": 2500,
+                "1:0": 800,
+                "1:1": 2000,
+                "1:2": 2900,
+            },
+        )
+        for example, channel, sample in first["descendant_positions"]:
+            self.assertGreater(
+                sample,
+                first["earliest_source"][f"{example}:{channel}"],
+            )
+            self.assertLess(sample, first["time_size"])
+        self.assertTrue(first["charge_integer"])
         self.assertEqual(first["pulse_support_ns"], 2020.27)
         self.assertEqual(first["pulse_coefficient_count"], 1011)
         self.assertEqual(first["pulse_offset_count"], 1011)
         self.assertAlmostEqual(first["pulse_minimum"], -14.5912372, places=5)
         self.assertTrue(first["pulse_finite"])
-        self.assertEqual(first["psd_shape"], [3, 2501])
-        self.assertEqual(first["psd_conditioning"], ["ChannelAxis"])
-        self.assertEqual(first["psd_operation"], ["FrequencyAxis"])
-        self.assertTrue(first["psd_dc_zero"])
-        self.assertTrue(first["psd_rows_distinct"])
+        self.assertEqual(first["psd_shape"], [2501])
+        self.assertEqual(first["psd_dtype"], "torch.float32")
+        self.assertEqual(first["psd_device"], "cpu")
+        self.assertEqual(first["psd_unit"], "millivolt ** 2")
         self.assertEqual(
-            first["psd_band_counts"],
+            first["psd_digest"],
+            "928921a257e50cbe1720358a8b929249e5bff9383cb3c63be1a67769c4c09a47",
+        )
+        self.assertEqual(first["psd_sum"], 11.251378314314934)
+        self.assertEqual(first["psd_nonzero"], 625)
+        self.assertEqual(first["psd_zero"], 1876)
+        self.assertEqual(first["psd_dc"], 0.0)
+        self.assertTrue(first["psd_positive_prefix"])
+        self.assertTrue(first["psd_zero_suffix"])
+        self.assertEqual(first["psd_conditioning"], [])
+        self.assertEqual(first["psd_operation"], ["FrequencyAxis"])
+        self.assertEqual(
+            first["noise_lane_digests"],
             [
-                [1, 625, 1875],
-                [1, 938, 1562],
-                [1, 1250, 1250],
+                "4aea755e7c8c309e8afac1f9e731cfab9c8310d78850d4150588033ce5f61763",
+                "cec5be6d2b2fa2eb797667cc12c4de62b4bf86039bb9b7c12dd996f377cf80cf",
+                "b5171e9fdac933624bffacc51c59a915e6868c1204841107202105b21970f702",
+                "8e131d07b8d5b5b0ac16c29b301ae0851eb49bb778891a317c43ff8900e248b7",
+                "a13129ebcf73d93b744079d95cf97969787f340a529eb6ef75a836061bf79391",
+                "d20164cd6371dd45ec1b3217b1e5a93794aba3c93ea1cb1dea9626c192a65d0b",
             ],
         )
-        self.assertTrue(all(first["sensor_products_distinct"]))
+        self.assertEqual(len(set(first["noise_lane_digests"])), 6)
         self.assertEqual(first["input_minimum"], -80.0)
         self.assertEqual(first["input_maximum"], 20.0)
         self.assertEqual(first["bit_depth"], 12)
@@ -1282,14 +1509,14 @@ class ReadoutDemoTests(unittest.TestCase):
             first["encoded_support"],
             [
                 [
-                    [[280, 362], [3721, 4261]],
-                    [[1363, 1749]],
-                    [[2541, 3085]],
+                    [[3724, 4371]],
+                    [[1349, 1817]],
+                    [[2530, 3147]],
                 ],
                 [
-                    [[873, 1267]],
-                    [[2030, 2570]],
-                    [[2924, 3425]],
+                    [[863, 1368]],
+                    [[2027, 2601], [3640, 3855]],
+                    [[2967, 3503]],
                 ],
             ],
         )
@@ -1358,6 +1585,12 @@ class ReadoutDemoTests(unittest.TestCase):
         self.assertEqual(
             tuple(zip(first["units"], first["figure_titles"])),
             tuple(zip(expected_units, expected_titles)),
+        )
+        self.assertEqual(first["adc_min"], 341)
+        self.assertEqual(first["adc_max"], 3692)
+        self.assertEqual(
+            first["adc_example_extrema"],
+            [[341, 3692], [896, 3656]],
         )
         self.assertGreater(first["adc_min"], 0)
         self.assertLess(first["adc_max"], (1 << 12) - 1)
