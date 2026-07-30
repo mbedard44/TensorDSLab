@@ -189,6 +189,62 @@ The accepted baseline evidence is eager CPU. CUDA was unavailable and remains
 unclaimed. Baseline artifact sizes and test totals are evidence identities,
 not target identities for the new candidate.
 
+## Review-Returned Final Ordinary Candidate
+
+The three ordinary Implementation candidate slots are exhausted. Their exact
+immutable lineage is:
+
+```text
+Candidate 1:
+    230c2e2294bb296b8ed049d3d61205d6ac71efb2
+Candidate 1 tree:
+    4eeb6e95f9bb1e84415bfe1afefa1033f2d05bf8
+
+Candidate 2:
+    502e9b0ad3580128e69f1334bb035f926c5d347c
+Candidate 2 tree:
+    6d22163e2262af78980bf17d2b3ccc8da741e3d5
+
+Candidate 3:
+    5d9a3ee50f7fb5800661ae749f6a6cf582ee0d3b
+Candidate 3 tree:
+    549acc2d7af851f0ccd07109bdae6b9b53c25459
+```
+
+Candidate 3 is the exact final ordinary candidate. Independent Validation
+cleared those exact bytes after:
+
+- focused source/archive `46/46/0` and complete source/archive `70/70/0`;
+- positive Pyright `0/0/0` and the exact `15/0/0` negative fixture;
+- all `30/30` required production mutants and every applicable notebook
+  mutant;
+- exact donor recurrence parity over the named fixtures and `88,572`
+  exhaustive short-state cases;
+- deterministic wheel/sdist, isolated-install, notebook execution/visual,
+  documentation, privacy, topology, and cleanliness gates; and
+- exact closure of the two prior Validation returns.
+
+Independent Review accepted the scientific raw-ZLE law, tensor-native
+execution, donor boundary, signed representation, sentinel/capacity policy,
+source provenance, lane/example independence, topology, and protected scope.
+It returned Candidate 3 unchanged with exactly three bounded public-contract
+findings:
+
+1. public `EncodedWaveform.produce()` and `EncodedWaveform.validate()` do not
+   admit the exact `EncodedWaveformConfig` class before dereferencing private
+   prepared state, so an alien Config produces `AttributeError` instead of the
+   required `TypeError`;
+2. `require_no_operation_axes()` raises `ValueError`, so the five encoded
+   policy Specs use the wrong exception category for an operation-axis
+   representation violation; and
+3. the negative typing fixture produces the accepted exact `15` diagnostics
+   but retains a stale module docstring saying `twelve`.
+
+Candidate 3 remains immutable, unmerged, and unpushed. Review return `1/2` is
+consumed. The findings change no accepted architecture or scientific law, but
+the exhausted ordinary loop means no role may infer a fourth ordinary
+candidate.
+
 ## Selected Ownership Boundary
 
 ### Terminal DAQ/readout Product
@@ -2069,6 +2125,63 @@ A concrete architecture contradiction, exhausted loop, unavailable exact
 donor identity, need for an unallowlisted path, or inability to preserve exact
 raw support stops the route and returns to Design. No role silently widens the
 contract.
+
+### Final supplemental repair route
+
+The ordinary loop stopped at exact Review-returned Candidate 3 and returned to
+Design as required. Design dispositions the three findings above as one final
+supplemental repair rather than a fourth ordinary candidate.
+
+This exact documentation commit is the amended Design authority. Implementation
+may create exactly one immutable direct child of this authority and may change
+only:
+
+```text
+tensor_dslab/common/requirements/kernel.py
+tensor_dslab/encoded_waveform/field.py
+tests/test_encoded_waveform.py
+tests/test_requirements.py
+tests/typing/negative/maintenance_15_spec_composed_products.py
+```
+
+The supplemental correction must:
+
+- require exact `EncodedWaveformConfig` admission at the public
+  `prepare/create/produce/validate` boundary before a downstream action,
+  private prepared-state dereference, tensor arithmetic, allocation, or RNG;
+- preserve exact tuple/member admission ordering and the one-source
+  `DigitizedWaveform` law;
+- classify a nonempty operation-axis tuple as `TypeError` through the shared
+  declarative `require_no_operation_axes()` requirement;
+- prove the corrected shared requirement through its direct requirement test
+  and through all five encoded policy Spec classes;
+- update the negative typing fixture's module docstring from twelve to fifteen
+  without changing its intended diagnostic set; and
+- change no valid Product result, raw-ZLE equation, tensor execution,
+  Config-preparation fact, donor boundary, notebook, facade, dependency,
+  metadata, environment, or other documentation byte.
+
+The supplemental proof must exercise all four public lifecycle methods with an
+alien Config and prove exact `TypeError` before a patched downstream action.
+It must exercise every encoded policy Spec with a nonempty operation axis and
+prove exact `TypeError`. It must retain the exact positive typing result and
+exact `15/0/0` negative diagnostic result without suppression, `Any`, cast, or
+ignore.
+
+Validation receives only that exact fixed supplemental child from Design. It
+must independently verify the five-path scope, repeat the focused and complete
+source/archive suites, positive and negative typing, the two corrected failure
+boundaries and effect ordering, deterministic artifacts, isolated public
+imports/Product smoke, docs/privacy/topology/hygiene, and exact final
+cleanliness. The donor, notebook-render, and fresh-Conda evidence may carry
+only where the candidate proves all corresponding production/notebook/
+dependency/environment bytes are Candidate-3-identical.
+
+After Validation CLEAR, Review performs one bounded independent recheck of the
+three returned findings, exact five-path scope, changed shared-requirement
+impact, typing-fixture wording/count, and carried evidence boundary. Review
+return `2/2` is the final available return. No further candidate, supplemental
+repair, amended authority, or implicit retry is authorized by this document.
 
 ## Completion
 

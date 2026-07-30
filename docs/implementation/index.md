@@ -715,6 +715,23 @@ encoded-waveform module, `70` discovered source tests, `75/14` facades,
 CPU-only notebook executions. This statement is Implementation evidence only
 until independent Validation and Review clear the same bytes.
 
+The exact final ordinary Candidate 3 is
+`5d9a3ee50f7fb5800661ae749f6a6cf582ee0d3b`, tree
+`549acc2d7af851f0ccd07109bdae6b9b53c25459`. Independent Validation cleared
+those exact bytes with complete source/archive, typing, `30/30` production
+mutants, donor, deterministic artifact, isolated-install, notebook, docs,
+privacy, topology, and cleanliness evidence. Independent Review accepted the
+scientific and representation implementation but returned three bounded
+public-contract findings: exact Config admission for public produce/validate,
+the operation-axis exception category, and a stale twelve-versus-fifteen
+negative-fixture docstring.
+
+The three ordinary candidate slots are exhausted. The direct documentation
+child of Candidate 3 explicitly authorizes one final supplemental repair
+limited to those findings and five exact executable/test paths. This is not a
+fourth ordinary candidate. It requires renewed fixed-byte Validation and one
+bounded Review recheck before any same-byte approval or local fast-forward.
+
 CUDA, push, publication, compatibility, calibration, application IO,
 reconstruction, and deployment remain unauthorized.
 
