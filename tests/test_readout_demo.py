@@ -19,10 +19,10 @@ ROOT = Path(__file__).resolve().parents[1]
 NOTEBOOK_PATH = ROOT / "demos" / "readout.ipynb"
 SUMMARY_PREFIX = "READOUT_DEMO_SUMMARY="
 SOURCE_PROJECTION_SHA256 = (
-    "431e248f0fec482715cba8178afe5a756565cc3c817ccf77b56a1ddfaf99fe51"
+    "808b98af9c8d08292f0e05d7b3d81f2bcf1ca28bd4c45718098023c1dc161b00"
 )
 COMMITTED_NOTEBOOK_SHA256 = (
-    "e39cfb205d8415fca6391eb8e88796c179cbb1af8ab44690e0444a45d2aeb784"
+    "6608d89c894df4f08ed4af7f9c0df404025e8d3855da59b32d75d56e32cce264"
 )
 FIGURE_TEXT = "<Figure size 1300x850 with 6 Axes>"
 OUTPUT_HASHES = {
@@ -512,7 +512,7 @@ class ReadoutDemoTests(unittest.TestCase):
             hashlib.sha256(self.notebook_bytes).hexdigest(),
             COMMITTED_NOTEBOOK_SHA256,
         )
-        self.assertEqual(len(self.notebook_bytes), 852312)
+        self.assertEqual(len(self.notebook_bytes), 852279)
         self.assertEqual(
             _source_projection_hash(self.notebook),
             SOURCE_PROJECTION_SHA256,
