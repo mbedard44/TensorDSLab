@@ -234,9 +234,35 @@ class ReadoutDemoTests(unittest.TestCase):
 
     def test_source_inventory_metadata_and_public_boundary(self) -> None:
         self.assertEqual(self.notebook.nbformat, 4)
-        self.assertEqual(len(self.notebook.cells), 22)
-        self.assertEqual(len(self.markdown_cells), 11)
-        self.assertEqual(len(self.code_cells), 11)
+        self.assertEqual(len(self.notebook.cells), 34)
+        self.assertEqual(len(self.markdown_cells), 17)
+        self.assertEqual(len(self.code_cells), 17)
+        self.assertEqual(
+            tuple(cell.cell_type for cell in self.notebook.cells),
+            ("markdown", "code") * 17,
+        )
+        self.assertEqual(
+            tuple(cell.id for cell in self.code_cells),
+            (
+                "imports-code",
+                "axes-code",
+                "photoelectron-values-code",
+                "photoelectrons-code",
+                "charge-code",
+                "pulse-math-code",
+                "pure-waveform-code",
+                "psd-values-code",
+                "noise-waveform-code",
+                "analog-waveform-code",
+                "digitizer-values-code",
+                "digitized-waveform-code",
+                "encoding-values-code",
+                "encoded-waveform-code",
+                "shared-shape-code",
+                "plot-preparation-code",
+                "product-views-code",
+            ),
+        )
         self.assertEqual(
             len({cell.id for cell in self.notebook.cells}),
             len(self.notebook.cells),
@@ -353,15 +379,15 @@ class ReadoutDemoTests(unittest.TestCase):
             "torch.full((1562,), 0.016",
             "torch.full((1250,), 0.020",
             "torch.full((1250,), 0.006",
-            "torch.tensor(-80.0",
-            "torch.tensor(20.0",
-            "torch.tensor(12",
-            "torch.tensor(1.0",
-            "torch.tensor(2500",
-            "torch.tensor(2800",
-            "torch.tensor(3",
-            "torch.tensor(25",
-            "torch.tensor(50",
+            "bit_depth_value = torch.tensor(12",
+            "input_minimum_value = torch.tensor(\n    -80.0",
+            "input_maximum_value = torch.tensor(\n    20.0",
+            "analog_gain_value = torch.tensor(\n    1.0",
+            "trigger_threshold_value = torch.tensor(\n    2500",
+            "release_threshold_value = torch.tensor(\n    2800",
+            "required_time_over_value = torch.tensor(\n    3",
+            "pre_trigger_value = torch.tensor(\n    25",
+            "post_trigger_value = torch.tensor(\n    50",
             "suppression_code=-1",
             "encoded_waveform = EncodedWaveform.create(",
         ):
@@ -393,6 +419,187 @@ class ReadoutDemoTests(unittest.TestCase):
             self.code_source,
         )
         self.assertIn('float("nan")', self.code_source)
+
+        photoelectron_values_source = next(
+            cell.source
+            for cell in self.code_cells
+            if cell.id == "photoelectron-values-code"
+        )
+        photoelectrons_source = next(
+            cell.source
+            for cell in self.code_cells
+            if cell.id == "photoelectrons-code"
+        )
+        self.assertNotIn("Photoelectrons", photoelectron_values_source)
+        self.assertNotIn("PhotoelectronsSpec", photoelectron_values_source)
+        self.assertIn("PhotoelectronsSpec", photoelectrons_source)
+        self.assertIn("photoelectrons = Photoelectrons(", photoelectrons_source)
+        self.assertNotIn("photoelectron_values[", photoelectrons_source)
+
+        pulse_math_source = next(
+            cell.source
+            for cell in self.code_cells
+            if cell.id == "pulse-math-code"
+        )
+        pure_waveform_source = next(
+            cell.source
+            for cell in self.code_cells
+            if cell.id == "pure-waveform-code"
+        )
+        for calculation in (
+            "pulse_support_ns = 2020.27",
+            "pulse_gaussian = torch.exp(",
+            "torch.erf(",
+            "pulse_raw = ",
+            "pulse_values = ",
+        ):
+            self.assertIn(calculation, pulse_math_source)
+        for semantic_name in (
+            "OffsetAxis",
+            "PulseResponse",
+            "PulseResponseSpec",
+            "PureWaveformConfig",
+            "PureWaveformKernels",
+            "PureWaveformSpec",
+            "PureWaveform.create",
+        ):
+            self.assertNotIn(semantic_name, pulse_math_source)
+        pure_sequence = (
+            "pulse_time_axis = OffsetAxis(",
+            "pulse_response = PulseResponse(",
+            "pure_waveform_config = PureWaveformConfig(",
+            "pure_waveform = PureWaveform.create(",
+        )
+        self.assertTrue(all(item in pure_waveform_source for item in pure_sequence))
+        self.assertEqual(
+            tuple(pure_waveform_source.index(item) for item in pure_sequence),
+            tuple(
+                sorted(
+                    pure_waveform_source.index(item)
+                    for item in pure_sequence
+                )
+            ),
+        )
+        for calculation in ("torch.exp(", "torch.erf(", "pulse_raw"):
+            self.assertNotIn(calculation, pure_waveform_source)
+
+        psd_values_source = next(
+            cell.source
+            for cell in self.code_cells
+            if cell.id == "psd-values-code"
+        )
+        noise_waveform_source = next(
+            cell.source
+            for cell in self.code_cells
+            if cell.id == "noise-waveform-code"
+        )
+        for calculation in ("torch.cat(", "torch.full(", "torch.stack("):
+            self.assertIn(calculation, psd_values_source)
+            self.assertNotIn(calculation, noise_waveform_source)
+        for semantic_name in (
+            "PowerSpectralDensitySpec",
+            "PowerSpectralDensity(",
+            "NoiseWaveformConfig",
+            "NoiseWaveformKernels",
+            "NoiseWaveformSpec",
+            "NoiseWaveform.create",
+        ):
+            self.assertNotIn(semantic_name, psd_values_source)
+            self.assertIn(semantic_name, noise_waveform_source)
+
+        digitizer_values_source = next(
+            cell.source
+            for cell in self.code_cells
+            if cell.id == "digitizer-values-code"
+        )
+        digitized_waveform_source = next(
+            cell.source
+            for cell in self.code_cells
+            if cell.id == "digitized-waveform-code"
+        )
+        self.assertEqual(digitizer_values_source.count("torch.tensor("), 4)
+        self.assertNotIn("DigitizedWaveform", digitizer_values_source)
+        for semantic_name in (
+            "BitDepth(",
+            "InputMinimum(",
+            "InputMaximum(",
+            "AnalogGain(",
+            "DigitizedWaveformConfig",
+            "DigitizedWaveformKernels",
+            "DigitizedWaveformSpec",
+            "DigitizedWaveform.create",
+        ):
+            self.assertIn(semantic_name, digitized_waveform_source)
+        self.assertNotIn("torch.tensor(", digitized_waveform_source)
+
+        encoding_values_source = next(
+            cell.source
+            for cell in self.code_cells
+            if cell.id == "encoding-values-code"
+        )
+        encoded_waveform_source = next(
+            cell.source
+            for cell in self.code_cells
+            if cell.id == "encoded-waveform-code"
+        )
+        self.assertEqual(encoding_values_source.count("torch.tensor("), 5)
+        self.assertNotIn("EncodedWaveform", encoding_values_source)
+        for semantic_name in (
+            "TriggerThresholdCode(",
+            "ReleaseThresholdCode(",
+            "RequiredTimeOverSamples(",
+            "PreTriggerSamples(",
+            "PostTriggerSamples(",
+            "EncodedWaveformConfig",
+            "EncodedWaveformKernels",
+            "EncodedWaveformSpec",
+            "EncodedWaveform.create",
+        ):
+            self.assertIn(semantic_name, encoded_waveform_source)
+        self.assertNotIn("torch.tensor(", encoded_waveform_source)
+
+        assertion_cells = tuple(
+            cell.id
+            for cell in self.code_cells
+            if any(
+                isinstance(node, ast.Assert)
+                for node in ast.walk(ast.parse(cell.source))
+            )
+        )
+        self.assertEqual(assertion_cells, ("shared-shape-code",))
+
+        plot_preparation_source = next(
+            cell.source
+            for cell in self.code_cells
+            if cell.id == "plot-preparation-code"
+        )
+        product_views_source = next(
+            cell.source
+            for cell in self.code_cells
+            if cell.id == "product-views-code"
+        )
+        for preparation in (
+            "channel_labels = ",
+            "sensor_colors = ",
+            "time_ns = ",
+            "products = ",
+            "y_labels = ",
+            "step_panels = ",
+        ):
+            self.assertIn(preparation, plot_preparation_source)
+        for rendering in (
+            "plt.style.use(",
+            "plt.subplots(",
+            "plot_axis.step(",
+            "plot_axis.plot(",
+            "figure.legend(",
+            "plt.show()",
+        ):
+            self.assertNotIn(rendering, plot_preparation_source)
+            self.assertIn(rendering, product_views_source)
+        self.assertNotIn("products = ", product_views_source)
+        self.assertNotIn(".create(", plot_preparation_source)
+        self.assertNotIn(".create(", product_views_source)
 
         assignments: list[tuple[str, str]] = []
         for cell in self.code_cells:
