@@ -1,6 +1,8 @@
 # Maintenance 21 Two-Example Product Grid Plots
 
-Status: **Active / Design authority prepared**.
+Status: **Merged / Closed** through exact Review-cleared and fast-forwarded
+Candidate 1 `98db48138800b8500d587389e5e159c11f252a73`, tree
+`b75ee59c6383a293658e0eaa8f8aa60942110a6d`.
 
 Stable key:
 `TensorDSLab/maintenance-21-two-example-product-grid-plots`

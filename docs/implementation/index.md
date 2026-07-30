@@ -784,7 +784,9 @@ artifact, CUDA, push, publication, or compatibility change occurred.
 
 ### [Maintenance 21: Two-Example Product Grid Plots](maintenance_21_two_example_product_grid_plots.md)
 
-Status: **Active / Design authority prepared**.
+Status: **Merged / Closed** through exact Review-cleared and fast-forwarded
+Candidate 1 `98db48138800b8500d587389e5e159c11f252a73`, tree
+`b75ee59c6383a293658e0eaa8f8aa60942110a6d`.
 
 Maintenance 21 starts from exact locally closed Maintenance 20
 `77201b415d00237b4a62951d6e13faa1751a1057`, tree
