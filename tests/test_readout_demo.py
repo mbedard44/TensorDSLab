@@ -35,6 +35,22 @@ product_values = (
     digitized_waveform,
     encoded_waveform,
 )
+plot_axes = [figure.axes[0] for figure in product_figures]
+layout_bounds = []
+for figure, axis in zip(product_figures, plot_axes):
+    figure.draw_without_rendering()
+    renderer = figure._get_renderer()
+    layout_bounds.append(
+        {{
+            "figure": list(figure.bbox.bounds),
+            "xlabel": list(
+                axis.xaxis.label.get_window_extent(renderer).bounds
+            ),
+            "legend": list(
+                axis.get_legend().get_window_extent(renderer).bounds
+            ),
+        }}
+    )
 summary = {{
     "types": [type(product).__name__ for product in product_values],
     "shapes": [list(product.tensor.shape) for product in product_values],
@@ -112,7 +128,8 @@ summary = {{
         )
         for product in product_values
     ],
-    "figure_axes": len(figure.axes),
+    "figure_count": len(product_figures),
+    "figure_axes": [len(figure.axes) for figure in product_figures],
     "line_counts": [len(axis.lines) for axis in plot_axes],
     "colors": [
         [line.get_color() for line in axis.lines]
@@ -122,11 +139,35 @@ summary = {{
         [line.get_drawstyle() for line in axis.lines]
         for axis in plot_axes
     ],
+    "alphas": [
+        [line.get_alpha() for line in axis.lines]
+        for axis in plot_axes
+    ],
+    "linewidths": [
+        [line.get_linewidth() for line in axis.lines]
+        for axis in plot_axes
+    ],
     "axis_legends": [
         axis.get_legend() is not None
         for axis in plot_axes
     ],
-    "figure_legends": len(figure.legends),
+    "figure_legends": [
+        len(figure.legends) for figure in product_figures
+    ],
+    "legend_labels": [
+        [text.get_text() for text in axis.get_legend().get_texts()]
+        for axis in plot_axes
+    ],
+    "legend_locations": [
+        axis.get_legend()._loc for axis in plot_axes
+    ],
+    "legend_columns": [
+        axis.get_legend()._ncols for axis in plot_axes
+    ],
+    "legend_frames": [
+        axis.get_legend().get_frame_on() for axis in plot_axes
+    ],
+    "layout_bounds": layout_bounds,
     "xlabels": [axis.get_xlabel() for axis in plot_axes],
     "ylabels": [axis.get_ylabel() for axis in plot_axes],
     "adc_min": int(digitized_waveform.tensor.min()),
@@ -234,33 +275,39 @@ class ReadoutDemoTests(unittest.TestCase):
 
     def test_source_inventory_metadata_and_public_boundary(self) -> None:
         self.assertEqual(self.notebook.nbformat, 4)
-        self.assertEqual(len(self.notebook.cells), 34)
-        self.assertEqual(len(self.markdown_cells), 17)
-        self.assertEqual(len(self.code_cells), 17)
+        self.assertEqual(len(self.notebook.cells), 46)
+        self.assertEqual(len(self.markdown_cells), 23)
+        self.assertEqual(len(self.code_cells), 23)
         self.assertEqual(
             tuple(cell.cell_type for cell in self.notebook.cells),
-            ("markdown", "code") * 17,
+            ("markdown", "code") * 23,
         )
         self.assertEqual(
             tuple(cell.id for cell in self.code_cells),
             (
                 "imports-code",
                 "axes-code",
+                "plotting-code",
                 "photoelectron-values-code",
                 "photoelectrons-code",
+                "photoelectrons-view-code",
                 "charge-code",
+                "charge-view-code",
                 "pulse-math-code",
                 "pure-waveform-code",
+                "pure-waveform-view-code",
                 "psd-values-code",
                 "noise-waveform-code",
+                "noise-waveform-view-code",
                 "analog-waveform-code",
+                "analog-waveform-view-code",
                 "digitizer-values-code",
                 "digitized-waveform-code",
+                "digitized-waveform-view-code",
                 "encoding-values-code",
                 "encoded-waveform-code",
+                "encoded-waveform-view-code",
                 "shared-shape-code",
-                "plot-preparation-code",
-                "product-views-code",
             ),
         )
         self.assertEqual(
@@ -317,13 +364,15 @@ class ReadoutDemoTests(unittest.TestCase):
                 )
             else:
                 self.assertIn(node.module, ("tensor_core", "tensor_dslab"))
-        self.assertFalse(
-            any(
-                isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-                for tree in trees
-                for node in ast.walk(tree)
-            )
+        functions = tuple(
+            node
+            for tree in trees
+            for node in ast.walk(tree)
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
         )
+        self.assertEqual(len(functions), 1)
+        self.assertIsInstance(functions[0], ast.FunctionDef)
+        self.assertEqual(functions[0].name, "plot_product")
         for forbidden in (
             "simulate_readout",
             "ReadoutConfig",
@@ -411,11 +460,11 @@ class ReadoutDemoTests(unittest.TestCase):
         self.assertIn("psd_sensor_2 = torch.cat", self.code_source)
         self.assertNotIn("torch.rand", self.code_source)
         self.assertIn(
-            "The last panel leaves suppressed regions blank",
+            "leaves suppressed regions blank",
             "\n".join(cell.source for cell in self.markdown_cells),
         )
         self.assertIn(
-            'if value == encoded_waveform.spec.suppression_code',
+            "if value == suppression_code",
             self.code_source,
         )
         self.assertIn('float("nan")', self.code_source)
@@ -568,38 +617,179 @@ class ReadoutDemoTests(unittest.TestCase):
         )
         self.assertEqual(assertion_cells, ("shared-shape-code",))
 
-        plot_preparation_source = next(
+        plotting_source = next(
             cell.source
             for cell in self.code_cells
-            if cell.id == "plot-preparation-code"
+            if cell.id == "plotting-code"
         )
-        product_views_source = next(
-            cell.source
-            for cell in self.code_cells
-            if cell.id == "product-views-code"
-        )
-        for preparation in (
+        for plotting_contract in (
+            'plt.style.use("seaborn-v0_8-whitegrid")',
             "channel_labels = ",
-            "sensor_colors = ",
-            "time_ns = ",
+            'sensor_colors = ("tab:blue", "tab:orange", "tab:green")',
+            "float(time_axis.quantity_at(index).to(\"ns\").magnitude)",
+            "def plot_product(",
+            "product.tensor[0, channel_index].detach().cpu().tolist()",
+            "figsize=(11, 3.6)",
+            "plot_axis.step(",
+            'where="post"',
+            "plot_axis.plot(",
+            "alpha=0.72",
+            "linewidth=0.9",
+            'plot_axis.set_xlabel("Time (ns)")',
+            "plot_axis.set_ylabel(y_label)",
+            'loc="upper center"',
+            "bbox_to_anchor=(0.5, -0.24)",
+            "ncol=3",
+            "frameon=False",
+            "figure.subplots_adjust(bottom=0.29)",
+            "plt.show()",
+        ):
+            with self.subTest(plotting_contract=plotting_contract):
+                self.assertIn(plotting_contract, plotting_source)
+        self.assertEqual(plotting_source.count("alpha=0.72"), 2)
+        self.assertEqual(plotting_source.count("linewidth=0.9"), 2)
+        for retired_combined_contract in (
             "products = ",
             "y_labels = ",
             "step_panels = ",
-        ):
-            self.assertIn(preparation, plot_preparation_source)
-        for rendering in (
-            "plt.style.use(",
-            "plt.subplots(",
-            "plot_axis.step(",
-            "plot_axis.plot(",
             "figure.legend(",
-            "plt.show()",
+            "plot-preparation-code",
+            "product-views-code",
         ):
-            self.assertNotIn(rendering, plot_preparation_source)
-            self.assertIn(rendering, product_views_source)
-        self.assertNotIn("products = ", product_views_source)
-        self.assertNotIn(".create(", plot_preparation_source)
-        self.assertNotIn(".create(", product_views_source)
+            self.assertNotIn(retired_combined_contract, self.code_source)
+        self.assertNotIn(".create(", plotting_source)
+
+        plotting_tree = ast.parse(plotting_source)
+        helper_definitions = tuple(
+            node
+            for node in plotting_tree.body
+            if isinstance(node, ast.FunctionDef)
+        )
+        self.assertEqual(len(helper_definitions), 1)
+        helper = helper_definitions[0]
+        self.assertEqual(helper.name, "plot_product")
+        self.assertEqual(
+            tuple(argument.arg for argument in helper.args.args),
+            ("product",),
+        )
+        self.assertEqual(
+            tuple(argument.arg for argument in helper.args.kwonlyargs),
+            ("y_label", "step", "suppression_code"),
+        )
+
+        view_contracts = (
+            (
+                "photoelectrons-code",
+                "photoelectrons-view-code",
+                "photoelectrons",
+                "Photoelectrons",
+                True,
+                None,
+            ),
+            (
+                "charge-code",
+                "charge-view-code",
+                "charge",
+                "Charge (avalanche)",
+                True,
+                None,
+            ),
+            (
+                "pure-waveform-code",
+                "pure-waveform-view-code",
+                "pure_waveform",
+                "Pure (mV)",
+                False,
+                None,
+            ),
+            (
+                "noise-waveform-code",
+                "noise-waveform-view-code",
+                "noise_waveform",
+                "Noise (mV)",
+                False,
+                None,
+            ),
+            (
+                "analog-waveform-code",
+                "analog-waveform-view-code",
+                "analog_waveform",
+                "Analog (mV)",
+                False,
+                None,
+            ),
+            (
+                "digitized-waveform-code",
+                "digitized-waveform-view-code",
+                "digitized_waveform",
+                "ADC code",
+                True,
+                None,
+            ),
+            (
+                "encoded-waveform-code",
+                "encoded-waveform-view-code",
+                "encoded_waveform",
+                "Retained ADC code",
+                True,
+                "encoded_waveform.spec.suppression_code",
+            ),
+        )
+        all_cell_ids = tuple(cell.id for cell in self.notebook.cells)
+        for (
+            construction_id,
+            view_id,
+            product_name,
+            y_label,
+            step,
+            suppression,
+        ) in view_contracts:
+            with self.subTest(view_id=view_id):
+                construction_index = all_cell_ids.index(construction_id)
+                self.assertEqual(
+                    all_cell_ids[construction_index + 2],
+                    view_id,
+                )
+                view_cell = self.notebook.cells[construction_index + 2]
+                view_tree = ast.parse(view_cell.source)
+                self.assertEqual(len(view_tree.body), 1)
+                expression = view_tree.body[0]
+                self.assertIsInstance(expression, ast.Expr)
+                assert isinstance(expression, ast.Expr)
+                self.assertIsInstance(expression.value, ast.Call)
+                call = expression.value
+                assert isinstance(call, ast.Call)
+                self.assertIsInstance(call.func, ast.Name)
+                assert isinstance(call.func, ast.Name)
+                self.assertEqual(call.func.id, "plot_product")
+                self.assertEqual(len(call.args), 1)
+                self.assertIsInstance(call.args[0], ast.Name)
+                assert isinstance(call.args[0], ast.Name)
+                self.assertEqual(call.args[0].id, product_name)
+                keywords = {
+                    keyword.arg: keyword.value for keyword in call.keywords
+                }
+                self.assertEqual(
+                    set(keywords),
+                    {"y_label", "step"}
+                    | ({"suppression_code"} if suppression else set()),
+                )
+                y_label_node = keywords["y_label"]
+                self.assertIsInstance(y_label_node, ast.Constant)
+                assert isinstance(y_label_node, ast.Constant)
+                self.assertEqual(y_label_node.value, y_label)
+                step_node = keywords["step"]
+                self.assertIsInstance(step_node, ast.Constant)
+                assert isinstance(step_node, ast.Constant)
+                self.assertIs(step_node.value, step)
+                if suppression is not None:
+                    self.assertEqual(
+                        ast.unparse(keywords["suppression_code"]),
+                        suppression,
+                    )
+                self.assertNotIn(".create(", view_cell.source)
+                self.assertNotIn("assert ", view_cell.source)
+                self.assertNotIn("torch.", view_cell.source)
 
         assignments: list[tuple[str, str]] = []
         for cell in self.code_cells:
@@ -753,6 +943,18 @@ class ReadoutDemoTests(unittest.TestCase):
             "Retained ADC code",
         ]
         self.assertEqual(first["units"], expected_units)
+        self.assertEqual(
+            first["digests"],
+            [
+                "8cd46f0f4ff164b63fc0068e22d7705cab82adbee84c804849925f436d247fc7",
+                "66113e0e8952d8e3906217ca6efee0ade16884ff2a2ec095192faf0b72dda5b4",
+                "7233c98dd4237a425703855271ecd85fa4a78440ffbf34f1b6fb8b3593481f45",
+                "0f8798c98ec544dcbcfd57579d0f6ee9c1af2e24e10caf6832919f438be51208",
+                "e625e37451c37424d345e470ca6426543e56a19dd2bfdf570ad5c3660bad39ad",
+                "4bc693b1c8870cecc1827afcf6da88883908b5bc202250ba99c9beaa0d1d4780",
+                "00644cce41594031fa44018ed27362c60234154e3dddafb6b6b517c87ca8335d",
+            ],
+        )
         self.assertTrue(first["source_unchanged"])
         self.assertTrue(first["photo_charge_equal"])
         self.assertEqual(
@@ -807,7 +1009,8 @@ class ReadoutDemoTests(unittest.TestCase):
         )
         self.assertEqual(first["encoded_plot_gaps"], [True, True, True])
 
-        self.assertEqual(first["figure_axes"], 7)
+        self.assertEqual(first["figure_count"], 7)
+        self.assertEqual(first["figure_axes"], [1] * 7)
         self.assertEqual(first["line_counts"], [3] * 7)
         expected_colors = ["tab:blue", "tab:orange", "tab:green"]
         self.assertEqual(first["colors"], [expected_colors] * 7)
@@ -823,13 +1026,36 @@ class ReadoutDemoTests(unittest.TestCase):
                 ["steps-post"] * 3,
             ],
         )
-        self.assertEqual(first["axis_legends"], [False] * 7)
-        self.assertEqual(first["figure_legends"], 1)
+        self.assertEqual(first["alphas"], [[0.72] * 3] * 7)
+        self.assertEqual(first["linewidths"], [[0.9] * 3] * 7)
+        self.assertEqual(first["axis_legends"], [True] * 7)
+        self.assertEqual(first["figure_legends"], [0] * 7)
         self.assertEqual(
-            first["xlabels"],
-            ["", "", "", "", "", "", "Time (ns)"],
+            first["legend_labels"],
+            [["sensor-0", "sensor-1", "sensor-2"]] * 7,
         )
+        self.assertEqual(first["legend_locations"], [9] * 7)
+        self.assertEqual(first["legend_columns"], [3] * 7)
+        self.assertEqual(first["legend_frames"], [False] * 7)
+        self.assertEqual(first["xlabels"], ["Time (ns)"] * 7)
         self.assertEqual(first["ylabels"], expected_ylabels)
+        for layout in first["layout_bounds"]:
+            _, _, figure_width, figure_height = layout["figure"]
+            xlabel_x, xlabel_y, xlabel_width, xlabel_height = layout[
+                "xlabel"
+            ]
+            legend_x, legend_y, legend_width, legend_height = layout[
+                "legend"
+            ]
+            for x, y, width, height in (
+                (xlabel_x, xlabel_y, xlabel_width, xlabel_height),
+                (legend_x, legend_y, legend_width, legend_height),
+            ):
+                self.assertGreaterEqual(x, 0.0)
+                self.assertGreaterEqual(y, 0.0)
+                self.assertLessEqual(x + width, figure_width)
+                self.assertLessEqual(y + height, figure_height)
+            self.assertLessEqual(legend_y + legend_height, xlabel_y)
         self.assertEqual(
             tuple(zip(first["units"], first["ylabels"])),
             tuple(zip(expected_units, expected_ylabels)),
@@ -854,8 +1080,9 @@ class ReadoutDemoTests(unittest.TestCase):
                 if output.output_type == "display_data"
             )
             self.assertEqual(errors, ())
-            self.assertEqual(len(displays), 1)
-            self.assertIn("image/png", displays[0].data)
+            self.assertEqual(len(displays), 7)
+            for display in displays:
+                self.assertIn("image/png", display.data)
 
 
 if __name__ == "__main__":
