@@ -1,6 +1,13 @@
 # Maintenance 23 Delayed Crosstalk And Global PSD Quickstart
 
-Status: **Active Design authority; implementation undispatched**.
+Status: **Self-effecting under the frozen exact-byte route**.
+
+Before the complete same-byte gate and clean local fast-forward, this status
+means **Active / Implementation dispatched** through the exact Design handoff.
+After one exact unchanged Validation-cleared, Review-cleared, and
+Design-approved candidate reaches clean local `main` through Review's
+`git merge --ff-only`, this same status resolves to **Merged / Closed**. No
+post-merge closeout edit is required or authorized.
 
 Stable key:
 `TensorDSLab/maintenance-23-delayed-crosstalk-global-psd-quickstart`

@@ -835,7 +835,10 @@ publication, release, calibration, or compatibility boundary.
 
 ### [Maintenance 23: Delayed Crosstalk And Global PSD Quickstart](maintenance_23_delayed_crosstalk_global_psd_quickstart.md)
 
-Status: **Active Design authority; implementation undispatched**.
+Status: **Self-effecting under the frozen exact-byte route**. Before the
+complete same-byte gate and clean local fast-forward, it denotes
+**Active / Implementation dispatched**. After the exact unchanged cleared
+candidate reaches local `main`, it resolves to **Merged / Closed**.
 
 Maintenance 23 starts from exact locally closed Maintenance 22
 `ea59807e4fd18b4e120ce5675c5efacb7adbbd73`, tree
