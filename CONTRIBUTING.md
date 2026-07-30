@@ -45,14 +45,17 @@ only transformation and materialization mechanics. Unit normalization remains
 in `common/units.py` and is distinct from pure Unit requirements.
 
 Do not add a Runtime/Plan record, generic Product/Config framework,
-`tensor_dslab.readout`, orchestration, result collection, application profile,
-alias, or forwarding shim. Applications own workflow composition. A narrowly
-authorized package-neutral demonstration may compose public Product calls as
-ordinary user code, but it must not create a package workflow contract,
-profile, hidden factory, or production import of demo tooling. The Maintenance
-15 architecture and executable work order supersede any later historical
-discussion in this file that presents the old embedded readout surface as
-current.
+`tensor_dslab.readout`, package-owned orchestration, result collection,
+package-owned application profile, alias, or forwarding shim. Applications own
+workflow composition. The sole package-neutral demonstration may define a
+small, notebook-local `ReadoutConfig`, `Readout(TensorCollection)`, and
+illustrative profile to show what an application package can own. Those
+examples must use only public Product calls, remain absent from `tensor_dslab`
+and its facades, and avoid reflection, registries, generic dependency
+resolution, hidden factories, detector-specific claims, or production import
+of demo tooling. The Maintenance 15 architecture and executable work order
+supersede any later historical discussion in this file that presents the old
+embedded readout surface as current.
 
 ## Governance And Delivery Maturity
 
@@ -1262,7 +1265,7 @@ Good tests should:
   `Photoelectrons[torch.int64]` to floating Charge;
 - for the sole supported `demos/readout.ipynb`, prove the normalized committed
   execution owns exactly seven Product-local `display_data` PNGs and exact
-  counts `1..23`, while every fresh scientific replay first clears all stored
+  counts `1..29`, while every fresh scientific replay first clears all stored
   counts and outputs and independently reproduces the same two-example Product
   values, grids, and frozen-stack image hashes;
 - do not add adversarial tests for unsupported final-leaf subclassing, class

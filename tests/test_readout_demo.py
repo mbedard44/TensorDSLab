@@ -19,10 +19,10 @@ ROOT = Path(__file__).resolve().parents[1]
 NOTEBOOK_PATH = ROOT / "demos" / "readout.ipynb"
 SUMMARY_PREFIX = "READOUT_DEMO_SUMMARY="
 SOURCE_PROJECTION_SHA256 = (
-    "b9fccd51e0a2afed827a9e21e7da5808c947fd659dae9af5ee7c89ded92db90f"
+    "431e248f0fec482715cba8178afe5a756565cc3c817ccf77b56a1ddfaf99fe51"
 )
 COMMITTED_NOTEBOOK_SHA256 = (
-    "9c5ba35300f64edb421a53bff55b7df4777140f057050e67c36885c4506bd055"
+    "e39cfb205d8415fca6391eb8e88796c179cbb1af8ab44690e0444a45d2aeb784"
 )
 FIGURE_TEXT = "<Figure size 1300x850 with 6 Axes>"
 OUTPUT_HASHES = {
@@ -377,6 +377,22 @@ summary = {{
             for axis in plot_axes[6]
         ]
     ],
+    "readout_member_types": [
+        type(member).__name__ for member in readout.members.values()
+    ],
+    "profile_config_identity": [
+        profile_config is original_config
+        for profile_config, original_config in zip(
+            profile_configs,
+            original_configs,
+            strict=True,
+        )
+    ],
+    "readout_matches": [
+        reproduced.spec == original.spec
+        and torch.equal(reproduced.tensor, original.tensor)
+        for reproduced, original in product_pairs
+    ],
 }}
 print({SUMMARY_PREFIX!r} + json.dumps(summary, sort_keys=True))
 """
@@ -447,12 +463,12 @@ class ReadoutDemoTests(unittest.TestCase):
 
     def test_source_inventory_metadata_and_public_boundary(self) -> None:
         self.assertEqual(self.notebook.nbformat, 4)
-        self.assertEqual(len(self.notebook.cells), 48)
-        self.assertEqual(len(self.markdown_cells), 24)
-        self.assertEqual(len(self.code_cells), 24)
+        self.assertEqual(len(self.notebook.cells), 58)
+        self.assertEqual(len(self.markdown_cells), 29)
+        self.assertEqual(len(self.code_cells), 29)
         self.assertEqual(
             tuple(cell.cell_type for cell in self.notebook.cells),
-            ("markdown", "code") * 24,
+            ("markdown", "code") * 29,
         )
         self.assertEqual(
             tuple(cell.id for cell in self.code_cells),
@@ -481,6 +497,11 @@ class ReadoutDemoTests(unittest.TestCase):
                 "encoded-waveform-code",
                 "encoded-waveform-view-code",
                 "shared-shape-code",
+                "application-config-code",
+                "application-readout-code",
+                "application-profile-code",
+                "application-create-code",
+                "application-proof-code",
             ),
         )
         self.assertEqual(
@@ -491,7 +512,7 @@ class ReadoutDemoTests(unittest.TestCase):
             hashlib.sha256(self.notebook_bytes).hexdigest(),
             COMMITTED_NOTEBOOK_SHA256,
         )
-        self.assertEqual(len(self.notebook_bytes), 845140)
+        self.assertEqual(len(self.notebook_bytes), 852312)
         self.assertEqual(
             _source_projection_hash(self.notebook),
             SOURCE_PROJECTION_SHA256,
@@ -519,7 +540,7 @@ class ReadoutDemoTests(unittest.TestCase):
             self.assertNotIn(forbidden, metadata_text)
         self.assertEqual(
             tuple(cell.execution_count for cell in self.code_cells),
-            tuple(range(1, 25)),
+            tuple(range(1, 30)),
         )
         observed_output_hashes = {}
         for cell in self.notebook.cells:
@@ -592,22 +613,29 @@ class ReadoutDemoTests(unittest.TestCase):
                     )
                 )
             else:
-                self.assertIn(node.module, ("tensor_core", "tensor_dslab"))
+                self.assertIn(
+                    node.module,
+                    ("dataclasses", "typing", "tensor_core", "tensor_dslab"),
+                )
         functions = tuple(
             node
             for tree in trees
             for node in ast.walk(tree)
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
         )
-        self.assertEqual(len(functions), 1)
-        self.assertIsInstance(functions[0], ast.FunctionDef)
-        self.assertEqual(functions[0].name, "plot_product")
+        self.assertEqual(
+            tuple(function.name for function in functions),
+            ("plot_product", "_require", "create", "quickstart_profile"),
+        )
+        self.assertTrue(
+            all(isinstance(function, ast.FunctionDef) for function in functions)
+        )
         for forbidden in (
             "simulate_readout",
-            "ReadoutConfig",
             "ReadoutCollection",
             "WhiteNoiseRms",
-            "ds20k",
+            "ds20k_veto",
+            "tensor_dslab.readout",
             "sys.path",
             "pip install",
             "requests",
@@ -645,6 +673,7 @@ class ReadoutDemoTests(unittest.TestCase):
                 "## AnalogWaveform",
                 "## DigitizedWaveform",
                 "## EncodedWaveform",
+                "## Application-Owned Workflow",
             ),
         )
         all_cell_ids = tuple(cell.id for cell in self.notebook.cells)
@@ -662,6 +691,21 @@ class ReadoutDemoTests(unittest.TestCase):
         self.assertNotIn(
             "delayed-crosstalk-values-explanation",
             all_cell_ids,
+        )
+        self.assertEqual(
+            all_cell_ids[-10:],
+            (
+                "application-config-explanation",
+                "application-config-code",
+                "application-readout-explanation",
+                "application-readout-code",
+                "application-profile-explanation",
+                "application-profile-code",
+                "application-create-explanation",
+                "application-create-code",
+                "application-proof-explanation",
+                "application-proof-code",
+            ),
         )
 
     def test_exact_product_axis_psd_and_shape_source(self) -> None:
@@ -983,7 +1027,10 @@ class ReadoutDemoTests(unittest.TestCase):
                 for node in ast.walk(ast.parse(cell.source))
             )
         )
-        self.assertEqual(assertion_cells, ("shared-shape-code",))
+        self.assertEqual(
+            assertion_cells,
+            ("shared-shape-code", "application-proof-code"),
+        )
 
         plotting_source = next(
             cell.source
@@ -1282,6 +1329,175 @@ class ReadoutDemoTests(unittest.TestCase):
             and "analog_waveform" in ast.unparse(node)
         )
         self.assertEqual(analog_assertions, ())
+        self._assert_application_owned_workflow_source()
+
+    def _assert_application_owned_workflow_source(self) -> None:
+        application_cells = {
+            cell.id: cell
+            for cell in self.code_cells
+            if cell.id.startswith("application-")
+        }
+        self.assertEqual(
+            tuple(application_cells),
+            (
+                "application-config-code",
+                "application-readout-code",
+                "application-profile-code",
+                "application-create-code",
+                "application-proof-code",
+            ),
+        )
+        application_source = "\n".join(
+            cell.source for cell in application_cells.values()
+        )
+        for forbidden in (
+            "plot_product(",
+            "plt.",
+            "display(",
+            "importlib",
+            "registry",
+            "reflection",
+            "recurse",
+            "dependency_graph",
+            "ds20k",
+        ):
+            with self.subTest(forbidden=forbidden):
+                self.assertNotIn(forbidden, application_source)
+
+        config_tree = ast.parse(
+            application_cells["application-config-code"].source
+        )
+        self.assertEqual(len(config_tree.body), 1)
+        config_class = config_tree.body[0]
+        self.assertIsInstance(config_class, ast.ClassDef)
+        assert isinstance(config_class, ast.ClassDef)
+        self.assertEqual(config_class.name, "ReadoutConfig")
+        config_fields = tuple(
+            (
+                statement.target.id,
+                ast.unparse(statement.annotation),
+            )
+            for statement in config_class.body
+            if isinstance(statement, ast.AnnAssign)
+            and isinstance(statement.target, ast.Name)
+        )
+        self.assertEqual(
+            config_fields,
+            (
+                ("charge", "ChargeConfig"),
+                ("pure_waveform", "PureWaveformConfig"),
+                ("noise_waveform", "NoiseWaveformConfig"),
+                ("analog_waveform", "AnalogWaveformConfig"),
+                ("digitized_waveform", "DigitizedWaveformConfig"),
+                ("encoded_waveform", "EncodedWaveformConfig"),
+            ),
+        )
+
+        readout_tree = ast.parse(
+            application_cells["application-readout-code"].source
+        )
+        self.assertEqual(len(readout_tree.body), 1)
+        readout_class = readout_tree.body[0]
+        self.assertIsInstance(readout_class, ast.ClassDef)
+        assert isinstance(readout_class, ast.ClassDef)
+        self.assertEqual(readout_class.name, "Readout")
+        self.assertEqual(
+            tuple(ast.unparse(base) for base in readout_class.bases),
+            ("TensorCollection[TensorField[Any]]",),
+        )
+        self.assertEqual(
+            tuple(
+                statement.name
+                for statement in readout_class.body
+                if isinstance(statement, ast.FunctionDef)
+            ),
+            ("_require", "create"),
+        )
+        create_method = next(
+            statement
+            for statement in readout_class.body
+            if isinstance(statement, ast.FunctionDef)
+            and statement.name == "create"
+        )
+        self.assertEqual(
+            tuple(argument.arg for argument in create_method.args.kwonlyargs),
+            ("photoelectrons", "config", "rng"),
+        )
+        create_calls = tuple(
+            f"{node.func.value.id}.{node.func.attr}"
+            for node in ast.walk(create_method)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and isinstance(node.func.value, ast.Name)
+            and node.func.attr == "create"
+        )
+        self.assertEqual(
+            create_calls,
+            (
+                "Charge.create",
+                "PureWaveform.create",
+                "NoiseWaveform.create",
+                "AnalogWaveform.create",
+                "DigitizedWaveform.create",
+                "EncodedWaveform.create",
+            ),
+        )
+        for product_type in (
+            "Photoelectrons",
+            "Charge",
+            "PureWaveform",
+            "NoiseWaveform",
+            "AnalogWaveform",
+            "DigitizedWaveform",
+            "EncodedWaveform",
+        ):
+            self.assertIn(
+                product_type,
+                application_cells["application-readout-code"].source,
+            )
+
+        profile_source = application_cells["application-profile-code"].source
+        self.assertIn(
+            "def quickstart_profile() -> ReadoutConfig:",
+            profile_source,
+        )
+        for config_name in (
+            "charge_config",
+            "pure_waveform_config",
+            "noise_waveform_config",
+            "analog_waveform_config",
+            "digitized_waveform_config",
+            "encoded_waveform_config",
+        ):
+            self.assertEqual(profile_source.count(config_name), 1)
+
+        create_source = application_cells["application-create-code"].source
+        self.assertEqual(create_source.count("Readout.create("), 1)
+        self.assertIn("photoelectrons=photoelectrons", create_source)
+        self.assertIn("config=readout_config", create_source)
+        self.assertIn("rng=rng", create_source)
+
+        proof_tree = ast.parse(
+            application_cells["application-proof-code"].source
+        )
+        self.assertEqual(
+            len(
+                tuple(
+                    node
+                    for node in proof_tree.body
+                    if isinstance(node, ast.Assert)
+                )
+            ),
+            2,
+        )
+        proof_source = application_cells["application-proof-code"].source
+        self.assertEqual(proof_source.count("readout.member("), 7)
+        self.assertIn("profile_config is original_config", proof_source)
+        self.assertIn("reproduced.spec == original.spec", proof_source)
+        self.assertIn(
+            "torch.equal(reproduced.tensor, original.tensor)",
+            proof_source,
+        )
 
     def test_clean_execution_replays_products_and_plot_structure(self) -> None:
         first, first_notebook = self._execute()
@@ -1521,6 +1737,20 @@ class ReadoutDemoTests(unittest.TestCase):
             ],
         )
         self.assertEqual(first["encoded_plot_gaps"], [[True] * 6])
+        self.assertEqual(
+            first["readout_member_types"],
+            [
+                "Photoelectrons",
+                "Charge",
+                "PureWaveform",
+                "NoiseWaveform",
+                "AnalogWaveform",
+                "DigitizedWaveform",
+                "EncodedWaveform",
+            ],
+        )
+        self.assertEqual(first["profile_config_identity"], [True] * 6)
+        self.assertEqual(first["readout_matches"], [True] * 7)
 
         self.assertEqual(first["figure_count"], 7)
         self.assertEqual(first["figure_axes"], [6] * 7)

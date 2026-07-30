@@ -1,13 +1,28 @@
 # Agent Workflow
 
+## Maintenance 24 Current Application-Owned Demonstration Boundary
+
+The sole newcomer notebook ends with one locally defined, application-owned
+teaching composition: `ReadoutConfig`, `Readout(TensorCollection)`, and
+`quickstart_profile()`. The explicit `Readout.create()` calls the six generated
+Products in dependency order and returns them with the caller-supplied
+`Photoelectrons`. These names are notebook-local examples of code that a real
+application package may own. They are not TensorDSLab exports, production
+workflow contracts, reusable demo tooling, detector calibration, or authority
+to restore `tensor_dslab.readout`.
+
+The notebook has `29` code cells with exact counts `1..29`. Only the same seven
+Product view cells retain one `display_data` PNG each. The five final
+application-workflow code cells add no plot or stored output.
+
 ## Maintenance 22 Current Notebook Output Boundary
 
 The sole supported newcomer notebook at `demos/readout.ipynb` contains two
 independent examples, three sensors, seven public Product calls, and one
 Product-local `3 x 2` grid per result. Maintenance 22 deliberately commits one
 normalized eager-CPU execution so those seven illustrative figures are visible
-when the notebook first opens. The 23 code-cell counts are exactly `1..23`;
-only the seven Product view cells retain one `display_data` PNG each.
+when the notebook first opens. Maintenance 24 extends the notebook source while
+retaining the same seven Product view outputs byte-for-byte.
 
 These embedded figures are a reproducible presentation snapshot on the exact
 recorded stack, not scientific artifacts, calibration, durable Product
@@ -40,10 +55,11 @@ newcomer demonstration at `demos/readout.ipynb`. Its current form hand-builds
 two independent examples over three sensors from public Product APIs and
 explains every code cell in plain language. It is application-neutral user
 code, not a package-owned workflow, profile, calibration, orchestration
-surface, compatibility promise, or authorization for another demo by
-analogy. Production package bytes and public facades remain unchanged, and
-applications continue to own workflow composition, retention, IO,
-integration, and collaboration profiles.
+surface, compatibility promise, or authorization for another demo by analogy.
+Maintenance 24 permits one notebook-local illustration of the workflow and
+profile classes that a real application package may own. Production package
+bytes and public facades remain unchanged, and applications continue to own
+workflow composition, retention, IO, integration, and collaboration profiles.
 
 ## Maintenance 15 Current Package Contract
 
