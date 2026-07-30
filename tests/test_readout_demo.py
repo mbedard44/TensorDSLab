@@ -19,10 +19,10 @@ ROOT = Path(__file__).resolve().parents[1]
 NOTEBOOK_PATH = ROOT / "demos" / "readout.ipynb"
 SUMMARY_PREFIX = "READOUT_DEMO_SUMMARY="
 SOURCE_PROJECTION_SHA256 = (
-    "af9290a54893abf34e06f849ae411a8edf8096148fe7fd9fda6027064b2c3468"
+    "b9fccd51e0a2afed827a9e21e7da5808c947fd659dae9af5ee7c89ded92db90f"
 )
 COMMITTED_NOTEBOOK_SHA256 = (
-    "f96f7bcb0d53dcbd16ac4badbeea28f9f5e199163ac40f8d6200926d2d60c6a6"
+    "9c5ba35300f64edb421a53bff55b7df4777140f057050e67c36885c4506bd055"
 )
 FIGURE_TEXT = "<Figure size 1300x850 with 6 Axes>"
 OUTPUT_HASHES = {
@@ -491,7 +491,7 @@ class ReadoutDemoTests(unittest.TestCase):
             hashlib.sha256(self.notebook_bytes).hexdigest(),
             COMMITTED_NOTEBOOK_SHA256,
         )
-        self.assertEqual(len(self.notebook_bytes), 846602)
+        self.assertEqual(len(self.notebook_bytes), 845140)
         self.assertEqual(
             _source_projection_hash(self.notebook),
             SOURCE_PROJECTION_SHA256,
@@ -619,8 +619,8 @@ class ReadoutDemoTests(unittest.TestCase):
             cell.source for cell in self.markdown_cells
         )
         self.assertIn(
-            "One Product call processes both independent examples "
-            "and all three sensors together",
+            "One `Photoelectrons` Product holds both independent examples "
+            "and all three sensors in one tensor",
             markdown_source,
         )
         self.assertIn("independent waveform realizations", markdown_source)
@@ -732,7 +732,7 @@ class ReadoutDemoTests(unittest.TestCase):
         self.assertNotIn("torch.stack", self.code_source)
         self.assertNotIn("torch.rand", self.code_source)
         self.assertIn(
-            "leaves suppressed regions blank",
+            "noisy baseline regions are suppressed",
             "\n".join(cell.source for cell in self.markdown_cells),
         )
         self.assertIn(
