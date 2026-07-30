@@ -735,6 +735,30 @@ bounded Review recheck before any same-byte approval or local fast-forward.
 CUDA, push, publication, compatibility, calibration, application IO,
 reconstruction, and deployment remain unauthorized.
 
+### [Maintenance 19: Readout Quickstart Cell Separation](maintenance_19_readout_quickstart_cell_separation.md)
+
+Status: **Active / Design authority prepared**.
+
+Maintenance 19 starts from exact locally closed Maintenance 18
+`b77fe74155d0903a727ead6da451f06b8b3ef652`, tree
+`94b3ccc8248b0119ddec682c51c277190ea83c50`. It changes only the source-only
+readout notebook, its focused proof, and these two implementation records.
+
+The maintenance preserves every numerical input, Product, Spec, Kernel,
+Config, result, plot, and public import from Maintenance 18 while giving the
+notebook a consistent visual grammar. Mathematical/data preparation,
+TensorCore/TensorDSLab semantic construction, assertions, presentation
+preparation, and plotting each occupy separate code cells. The recognizable
+pulse derivation remains fully visible, but the following semantic cell reads
+only as PulseResponse construction, PureWaveform Config assembly, and
+`PureWaveform.create(...)`.
+
+The committed notebook remains source-only. Implementation must execute a
+temporary copy outside the repository, retain no generated repository byte,
+and return one rendered PNG for Design/user inspection. No production,
+dependency, metadata, environment, public API, scientific, RNG, donor,
+artifact, CUDA, push, publication, or compatibility change is authorized.
+
 ### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
 
 Status: **Architecture selected / TensorCore Stage 29 published /
