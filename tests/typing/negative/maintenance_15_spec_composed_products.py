@@ -1,4 +1,4 @@
-"""The twelve intentional Maintenance 15 public typing failures."""
+"""The fifteen intentional Maintenance 15 public typing failures."""
 
 import torch
 from tensor_core import (

@@ -432,6 +432,8 @@ class RequirementTests(unittest.TestCase):
             maximum=1.0,
             tolerance=1.0e-12,
         )
+        with self.assertRaises(TypeError):
+            require_no_operation_axes(spec)
         with self.assertRaises(ValueError):
             require_operation_row_total(
                 kernel,

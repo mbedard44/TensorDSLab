@@ -255,6 +255,10 @@ class EncodedWaveformTests(unittest.TestCase):
     def test_exact_policy_leaves_geometry_domains_collection_and_exports(
         self,
     ) -> None:
+        operation = OffsetAxis(
+            coordinates=OffsetCoordinates(offsets=(0,)),
+            relative_to=TimeAxis,
+        )
         cases = (
             (TriggerThresholdCodeSpec, TriggerThresholdCode, 0, -1),
             (ReleaseThresholdCodeSpec, ReleaseThresholdCode, 0, -1),
@@ -279,6 +283,11 @@ class EncodedWaveformTests(unittest.TestCase):
                         device=CPU,
                         dtype=torch.int32,
                     )
+                with self.assertRaises(TypeError):
+                    spec_type(
+                        conditioning_axes=(), operation_axes=(operation,),
+                        device=CPU, dtype=torch.int64,
+                    )
         kernels = EncodedWaveformKernels(members=tuple(members))
         self.assertIs(kernels.trigger_threshold_code, members[0])
         self.assertIs(kernels.release_threshold_code, members[1])
@@ -287,7 +296,6 @@ class EncodedWaveformTests(unittest.TestCase):
         self.assertIs(kernels.post_trigger_samples, members[4])
         with self.assertRaises(ValueError):
             EncodedWaveformKernels(members=tuple(members[:-1]))
-
         time = _axes(time_count=3)[2]
         with self.assertRaises(TypeError):
             TriggerThresholdCodeSpec(
@@ -296,18 +304,6 @@ class EncodedWaveformTests(unittest.TestCase):
                 device=CPU,
                 dtype=torch.int64,
             )
-        operation = OffsetAxis(
-            coordinates=OffsetCoordinates(offsets=(0,)),
-            relative_to=TimeAxis,
-        )
-        with self.assertRaises(ValueError):
-            TriggerThresholdCodeSpec(
-                conditioning_axes=(),
-                operation_axes=(operation,),
-                device=CPU,
-                dtype=torch.int64,
-            )
-
         import tensor_dslab
         import tensor_dslab.encoded_waveform as encoded
 
@@ -473,7 +469,6 @@ class EncodedWaveformTests(unittest.TestCase):
         self.assertIs(prepared._working_dtype, torch.int32)
         self.assertEqual(prepared._time_dimension, 2)
         self.assertEqual(prepared._kernel_dimensions, ((),) * 5)
-
         with self.assertRaises(ValueError):
             EncodedWaveform.prepare(source_specs=(), config=config)
         with self.assertRaises(ValueError):
@@ -512,7 +507,6 @@ class EncodedWaveformTests(unittest.TestCase):
         )
         with self.assertRaisesRegex(ValueError, "exactly one TimeAxis"):
             EncodedWaveform.prepare(source_specs=(missing_time_source.spec,), config=_config(missing_time_source))
-
         product = EncodedWaveform.create(sources=(source,), config=config)
         module = "tensor_dslab.encoded_waveform"
         malformed_calls = (
@@ -533,6 +527,12 @@ class EncodedWaveformTests(unittest.TestCase):
                         with self.assertRaises(TypeError):
                             getattr(EncodedWaveform, method)(**kwargs)
                         downstream.assert_not_called()
+            with self.subTest(method=method, malformed_config=True), \
+                    patch(target) as downstream, self.assertRaises(TypeError):
+                getattr(EncodedWaveform, method)(
+                    **{key: (admitted,), **context, "config": object()}
+                )
+            downstream.assert_not_called()
 
         mismatched_specs = (
             EncodedWaveformSpec(

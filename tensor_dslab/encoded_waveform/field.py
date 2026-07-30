@@ -40,6 +40,15 @@ def _require_sources(sources: object) -> None:
             raise TypeError(f"sources[{index}] must be a TensorField")
 
 
+def _require_config(config: object) -> None:
+    """Require the exact public Config representation before lifecycle effects."""
+
+    from tensor_dslab.encoded_waveform.config import EncodedWaveformConfig
+
+    if type(config) is not EncodedWaveformConfig:
+        raise TypeError("config must be exactly EncodedWaveformConfig")
+
+
 @final
 @dataclass(frozen=True, slots=True, eq=False, repr=False, kw_only=True)
 class EncodedWaveformSpec[
@@ -79,6 +88,7 @@ class EncodedWaveform(TensorField[EncodedWaveformSpec[Any]]):
         config: EncodedWaveformConfig,
     ) -> EncodedWaveformConfig:
         _require_source_specs(source_specs)
+        _require_config(config)
         from tensor_dslab.encoded_waveform.runtime.prepare import (
             prepare_encoded_waveform,
         )
@@ -96,6 +106,7 @@ class EncodedWaveform(TensorField[EncodedWaveformSpec[Any]]):
         config: EncodedWaveformConfig,
     ) -> Self:
         _require_sources(sources)
+        _require_config(config)
         from tensor_dslab.encoded_waveform.runtime.produce import (
             produce_encoded_waveform,
         )
@@ -114,6 +125,7 @@ class EncodedWaveform(TensorField[EncodedWaveformSpec[Any]]):
         config: EncodedWaveformConfig,
     ) -> None:
         _require_sources(sources)
+        _require_config(config)
         from tensor_dslab.encoded_waveform.runtime.validate import (
             validate_encoded_waveform,
         )
@@ -132,6 +144,7 @@ class EncodedWaveform(TensorField[EncodedWaveformSpec[Any]]):
         config: EncodedWaveformConfig,
     ) -> Self:
         _require_sources(sources)
+        _require_config(config)
         prepared = cls.prepare(
             source_specs=tuple(source.spec for source in sources),
             config=config,

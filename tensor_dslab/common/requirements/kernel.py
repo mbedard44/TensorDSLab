@@ -25,7 +25,7 @@ def require_no_operation_axes(
     """Require a scalar or conditioning-only kernel geometry."""
 
     if spec.operation_axes:
-        raise ValueError(
+        raise TypeError(
             f"{type(spec).__name__} must not have operation axes"
         )
 
