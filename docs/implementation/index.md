@@ -833,6 +833,33 @@ This changes presentation storage only. It changes no production, dependency,
 metadata, environment, public API, scientific, RNG, donor, CUDA, push,
 publication, release, calibration, or compatibility boundary.
 
+### [Maintenance 23: Delayed Crosstalk And Global PSD Quickstart](maintenance_23_delayed_crosstalk_global_psd_quickstart.md)
+
+Status: **Active Design authority; implementation undispatched**.
+
+Maintenance 23 starts from exact locally closed Maintenance 22
+`ea59807e4fd18b4e120ce5675c5efacb7adbbd73`, tree
+`cc9533fbed8412cf03119ec565c4eaafe74167bb`. It changes only the supported
+readout notebook and its focused proof after this documentation-only Design
+authority.
+
+The notebook adds one global unconditioned `DelayedCrosstalk` Kernel spanning
+the exact `2..500 ns` Time-relative offsets, with illustrative expected
+offspring mean `0.15` and two correlated-avalanche generations. It replaces
+the three Channel-conditioned PSD rows with one global unconditioned
+`PowerSpectralDensity` Kernel shared by every example and sensor.
+
+Only the seven Product names remain as section headings. Mathematical/value
+preparation, TensorCore/TensorDSLab semantic construction, assertions, and
+Product-local plots remain visibly separate code blocks within those Product
+sections. The revised notebook retains two examples, three channels, exact
+`(2, 3, 5000)` Product shape, seven local `3 x 2` figures, and normalized
+committed outputs.
+
+No production, dependency, metadata, environment, public API, RNG address,
+application profile, workflow factory, donor parity, CUDA, push, publication,
+release, calibration, or compatibility change is authorized.
+
 ### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
 
 Status: **Architecture selected / TensorCore Stage 29 published /
