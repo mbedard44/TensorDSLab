@@ -284,12 +284,33 @@ strict Markdown/code alternation
 All existing cell IDs remain stable. The new cells are exactly:
 
 ```text
-delayed-crosstalk-values-explanation
 delayed-crosstalk-values-code
+charge-semantics-explanation
 ```
 
-They are inserted immediately after `charge-explanation` and immediately
-before `charge-code`.
+The exact local alternating order is:
+
+```text
+charge-explanation
+    Markdown
+    Charge heading plus delayed-crosstalk preparation explanation
+
+delayed-crosstalk-values-code
+    code
+    ordinary tensor mathematics only
+
+charge-semantics-explanation
+    Markdown
+    explains the TensorCore/TensorDSLab objects constructed next
+
+charge-code
+    code
+    semantic Axis/Spec/Kernel/Config/Product construction
+```
+
+This is one new code cell followed by one new Markdown cell at the former
+`charge-explanation -> charge-code` boundary. Calling it a Markdown/code pair
+would reverse the exact order and violate strict alternation.
 
 The exact ordered code-cell IDs become:
 
@@ -922,7 +943,8 @@ Implementation must:
 1. bind the exact authority commit/tree/parent and clean required branch;
 2. read the complete work order and exact current notebook proof;
 3. modify only the notebook and focused proof;
-4. insert the exact delayed-crosstalk preparation pair;
+4. insert exact `delayed-crosstalk-values-code` followed by
+   `charge-semantics-explanation` at the frozen Charge boundary;
 5. preserve every other stable cell ID and exact ordered Product story;
 6. install only the seven exact Product headings;
 7. construct the unconditioned DelayedCrosstalk Kernel;
@@ -964,7 +986,8 @@ obsolete assertions.
 It must prove:
 
 - exact `48 / 24 / 24` inventory and strict alternation;
-- exact stable old IDs plus the one exact new Markdown/code pair;
+- exact stable old IDs plus exact new `delayed-crosstalk-values-code` and
+  `charge-semantics-explanation` IDs in their frozen code/Markdown order;
 - exact ordered code-cell inventory;
 - exact seven Product-only level-two headings;
 - absence of every former non-Product heading;
