@@ -761,12 +761,12 @@ artifact, CUDA, push, publication, or compatibility change is authorized.
 
 ### [Maintenance 20: Product-Local Readout Plots](maintenance_20_product_local_readout_plots.md)
 
-Status: **Active / Design authority prepared**.
+Status: **Merged / Closed**.
 
-Maintenance 20 starts from exact locally closed Maintenance 19
-`fce1f352ae417a009e52c3ab889ba7881e42468b`, tree
-`dc538012906d0af1908b479d635a3bce9bb43edf`. It changes only the source-only
-readout notebook, its focused proof, and these three Design authority records.
+Exact Review-cleared and fast-forwarded Candidate 1 is
+`77201b415d00237b4a62951d6e13faa1751a1057`, tree
+`7293508c667a9da2939e125beae41192336951ca`. Its executable delta is exactly
+the source-only readout notebook and focused notebook proof.
 
 The combined seven-panel figure is replaced with one Product-local plot
 immediately after each Product is created. Every plot uses the same stable
@@ -776,11 +776,35 @@ mathematical preparation, semantic construction, assertions, and presentation
 remains operative.
 
 All seven Product values, digests, Units, shapes, axes, retained intervals,
-and stochastic results remain exact. The committed notebook remains
-source-only; only temporary external notebook outputs and images may be used
-for Design/user inspection. No production, dependency, metadata, environment,
-public API, scientific, RNG, donor, artifact, CUDA, push, publication, or
-compatibility change is authorized.
+and stochastic results remain exact. Fixed-byte Validation and independent
+Review returned zero findings, and Review completed the clean local
+fast-forward. The committed notebook remains source-only. No production,
+dependency, metadata, environment, public API, scientific, RNG, donor,
+artifact, CUDA, push, publication, or compatibility change occurred.
+
+### [Maintenance 21: Two-Example Product Grid Plots](maintenance_21_two_example_product_grid_plots.md)
+
+Status: **Active / Design authority prepared**.
+
+Maintenance 21 starts from exact locally closed Maintenance 20
+`77201b415d00237b4a62951d6e13faa1751a1057`, tree
+`7293508c667a9da2939e125beae41192336951ca`. It changes only the source-only
+readout notebook, its focused proof, and these three Design authority records.
+
+The quickstart now demonstrates two independent examples and three sensor
+channels, so all seven Products have meaningful `(2, 3, 5000)` shape. Each
+Product-local figure becomes a `3 x 2` grid with columns for Example 0/1 and
+rows for sensor-0/1/2. Each subplot contains one trace, and each Product uses
+one distinct stable color across its six coordinate panels.
+
+Legends are removed as redundant. Product-level figure titles, example column
+titles, and sensor row labels communicate the domain directly. No final
+combined or summary plot is added. Maintenance 19's math/semantic/assertion
+separation and Maintenance 20's Product-local story remain operative.
+
+No production, dependency, metadata, environment, public API, scientific,
+RNG, donor, artifact, CUDA, push, publication, or compatibility change is
+authorized.
 
 ### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
 

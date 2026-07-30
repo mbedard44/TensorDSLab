@@ -1,6 +1,6 @@
 # Maintenance 20 Product-Local Readout Plots
 
-Status: **Active / Design authority prepared**.
+Status: **Merged / Closed**.
 
 Stable key:
 `TensorDSLab/maintenance-20-product-local-readout-plots`
@@ -508,3 +508,40 @@ Maintenance 20 is complete only when:
 The final report must link the source-only notebook and the temporary executed
 notebook and show a temporary contact sheet or the individual rendered plots
 without committing generated outputs.
+
+## Closeout
+
+Maintenance 20 is Merged / Closed through exact Review-cleared and
+fast-forwarded Candidate 1:
+
+```text
+commit:
+    77201b415d00237b4a62951d6e13faa1751a1057
+tree:
+    7293508c667a9da2939e125beae41192336951ca
+parent / Design authority:
+    f0f958f3ce200bb65c3078906e42e3dba25fb92c
+```
+
+The exact implementation delta is only:
+
+```text
+demos/readout.ipynb
+tests/test_readout_demo.py
+```
+
+Fixed-byte Validation and independent Review both returned CLEAR with zero
+findings. Focused source/archive evidence passed `3/3/0` in each dependency
+form; complete source/archive evidence passed `70/70/0`; positive Pyright
+reported zero diagnostics; and the negative fixture retained exactly fifteen
+intended diagnostics.
+
+Both roles independently reproduced all seven Product values and exact
+Maintenance 19 digests. They independently rendered seven Product-local
+figures, verified the selected thin/translucent style, and proved every
+three-entry legend was centered below a non-overlapping x-axis label.
+
+The committed notebook remains source-only. Review fast-forwarded the exact
+unchanged candidate to clean local `main`. No push, artifact rebuild, fresh
+environment, CUDA, performance, calibration, compatibility, release, or
+publication claim follows.
