@@ -1,5 +1,21 @@
 # Agent Workflow
 
+## Maintenance 22 Current Notebook Output Boundary
+
+The sole supported newcomer notebook at `demos/readout.ipynb` contains two
+independent examples, three sensors, seven public Product calls, and one
+Product-local `3 x 2` grid per result. Maintenance 22 deliberately commits one
+normalized eager-CPU execution so those seven illustrative figures are visible
+when the notebook first opens. The 23 code-cell counts are exactly `1..23`;
+only the seven Product view cells retain one `display_data` PNG each.
+
+These embedded figures are a reproducible presentation snapshot on the exact
+recorded stack, not scientific artifacts, calibration, durable Product
+storage, a workflow surface, or a cross-version image-byte promise. Fresh
+validation must clear every stored count and output in a private copy before
+replaying the unchanged source. No second notebook, standalone image, export,
+cache, or generated manifest is part of the package contract.
+
 ## Maintenance 18 Current Encoded-Waveform Boundary
 
 Maintenance 18 adds one deterministic terminal DAQ/readout Product at
@@ -20,13 +36,14 @@ now shows EncodedWaveform as its seventh separate public Product.
 ## Maintenance 17 Current Demonstration Boundary
 
 Maintenance 16 is locally closed. Maintenance 17 adds exactly one supported
-newcomer demonstration at `demos/readout.ipynb`. It hand-builds a small
-three-sensor example from public Product APIs and explains every code cell in
-plain language. It is application-neutral user code, not a package-owned
-workflow, profile, calibration, orchestration surface, compatibility promise,
-or authorization for another demo by analogy. Production package bytes and
-public facades remain unchanged, and applications continue to own workflow
-composition, retention, IO, integration, and collaboration profiles.
+newcomer demonstration at `demos/readout.ipynb`. Its current form hand-builds
+two independent examples over three sensors from public Product APIs and
+explains every code cell in plain language. It is application-neutral user
+code, not a package-owned workflow, profile, calibration, orchestration
+surface, compatibility promise, or authorization for another demo by
+analogy. Production package bytes and public facades remain unchanged, and
+applications continue to own workflow composition, retention, IO,
+integration, and collaboration profiles.
 
 ## Maintenance 15 Current Package Contract
 

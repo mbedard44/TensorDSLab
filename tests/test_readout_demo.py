@@ -1,11 +1,14 @@
 """Focused source and execution proof for the public readout quickstart."""
 
 import ast
+import base64
 import copy
+import hashlib
 import json
 from pathlib import Path
 import unittest
 
+from matplotlib import font_manager
 from nbclient import NotebookClient
 import nbformat
 from nbformat.notebooknode import NotebookNode
@@ -14,6 +17,53 @@ from nbformat.notebooknode import NotebookNode
 ROOT = Path(__file__).resolve().parents[1]
 NOTEBOOK_PATH = ROOT / "demos" / "readout.ipynb"
 SUMMARY_PREFIX = "READOUT_DEMO_SUMMARY="
+SOURCE_PROJECTION_SHA256 = (
+    "921b5f9fee0e3260867689642cb35224f2b1facd9623d42d3404a3887ee47fbf"
+)
+COMMITTED_NOTEBOOK_SHA256 = (
+    "5f423a6c90d093e10af5d2f8e7f5dcfe1070cf369d195b28b27f2d58c66be57b"
+)
+FIGURE_TEXT = "<Figure size 1300x850 with 6 Axes>"
+OUTPUT_HASHES = {
+    "photoelectrons-view-code": (
+        "3f5814fa5c83b856ecdb5a15def832251cd0a5cff91d3dfbda21bd44bceb9139"
+    ),
+    "charge-view-code": (
+        "680c6231d009a9d6c590ee060bd5ddd1d4aad79950411e677a1e3da53cc2854c"
+    ),
+    "pure-waveform-view-code": (
+        "924a95d4c97e00d3cc6fde320e03b548cf323d24c0ddc8e7285560fa35809a1f"
+    ),
+    "noise-waveform-view-code": (
+        "69bf7451031461ad9a3baad9c70f6b53b7f733a1df3a7c5213e0849bae64e08b"
+    ),
+    "analog-waveform-view-code": (
+        "74f5b46839ad9ee3263caba3fac21705fb1e3606a2e25e0d688cb1c655b040c3"
+    ),
+    "digitized-waveform-view-code": (
+        "fdd07c0a2a187aebe7b10239f297efafa96ba9ced98377278c626dc5d12479f0"
+    ),
+    "encoded-waveform-view-code": (
+        "dc7df1661bd9e5fca09a886ebae8d84f56b07c010f62066890a7a98f64e52e0d"
+    ),
+}
+
+
+def _source_projection_hash(notebook: NotebookNode) -> str:
+    projection = [
+        (cell.cell_type, cell.id, cell.source) for cell in notebook.cells
+    ]
+    encoded = json.dumps(
+        projection,
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _decoded_png_hash(output: NotebookNode) -> str:
+    png_bytes = base64.b64decode(output.data["image/png"])
+    return hashlib.sha256(png_bytes).hexdigest()
 
 
 PROBE_SOURCE = f"""
@@ -292,6 +342,8 @@ print({SUMMARY_PREFIX!r} + json.dumps(summary, sort_keys=True))
 class ReadoutDemoTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
+        font_manager.findfont("DejaVu Sans")
+        cls.notebook_bytes = NOTEBOOK_PATH.read_bytes()
         cls.notebook = nbformat.read(NOTEBOOK_PATH, as_version=4)
         cls.code_cells = tuple(
             cell for cell in cls.notebook.cells if cell.cell_type == "code"
@@ -302,14 +354,35 @@ class ReadoutDemoTests(unittest.TestCase):
         cls.code_source = "\n".join(cell.source for cell in cls.code_cells)
 
     @classmethod
-    def _execute(cls) -> tuple[dict, NotebookNode]:
+    def _cleared_copy(cls) -> NotebookNode:
         notebook = copy.deepcopy(cls.notebook)
+        for cell in notebook.cells:
+            cell.metadata = {}
+            if cell.cell_type == "code":
+                cell.execution_count = None
+                cell.outputs = []
+        return notebook
+
+    @classmethod
+    def _execute(cls) -> tuple[dict, NotebookNode]:
+        notebook = cls._cleared_copy()
+        code_cells = tuple(
+            cell for cell in notebook.cells if cell.cell_type == "code"
+        )
+        if any(
+            cell.execution_count is not None or cell.outputs
+            for cell in code_cells
+        ):
+            raise AssertionError("fresh replay retained committed execution")
         notebook.cells.append(nbformat.v4.new_code_cell(PROBE_SOURCE))
         executed = NotebookClient(
             notebook,
             timeout=120,
             kernel_name="python3",
+            record_timing=False,
         ).execute(cwd=str(ROOT))
+        if NOTEBOOK_PATH.read_bytes() != cls.notebook_bytes:
+            raise AssertionError("fresh replay changed the committed notebook")
         probe = executed.cells[-1]
         streams = tuple(
             output.text
@@ -371,6 +444,19 @@ class ReadoutDemoTests(unittest.TestCase):
             len(self.notebook.cells),
         )
         self.assertEqual(
+            hashlib.sha256(self.notebook_bytes).hexdigest(),
+            COMMITTED_NOTEBOOK_SHA256,
+        )
+        self.assertEqual(len(self.notebook_bytes), 876216)
+        self.assertEqual(
+            _source_projection_hash(self.notebook),
+            SOURCE_PROJECTION_SHA256,
+        )
+        self.assertEqual(
+            set(self.notebook.metadata),
+            {"kernelspec", "language_info"},
+        )
+        self.assertEqual(
             self.notebook.metadata.kernelspec.name,
             "python3",
         )
@@ -387,11 +473,54 @@ class ReadoutDemoTests(unittest.TestCase):
             "timestamp",
         ):
             self.assertNotIn(forbidden, metadata_text)
+        self.assertEqual(
+            tuple(cell.execution_count for cell in self.code_cells),
+            tuple(range(1, 24)),
+        )
+        observed_output_hashes = {}
         for cell in self.notebook.cells:
             self.assertNotIn("attachments", cell)
+            self.assertEqual(cell.metadata, {})
             if cell.cell_type == "code":
-                self.assertIsNone(cell.execution_count)
-                self.assertEqual(cell.outputs, [])
+                if cell.id not in OUTPUT_HASHES:
+                    self.assertEqual(cell.outputs, [])
+                    continue
+                self.assertEqual(len(cell.outputs), 1)
+                output = cell.outputs[0]
+                self.assertEqual(output.output_type, "display_data")
+                self.assertEqual(
+                    set(output.data),
+                    {"image/png", "text/plain"},
+                )
+                self.assertEqual(output.data["text/plain"], FIGURE_TEXT)
+                self.assertEqual(output.metadata, {})
+                observed_output_hashes[cell.id] = _decoded_png_hash(output)
+        self.assertEqual(observed_output_hashes, OUTPUT_HASHES)
+        test_module = ast.parse(Path(__file__).read_text())
+        exact_hash_assertions = tuple(
+            node
+            for node in ast.walk(test_module)
+            if isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "assertEqual"
+            and len(node.args) == 2
+            and isinstance(node.args[0], ast.Name)
+            and node.args[0].id == "observed_output_hashes"
+            and isinstance(node.args[1], ast.Name)
+            and node.args[1].id == "OUTPUT_HASHES"
+        )
+        self.assertEqual(len(exact_hash_assertions), 1)
+
+        cleared = self._cleared_copy()
+        cleared_code_cells = tuple(
+            cell for cell in cleared.cells if cell.cell_type == "code"
+        )
+        self.assertTrue(
+            all(
+                cell.execution_count is None and cell.outputs == []
+                for cell in cleared_code_cells
+            )
+        )
 
         self.assertTrue(
             self.markdown_cells[0].source.startswith("# Readout quickstart")
@@ -983,6 +1112,29 @@ class ReadoutDemoTests(unittest.TestCase):
         first, first_notebook = self._execute()
         second, second_notebook = self._execute()
         self.assertEqual(first, second)
+        self.assertEqual(NOTEBOOK_PATH.read_bytes(), self.notebook_bytes)
+
+        for executed in (first_notebook, second_notebook):
+            original_cells = executed.cells[:-1]
+            self.assertEqual(len(original_cells), len(self.notebook.cells))
+            for committed_cell, fresh_cell in zip(
+                self.notebook.cells,
+                original_cells,
+                strict=True,
+            ):
+                self.assertEqual(fresh_cell.cell_type, committed_cell.cell_type)
+                self.assertEqual(fresh_cell.id, committed_cell.id)
+                self.assertEqual(fresh_cell.source, committed_cell.source)
+                self.assertEqual(fresh_cell.metadata, {})
+                if fresh_cell.cell_type == "code":
+                    self.assertEqual(
+                        fresh_cell.execution_count,
+                        committed_cell.execution_count,
+                    )
+                    self.assertEqual(
+                        fresh_cell.outputs,
+                        committed_cell.outputs,
+                    )
 
         self.assertEqual(
             first["types"],
@@ -1228,8 +1380,18 @@ class ReadoutDemoTests(unittest.TestCase):
             )
             self.assertEqual(errors, ())
             self.assertEqual(len(displays), 7)
+            self.assertEqual(
+                [_decoded_png_hash(display) for display in displays],
+                list(OUTPUT_HASHES.values()),
+            )
             for display in displays:
-                self.assertIn("image/png", display.data)
+                self.assertEqual(display.output_type, "display_data")
+                self.assertEqual(
+                    set(display.data),
+                    {"image/png", "text/plain"},
+                )
+                self.assertEqual(display.data["text/plain"], FIGURE_TEXT)
+                self.assertEqual(display.metadata, {})
 
 
 if __name__ == "__main__":

@@ -59,6 +59,13 @@ ordinary user code. Such a notebook does not define a universal chain,
 profile, calibration, retention policy, or compatibility facade for the
 retired embedded readout workflow.
 
+The current notebook presents two independent examples across three sensors,
+using seven separate public Product calls and one `3 x 2` grid per Product.
+Its committed figures are a first-open teaching snapshot. They remain
+illustrative, are reproducible only on the exact recorded plotting stack, and
+do not become canonical data, durable output, calibration, or a
+package-owned execution graph.
+
 See the [Maintenance 15 architecture record](implementation/maintenance_15_spec_composed_products_and_application_boundary.md),
 its [execution work order](implementation/maintenance_15_execution_work_order.md),
 the [Maintenance 16 requirements-ownership work order](implementation/maintenance_16_declarative_requirements_and_kernel_ownership.md),

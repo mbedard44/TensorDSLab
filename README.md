@@ -49,11 +49,15 @@ Applications compose the direct Products they need.
 
 ## Readout Quickstart
 
-The [application-neutral readout notebook](demos/readout.ipynb) builds a small
-three-sensor example by hand from the public Product APIs, including
-EncodedWaveform as the seventh separate transformation. It is an
-illustrative newcomer guide, not a package-owned workflow, detector profile,
-or calibration.
+The [application-neutral readout notebook](demos/readout.ipynb) builds two
+independent examples over three sensors by hand from the public Product APIs,
+including EncodedWaveform as the seventh separate transformation. Each
+Product has its own `3 x 2` grid, and the seven illustrative figures are
+committed so readers can inspect the complete story before running a kernel.
+Rerunning the notebook on the recorded eager-CPU stack deterministically
+refreshes the same demonstration. The snapshot is not a package-owned
+workflow, durable artifact, detector profile, calibration, or cross-platform
+PNG promise.
 
 ```python
 import torch

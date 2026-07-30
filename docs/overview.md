@@ -12,9 +12,10 @@ own workflow composition, IO, and persistence.
 
 ## Current Package
 
-Maintenance 17 is locally closed. Maintenance 18 retains TensorCore `0.22.0`
-and the
-direct reusable Products introduced by Maintenance 15:
+Maintenance 22 changes only the committed presentation state of the newcomer
+notebook. The production package remains the Maintenance 18 boundary, retains
+TensorCore `0.22.0`, and provides the direct reusable Products introduced by
+Maintenance 15:
 
 ```text
 Coordinates -> semantic Axis -> exact Spec -> Tensor Product/Kernel
@@ -62,12 +63,16 @@ records.
 ## Newcomer Quickstart
 
 The [application-neutral readout notebook](../demos/readout.ipynb) constructs
-one small three-sensor example directly from the public Product APIs. It is a
-teaching composition, not a package-owned workflow, profile, orchestration
-surface, or calibration. Applications remain responsible for choosing and
-retaining Products in their real workflows.
-Its seventh Product demonstrates the deterministic EncodedWaveform boundary
-with suppressed samples displayed as gaps.
+two independent examples over three sensors directly from seven public Product
+calls. Every Product has its own `3 x 2` grid, and the normalized figures are
+committed so the story is visible before execution. Rerunning the notebook on
+the exact recorded eager-CPU stack deterministically refreshes that snapshot.
+It is a teaching composition, not canonical data, durable output, a
+package-owned workflow, profile, orchestration surface, calibration, or a
+cross-platform image-byte promise. Applications remain responsible for
+choosing and retaining Products in their real workflows. The seventh Product
+demonstrates the deterministic EncodedWaveform boundary with suppressed
+samples displayed as gaps.
 
 ## Documentation Map
 

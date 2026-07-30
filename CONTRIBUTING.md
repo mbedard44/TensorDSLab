@@ -1260,6 +1260,11 @@ Good tests should:
   occurs in `simulate_readout(...)`; this does not prohibit a producer's
   declared fresh generated-product dtype conversion, including
   `Photoelectrons[torch.int64]` to floating Charge;
+- for the sole supported `demos/readout.ipynb`, prove the normalized committed
+  execution owns exactly seven Product-local `display_data` PNGs and exact
+  counts `1..23`, while every fresh scientific replay first clears all stored
+  counts and outputs and independently reproduces the same two-example Product
+  values, grids, and frozen-stack image hashes;
 - do not add adversarial tests for unsupported final-leaf subclassing, class
   mutation, constructor bypass, private calls, exposed-tensor mutation, or
   custom dispatch merely to harden outside the public contract;
@@ -1358,4 +1363,7 @@ PYTHONPATH=. python -m unittest discover -s tests
 For future DAG-compatible changes, also run the accepted operation-spec or
 domain-module validation command.
 
-Never stage generated caches, local outputs, or unrelated files.
+Never stage generated caches, local outputs, or unrelated files. The sole
+deliberate exception is the normalized seven-figure presentation snapshot
+inside `demos/readout.ipynb`; do not stage a second executed notebook,
+standalone PNG, export, cache, or manifest.

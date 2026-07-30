@@ -6,8 +6,9 @@ adds exact encoded-waveform, signed-dtype, donor-parity, and seventh-panel
 evidence. It proves
 the private declarative-requirement ownership refactor preserves supported
 public contracts and scientific behavior without retaining tests for the
-retired application workflow. Maintenance 17 adds one source-only,
-application-neutral notebook demonstration without restoring that workflow.
+retired application workflow. Maintenance 17 adds one application-neutral
+notebook demonstration without restoring that workflow; Maintenance 22
+commits only its normalized seven-figure presentation snapshot.
 
 ## Required Boundaries
 
@@ -112,19 +113,28 @@ CUDA and cluster work are excluded; no accelerator claim follows.
 
 ## Notebook Demonstration
 
-The Maintenance 17 notebook, as updated by Maintenance 18, is validated as
-ordinary public-API user code.
-Committed proof checks its exact source-only cell inventory, plain-language
-Markdown before every code cell, public imports, literal three-channel source
-and PSD construction, seven separate Product calls, light shared-shape
-assertions, and seven-panel plot structure. The final panel must show exact
-EncodedWaveform support with suppression converted to presentation-only gaps.
-Two immediate executions must agree
-on Product values and plot structure while leaving the source unchanged.
+The Maintenance 17 notebook, as updated through Maintenance 22, is validated
+as ordinary public-API user code. Its source remains exact while its 23 code
+cells carry one normalized top-to-bottom execution. Exactly the seven local
+Product view cells own one `display_data` output containing `image/png` and
+the exact six-axes figure text; all other code cells own no output.
+
+Committed proof checks the exact `46 / 23 / 23` grammar, source projection,
+counts `1..23`, empty cell/output metadata, seven decoded frozen-stack PNG
+hashes, plain-language Markdown, public imports, two independent examples over
+three sensors, seven separate Product calls, light shared-shape assertions,
+and seven Product-local `3 x 2` grids. EncodedWaveform suppression is converted
+to gaps only for presentation.
+
+Every fresh replay first clears all stored counts and outputs in a private
+copy. Two immediate executions must independently reproduce the exact Product
+and lane digests, EncodedWaveform support, plot artists, normalized outputs,
+and decoded PNG hashes while leaving the committed notebook bytes unchanged.
 
 Complete Validation also executes the notebook from both exact dependency
-forms and from an isolated installed artifact outside the checkout, visually
-inspects the rendered figure, and exercises one fresh environment created by
-`create_environment.sh`. Demo dependencies remain optional, notebook
-execution remains CPU-only, and no result establishes a package workflow,
-calibration, CUDA, compatibility, release, or deployment claim.
+forms and from an isolated installed artifact outside the checkout, decodes
+and visually inspects all seven figures, and verifies the sdist contains the
+exact notebook. Demo dependencies remain optional and execution remains
+CPU-only. The committed images are an illustrative first-open snapshot, not
+canonical data, a durable artifact, calibration, workflow ownership, CUDA,
+compatibility, release, or deployment evidence.
