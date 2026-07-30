@@ -808,6 +808,31 @@ No production, dependency, metadata, environment, public API, scientific,
 RNG, donor, artifact, CUDA, push, publication, or compatibility change is
 authorized.
 
+### [Maintenance 22: Committed Readout Notebook Outputs](maintenance_22_committed_readout_notebook_outputs.md)
+
+Status: **Self-effecting under the frozen exact-byte route**. Before the
+complete same-byte gate and clean local fast-forward, it denotes the latest
+completed fixed-byte handoff. After the exact unchanged cleared candidate
+reaches local `main`, it resolves to **Merged / Closed**.
+
+Maintenance 22 starts from exact locally closed Maintenance 21
+`e71974239c4ec04d6b138ade5fe346c47f85172f`, tree
+`0c660682d92c0c60c404e848ee3eee193ccf3257`. It commits one normalized
+top-to-bottom execution of the existing `demos/readout.ipynb` so all seven
+Product grids are visible when a newcomer first opens the notebook.
+
+The exact `46 / 23 / 23` cell grammar and every source byte remain unchanged.
+Code-cell execution counts are exactly `1..23`; only the seven Product view
+cells retain one PNG `display_data` output each; all transient metadata,
+attachments, other outputs, and standalone generated files remain absent.
+Fresh privately cleared replay remains the scientific oracle and must
+reproduce the exact Product results and embedded images on the frozen eager-CPU
+stack.
+
+This changes presentation storage only. It changes no production, dependency,
+metadata, environment, public API, scientific, RNG, donor, CUDA, push,
+publication, release, calibration, or compatibility boundary.
+
 ### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
 
 Status: **Architecture selected / TensorCore Stage 29 published /
