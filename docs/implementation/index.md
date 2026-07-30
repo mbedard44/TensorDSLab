@@ -737,12 +737,12 @@ reconstruction, and deployment remain unauthorized.
 
 ### [Maintenance 19: Readout Quickstart Cell Separation](maintenance_19_readout_quickstart_cell_separation.md)
 
-Status: **Active / Design authority prepared**.
+Status: **Merged / Closed**.
 
-Maintenance 19 starts from exact locally closed Maintenance 18
-`b77fe74155d0903a727ead6da451f06b8b3ef652`, tree
-`94b3ccc8248b0119ddec682c51c277190ea83c50`. It changes only the source-only
-readout notebook, its focused proof, and these two implementation records.
+Exact Review-cleared and fast-forwarded Candidate 1 is
+`fce1f352ae417a009e52c3ab889ba7881e42468b`, tree
+`dc538012906d0af1908b479d635a3bce9bb43edf`. It changes only the source-only
+readout notebook, its focused proof, and its two implementation records.
 
 The maintenance preserves every numerical input, Product, Spec, Kernel,
 Config, result, plot, and public import from Maintenance 18 while giving the
@@ -758,6 +758,29 @@ temporary copy outside the repository, retain no generated repository byte,
 and return one rendered PNG for Design/user inspection. No production,
 dependency, metadata, environment, public API, scientific, RNG, donor,
 artifact, CUDA, push, publication, or compatibility change is authorized.
+
+### [Maintenance 20: Product-Local Readout Plots](maintenance_20_product_local_readout_plots.md)
+
+Status: **Active / Design authority prepared**.
+
+Maintenance 20 starts from exact locally closed Maintenance 19
+`fce1f352ae417a009e52c3ab889ba7881e42468b`, tree
+`dc538012906d0af1908b479d635a3bce9bb43edf`. It changes only the source-only
+readout notebook, its focused proof, and these three Design authority records.
+
+The combined seven-panel figure is replaced with one Product-local plot
+immediately after each Product is created. Every plot uses the same stable
+sensor colors, thinner semi-transparent curves, and its own three-sensor
+legend centered below the x-axis. Maintenance 19's strict separation of
+mathematical preparation, semantic construction, assertions, and presentation
+remains operative.
+
+All seven Product values, digests, Units, shapes, axes, retained intervals,
+and stochastic results remain exact. The committed notebook remains
+source-only; only temporary external notebook outputs and images may be used
+for Design/user inspection. No production, dependency, metadata, environment,
+public API, scientific, RNG, donor, artifact, CUDA, push, publication, or
+compatibility change is authorized.
 
 ### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
 

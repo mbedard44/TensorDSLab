@@ -1,6 +1,10 @@
 # Maintenance 19 Readout Quickstart Cell Separation
 
-Status: **Active / Design authority prepared**.
+Status: **Merged / Closed**.
+
+Exact Review-cleared and fast-forwarded Candidate 1 is
+`fce1f352ae417a009e52c3ab889ba7881e42468b`, tree
+`dc538012906d0af1908b479d635a3bce9bb43edf`.
 
 Stable key:
 `TensorDSLab/maintenance-19-readout-quickstart-cell-separation`
