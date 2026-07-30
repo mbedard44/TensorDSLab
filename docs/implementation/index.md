@@ -863,6 +863,31 @@ No production, dependency, metadata, environment, public API, RNG address,
 application profile, workflow factory, donor parity, CUDA, push, publication,
 release, calibration, or compatibility change is authorized.
 
+### [Maintenance 24: Application-Owned Readout Quickstart](maintenance_24_application_owned_readout_quickstart.md)
+
+Status: **Active / Implementation authorized**.
+
+Maintenance 24 starts from synchronized local/live `main`
+`adbd3ded3bbbc90fb7fee2c2ecb486307e815014`, tree
+`f2300d47076bd2eb4a3f19e7b4fbab7acaf904a3`. It adds one final
+`Application-Owned Workflow` section to the supported readout notebook.
+
+The section locally defines an illustrative `ReadoutConfig`,
+`Readout(TensorCollection)`, and application-neutral `quickstart_profile()`.
+The explicit one-shot `Readout.create()` calls the same six generated Product
+operations in dependency order and returns all seven Products, including the
+caller-supplied `Photoelectrons`. It then proves exact Spec and tensor equality
+with the Products created in the preceding teaching sections.
+
+This narrowly amends the demo boundary to permit an application-owned teaching
+composition while continuing to forbid a package-owned workflow/profile API,
+generic orchestration, or production import of notebook code. It adds no plot
+and preserves all seven committed Product-local PNG payloads exactly.
+
+No production, dependency, metadata, environment, public API, scientific, RNG,
+CUDA, calibration, compatibility, release, or publication change is
+authorized.
+
 ### [Proposed Kernel Geometry And Quantity Architecture](proposed_kernel_geometry_and_quantity_architecture.md)
 
 Status: **Architecture selected / TensorCore Stage 29 published /
