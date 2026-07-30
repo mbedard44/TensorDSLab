@@ -35,20 +35,34 @@ product_values = (
     digitized_waveform,
     encoded_waveform,
 )
-plot_axes = [figure.axes[0] for figure in product_figures]
+plot_axes = [list(figure.axes) for figure in product_figures]
 layout_bounds = []
-for figure, axis in zip(product_figures, plot_axes):
+for figure, axes_group in zip(product_figures, plot_axes):
     figure.draw_without_rendering()
     renderer = figure._get_renderer()
+    text_bounds = []
+    for axis in axes_group:
+        for text_artist in (
+            axis.title,
+            axis.xaxis.label,
+            axis.yaxis.label,
+        ):
+            if text_artist.get_text():
+                text_bounds.append(
+                    list(text_artist.get_window_extent(renderer).bounds)
+                )
+    if figure._suptitle is not None:
+        text_bounds.append(
+            list(figure._suptitle.get_window_extent(renderer).bounds)
+        )
     layout_bounds.append(
         {{
             "figure": list(figure.bbox.bounds),
-            "xlabel": list(
-                axis.xaxis.label.get_window_extent(renderer).bounds
-            ),
-            "legend": list(
-                axis.get_legend().get_window_extent(renderer).bounds
-            ),
+            "axes": [
+                list(axis.get_window_extent(renderer).bounds)
+                for axis in axes_group
+            ],
+            "text": text_bounds,
         }}
     )
 summary = {{
@@ -58,6 +72,13 @@ summary = {{
     "dtypes": [str(product.tensor.dtype) for product in product_values],
     "units": [str(product.spec.unit) for product in product_values],
     "digests": [tensor_digest(product.tensor) for product in product_values],
+    "example_digests": [
+        [
+            tensor_digest(product.tensor[example_index])
+            for example_index in range(example_axis.size)
+        ]
+        for product in product_values
+    ],
     "source_unchanged": bool(torch.equal(
         photoelectron_values,
         photoelectron_values_before,
@@ -69,6 +90,7 @@ summary = {{
     "channel_labels": list(channel_axis.coordinates.labels),
     "deposits": [
         [
+            int(position[0]),
             int(position[1]),
             int(position[2]),
             int(photoelectrons.tensor[tuple(position)]),
@@ -130,46 +152,67 @@ summary = {{
     ],
     "figure_count": len(product_figures),
     "figure_axes": [len(figure.axes) for figure in product_figures],
-    "line_counts": [len(axis.lines) for axis in plot_axes],
+    "line_counts": [
+        [len(axis.lines) for axis in axes_group]
+        for axes_group in plot_axes
+    ],
     "colors": [
-        [line.get_color() for line in axis.lines]
-        for axis in plot_axes
+        [
+            [line.get_color() for line in axis.lines]
+            for axis in axes_group
+        ]
+        for axes_group in plot_axes
     ],
     "drawstyles": [
-        [line.get_drawstyle() for line in axis.lines]
-        for axis in plot_axes
+        [
+            [line.get_drawstyle() for line in axis.lines]
+            for axis in axes_group
+        ]
+        for axes_group in plot_axes
     ],
     "alphas": [
-        [line.get_alpha() for line in axis.lines]
-        for axis in plot_axes
+        [
+            [line.get_alpha() for line in axis.lines]
+            for axis in axes_group
+        ]
+        for axes_group in plot_axes
     ],
     "linewidths": [
-        [line.get_linewidth() for line in axis.lines]
-        for axis in plot_axes
+        [
+            [line.get_linewidth() for line in axis.lines]
+            for axis in axes_group
+        ]
+        for axes_group in plot_axes
     ],
     "axis_legends": [
-        axis.get_legend() is not None
-        for axis in plot_axes
+        [
+            axis.get_legend() is not None
+            for axis in axes_group
+        ]
+        for axes_group in plot_axes
     ],
     "figure_legends": [
         len(figure.legends) for figure in product_figures
     ],
-    "legend_labels": [
-        [text.get_text() for text in axis.get_legend().get_texts()]
-        for axis in plot_axes
+    "figure_titles": [
+        figure._suptitle.get_text()
+        if figure._suptitle is not None
+        else ""
+        for figure in product_figures
     ],
-    "legend_locations": [
-        axis.get_legend()._loc for axis in plot_axes
+    "axis_titles": [
+        [axis.get_title() for axis in axes_group]
+        for axes_group in plot_axes
     ],
-    "legend_columns": [
-        axis.get_legend()._ncols for axis in plot_axes
+    "xlabels": [
+        [axis.get_xlabel() for axis in axes_group]
+        for axes_group in plot_axes
     ],
-    "legend_frames": [
-        axis.get_legend().get_frame_on() for axis in plot_axes
+    "ylabels": [
+        [axis.get_ylabel() for axis in axes_group]
+        for axes_group in plot_axes
     ],
     "layout_bounds": layout_bounds,
-    "xlabels": [axis.get_xlabel() for axis in plot_axes],
-    "ylabels": [axis.get_ylabel() for axis in plot_axes],
     "adc_min": int(digitized_waveform.tensor.min()),
     "adc_max": int(digitized_waveform.tensor.max()),
     "input_minimum": float(input_minimum.tensor),
@@ -186,47 +229,60 @@ summary = {{
     "suppression_code": encoded_waveform.spec.suppression_code,
     "encoded_support": [
         [
-            [start, end]
-            for start, end in zip(
-                [
-                    index
-                    for index in range(time_axis.size)
-                    if (
-                        encoded_waveform.tensor[0, channel_index, index]
-                        != encoded_waveform.spec.suppression_code
-                        and (
-                            index == 0
-                            or encoded_waveform.tensor[
-                                0, channel_index, index - 1
+            [
+                [start, end]
+                for start, end in zip(
+                    [
+                        index
+                        for index in range(time_axis.size)
+                        if (
+                            encoded_waveform.tensor[
+                                example_index, channel_index, index
                             ]
-                            == encoded_waveform.spec.suppression_code
+                            != encoded_waveform.spec.suppression_code
+                            and (
+                                index == 0
+                                or encoded_waveform.tensor[
+                                    example_index,
+                                    channel_index,
+                                    index - 1,
+                                ]
+                                == encoded_waveform.spec.suppression_code
+                            )
                         )
-                    )
-                ],
-                [
-                    index
-                    for index in range(1, time_axis.size + 1)
-                    if (
-                        encoded_waveform.tensor[
-                            0, channel_index, index - 1
-                        ]
-                        != encoded_waveform.spec.suppression_code
-                        and (
-                            index == time_axis.size
-                            or encoded_waveform.tensor[
-                                0, channel_index, index
+                    ],
+                    [
+                        index
+                        for index in range(1, time_axis.size + 1)
+                        if (
+                            encoded_waveform.tensor[
+                                example_index,
+                                channel_index,
+                                index - 1,
                             ]
-                            == encoded_waveform.spec.suppression_code
+                            != encoded_waveform.spec.suppression_code
+                            and (
+                                index == time_axis.size
+                                or encoded_waveform.tensor[
+                                    example_index,
+                                    channel_index,
+                                    index,
+                                ]
+                                == encoded_waveform.spec.suppression_code
+                            )
                         )
-                    )
-                ],
-            )
+                    ],
+                )
+            ]
+            for channel_index in range(channel_axis.size)
         ]
-        for channel_index in range(channel_axis.size)
+        for example_index in range(example_axis.size)
     ],
     "encoded_plot_gaps": [
-        any(math.isnan(float(value)) for value in line.get_ydata())
-        for line in plot_axes[6].lines
+        [
+            any(math.isnan(float(value)) for value in axis.lines[0].get_ydata())
+            for axis in plot_axes[6]
+        ]
     ],
 }}
 print({SUMMARY_PREFIX!r} + json.dumps(summary, sort_keys=True))
@@ -390,9 +446,12 @@ class ReadoutDemoTests(unittest.TestCase):
             cell.source for cell in self.markdown_cells
         )
         self.assertIn(
-            "one Product call processes several sensors together in one tensor",
+            "One Product call processes both independent examples "
+            "and all three sensors together",
             markdown_source,
         )
+        self.assertIn("independent waveform realizations", markdown_source)
+        self.assertIn("not adjacent windows or sequential state", markdown_source)
         self.assertIn(
             "illustrative rather than calibrated",
             markdown_source,
@@ -403,6 +462,7 @@ class ReadoutDemoTests(unittest.TestCase):
             'labels=("sensor-0", "sensor-1", "sensor-2")',
             self.code_source,
         )
+        self.assertIn("coordinates=CountCoordinates(count=2)", self.code_source)
         self.assertIn("count=5000", self.code_source)
         self.assertIn("coordinate_scale=2.0", self.code_source)
         self.assertIn("count=2501", self.code_source)
@@ -412,6 +472,10 @@ class ReadoutDemoTests(unittest.TestCase):
             "photoelectron_values[0, 0, 3700] = 4",
             "photoelectron_values[0, 1, 1300] = 2",
             "photoelectron_values[0, 2, 2500] = 3",
+            "photoelectron_values[1, 0, 800] = 2",
+            "photoelectron_values[1, 1, 2000] = 4",
+            "photoelectron_values[1, 1, 3500] = 1",
+            "photoelectron_values[1, 2, 2900] = 3",
             "pulse_support_ns = 2020.27",
             "pulse_time_ns - 232.89",
             "2.0 * 507.72**2",
@@ -625,23 +689,28 @@ class ReadoutDemoTests(unittest.TestCase):
         for plotting_contract in (
             'plt.style.use("seaborn-v0_8-whitegrid")',
             "channel_labels = ",
-            'sensor_colors = ("tab:blue", "tab:orange", "tab:green")',
             "float(time_axis.quantity_at(index).to(\"ns\").magnitude)",
             "def plot_product(",
-            "product.tensor[0, channel_index].detach().cpu().tolist()",
-            "figsize=(11, 3.6)",
+            "product.tensor[example_index, channel_index]",
+            "plt.subplots(\n        3,\n        2,",
+            "figsize=(13, 8.5)",
+            "sharex=True",
+            "squeeze=False",
             "plot_axis.step(",
             'where="post"',
             "plot_axis.plot(",
             "alpha=0.72",
             "linewidth=0.9",
+            'plot_axis.set_title(f"Example {example_index}")',
             'plot_axis.set_xlabel("Time (ns)")',
-            "plot_axis.set_ylabel(y_label)",
-            'loc="upper center"',
-            "bbox_to_anchor=(0.5, -0.24)",
-            "ncol=3",
-            "frameon=False",
-            "figure.subplots_adjust(bottom=0.29)",
+            "plot_axis.set_ylabel(channel_label)",
+            "figure.suptitle(title)",
+            "left=0.08",
+            "right=0.98",
+            "bottom=0.08",
+            "top=0.91",
+            "hspace=0.18",
+            "wspace=0.12",
             "plt.show()",
         ):
             with self.subTest(plotting_contract=plotting_contract):
@@ -653,8 +722,13 @@ class ReadoutDemoTests(unittest.TestCase):
             "y_labels = ",
             "step_panels = ",
             "figure.legend(",
+            ".legend(",
+            "sensor_colors",
+            "y_label",
             "plot-preparation-code",
             "product-views-code",
+            "combined",
+            "summary figure",
         ):
             self.assertNotIn(retired_combined_contract, self.code_source)
         self.assertNotIn(".create(", plotting_source)
@@ -674,7 +748,7 @@ class ReadoutDemoTests(unittest.TestCase):
         )
         self.assertEqual(
             tuple(argument.arg for argument in helper.args.kwonlyargs),
-            ("y_label", "step", "suppression_code"),
+            ("title", "color", "step", "suppression_code"),
         )
 
         view_contracts = (
@@ -683,6 +757,7 @@ class ReadoutDemoTests(unittest.TestCase):
                 "photoelectrons-view-code",
                 "photoelectrons",
                 "Photoelectrons",
+                "tab:blue",
                 True,
                 None,
             ),
@@ -691,6 +766,7 @@ class ReadoutDemoTests(unittest.TestCase):
                 "charge-view-code",
                 "charge",
                 "Charge (avalanche)",
+                "tab:orange",
                 True,
                 None,
             ),
@@ -699,6 +775,7 @@ class ReadoutDemoTests(unittest.TestCase):
                 "pure-waveform-view-code",
                 "pure_waveform",
                 "Pure (mV)",
+                "tab:green",
                 False,
                 None,
             ),
@@ -707,6 +784,7 @@ class ReadoutDemoTests(unittest.TestCase):
                 "noise-waveform-view-code",
                 "noise_waveform",
                 "Noise (mV)",
+                "tab:red",
                 False,
                 None,
             ),
@@ -715,6 +793,7 @@ class ReadoutDemoTests(unittest.TestCase):
                 "analog-waveform-view-code",
                 "analog_waveform",
                 "Analog (mV)",
+                "tab:purple",
                 False,
                 None,
             ),
@@ -723,6 +802,7 @@ class ReadoutDemoTests(unittest.TestCase):
                 "digitized-waveform-view-code",
                 "digitized_waveform",
                 "ADC code",
+                "tab:brown",
                 True,
                 None,
             ),
@@ -731,6 +811,7 @@ class ReadoutDemoTests(unittest.TestCase):
                 "encoded-waveform-view-code",
                 "encoded_waveform",
                 "Retained ADC code",
+                "tab:pink",
                 True,
                 "encoded_waveform.spec.suppression_code",
             ),
@@ -740,7 +821,8 @@ class ReadoutDemoTests(unittest.TestCase):
             construction_id,
             view_id,
             product_name,
-            y_label,
+            title,
+            color,
             step,
             suppression,
         ) in view_contracts:
@@ -771,13 +853,17 @@ class ReadoutDemoTests(unittest.TestCase):
                 }
                 self.assertEqual(
                     set(keywords),
-                    {"y_label", "step"}
+                    {"title", "color", "step"}
                     | ({"suppression_code"} if suppression else set()),
                 )
-                y_label_node = keywords["y_label"]
-                self.assertIsInstance(y_label_node, ast.Constant)
-                assert isinstance(y_label_node, ast.Constant)
-                self.assertEqual(y_label_node.value, y_label)
+                title_node = keywords["title"]
+                self.assertIsInstance(title_node, ast.Constant)
+                assert isinstance(title_node, ast.Constant)
+                self.assertEqual(title_node.value, title)
+                color_node = keywords["color"]
+                self.assertIsInstance(color_node, ast.Constant)
+                assert isinstance(color_node, ast.Constant)
+                self.assertEqual(color_node.value, color)
                 step_node = keywords["step"]
                 self.assertIsInstance(step_node, ast.Constant)
                 assert isinstance(step_node, ast.Constant)
@@ -910,7 +996,7 @@ class ReadoutDemoTests(unittest.TestCase):
                 "EncodedWaveform",
             ],
         )
-        self.assertEqual(first["shapes"], [[1, 3, 5000]] * 7)
+        self.assertEqual(first["shapes"], [[2, 3, 5000]] * 7)
         self.assertEqual(first["devices"], ["cpu"] * 7)
         self.assertEqual(
             first["dtypes"],
@@ -933,7 +1019,7 @@ class ReadoutDemoTests(unittest.TestCase):
             "dimensionless",
             "dimensionless",
         ]
-        expected_ylabels = [
+        expected_titles = [
             "Photoelectrons",
             "Charge (avalanche)",
             "Pure (mV)",
@@ -946,14 +1032,51 @@ class ReadoutDemoTests(unittest.TestCase):
         self.assertEqual(
             first["digests"],
             [
-                "8cd46f0f4ff164b63fc0068e22d7705cab82adbee84c804849925f436d247fc7",
-                "66113e0e8952d8e3906217ca6efee0ade16884ff2a2ec095192faf0b72dda5b4",
-                "7233c98dd4237a425703855271ecd85fa4a78440ffbf34f1b6fb8b3593481f45",
-                "0f8798c98ec544dcbcfd57579d0f6ee9c1af2e24e10caf6832919f438be51208",
-                "e625e37451c37424d345e470ca6426543e56a19dd2bfdf570ad5c3660bad39ad",
-                "4bc693b1c8870cecc1827afcf6da88883908b5bc202250ba99c9beaa0d1d4780",
-                "00644cce41594031fa44018ed27362c60234154e3dddafb6b6b517c87ca8335d",
+                "d1d3b5339e0fcb4c3c0e03253b22f8dc221aa4e97bc681afe46d5bfa5be89be7",
+                "18f7bcafed30c6aae5507efe928e899a16e7a0d5c5fe070116f1026feb74aceb",
+                "177d956b3c0a0119548a1ad47cd92904f0d53400c4536373d67b97da8896d865",
+                "1f493e35435eb2d72ff01334a6c0d0028766813d9ed8eabe6feebbd673314844",
+                "94646193ffdf7ef6dd7afd0822d9850a396e80aa0b6c9a3590da3302cb143524",
+                "c4e2a4210cef98ccfcc4e20090e5b456b05db2bd276ab3b0c75ddbaa2d9f02cf",
+                "8b25c2ac35d68db9b183d7ab0b82427167527e0ff4137a1a6d727af062c316f8",
             ],
+        )
+        expected_example_digests = [
+            [
+                "8cd46f0f4ff164b63fc0068e22d7705cab82adbee84c804849925f436d247fc7",
+                "df666d1bba4f9d1c0d09805352fd1936375a6ec274abd7c923dd123eac817542",
+            ],
+            [
+                "66113e0e8952d8e3906217ca6efee0ade16884ff2a2ec095192faf0b72dda5b4",
+                "31f86a483f59402737b2264644608062f3f2a0f826afad9e5544fc793f39616b",
+            ],
+            [
+                "7233c98dd4237a425703855271ecd85fa4a78440ffbf34f1b6fb8b3593481f45",
+                "8819e225bea2a0d0ecdb237061b1bf3645b0dbe7a978220168f23fc9b74f29fd",
+            ],
+            [
+                "0f8798c98ec544dcbcfd57579d0f6ee9c1af2e24e10caf6832919f438be51208",
+                "c3feda4109ef0c6cd99dd9a62fbf5d5e793e8048c179955ac2d4c14e393ec0e0",
+            ],
+            [
+                "e625e37451c37424d345e470ca6426543e56a19dd2bfdf570ad5c3660bad39ad",
+                "270d00c4f683027354b06bd7174232804f317bedeeeed7a7de48c06e9805b168",
+            ],
+            [
+                "4bc693b1c8870cecc1827afcf6da88883908b5bc202250ba99c9beaa0d1d4780",
+                "a7c1373e511a624054d66069ba639abd609ab30d0c9e20e4c9ca1d69bdf4f693",
+            ],
+            [
+                "00644cce41594031fa44018ed27362c60234154e3dddafb6b6b517c87ca8335d",
+                "52256c0c105e70cb2aa2f06d7ddc332325ce5ab3d641823292bd188dcee378a4",
+            ],
+        ]
+        self.assertEqual(first["example_digests"], expected_example_digests)
+        self.assertTrue(
+            all(
+                example_0 != example_1
+                for example_0, example_1 in first["example_digests"]
+            )
         )
         self.assertTrue(first["source_unchanged"])
         self.assertTrue(first["photo_charge_equal"])
@@ -964,10 +1087,14 @@ class ReadoutDemoTests(unittest.TestCase):
         self.assertEqual(
             first["deposits"],
             [
-                [0, 100, 1],
-                [0, 3700, 4],
-                [1, 1300, 2],
-                [2, 2500, 3],
+                [0, 0, 100, 1],
+                [0, 0, 3700, 4],
+                [0, 1, 1300, 2],
+                [0, 2, 2500, 3],
+                [1, 0, 800, 2],
+                [1, 1, 2000, 4],
+                [1, 1, 3500, 1],
+                [1, 2, 2900, 3],
             ],
         )
         self.assertEqual(first["time_size"], 5000)
@@ -1002,63 +1129,83 @@ class ReadoutDemoTests(unittest.TestCase):
         self.assertEqual(
             first["encoded_support"],
             [
-                [[280, 362], [3721, 4261]],
-                [[1363, 1749]],
-                [[2541, 3085]],
+                [
+                    [[280, 362], [3721, 4261]],
+                    [[1363, 1749]],
+                    [[2541, 3085]],
+                ],
+                [
+                    [[873, 1267]],
+                    [[2030, 2570]],
+                    [[2924, 3425]],
+                ],
             ],
         )
-        self.assertEqual(first["encoded_plot_gaps"], [True, True, True])
+        self.assertEqual(first["encoded_plot_gaps"], [[True] * 6])
 
         self.assertEqual(first["figure_count"], 7)
-        self.assertEqual(first["figure_axes"], [1] * 7)
-        self.assertEqual(first["line_counts"], [3] * 7)
-        expected_colors = ["tab:blue", "tab:orange", "tab:green"]
-        self.assertEqual(first["colors"], [expected_colors] * 7)
+        self.assertEqual(first["figure_axes"], [6] * 7)
+        self.assertEqual(first["line_counts"], [[1] * 6] * 7)
+        expected_colors = [
+            "tab:blue",
+            "tab:orange",
+            "tab:green",
+            "tab:red",
+            "tab:purple",
+            "tab:brown",
+            "tab:pink",
+        ]
+        self.assertEqual(
+            first["colors"],
+            [[[color]] * 6 for color in expected_colors],
+        )
+        self.assertEqual(len(set(expected_colors)), 7)
         self.assertEqual(
             first["drawstyles"],
             [
-                ["steps-post"] * 3,
-                ["steps-post"] * 3,
-                ["default"] * 3,
-                ["default"] * 3,
-                ["default"] * 3,
-                ["steps-post"] * 3,
-                ["steps-post"] * 3,
+                [["steps-post"]] * 6,
+                [["steps-post"]] * 6,
+                [["default"]] * 6,
+                [["default"]] * 6,
+                [["default"]] * 6,
+                [["steps-post"]] * 6,
+                [["steps-post"]] * 6,
             ],
         )
-        self.assertEqual(first["alphas"], [[0.72] * 3] * 7)
-        self.assertEqual(first["linewidths"], [[0.9] * 3] * 7)
-        self.assertEqual(first["axis_legends"], [True] * 7)
+        self.assertEqual(first["alphas"], [[[0.72]] * 6] * 7)
+        self.assertEqual(first["linewidths"], [[[0.9]] * 6] * 7)
+        self.assertEqual(first["axis_legends"], [[False] * 6] * 7)
         self.assertEqual(first["figure_legends"], [0] * 7)
         self.assertEqual(
-            first["legend_labels"],
-            [["sensor-0", "sensor-1", "sensor-2"]] * 7,
+            first["figure_titles"],
+            expected_titles,
         )
-        self.assertEqual(first["legend_locations"], [9] * 7)
-        self.assertEqual(first["legend_columns"], [3] * 7)
-        self.assertEqual(first["legend_frames"], [False] * 7)
-        self.assertEqual(first["xlabels"], ["Time (ns)"] * 7)
-        self.assertEqual(first["ylabels"], expected_ylabels)
+        self.assertEqual(
+            first["axis_titles"],
+            [["Example 0", "Example 1", "", "", "", ""]] * 7,
+        )
+        self.assertEqual(
+            first["xlabels"],
+            [["", "", "", "", "Time (ns)", "Time (ns)"]] * 7,
+        )
+        self.assertEqual(
+            first["ylabels"],
+            [["sensor-0", "", "sensor-1", "", "sensor-2", ""]] * 7,
+        )
         for layout in first["layout_bounds"]:
             _, _, figure_width, figure_height = layout["figure"]
-            xlabel_x, xlabel_y, xlabel_width, xlabel_height = layout[
-                "xlabel"
-            ]
-            legend_x, legend_y, legend_width, legend_height = layout[
-                "legend"
-            ]
+            self.assertEqual(len(layout["axes"]), 6)
+            self.assertEqual(len(layout["text"]), 8)
             for x, y, width, height in (
-                (xlabel_x, xlabel_y, xlabel_width, xlabel_height),
-                (legend_x, legend_y, legend_width, legend_height),
+                layout["axes"] + layout["text"]
             ):
                 self.assertGreaterEqual(x, 0.0)
                 self.assertGreaterEqual(y, 0.0)
                 self.assertLessEqual(x + width, figure_width)
                 self.assertLessEqual(y + height, figure_height)
-            self.assertLessEqual(legend_y + legend_height, xlabel_y)
         self.assertEqual(
-            tuple(zip(first["units"], first["ylabels"])),
-            tuple(zip(expected_units, expected_ylabels)),
+            tuple(zip(first["units"], first["figure_titles"])),
+            tuple(zip(expected_units, expected_titles)),
         )
         self.assertGreater(first["adc_min"], 0)
         self.assertLess(first["adc_max"], (1 << 12) - 1)
